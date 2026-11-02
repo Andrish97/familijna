@@ -1,4 +1,4 @@
-import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-02T16570";
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-02T17000";
 // base-explorerjs/tags-modal.js
 // Nowy modal tagów (3 warstwy) – spójny z założeniami:
 // - na każdej warstwie tylko X i "Zapisz"
@@ -8,15 +8,15 @@ import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.
 //
 // UWAGA: ten plik nie zna nic o SEARCH/TAG view. To jest czysty modal.
 
-import * as ops from "./ops.js?v=v2026-11-02T16570";
-import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-02T16570";
-import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-02T16570";
-import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-02T16570";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-02T16570";
-import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-02T16570";
-import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-02T16570";
-import { normalizeText } from "./data/listing.js?v=v2026-11-02T16570";
-import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-02T16570";
+import * as ops from "./ops.js?v=v2026-11-02T17000";
+import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-02T17000";
+import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-02T17000";
+import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-02T17000";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-02T17000";
+import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-02T17000";
+import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-02T17000";
+import { normalizeText } from "./data/listing.js?v=v2026-11-02T17000";
+import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-02T17000";
 
 // Nazwa i kolor tagu pochodzą od użytkownika (także współdzielących bazę).
 
