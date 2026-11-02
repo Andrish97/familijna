@@ -3257,6 +3257,9 @@ test("control2: awaria odczytu stanu urządzeń wstrzymuje akcje bez fałszywego
       const sessions = await readControl2Sessions(page, game.id);
       return (sessions[0]?.stats_detail.events || []).filter(event => event.category === "connectivity" && event.metrics?.phase === phase).length;
     };
+    // Pierwszy nieudany odczyt przy świeżej migawce nie blokuje (decyzja 2.11),
+    // drugi z rzędu już tak.
+    await expect.poll(() => connectivityEvents("read_retry")).toBe(1);
     await expect.poll(() => connectivityEvents("read_error")).toBe(1);
     await page.unroute(snapshotRoute);
     await expect(confirm).toBeEnabled({ timeout: 10000 });
@@ -3385,10 +3388,10 @@ test("control2: zerwanie połączenia wszystkich trzech urządzeń naraz i ponow
     await revealAnswer(page, 1);
     await expect(page.getByText("Bank: 40")).toBeVisible({ timeout: 10000 });
 
-    // Awaria odczytu migawki wyżej zapisuje własne read_error/recovered;
+    // Awaria odczytu migawki wyżej zapisuje własne read_retry/read_error/recovered;
     // tu liczy się wyłącznie incydent rozłączenia urządzeń.
     const isDeviceOutage = event => event.kind === "diagnostic" && event.category === "connectivity"
-      && !["read_error", "recovered"].includes(event.metrics?.phase);
+      && !["read_retry", "read_error", "recovered"].includes(event.metrics?.phase);
     await expect.poll(async () => {
       const sessions = await readControl2Sessions(page, game.id);
       return (sessions[0]?.stats_detail.events || []).filter(isDeviceOutage).length;

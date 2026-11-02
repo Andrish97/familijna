@@ -987,6 +987,21 @@ async function main() {
 
   const presence = createPresence({
     gameId,
+    // Pojedynczy nieudany odczyt przy świeżej migawce: gra nie jest blokowana,
+    // tylko zapis do diagnostyki (czy to dalej się zdarza i jak często).
+    onTransientError: ({ error, errorSource }) => {
+      if (pageLeaving()) return;
+      void sessionTelemetry.report({
+        kind: "diagnostic", category: "connectivity",
+        message: "Jeden odczyt statusu urządzeń się nie udał; gra nie była blokowana.",
+        devices: ["control"],
+        metrics: {
+          phase: "read_retry", source: errorSource || "status_read",
+          error_name: String(error?.name || "Error").slice(0, 80),
+          error_message: String(error?.message || "").slice(0, 120) || null,
+        },
+      });
+    },
     onChange: ({ flags, displayAudioUnlocked: audioUnlocked, deviceDiagnostics, error, errorSource }) => {
       const previous = presenceFlags;
       if (error) {

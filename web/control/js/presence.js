@@ -13,9 +13,13 @@ import { sb } from "../../shared/js/core/supabase.js?v=v2026-10-29T17510";
 
 const STATUS_READ_TIMEOUT_MS = 6_500;
 const POLL_MS = 750;
+// Jeden nieudany odczyt (zwykle pojedyncze żądanie zawieszone do limitu, gdy
+// następne odpowiada w 0,3 s — eksport 2.11) nie blokuje gry, jeśli poprzedni
+// udany odczyt jest świeży; drugi z rzędu już tak (decyzja właściciela 2.11).
+const FRESH_SNAPSHOT_MS = 10_000;
 const KINDS = ["display", "host", "buzzer"];
 
-export function createPresence({ gameId, onChange }) {
+export function createPresence({ gameId, onChange, onTransientError }) {
   let timer = null;
   let inFlight = false;
   let flags = { display: false, host: false, buzzer: false };
@@ -24,6 +28,8 @@ export function createPresence({ gameId, onChange }) {
   let lastPageVisibility = { display: null, host: null, buzzer: null };
   let pageVisibilityChangedAt = { display: null, host: null, buzzer: null };
   let readUnavailable = false;
+  let failedReads = 0;
+  let lastSnapshotAt = null;
   // onChange() przerysowuje panel, więc zawiadamiamy tylko o realnej zmianie.
   let lastReported = null;
 
@@ -38,13 +44,14 @@ export function createPresence({ gameId, onChange }) {
         // flagi, a Control blokuje akcje do czasu poprawnego odczytu.
         // lease_status: baza odpowiedziała błędem; status_read: brak
         // odpowiedzi (sieć, limit czasu) — supabase-js zwraca wtedy status 0.
-        readUnavailable = true;
         const failure = error || new Error("snapshot_unavailable");
         if (failure && typeof failure === "object" && failure.status == null) failure.status = status;
-        report({ error: failure, errorSource: Number(status) >= 400 || error?.code ? "lease_status" : "status_read" });
+        fail(failure, Number(status) >= 400 || error?.code ? "lease_status" : "status_read");
         return;
       }
       readUnavailable = false;
+      failedReads = 0;
+      lastSnapshotAt = Date.now();
       devices = data.devices || {};
       flags = Object.fromEntries(KINDS.map(kind => [kind, devices[kind]?.primary_online === true]));
       displayAudioUnlocked = flags.display && devices.display?.audio_unlocked === true;
@@ -57,11 +64,20 @@ export function createPresence({ gameId, onChange }) {
       }
       report({ error: null, errorSource: null });
     } catch (error) {
-      readUnavailable = true;
-      report({ error, errorSource: "status_read" });
+      fail(error, "status_read");
     } finally {
       inFlight = false;
     }
+  }
+
+  function fail(error, errorSource) {
+    failedReads++;
+    if (!readUnavailable && failedReads === 1 && lastSnapshotAt != null && Date.now() - lastSnapshotAt < FRESH_SNAPSHOT_MS) {
+      onTransientError?.({ error, errorSource });
+      return;
+    }
+    readUnavailable = true;
+    report({ error, errorSource });
   }
 
   function report({ error, errorSource }) {
