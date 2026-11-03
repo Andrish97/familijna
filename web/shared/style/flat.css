@@ -395,7 +395,7 @@
   .topbar-layout-4 .topbar-section-2 { flex-wrap: nowrap; }
   .topbar-layout-4 .topbar-section button { touch-action: manipulation; }
   .topbar-layout-4 .topbar-section-1 .brand { align-self: center; }
-  .topbar-layout-4 .topbar-section :is(.btn, .who, .lang-switcher, .user-btn, .top-status) {
+  .topbar-layout-4 .topbar-section :is(.btn, .who, .lang-switcher, .theme-switcher, .user-btn, .top-status) {
     flex: 0 0 auto;
     max-width: 100%;
   }
@@ -1627,7 +1627,8 @@
   }
 
   /* ── Język, menu topbara (konto, język, hamburger) ────────────── */
-  .lang-switcher {
+  .lang-switcher,
+  .theme-switcher {
     position: relative;
     display: inline-flex;
     align-items: center;
@@ -1639,7 +1640,8 @@
     z-index: var(--z-lang-float);
   }
   .lang-btn,
-  .btn.lang-btn {
+  .btn.lang-btn,
+  .btn.theme-btn {
     min-width: 38px;
     min-height: var(--topbar-ctl-h);
     display: grid;
@@ -1653,6 +1655,9 @@
     vertical-align: middle;
   }
   .lang-menu .menu-item > .ico { width: 1.6em; height: 1.6em; }
+  .theme-btn .ico { width: 20px; height: 20px; }
+  /* Przycisk motywu w pływającym przełączniku języka (strony bez topbara). */
+  .lang-floating .theme-switcher { margin-right: 6px; }
   .topbar-menu-toggle {
     order: 999;
     min-width: 38px;
@@ -1664,7 +1669,7 @@
   /* Wygląd każdego menu (jeden): język, konto, „Więcej”, lista wyboru,
      menu kontekstowe, wysuwane panele paska rysowania, panel hamburgera.
      Kryjące tło: półprzezroczyste nakładały się przy przerysowaniach. */
-  :is(.lang-menu, .account-menu, .nav-more-dropdown, .ui-select-menu, .context-menu, .ctxPop, .topbar-mobile-panel) {
+  :is(.lang-menu, .theme-menu, .account-menu, .nav-more-dropdown, .ui-select-menu, .context-menu, .ctxPop, .topbar-mobile-panel) {
     --under: var(--surface-1);
     padding: 6px;
     border: 1px solid var(--line);
@@ -1673,6 +1678,7 @@
     box-shadow: var(--shadow-menu);
   }
   .lang-menu,
+  .theme-menu,
   .account-menu {
     position: fixed;
     display: grid;
@@ -2743,7 +2749,7 @@
      karty): tam, gdzie łuk leży na obwódce karty lub wypustki, nie pogrubia jej. */
   :is(.tab-label.active, .tab-slot.active > .tab-label)::before,
   :is(.tab-label.active, .tab-slot.active > .tab-label)::after {
-    --tab-line: color-mix(in srgb, var(--white) 14%, var(--surface-1));
+    --tab-line: color-mix(in srgb, var(--text) 14%, var(--surface-1));
     --tab-arc: transparent calc(var(--tab-r-in) - 1.5px), var(--tab-line) calc(var(--tab-r-in) - .5px), var(--surface-1) calc(var(--tab-r-in) + .5px);
     content: "";
     display: block;

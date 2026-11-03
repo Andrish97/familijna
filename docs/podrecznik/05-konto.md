@@ -205,6 +205,19 @@ W *Ustawieniach konta* znajdziesz także:
 > Uwaga: przywrócenie zastępuje dotychczasowe materiały demo, także te, które zmieniłeś.
 > Jeśli chcesz zachować zmiany, najpierw powiel taką grę, bazę lub logo.
 
+### 5.8.1 Język i wygląd
+
+Na górnym pasku przycisk z flagą zmienia język (polski, angielski, ukraiński), a przycisk
+wyglądu obok niego — kolory serwisu:
+
+- **Automatyczny** — jasny albo ciemny, tak jak ustawienia telefonu lub komputera,
+- **Jasny** albo **Ciemny** — zawsze ten sam, niezależnie od urządzenia.
+
+Wybór zapamiętuje przeglądarka, także bez logowania. Ekrany rozgrywki (Wyświetlacz,
+Prowadzący, Przycisk) są zawsze ciemne. Wiadomości e-mail mają kolory programu pocztowego.
+
+![Menu wyglądu](zrzut:theme-menu)
+
 ## 5.9 Usunięcie konta
 
 W *Ustawieniach konta*, w sekcji „Usuń konto”, wpisz swoje hasło i wybierz

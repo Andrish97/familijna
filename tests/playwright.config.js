@@ -7,6 +7,9 @@ module.exports = defineConfig({
   timeout: 90_000, // logowanie gościa (auth signup + seed demo) bywa wolne w CI
   retries: 0,
   use: {
+    // Motyw Auto idzie za systemem; spece sprawdzają kolory ciemnego motywu.
+    // Jasny motyw ma własny spec (theme.spec.js).
+    colorScheme: "dark",
     actionTimeout: 15_000,
     navigationTimeout: 30_000,
     baseURL: "https://www.familijna.app",

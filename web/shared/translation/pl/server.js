@@ -8,7 +8,7 @@ const pl = {
       subtitle: "Zadania",
       taskTitle: "Zaproszenie do ankiety",
       taskSubject: "Zaproszenie do ankiety — {name}",
-      taskBody: "Użytkownik <strong>{owner}</strong> zaprasza Cię do udziału w {name}.",
+      taskBody: "Użytkownik {owner} zaprasza Cię do udziału w {name}.",
       taskAction: "Przejdź do ankiety",
       ignoreNote: "Jeśli to nie Ty, zignoruj tę wiadomość.",
       linkHint: "Link nie działa? Skopiuj i wklej do przeglądarki:",

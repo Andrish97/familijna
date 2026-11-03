@@ -164,6 +164,14 @@ test('single sharing mail transport reports queue omission without false success
   }
 });
 
+test('mail is light inline with a dark variant for clients that support prefers-color-scheme', () => {
+  const html = renderMailDocument({ ...input, autoNote: 'Auto' });
+  assert.match(html, /<meta name="color-scheme" content="light dark">/);
+  assert.match(html, /<body class="fm-body" style="[^"]*background:#f3f0e8;/);
+  assert.match(html, /@media \(prefers-color-scheme: dark\)\{\.fm-body\{background:#050914!important/);
+  for (const cls of ['fm-head', 'fm-card', 'fm-title', 'fm-btn', 'fm-url', 'fm-foot']) assert.ok(html.includes(`class="${cls}"`), cls);
+});
+
 test('contact/manual document has no artificial action; rich editor body stays HTML and title stays text', () => {
   const html = renderRichMailDocument({ lang: 'pl', title: '<Subject>', bodyHtml: '<p><strong>Editor body</strong></p>' });
   assert.ok(html.includes('&lt;Subject&gt;'));
@@ -175,7 +183,8 @@ test('contact/manual document has no artificial action; rich editor body stays H
 });
 
 test('optional-action refactor preserves published invitation HTML apart from deliberate long-text wrapping', () => {
-  const snapshots = { pl: '9707f7f666b505db808f8f1b3c2334262a030583112efb5b8f8526db8df9da10', en: 'ccccd63a6b67943d886e46d2a2b021593545ef1900e369e433f0a85b6407cea5', uk: 'ac39d3525dfb79dc0f222fc71a3921a287b3324be6b20119b9d2bca8ce98150d' };
+  // Wzorzec po jasnym szablonie (2026-11-03): jasne style inline, ciemne w @media (prefers-color-scheme: dark).
+  const snapshots = { pl: 'cdef8af5b2a9f8f0dfcdd161af8000f2e14ff5b4980bdfd47c04a12321b49952', en: '7e4351d98857f86206056aceb5bac23650cfd14bb9918a254b37a9786cc8cc30', uk: '94d7d69a633febe7ca0006c47187d7a6e466babb973df5ec3bb28562601c3cb0' };
   for (const lang of ['pl','en','uk']) {
     const html = renderMailDocument({ lang, title: 'Title', body: '<body>\nText', actionLabel: 'Open', actionUrl: 'https://example.com/?t=existing&lang=' + lang });
     assert.ok(html.includes('overflow-wrap:anywhere;word-break:break-word;'));

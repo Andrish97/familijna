@@ -83,8 +83,10 @@ async function launch() {
 }
 
 // Kontekst przeglądarki z atrapą Supabase i danymi db (buildDb z data/demo.cjs).
-async function newContext(browser, db, lang, device) {
+// theme: "dark" (domyślnie — Wskazówki i galeria) albo "light" (jasny motyw, Auto wg systemu).
+async function newContext(browser, db, lang, device, { theme = "dark" } = {}) {
   const context = await browser.newContext({
+    colorScheme: theme === "light" ? "light" : "dark",
     viewport: { width: device.width, height: device.height }, deviceScaleFactor: device.scale,
     ...(device.screen ? { screen: device.screen } : {}),
     isMobile: device.mobile, hasTouch: device.mobile, locale: { pl: "pl-PL", en: "en-GB", uk: "uk-UA" }[lang],

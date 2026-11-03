@@ -8,6 +8,7 @@
 //   node scripts/screens/publish-manual.cjs --list --base=<ref>  -- tylko sceny do odświeżenia: zmiany od <ref>
 //     wg changes.cjs (jak run.cjs --changed) albo brak pliku (workflow screens.yml)
 //   opcje: --out=<katalog wyniku run.cjs> (domyślnie scripts/screens/out), --strict (wymaga kompletu)
+//   --theme=light -- zrzuty z run.cjs --theme=light do web/manual/img/<język>/light/ (jasny motyw Wskazówek)
 const fs = require("node:fs");
 const path = require("node:path");
 const { repo, launch, composeDevice } = require("./lib.cjs");
@@ -21,6 +22,9 @@ const args = Object.fromEntries(process.argv.slice(2).map((arg) => {
 const outDir = path.resolve(repo, args.out || "scripts/screens/out");
 const CONTENT = path.join(repo, "web/manual/content");
 const MAX_WIDTH = 1400;
+const LIGHT = args.theme === "light";
+// Plik w motywie: ciemny img/<język>/<plik>, jasny img/<język>/light/<plik>.
+const themed = (file) => (LIGHT ? file.replace(/^img\/(pl|en|uk)\//, "img/$1/light/") : file);
 
 // Zrzuty wskazane w wygenerowanej treści: { lang, scene, device, file }.
 function usedShots() {
@@ -60,7 +64,7 @@ async function toWebp(page, png, maxWidth, quality) {
       const { all, scenes: picked, reason } = selectChanged(scenes.filter((s) => used.includes(s.id)), args.base);
       console.error(`[publish-manual] ${reason}`);
       const ids = new Set(picked.map((s) => s.id));
-      const missing = new Set(shots.filter((s) => !fs.existsSync(path.join(repo, "web/manual", s.file))).map((s) => s.scene));
+      const missing = new Set(shots.filter((s) => !fs.existsSync(path.join(repo, "web/manual", themed(s.file)))).map((s) => s.scene));
       used = used.filter((id) => all || ids.has(id) || missing.has(id));
     }
     // „scena@urządzenie” -- run.cjs robi tylko urządzenia użyte w treści (nie wszystkie z --devices).
@@ -77,7 +81,7 @@ async function toWebp(page, png, maxWidth, quality) {
       // Scena z własnym rozmiarem (size) zapisuje się jako <język>.png.
       const src = [`${shot.lang}-${shot.device}.png`, `${shot.lang}.png`].map((n) => path.join(outDir, shot.scene, n)).find((f) => fs.existsSync(f));
       if (!src) { missing.push(`${shot.scene}/${shot.lang}-${shot.device}`); continue; }
-      const dest = path.join(repo, "web/manual", shot.file);
+      const dest = path.join(repo, "web/manual", themed(shot.file));
       fs.mkdirSync(path.dirname(dest), { recursive: true });
       // Telefon i tablet w ramce urządzenia (iPhone / iPad, pionowo lub poziomo), na tle 1400×875
       // jak zrzut z komputera; scena z własną ramką (deviceFrame) i sceny „size” zostają bez zmian.

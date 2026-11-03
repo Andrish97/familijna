@@ -136,3 +136,19 @@ test('szablony odrzucają nieznaną akcję, język i rodzaj urządzenia', () => 
   assert.throws(() => buildNotificationMail({ action: 'friend:invite', lang: 'de', data: { token: TOKEN } }));
   assert.throws(() => buildNotificationMail({ action: 'device:share', lang: 'pl', data: { token: TOKEN, deviceType: 'x', gameId: GAME } }));
 });
+
+test('treść maili powiadomień bez dosłownych znaczników HTML (zgłoszenie 2026-11-03)', () => {
+  const token = '0f1e2d3c-4b5a-4968-8776-5a4b3c2d1e0f';
+  const cases = [
+    { action: 'friend:invite', data: { ownerLabel: 'O', token } },
+    { action: 'poll:resend', data: { ownerLabel: 'O', token, unsubToken: 'u' } },
+    { action: 'poll:share', data: { ownerLabel: 'O', token, pollName: 'P', isRegistered: true } },
+    { action: 'base:share', data: { ownerLabel: 'O', token, baseName: 'B', role: 'editor' } },
+    { action: 'copy:send', data: { ownerLabel: 'O', token, name: 'N', resourceKind: 'game' } },
+    { action: 'device:share', data: { ownerLabel: 'O', token, deviceType: 'host', gameId: token, gameName: 'G' } },
+  ];
+  for (const lang of ['pl', 'en', 'uk']) for (const c of cases) for (const reminder of [false, true]) {
+    const { html } = buildNotificationMail({ ...c, lang, reminder });
+    assert.doesNotMatch(html, /&lt;\/?[a-z]/i, `${lang} ${c.action}`);
+  }
+});

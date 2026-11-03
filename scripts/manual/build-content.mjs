@@ -56,6 +56,8 @@ const pageName = (name) => {
 // pod rząd to karuzela (np. widoki urządzeń przy prowadzeniu rozgrywki).
 export const SHOT_RE = /^!\[([^\]]*)\]\(zrzut:([a-z0-9-]+)(?:@(desktop|phone-landscape|tablet-landscape|phone|tablet))?\)\s*$/;
 export const shotPath = (lang, scene, device = "desktop") => `img/${lang}/${scene}-${device}.webp`;
+// Jasny motyw (decyzja 2026-11-03): drugi komplet zrzutów w img/<język>/light/.
+export const lightShotPath = (lang, scene, device = "desktop") => `img/${lang}/light/${scene}-${device}.webp`;
 let LANG = "pl";
 // Wymiary opublikowanego webp (nagłówek VP8 / VP8L / VP8X) — width/height w <img>, żeby
 // wczytywane później zrzuty nie przesuwały treści (np. po przewinięciu do trafienia wyszukiwania).
@@ -73,7 +75,14 @@ const shotFigure = (line) => {
   const alt = esc(caption.replace(/[*`]/g, ""));
   const size = webpSize(path.join(ROOT, "web/manual", shotPath(LANG, scene, device)));
   const dims = size ? ` width="${size.w}" height="${size.h}"` : "";
-  return `<figure class="m-shot m-shot-${device}"><button class="m-shot-zoom" type="button" data-zoom="1"><img src="/manual/${shotPath(LANG, scene, device)}" alt="${alt}"${dims} loading="lazy" decoding="async"></button>${caption ? `<figcaption>${inline(caption, new Map(), TITLES)}</figcaption>` : ""}</figure>`;
+  // Zrzut w motywie czytelnika: oba obrazy, CSS pokazuje jeden (ukryty z loading="lazy" się nie pobiera).
+  // Bez jasnego pliku — jeden obraz dla obu motywów.
+  const lightSize = webpSize(path.join(ROOT, "web/manual", lightShotPath(LANG, scene, device)));
+  const img = (src, cls, sz) => `<img${cls ? ` class="${cls}"` : ""} src="/manual/${src}" alt="${alt}"${sz ? ` width="${sz.w}" height="${sz.h}"` : ""} loading="lazy" decoding="async">`;
+  const imgs = lightSize
+    ? img(shotPath(LANG, scene, device), "m-shot-dark", size) + img(lightShotPath(LANG, scene, device), "m-shot-light", lightSize)
+    : img(shotPath(LANG, scene, device), "", size);
+  return `<figure class="m-shot m-shot-${device}"><button class="m-shot-zoom" type="button" data-zoom="1">${imgs}</button>${caption ? `<figcaption>${inline(caption, new Map(), TITLES)}</figcaption>` : ""}</figure>`;
 };
 
 export const refHref = (num) => (String(num).includes(".") ? `?ch=${chapterOf(num)}#${sectionAnchor(num)}` : `?ch=${num}`);

@@ -5,7 +5,7 @@
 //   node scripts/screens/run.cjs --scenes=games,logos
 //   node scripts/screens/run.cjs --all --lang=all
 //   --scenes=a,b@phone  -- „scena@urządzenie”: tylko to urządzenie (lista z publish-manual.cjs --list)
-//   opcje: --devices=desktop,phone,tablet,phone-landscape,tablet-landscape,tablet-landscape-short,desktop-short,desktop-1400,tablet-short-1400  --lang=pl,en,uk|all  --base=<ref>  --out=<katalog>  --list  --dry (tylko wypisz sceny)  --force-devices (urządzenia z --devices także dla scen z własną listą)  --verbose (konsola strony)  --homepage (tylko kadry strony głównej)
+//   opcje: --devices=desktop,phone,tablet,phone-landscape,tablet-landscape,tablet-landscape-short,desktop-short,desktop-1400,tablet-short-1400  --lang=pl,en,uk|all  --base=<ref>  --out=<katalog>  --list  --dry (tylko wypisz sceny)  --force-devices (urządzenia z --devices także dla scen z własną listą)  --verbose (konsola strony)  --homepage (tylko kadry strony głównej)  --theme=light (jasny motyw; domyślnie ciemny)
 //
 // Strony, CSS i JS pochodzą z web/ (kod z bieżącego katalogu roboczego).
 // Supabase podmienia fake-supabase.js, dane: data/demo.cjs, sceny: scenes.cjs.
@@ -89,7 +89,7 @@ async function capture(browser, origin, scene, lang, deviceName, outDir) {
   if (scene.guest) { db.user = null; db.localStorage = {}; }
   // Dane tylko dla tej sceny (np. pusty stan, błąd, inny stan gry) bez zmian w demo.cjs.
   if (typeof scene.db === "function") scene.db(db, lang);
-  const context = await newContext(browser, db, lang, device);
+  const context = await newContext(browser, db, lang, device, { theme: args.theme });
   // Telefon jak iPhone (zrzuty w ramce z wyspą aparatu): strefa bezpieczna, chyba że scena ma własną.
   const safeArea = scene.safeArea || IPHONE_SAFE_AREA[deviceName];
   if (safeArea) await emulateSafeArea(context, origin, safeArea);

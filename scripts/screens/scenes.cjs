@@ -232,6 +232,11 @@ module.exports = [
       await view.locator("#topbarAccountMenu .menu-item").last().waitFor({ state: "visible" });
       await view.waitForTimeout(300);
     }] },
+{ id: "theme-menu", category: "Dodatkowe", title: "Menu wyglądu (Automatyczny / Jasny / Ciemny)", path: "/tasks/", sources: [...page("tasks"), "web/shared/js/core/theme-switcher.js", "web/shared/js/core/page-boot.js"], ready: "#tasksHost > *",
+    steps: [async (view) => {
+      await view.locator(".theme-btn").first().click();
+      await view.waitForTimeout(400);
+    }] },
 { id: "tasks-account-menu", category: "Dodatkowe", title: "Zadania — menu konta (komputer) i menu telefonu", path: "/tasks/", sources: [...page("tasks"), "web/shared/js/core/topbar-controller.js"], ready: "#tasksHost > *",
     steps: [async (view) => {
       const toggle = view.locator(".topbar-menu-toggle");

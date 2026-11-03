@@ -8,7 +8,7 @@ const en = {
       subtitle: "Tasks",
       taskTitle: "Voting invitation",
       taskSubject: "Voting invitation — {name}",
-      taskBody: "User <strong>{owner}</strong> invites you to participate in {name}.",
+      taskBody: "User {owner} invites you to participate in {name}.",
       taskAction: "Go to voting",
       ignoreNote: "If this wasn't you, ignore this message.",
       linkHint: "Link not working? Copy and paste into your browser:",

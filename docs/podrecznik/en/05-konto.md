@@ -205,6 +205,19 @@ In *Account settings* you will also find:
 > Note: restoring replaces your existing demo materials, including the ones you changed.
 > If you want to keep your changes, duplicate that game, base or logo first.
 
+### 5.8.1 Language and appearance
+
+On the top bar, the flag button changes the language (Polish, English, Ukrainian), and the
+appearance button next to it changes the colours of the app:
+
+- **Automatic** — light or dark, following your phone or computer settings,
+- **Light** or **Dark** — always the same, regardless of the device.
+
+The browser remembers your choice, also without signing in. Game screens (Display,
+Host, Buzzer) are always dark. Emails follow the colours of your email app.
+
+![Appearance menu](zrzut:theme-menu)
+
 ## 5.9 Deleting your account
 
 In *Account settings*, in the "Delete account" section, enter your password and choose

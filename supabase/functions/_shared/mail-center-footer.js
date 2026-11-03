@@ -1,4 +1,4 @@
-import { escapeMailText } from './mail-document.js';
+import { escapeMailText, MAIL_FOOTER_ATTRS, MAIL_LINK_ATTRS } from './mail-document.js';
 
 const copy = {
   pl: { text: 'Zarządzaj powiadomieniami lub zrezygnuj z wiadomości e-mail.', link: 'Moje powiadomienia' },
@@ -11,7 +11,7 @@ export function appendMailCenterFooter(html, token, lang) {
   const language = Object.hasOwn(copy, lang) ? lang : 'pl';
   const url = `https://www.familijna.app/go/?m=${token}&lang=${language}`;
   const labels = copy[language];
-  const footer = `<div data-familijna-mail-center="true" style="margin:14px auto;padding:0 16px;max-width:560px;text-align:center;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;font-size:11px;line-height:1.5;color:#a6adbc;">${escapeMailText(labels.text)}<br><a href="${escapeMailText(url)}" style="color:#ffeaa6;text-decoration:underline;">${escapeMailText(labels.link)}</a></div>`;
+  const footer = `<div data-familijna-mail-center="true" ${MAIL_FOOTER_ATTRS}>${escapeMailText(labels.text)}<br><a href="${escapeMailText(url)}" ${MAIL_LINK_ATTRS}>${escapeMailText(labels.link)}</a></div>`;
   const document = String(html || '');
   return /<\/body\s*>/i.test(document) ? document.replace(/<\/body\s*>/i, footer + '</body>') : document + footer;
 }

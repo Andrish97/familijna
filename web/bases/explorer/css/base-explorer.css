@@ -1463,7 +1463,7 @@
     padding: 12px;
     border-radius: var(--r-md);
     /* Kryjące (Android): odcień listy jako kolor; wiersze biorą go za podłoże. */
-    --list-under: color-mix(in srgb, var(--white) 4%, var(--under));
+    --list-under: color-mix(in srgb, var(--text) 4%, var(--under));
     background: var(--list-under);
     border: 1px solid var(--line, var(--w-8));
   }

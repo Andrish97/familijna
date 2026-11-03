@@ -214,9 +214,17 @@ jobs:
           if [ -n "$FROM" ] && git cat-file -e "$FROM^{commit}" 2>/dev/null; then BASE="$FROM"; else ALL=1; fi
           if [ -n "$ALL" ]; then echo "Punkt odniesienia: brak -- wszystkie zrzuty"; else echo "Punkt odniesienia: $BASE"; fi
           if [ -n "$ALL" ]; then pick=$(node scripts/screens/publish-manual.cjs --list); else pick=$(node scripts/screens/publish-manual.cjs --list --base="$BASE"); fi
-          [ -n "$pick" ] || { echo "Brak zrzutów Wskazówek do odświeżenia."; exit 0; }
-          node scripts/screens/run.cjs --scenes="$pick" --lang=all --devices=desktop,phone,phone-landscape,tablet,tablet-landscape --out=help-out || true
-          node scripts/screens/publish-manual.cjs --out=help-out
+          # Jasny motyw (jasny-motyw-plan.md): drugi komplet w img/<język>/light/; brakujące pliki też.
+          if [ -n "$ALL" ]; then pickLight=$(node scripts/screens/publish-manual.cjs --list --theme=light); else pickLight=$(node scripts/screens/publish-manual.cjs --list --theme=light --base="$BASE"); fi
+          [ -n "$pick$pickLight" ] || { echo "Brak zrzutów Wskazówek do odświeżenia."; exit 0; }
+          if [ -n "$pick" ]; then
+            node scripts/screens/run.cjs --scenes="$pick" --lang=all --devices=desktop,phone,phone-landscape,tablet,tablet-landscape --out=help-out || true
+            node scripts/screens/publish-manual.cjs --out=help-out
+          fi
+          if [ -n "$pickLight" ]; then
+            node scripts/screens/run.cjs --scenes="$pickLight" --theme=light --lang=all --devices=desktop,phone,phone-landscape,tablet,tablet-landscape --out=help-out-light || true
+            node scripts/screens/publish-manual.cjs --theme=light --out=help-out-light
+          fi
           # Treść ma wymiary obrazów (width/height) — po nowych zrzutach generuje się od nowa.
           node scripts/manual/build-content.mjs
           git add web/manual/img web/manual/content
