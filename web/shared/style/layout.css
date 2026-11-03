@@ -262,7 +262,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 8px 10px;
+    --list-toolbar-gap-x: 10px; /* też w nakładkach wygaszonej krawędzi */
+    gap: 8px var(--list-toolbar-gap-x);
     flex-wrap: nowrap; /* sekcje obok siebie; zawijają się ich przyciski */
   }
   .list-toolbar-left {
@@ -343,11 +344,38 @@
     scrollbar-width: none;
   }
   .list-toolbar.is-scroll::-webkit-scrollbar { display: none; }
-  .list-toolbar.has-more-end { mask-image: linear-gradient(to right, var(--mask-on) calc(100% - 28px), transparent); }
-  .list-toolbar.has-more-start { mask-image: linear-gradient(to right, transparent, var(--mask-on) 28px); }
-  .list-toolbar.has-more-start.has-more-end { mask-image: linear-gradient(to right, transparent, var(--mask-on) 28px, var(--mask-on) calc(100% - 28px), transparent); }
-  /* Maska tworzy osobną warstwę — otwarte menu filtra trafiałoby pod siatkę. */
-  .list-toolbar:has(.ui-select.open) { mask-image: none; }
+  /* Wygaszona krawędź paska: nakładki w kolorze karty (--under) przyklejone
+     do brzegów przewijanego paska, nie maska. Chrome na Androidzie malował
+     maskę przewijanego w bok paska jako czarny prostokąt na przyciskach
+     (zgłoszenie właściciela 2026-11-03, Moje gry na telefonie). Nakładki nie
+     zajmują miejsca (ujemny margines) i nie łapią dotyku. */
+  .list-toolbar.is-scroll::before,
+  .list-toolbar.is-scroll::after {
+    content: "";
+    position: sticky;
+    z-index: 1;
+    flex: 0 0 28px;
+    align-self: stretch;
+    pointer-events: none;
+    opacity: 0;
+  }
+  .list-toolbar.is-scroll::before {
+    order: -1;
+    left: 0;
+    margin-right: calc(-28px - var(--list-toolbar-gap-x));
+    background: linear-gradient(to right, var(--under, var(--surface-1)), transparent);
+  }
+  .list-toolbar.is-scroll::after {
+    order: 99;
+    right: 0;
+    margin-left: calc(-28px - var(--list-toolbar-gap-x));
+    background: linear-gradient(to left, var(--under, var(--surface-1)), transparent);
+  }
+  .list-toolbar.has-more-start::before,
+  .list-toolbar.has-more-end::after { opacity: 1; }
+  /* Otwarte menu filtra nad nakładką. */
+  .list-toolbar:has(.ui-select.open)::before,
+  .list-toolbar:has(.ui-select.open)::after { opacity: 0; }
   .list-toolbar.is-compact-icons :is(.list-toolbar-right .btn, .list-filter .ui-select-btn, .list-sort .ui-select-btn) {
     width: 36px;
     height: 36px;
