@@ -94,70 +94,9 @@
   }
 
 
-  // Motyw (decyzja 2026-11-03, familijna-server/docs/jasny-motyw-plan.md):
-  // wybór „auto” | „light” | „dark” w localStorage (uiTheme); „auto” wg systemu.
-  // Ustawiany przed pierwszą klatką. Ekrany gry (<html data-theme-lock>) są ciemne.
-  const THEME_KEY = "uiTheme";
-  const THEME_CHOICES = ["auto", "light", "dark"];
-  const THEME_BG = { light: "#f3f0e8", dark: "#050914" };
-  function setupTheme(root) {
-    const locked = !!root.hasAttribute?.("data-theme-lock");
-    const media = window.matchMedia?.("(prefers-color-scheme: light)");
-    const readChoice = () => {
-      if (locked) return "dark";
-      try {
-        const stored = localStorage.getItem(THEME_KEY);
-        return THEME_CHOICES.includes(stored) ? stored : "auto";
-      } catch { return "auto"; }
-    };
-    let choice = readChoice();
-    const resolve = () => choice === "auto" ? (media?.matches ? "light" : "dark") : choice;
-    const paintMeta = () => {
-      const meta = document.querySelector?.('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", THEME_BG[root.dataset.theme] || THEME_BG.dark);
-    };
-    const apply = () => {
-      const theme = resolve();
-      if (root.dataset.theme === theme) return theme;
-      root.dataset.theme = theme;
-      paintMeta();
-      if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:change", { detail: { theme, choice } }));
-      return theme;
-    };
-    apply();
-    // meta theme-color stoi w head po tym skrypcie — kolor po sparsowaniu.
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paintMeta, { once: true });
-    if (locked) { globalThis.FamilijnaTheme = { getChoice: () => "dark", getTheme: () => "dark", setChoice() {}, CHOICES: THEME_CHOICES, locked: true }; return; }
-    media?.addEventListener?.("change", () => { if (choice === "auto") apply(); });
-    // Inna karta zmieniła wybór.
-    window.addEventListener?.("storage", (event) => {
-      if (event.key !== THEME_KEY) return;
-      choice = readChoice();
-      apply();
-      if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:choice", { detail: { choice } }));
-    });
-    globalThis.FamilijnaTheme = {
-      CHOICES: THEME_CHOICES,
-      locked: false,
-      getChoice: () => choice,
-      getTheme: () => root.dataset.theme,
-      setChoice(next) {
-        if (!THEME_CHOICES.includes(next)) throw new Error(`Unknown theme: ${next}`);
-        choice = next;
-        try {
-          if (next === "auto") localStorage.removeItem(THEME_KEY);
-          else localStorage.setItem(THEME_KEY, next);
-        } catch {}
-        apply();
-        if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:choice", { detail: { choice } }));
-      },
-    };
-  }
-
   globalThis.FamilijnaDevice = { getDeviceProfile, editableFocused, keyboardLikely, KEYBOARD_CLOSE_MS, deviceLayout, PHONE_MAX_SHORT_SIDE, NARROW_MAX };
   if (typeof document === "undefined" || typeof window === "undefined") return;
   const root = document.documentElement;
-  setupTheme(root);
   const next = deviceLayout();
   root.dataset.device = next.device;
   root.dataset.input = next.input;

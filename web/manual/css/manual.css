@@ -523,10 +523,6 @@
   /* zrzut telefonu/tabletu ma już ramkę urządzenia na przezroczystym tle */
   .m-shot:not(.m-shot-desktop) .m-shot-zoom { border: 0; border-radius: 0; background: transparent; }
   .m-shot img { display: block; width: 100%; height: auto; }
-  /* Zrzut w motywie czytelnika (jasny-motyw-plan.md): jeden z pary jest ukryty. */
-  .m-shot img.m-shot-light,
-  :root[data-theme="light"] .m-shot img.m-shot-dark { display: none; }
-  :root[data-theme="light"] .m-shot img.m-shot-light { display: block; }
   .m-shot figcaption { margin-top: 8px; font-size: .82rem; text-align: center; color: var(--text-muted); }
 
   .m-carousel { margin: 18px 0; outline: none; }
