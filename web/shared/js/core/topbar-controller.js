@@ -1,4 +1,4 @@
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-03T22214";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-03T22350";
 // js/core/topbar-controller.js
 // Zarządza całym topbarem:
 //  - Desktop: overflow nav ("Więcej") w section-2, dropdown .account-wrap w section-4
@@ -6,11 +6,11 @@ import { registerPageLayout } from "./page-layout.js?v=v2026-11-03T22214";
 //
 // Eksportuje: setTopbarNavPriority, setTopbarAccount (alias: initTopbarAccountDropdown), autoInitTopbarAuthButton
 
-import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-03T22214";
-import { isGuestUser } from './guest-mode.js?v=v2026-11-03T22214';
-import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-03T22214';
-import { icon, iconText } from './icons.js?v=v2026-11-03T22214';
-import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-03T22214';
+import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-03T22350";
+import { isGuestUser } from './guest-mode.js?v=v2026-11-03T22350';
+import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-03T22350';
+import { icon, iconText } from './icons.js?v=v2026-11-03T22350';
+import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-03T22350';
 
 
 // ── Narzędzie: pozycjonowanie fixed dropdown ──────────────────────────────────
@@ -389,7 +389,7 @@ function applyTopbarAccount(user, {
       if (onLogout) {
         try { await onLogout(); } catch(e) { console.warn('logout callback error:', e); }
       }
-      const { signOut } = await import("./auth.js?v=v2026-11-03T22214");
+      const { signOut } = await import("./auth.js?v=v2026-11-03T22350");
       await signOut();
       location.href = withLangParam(loginHref);
     });
@@ -452,7 +452,7 @@ export { setTopbarAccount as initTopbarAccountDropdown };
 export async function autoInitTopbarAuthButton(btn = document.getElementById('btnLogout')) {
   if (!btn) return;
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
-  const { getUser } = await import('./auth.js?v=v2026-11-03T22214');
+  const { getUser } = await import('./auth.js?v=v2026-11-03T22350');
 
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
   const user = await getUser();
@@ -486,7 +486,7 @@ function initTopbarController() {
   const tabsPlaceholder = document.createComment('topbar-tabs-restore');
   const simpleTabs = document.querySelector('.simple-tabs');
   const menuContentSelector =
-    'button, a, [role="button"], [role="tab"], .btn, .user-btn, .lang-switcher, .top-status';
+    'button, a, [role="button"], [role="tab"], .btn, .user-btn, .lang-switcher, .theme-switcher, .top-status';
 
   let overlay, panel, mount, tabGroup, group2, group4, sep, toggleBtn, toggleBadge, badgeObserver;
   let isMobileMounted = false;
@@ -527,7 +527,7 @@ function initTopbarController() {
 
   const hasMenuContent = () => {
     const hasTabs = !!simpleTabs?.querySelector('.tab, button, [role="tab"]');
-    const sel = 'button, a, .btn, [role="button"], [role="tab"], .user-btn, .lang-switcher, .top-status';
+    const sel = 'button, a, .btn, [role="button"], [role="tab"], .user-btn, .lang-switcher, .theme-switcher, .top-status';
     return hasTabs ||
       [...section2.querySelectorAll(sel)].some(isVisible) ||
       [...section4.querySelectorAll(sel)].some(isVisible);

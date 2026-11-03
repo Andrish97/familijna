@@ -1,6 +1,6 @@
-import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-03T22214";
-import { icon, iconText } from "../js/core/icons.js?v=v2026-11-03T22214";
-import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-03T22214";
+import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-03T22350";
+import { icon, iconText } from "../js/core/icons.js?v=v2026-11-03T22350";
+import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-03T22350";
 
 // Przenosiny ze starej domeny przed pierwszym odczytem uiLang (do usunięcia po 2026-12-01).
 applyLegacyHandoff();
@@ -15,7 +15,8 @@ const LANG_META = {
   uk: { lang: "uk", label: "Українська", icon: "flag-ua" },
 };
 const ASSET_VERSION = new URL(import.meta.url).search;
-import { placeDropdown } from "../js/core/popover.js?v=v2026-11-03T22214";
+import { placeDropdown } from "../js/core/popover.js?v=v2026-11-03T22350";
+import { injectThemeSwitcher, refreshThemeSwitcher } from "../js/core/theme-switcher.js?v=v2026-11-03T22350";
 
 const LANG_ORDER = ["pl", "en", "uk"];
 let pageParts = null;
@@ -304,9 +305,12 @@ async function injectLanguageSwitcher() {
   const topbarLangSection = document.querySelector(".topbar .topbar-section-3") || document.querySelector("[data-lang-slot]");
   if (topbarLangSection) {
     topbarLangSection.appendChild(container);
+    // Motyw: osobny przycisk tuż przed flagą (decyzja 2026-11-03).
+    injectThemeSwitcher(topbarLangSection, container, t);
   } else {
     container.classList.add("lang-floating");
     document.body.appendChild(container);
+    injectThemeSwitcher(container, btn, t);
   }
 
   switcherEl = container;
@@ -323,6 +327,7 @@ function updateSwitcherLabel() {
   const meta = LANG_META[currentLang] || LANG_META.pl;
   btn.innerHTML = icon(meta.icon);
   btn.setAttribute("aria-label", t("common.languageLabel"));
+  refreshThemeSwitcher();
 }
 
 // -----------------------------------------------------------------------------

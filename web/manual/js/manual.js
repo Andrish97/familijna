@@ -1,4 +1,4 @@
-import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-03T22214";
+import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-03T22350";
 // manual/js/manual.js
 // Podręcznik (E13): części → rozdziały → podrozdziały. Treść z content/{lang}.js
 // (generowana z docs/podrecznik przez scripts/manual/build-content.mjs).
@@ -6,28 +6,28 @@ import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-03T22214";
 // Zmiana rozdziału to replaceState (jak karty, tabs.js): „Wstecz” wraca do poprzedniej strony.
 // Strona ma działać nawet bez auth: najpierw treść, potem initPage „miękko”.
 
-import { initI18n, setUiLang, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-03T22214";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-03T22214";
-import { hydrateIcons, icon } from "../../shared/js/core/icons.js?v=v2026-11-03T22214";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-03T22214";
-import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-03T22214";
-import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-03T22214";
-import { createImageViewer } from "../../shared/js/core/image-viewer.js?v=v2026-11-03T22214";
-import { buildIndex, initManualSearch, highlight } from "./search.js?v=v2026-11-03T22214";
-import chapterLoaders from "../content/chapter-loaders.js?v=v2026-11-03T22214";
+import { initI18n, setUiLang, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-03T22350";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-03T22350";
+import { hydrateIcons, icon } from "../../shared/js/core/icons.js?v=v2026-11-03T22350";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-03T22350";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-03T22350";
+import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-03T22350";
+import { createImageViewer } from "../../shared/js/core/image-viewer.js?v=v2026-11-03T22350";
+import { buildIndex, initManualSearch, highlight } from "./search.js?v=v2026-11-03T22350";
+import chapterLoaders from "../content/chapter-loaders.js?v=v2026-11-03T22350";
 
-import { manualToc, manualArticle } from "./render.js?v=v2026-11-03T22214";
-import { syncPublicSeo } from "../../shared/js/core/public-seo.js?v=v2026-11-03T22214";
+import { manualToc, manualArticle } from "./render.js?v=v2026-11-03T22350";
+import { syncPublicSeo } from "../../shared/js/core/public-seo.js?v=v2026-11-03T22350";
 
 const CONTENT = {
-  pl: () => import("../content/pl.js?v=v2026-11-03T22214"),
-  en: () => import("../content/en.js?v=v2026-11-03T22214"),
-  uk: () => import("../content/uk.js?v=v2026-11-03T22214"),
+  pl: () => import("../content/pl.js?v=v2026-11-03T22350"),
+  en: () => import("../content/en.js?v=v2026-11-03T22350"),
+  uk: () => import("../content/uk.js?v=v2026-11-03T22350"),
 };
 const META = {
-  pl: () => import("../content/meta/pl.js?v=v2026-11-03T22214"),
-  en: () => import("../content/meta/en.js?v=v2026-11-03T22214"),
-  uk: () => import("../content/meta/uk.js?v=v2026-11-03T22214"),
+  pl: () => import("../content/meta/pl.js?v=v2026-11-03T22350"),
+  en: () => import("../content/meta/en.js?v=v2026-11-03T22350"),
+  uk: () => import("../content/meta/uk.js?v=v2026-11-03T22350"),
 };
 export const CHAPTER_PARAM = "ch";
 // Skąd przyszedł czytelnik po kliknięciu odnośnika w treści (rozdział albo podrozdział, np. "6.7").
@@ -289,7 +289,7 @@ function wireNavigation() {
   // Odnośniki wewnątrz podręcznika (spis, karty części, „→ 7.3”, poprzedni/następny).
   document.addEventListener("click", (ev) => {
     const zoom = ev.target.closest?.(".m-shot-zoom");
-    if (zoom) { openShot(zoom.querySelector("img")); return; }
+    if (zoom) { openShot([...zoom.querySelectorAll("img")].find((img) => img.offsetParent !== null) || zoom.querySelector("img")); return; }
     const a = ev.target.closest?.("a[href]");
     if (!a || !a.closest(".m-layout") || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.button) return;
     // Nazwa strony serwisu (*Moje gry*): najpierw adres podręcznika wskazuje bieżący podrozdział,
