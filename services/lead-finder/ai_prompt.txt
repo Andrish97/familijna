@@ -25,6 +25,11 @@ Zasady:
   animatora lub prowadzącego, organizuje zabawy, konkursy, quizy albo program
   rozrywkowy razem z salą i jedzeniem. Sam wynajem sali, przyjęcie, catering
   czy „organizacja imprez” bez rozrywki dla gości to za mało.
+  Gdy akceptujesz lokal, ustaw "venue": 1 i w "evidence" przepisz DOKŁADNIE
+  (słowo w słowo) fragment z "text", który mówi o jego własnej rozrywce
+  (np. „w cenie animator dla dzieci”). Bez takiego fragmentu w danych — odrzuć.
+- ODRZUĆ (ok: 0) wpisy z bloga, poradniki i artykuły (np. „jak wybrać lokal…”),
+  nawet na stronie firmy: oceniamy firmę, nie temat artykułu.
 - ODRZUĆ (ok: 0) wykonawców samych pokazów do oglądania: fireshow i teatr
   ognia, pokazy barmańskie, taneczne, iluzji, szczudlarzy, bańki mydlane,
   koncerty — chyba że w opisie wprost prowadzą też zabawy, gry lub konkursy
@@ -41,5 +46,7 @@ Zwróć JSON z wynikiem dla KAŻDEGO id dokładnie raz:
 {"results": [
   {"id": "c1", "ok": 1, "title": "krótka nazwa firmy (do 60 znaków)",
    "short_description": "czym się zajmuje, jedno zdanie", "reason": "krótko, dlaczego"},
+  {"id": "c3", "ok": 1, "venue": 1, "evidence": "dokładny cytat z text o rozrywce",
+   "title": "...", "short_description": "...", "reason": "lokal z własnym wodzirejem"},
   {"id": "c2", "ok": 0, "reason": "krótka przyczyna (max 10 słów)"}
 ]}

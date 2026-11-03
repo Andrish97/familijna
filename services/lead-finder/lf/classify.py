@@ -89,6 +89,10 @@ def parse_results(content, ids):
             'title': _clean(r.get('title'), 200),
             'short_description': _clean(r.get('short_description'), 300),
             'reason': reason,
+            # Lokal (sala, restauracja, hotel…) przyjęty tylko z cytatem o własnej
+            # rozrywce dla gości; cytat sprawdza kod (pipeline, filters.quote_in).
+            'venue': r.get('venue') in (1, True, '1', 'true'),
+            'evidence': _clean(r.get('evidence'), 300),
         }
     return out
 
