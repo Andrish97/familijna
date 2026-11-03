@@ -1581,7 +1581,6 @@
   .mc-cat-name { font-weight: 600; overflow-wrap: anywhere; }
   .mc-cat-details { flex: 1 0 100%; display: grid; gap: 4px; }
   .mc-cat-desc { margin: 0; font-size: 12px; opacity: .8; }
-  .mc-ai-note { font-size: 13px; opacity: .85; margin: 8px 0; }
   .mc-logs > summary { cursor: pointer; font-size: 13px; opacity: .8; margin: 8px 0; }
   .mc-reaction--declined, .mc-reaction--bounced { color: var(--bad-text); }
   .mc-reaction--replied { color: var(--ok-text); }

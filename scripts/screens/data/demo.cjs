@@ -421,7 +421,6 @@ function buildDb(lang, extras = {}) {
         { created_at: "2026-10-20T10:01:00Z", level: "info", message: "Zlecenie wstrzymane" },
         { created_at: "2026-10-20T10:00:00Z", level: "success", message: "Zweryfikowano kontakt" },
       ] },
-      "/_admin_api/marketing/ai-providers": { ok: true, rows: [{ name: "deepseek", label: "DeepSeek", is_active: true, cooldown_until: null }] },
       // E25: wykluczenia ze statystyk -- automatyczne z rolą konta testowego, ręczne z przyciskiem
       "/_admin_api/stats/excluded": { ok: true, rows: [
         ...["e2e.standard01", "e2e.standard02", "e2e.standard03"].map((username) => ({ user_id: `00000000-0000-4000-8000-0000000000${username.slice(-2)}`, username, email: `e2e+${username.slice(4)}@familiada.online`, reason: "test:standard", automatic: true, added_at: "2026-10-22T20:30:00Z" })),

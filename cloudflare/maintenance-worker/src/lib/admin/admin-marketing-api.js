@@ -136,13 +136,6 @@ export async function handleAdminMarketingApi(request, env, url) {
     return json({ ok: true, rows: Array.isArray(res.data) ? res.data : [] });
   }
 
-  // GET /_admin_api/marketing/ai-providers
-  if (url.pathname === "/_admin_api/marketing/ai-providers" && request.method === "GET") {
-    const res = await supabaseRequest(env, "/rest/v1/marketing_ai_providers?select=*&order=priority.asc");
-    if (!res.ok) return json({ ok: false, error: "ai_providers_failed", details: summarizeSupabaseError(res) }, res.status || 500);
-    return json({ ok: true, rows: Array.isArray(res.data) ? res.data : [] });
-  }
-
   // POST /_admin_api/marketing/send { emails, subject, template_id, custom_body }
   if (url.pathname === "/_admin_api/marketing/send" && request.method === "POST") {
     const body = await readJson(request);

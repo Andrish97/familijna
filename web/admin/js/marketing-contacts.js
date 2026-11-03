@@ -181,23 +181,6 @@ export async function initMarketingContacts() {
     }
   }
 
-  // Jedyny dostawca AI Lead Findera: DeepSeek (decyzja 2026-10-25). Stan z
-  // marketing_ai_providers: aktywny albo zablokowany limitem (cooldown).
-  async function mcLoadAiStatus() {
-    const el = document.getElementById("mcAiStatus");
-    if (!el) return;
-    try {
-      const rows = (await adminGet("/marketing/ai-providers", "rows")) || [];
-      const p = rows.find((r) => r.name === "deepseek");
-      const until = p?.cooldown_until ? new Date(p.cooldown_until) : null;
-      if (!p || !p.is_active) { el.textContent = "wyłączony"; el.dataset.tone = "bad"; }
-      else if (until && until > new Date()) {
-        el.textContent = `zablokowany limitem do ${until.toLocaleString("pl-PL", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}`;
-        el.dataset.tone = "warn";
-      } else { el.textContent = "aktywny"; el.dataset.tone = "ok"; }
-    } catch { el.textContent = ""; }
-  }
-
   async function mcLoadRuns() {
     try {
       const data = await mcLeads("search-runs/status");
@@ -632,7 +615,7 @@ export async function initMarketingContacts() {
   }
 
   // ── Zdarzenia ───────────────────────────────────────────────────────────
-  document.getElementById("mcRefreshBtn")?.addEventListener("click", () => { mcLoadRuns(); mcLoadCategories(); mcLoadContacts(); mcLoadLogs(); mcLoadAiStatus(); });
+  document.getElementById("mcRefreshBtn")?.addEventListener("click", () => { mcLoadRuns(); mcLoadCategories(); mcLoadContacts(); mcLoadLogs(); });
   {
     let mcSearchTimer = null;
     const searchInput = document.getElementById("mcSearchInput");
@@ -693,7 +676,6 @@ export async function initMarketingContacts() {
     await mcLoadRuns();
     mcLoadLogs();
     if (mcState.status === "running" && document.getElementById("mcAutoRefreshLogs")?.checked) mcStartLogAutoRefresh();
-    mcLoadAiStatus();
   };
   if (panel) new MutationObserver(onShow).observe(panel, { attributes: true, attributeFilter: ["hidden"] });
   mcUpdateButtons();
