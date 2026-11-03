@@ -90,6 +90,11 @@ test("bazy337: rzeczywisty mail, odmowa i opuszczenie, undo, role oraz cofnięci
     // Dymek błędu zostaje do zamknięcia (nie znika sam po kilku sekundach).
     expect((await rpc(page, "list_base_share_tasks_outgoing", { p_base_id: baseId })).length).toBe(1);
     const email = await waitForEmail({ recipient: recipientEmail, after, subject: /baz|base/i, timeout: 150_000 });
+    const sentBy = await readMailDelivery({ recipient: recipientEmail, after });
+    console.log("[e2e-diag] mail provider", JSON.stringify({
+      queue: (sentBy.queue || []).map(row => ({ status: row.status, attempts: row.attempts, provider: row.provider_used, error: row.last_error })),
+      events: (sentBy.events || []).filter(row => row.provider || row.error).map(row => ({ fn: row.function_name, event: row.event, provider: row.provider, error: row.error })),
+    }));
     expectMailDocument(email, { accountFooter: true, text: ["przeglądający", "Dostęp otrzymasz po akceptacji zaproszenia."] });
     const link = extractHttpLinks(email).find(url => new URL(url).pathname === "/go/" && new URL(url).searchParams.has("b"));
     expect(link).toBeTruthy();
