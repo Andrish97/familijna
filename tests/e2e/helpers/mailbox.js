@@ -76,6 +76,14 @@ async function waitForEmail({ recipient, after, subject, timeout = 90_000, trigg
     const email = (data.emails || []).find((row) => (!subject || subject.test(row.subject || "")) && (!accept || accept(row)));
     if (email) {
       console.log("[e2e-mail] received", JSON.stringify({ recipient, elapsedMs: Date.now() - startedAt, receivedAt: email.received_at }));
+      // Który dostawca wysłał (provider_used z kolejki, provider z logów funkcji) -- bez adresów i treści.
+      try {
+        const delivery = await api(`/mail-delivery?recipient=${encodeURIComponent(recipient)}&after=${encodeURIComponent(after)}`);
+        console.log("[e2e-diag] mail provider", JSON.stringify({
+          queue: (delivery.queue || []).map((row) => ({ status: row.status, attempts: row.attempts, provider: row.provider_used, error: row.last_error })),
+          events: (delivery.events || []).filter((row) => row.provider || row.error).map((row) => ({ fn: row.function_name, event: row.event, provider: row.provider, error: row.error })),
+        }));
+      } catch (error) { console.log("[e2e-diag] mail provider unavailable:", error.message); }
       return email;
     }
     if (!triggered) {
