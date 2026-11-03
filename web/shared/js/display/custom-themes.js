@@ -3,8 +3,8 @@
 // bucketu user-themes. Każde wczytanie przechodzi ponownie przez walidator,
 // więc wyświetlacz i Prowadzący rysują tylko grafikę z białej listy.
 // Brak pliku albo błąd walidacji → null (strona wraca do motywu domyślnego).
-import { SUPABASE_URL } from "../core/supabase.js?v=v2026-11-03T22592";
-import { parseThemeFile, customThemeId, themeObjectPath, THEME_BUCKET } from "./theme-file.js?v=v2026-11-03T22592";
+import { SUPABASE_URL } from "../core/supabase.js?v=v2026-11-03T22594";
+import { parseThemeFile, customThemeId, themeObjectPath, THEME_BUCKET } from "./theme-file.js?v=v2026-11-03T22594";
 
 const cache = new Map();
 
