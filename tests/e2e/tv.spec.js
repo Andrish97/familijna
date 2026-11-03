@@ -1,9 +1,9 @@
 const { test, expect } = require("@playwright/test");
 const { serveBranchCode } = require("./helpers/branch-code");
-// Kod TV (JS/CSS) z brancha; HTML z produkcji (Worker podaje stronę TV dla UA telewizora).
+// Kod TV (JS/CSS) i HTML /connect/tv/ z brancha; inne strony z produkcji (Worker podaje stronę TV dla UA telewizora).
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({ context }) => {
-  if (process.env.GITHUB_REF_NAME !== "main" && process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: [], productionHtml: true });
+  if (process.env.GITHUB_REF_NAME !== "main" && process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: ["connect/tv"], productionHtml: true });
 });
 const ua = "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36 TV Safari/537.36";
 test.use({ locale: "pl-PL", userAgent: ua, viewport: { width: 1920, height: 1080 } });
@@ -82,4 +82,27 @@ test("TV: pierwszy wybór języka pochodzi z przeglądarki telewizora", async ({
     await expect(page.locator("h1")).toHaveText("Connect display");
     await expect(page.locator("#tvConnect")).toHaveText("Connect");
   } finally { await context.close(); }
+});
+
+test("TV: wygląd idzie za ustawieniem telewizora, pilot zmienia go przyciskiem obok flagi", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/connect/tv/", { waitUntil: "domcontentloaded" });
+  const html = page.locator("html");
+  await expect(page.locator("#tvCode")).toBeFocused();
+  await expect(html).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("body")).toHaveCSS("background-color", "rgb(243, 240, 232)");
+  await page.keyboard.press("ArrowUp");
+  await expect(page.locator(".lang-btn")).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(page.locator(".theme-btn")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator('.theme-menu .menu-item[data-theme="auto"]')).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('.theme-menu .menu-item[data-theme="dark"]')).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(page.locator(".theme-btn")).toBeFocused();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(html).toHaveAttribute("data-theme", "dark");
 });

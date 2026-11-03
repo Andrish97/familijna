@@ -1,10 +1,10 @@
 // familiada/logos/js/db.js
 // Dostęp do tabeli user_logos i plików logo w Storage.
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-03T22592";
-import { getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-03T22592";
-import { storagePathFromUrl } from "./image.js?v=v2026-11-03T22592";
-import { decodeImportedLogoImage } from "../../shared/js/core/logo-image-data.js?v=v2026-11-03T22592";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-03T23181";
+import { getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-03T23181";
+import { storagePathFromUrl } from "./image.js?v=v2026-11-03T23181";
+import { decodeImportedLogoImage } from "../../shared/js/core/logo-image-data.js?v=v2026-11-03T23181";
 
 
 /** Błąd „zasób zajęty” z RPC *_checked -- reason: logo (inna karta edytuje to logo)

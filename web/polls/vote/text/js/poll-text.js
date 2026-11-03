@@ -1,11 +1,11 @@
 // js/pages/poll-text.js
-import { sb } from "../../../../shared/js/core/supabase.js?v=v2026-11-03T22592";
-import { getUser } from "../../../../shared/js/core/auth.js?v=v2026-11-03T22592";
-import { initI18n, t, withLangParam } from "../../../../shared/translation/translation.js?v=v2026-11-03T22592";
-import { createPollVoteView, createPollVoteSession } from "../../../../shared/js/core/poll-vote-session.js?v=v2026-11-03T22592";
-import { showPollSubmitRetry } from "../../../../shared/js/core/poll-submit-retry.js?v=v2026-11-03T22592";
-import { ANSWER_MAX, clipChars, charLength, nfc } from "../../../../shared/js/core/answer-text.js?v=v2026-11-03T22592";
-import { initEntryPage } from "../../../../shared/js/core/page-init.js?v=v2026-11-03T22592";
+import { sb } from "../../../../shared/js/core/supabase.js?v=v2026-11-03T23181";
+import { getUser } from "../../../../shared/js/core/auth.js?v=v2026-11-03T23181";
+import { initI18n, t, withLangParam } from "../../../../shared/translation/translation.js?v=v2026-11-03T23181";
+import { createPollVoteView, createPollVoteSession } from "../../../../shared/js/core/poll-vote-session.js?v=v2026-11-03T23181";
+import { showPollSubmitRetry } from "../../../../shared/js/core/poll-submit-retry.js?v=v2026-11-03T23181";
+import { ANSWER_MAX, clipChars, charLength, nfc } from "../../../../shared/js/core/answer-text.js?v=v2026-11-03T23181";
+import { initEntryPage } from "../../../../shared/js/core/page-init.js?v=v2026-11-03T23181";
 
 // Podręcznik w nowej karcie (wpisane odpowiedzi zostają), bez ?ret= — adres niesie klucz ankiety.
 const i18nReady = initEntryPage("pollVoteText", { ready: initI18n({ withSwitcher: true }) }).then(() => {

@@ -25,6 +25,12 @@
 }
 
 @layer base {
+  /* Zmiana motywu: przenikanie całej strony (page-boot.js, View Transitions). */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: var(--dur-slow);
+    animation-timing-function: ease;
+  }
   html {
     min-height: 100dvh;
     background: var(--bg);

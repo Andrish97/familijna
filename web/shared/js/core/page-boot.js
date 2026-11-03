@@ -124,16 +124,27 @@
       if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:change", { detail: { theme, choice } }));
       return theme;
     };
+    // Zmiana w trakcie pracy: przenikanie starego i nowego wyglądu (View
+    // Transitions, decyzja 2026-11-03). Bez wsparcia przeglądarki albo przy
+    // „ogranicz ruch” — od razu. Pierwsze ustawienie (przed klatką) bez animacji.
+    const applyAnimated = () => {
+      const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      if (resolve() === root.dataset.theme || reduce || typeof document.startViewTransition !== "function" || document.visibilityState === "hidden") {
+        apply();
+        return;
+      }
+      document.startViewTransition(() => { apply(); });
+    };
     apply();
     // meta theme-color stoi w head po tym skrypcie — kolor po sparsowaniu.
     if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paintMeta, { once: true });
     if (locked) { globalThis.FamilijnaTheme = { getChoice: () => "dark", getTheme: () => "dark", setChoice() {}, CHOICES: THEME_CHOICES, locked: true }; return; }
-    media?.addEventListener?.("change", () => { if (choice === "auto") apply(); });
+    media?.addEventListener?.("change", () => { if (choice === "auto") applyAnimated(); });
     // Inna karta zmieniła wybór.
     window.addEventListener?.("storage", (event) => {
       if (event.key !== THEME_KEY) return;
       choice = readChoice();
-      apply();
+      applyAnimated();
       if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:choice", { detail: { choice } }));
     });
     globalThis.FamilijnaTheme = {
@@ -148,7 +159,7 @@
           if (next === "auto") localStorage.removeItem(THEME_KEY);
           else localStorage.setItem(THEME_KEY, next);
         } catch {}
-        apply();
+        applyAnimated();
         if (typeof CustomEvent === "function") window.dispatchEvent?.(new CustomEvent("theme:choice", { detail: { choice } }));
       },
     };

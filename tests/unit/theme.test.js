@@ -9,18 +9,19 @@ import vm from "node:vm";
 const read = (p) => fs.readFileSync(new URL("../../" + p, import.meta.url), "utf8");
 const BOOT = read("web/shared/js/core/page-boot.js");
 
-function boot({ systemLight = false, stored = null, locked = false } = {}) {
+function boot({ systemLight = false, stored = null, locked = false, viewTransition = false, reduceMotion = false } = {}) {
   const store = new Map(stored ? [["uiTheme", stored]] : []);
   const attrs = new Set(locked ? ["data-theme-lock"] : []);
   const root = { dataset: {}, hasAttribute: (k) => attrs.has(k), toggleAttribute() {}, setAttribute() {}, removeAttribute() {},
     classList: { contains: () => false, remove() {} } };
   const meta = { content: "", setAttribute(_k, v) { this.content = v; } };
-  const mediaListeners = [], events = [];
+  const mediaListeners = [], events = [], transitions = [];
   const media = { matches: systemLight, addEventListener: (_t, fn) => mediaListeners.push(fn) };
   const context = vm.createContext({
-    document: { documentElement: root, readyState: "complete", addEventListener() {}, querySelector: () => meta },
+    document: { documentElement: root, readyState: "complete", visibilityState: "visible", addEventListener() {}, querySelector: () => meta,
+      ...(viewTransition ? { startViewTransition: (fn) => { transitions.push(root.dataset.theme); fn(); } } : {}) },
     window: { innerWidth: 1440, innerHeight: 900, screen: { width: 1440, height: 900 },
-      matchMedia: (q) => (q.includes("prefers-color-scheme") ? media : { matches: false }),
+      matchMedia: (q) => (q.includes("prefers-color-scheme") ? media : { matches: q.includes("reduced-motion") ? reduceMotion : false }),
       addEventListener() {}, dispatchEvent: (e) => events.push(e.type) },
     navigator: { maxTouchPoints: 0, userAgent: "" },
     localStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, v), removeItem: (k) => store.delete(k) },
@@ -28,7 +29,7 @@ function boot({ systemLight = false, stored = null, locked = false } = {}) {
     MutationObserver: class { observe() {} disconnect() {} }, setTimeout() {}, clearTimeout() {},
   });
   vm.runInContext(BOOT, context);
-  return { root, meta, media, mediaListeners, events, store, theme: context.FamilijnaTheme };
+  return { root, meta, media, mediaListeners, events, store, transitions, theme: context.FamilijnaTheme };
 }
 
 test("Auto idzie za systemem, także po zmianie ustawień systemu", () => {
@@ -60,7 +61,7 @@ test("ekrany gry (data-theme-lock) zostają ciemne mimo jasnego systemu i wyboru
   const b = boot({ systemLight: true, stored: "light", locked: true });
   assert.equal(b.root.dataset.theme, "dark");
   assert.equal(b.theme.locked, true);
-  for (const page of ["web/snake/index.html", "web/connect/tv/index.html", "web/control/buzzer/index.html",
+  for (const page of ["web/snake/index.html", "web/control/buzzer/index.html",
     "web/control/host/index.html", "web/polls/vote/qr/index.html", "web/control/display/index.html"]) {
     assert.match(read(page), /<html[^>]*\bdata-theme-lock\b/, page);
   }
@@ -72,4 +73,26 @@ test("tokeny: jasny motyw nadpisuje podłoża, tekst i „biel” przezroczysto�
   for (const token of ["color-scheme: light", "--rgb-white:", "--bg:", "--surface-1:", "--surface-modal:", "--text:", "--accent:"]) {
     assert.ok(light.includes(token), token);
   }
+});
+
+test("strona TV idzie za motywem (decyzja 2026-11-03), ekrany gry zablokowane", () => {
+  assert.doesNotMatch(read("web/connect/tv/index.html"), /data-theme-lock/);
+  assert.doesNotMatch(read("web/connect/tv/css/tv.css"), /color-scheme:\s*dark/);
+});
+
+test("zmiana motywu przenika (View Transitions); start i „ogranicz ruch” bez animacji", () => {
+  const b = boot({ viewTransition: true });
+  assert.deepEqual(b.transitions, [], "pierwsze ustawienie przed klatką bez animacji");
+  b.theme.setChoice("light");
+  assert.deepEqual(b.transitions, ["dark"]);
+  assert.equal(b.root.dataset.theme, "light");
+  b.theme.setChoice("light");
+  assert.equal(b.transitions.length, 1, "ten sam motyw — bez przejścia");
+  b.media.matches = false;
+  b.theme.setChoice("auto");
+  assert.equal(b.transitions.length, 2, "auto przy ciemnym systemie: zmiana na ciemny");
+  const reduced = boot({ viewTransition: true, reduceMotion: true });
+  reduced.theme.setChoice("light");
+  assert.deepEqual(reduced.transitions, []);
+  assert.equal(reduced.root.dataset.theme, "light");
 });
