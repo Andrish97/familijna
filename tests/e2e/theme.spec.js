@@ -42,7 +42,8 @@ test("404 (flat.css) jest jasny, wąż (ekran gry) zostaje ciemny", async ({ pag
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   expect(await bg(page)).toBe("rgb(243, 240, 232)");
 
-  await page.goto(`${ORIGIN}/snake/?lang=pl`, { waitUntil: "domcontentloaded" });
+  // Bez ?qr= z kodu QR Worker podaje 404 (jasną) zamiast węża.
+  await page.goto(`${ORIGIN}/snake/?qr=00000000-0000-4000-8000-000000000103&lang=pl`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator('.theme-btn')).toHaveCount(0);
 });
