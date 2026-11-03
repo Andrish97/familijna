@@ -8,9 +8,19 @@ test.beforeEach(async ({ context }) => {
 const ua = "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36 TV Safari/537.36";
 test.use({ locale: "pl-PL", userAgent: ua, viewport: { width: 1920, height: 1080 } });
 test("TV: każda strona kieruje do samego kodu, bez logowania", async ({ page }, testInfo) => {
+  // [e2e-diag]: błędy strony i stan DOM, gdy pole kodu się nie pojawia.
+  page.on("pageerror", (e) => console.log(`[e2e-diag] pageerror ${e.message}`));
+  page.on("console", (m) => { if (m.type() === "error") console.log(`[e2e-diag] console ${m.text()}`); });
+  page.on("framenavigated", (f) => { if (f === page.mainFrame()) console.log(`[e2e-diag] nav ${new URL(f.url()).pathname}`); });
   for (const path of ["/", "/login/", "/games/", "/control/", "/control/", "/control/host/?id=x&key=y", "/control/buzzer/?id=x&key=y"]) {
     await page.goto(path, { waitUntil: "domcontentloaded" });
-    await expect(page.locator("#tvCode")).toBeVisible();
+    await expect(page.locator("#tvCode")).toBeVisible().catch(async (e) => {
+      const state = await page.evaluate(() => ({ path: location.pathname, theme: document.documentElement.dataset.theme,
+        cls: document.documentElement.className, attrs: [...document.documentElement.attributes].map((a) => a.name).join(","),
+        body: document.body?.className, ids: [...document.querySelectorAll("[id]")].slice(0, 25).map((n) => n.id).join(",") })).catch(() => null);
+      console.log(`[e2e-diag] brak #tvCode dla ${path}: ${JSON.stringify(state)}`);
+      throw e;
+    });
     await expect(page.locator("#tvCode")).toBeFocused();
     await expect(page.locator("body")).toHaveCSS("background-image", "none");
     await expect(page.locator("body")).toHaveCSS("background-color", "rgb(5, 9, 20)");
