@@ -48,6 +48,9 @@ test("serveBranchCode mapuje główną trasę / na index.html z brancha", () => 
 
 test("serveBranchCode mapuje zagnieżdżony edytor DRAW na jego własny index.html", () => {
   assert.equal(localFileFor("/logos/editor/draw/", ["logos"]), path.join(webRoot, "logos/editor/draw/index.html"));
+  // tv.spec: HTML strony (np. /connect/ dla telewizora) wybiera Worker, kod z brancha.
+  assert.equal(localFileFor("/connect/", [], { productionHtml: true }), null);
+  assert.equal(localFileFor("/shared/js/core/page-boot.js", [], { productionHtml: true }), path.join(webRoot, "shared/js/core/page-boot.js"));
 });
 
 test("serveBranchCode serwuje moduły manuala i polityki prywatności zamiast HTML strony", () => {

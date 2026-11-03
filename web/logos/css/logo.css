@@ -44,7 +44,6 @@
   .logoTile:hover{
     border-color: var(--accent);
     background: var(--surface-2);
-    box-shadow: 0 10px 24px var(--k-40);
   }
 
   .logoTileTop{

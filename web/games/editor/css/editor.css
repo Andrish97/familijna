@@ -230,7 +230,7 @@
           linear-gradient(var(--g-10), var(--g-10)),
           linear-gradient(var(--btn-tint), var(--btn-tint));
       background-color: var(--under, var(--bg));
-      box-shadow: 0 0 0 2px var(--g-60), 0 10px 22px var(--k-40);
+      box-shadow: 0 0 0 2px var(--g-60);
   }
 
   /* Okno importu: wspólne .overlay/.modal/.importRow/.importTa/.import-preview z silnika. */

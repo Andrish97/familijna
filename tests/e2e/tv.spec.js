@@ -3,7 +3,7 @@ const { serveBranchCode } = require("./helpers/branch-code");
 // Kod TV (JS/CSS) z brancha; HTML z produkcji (Worker podaje stronę TV dla UA telewizora).
 test.use({ serviceWorkers: "block" });
 test.beforeEach(async ({ context }) => {
-  if (process.env.GITHUB_REF_NAME !== "main" && process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: [] });
+  if (process.env.GITHUB_REF_NAME !== "main" && process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: [], productionHtml: true });
 });
 const ua = "Mozilla/5.0 (SMART-TV; LINUX; Tizen 6.0) AppleWebKit/537.36 TV Safari/537.36";
 test.use({ locale: "pl-PL", userAgent: ua, viewport: { width: 1920, height: 1080 } });

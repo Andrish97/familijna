@@ -2055,6 +2055,9 @@
     background: var(--bg);
     border-radius: var(--r-md);
     border: 1px solid var(--w-25);
+    /* Bez cienia karty: przewijana lista ucina go do prostokąta (widoczne
+       w jasnym motywie). Stan pokazuje obramowanie. */
+    box-shadow: none;
     padding: 14px 14px 12px;
     cursor: pointer;
     transition: transform var(--dur-fast) ease-out, box-shadow var(--dur-fast) ease-out, border-color var(--dur-fast) ease-out, background var(--dur-fast) ease-out;
@@ -2165,7 +2168,6 @@
   .grid .tile.not-ready:not(.selected) .name { color: var(--text-muted); }
   .grid .tile:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-lift);
     border-color: var(--accent);
     background: var(--surface-2);
   }
@@ -2629,7 +2631,7 @@
   }
   :is(tr, .row).is-selected { outline: 2px solid var(--g-60); outline-offset: -2px; }
   tr.is-selected > td { background-image: linear-gradient(var(--g-10), var(--g-10)); }
-  :is(.tile, .logoTile).is-selected { box-shadow: 0 0 0 2px var(--g-60), 0 10px 22px var(--k-40); }
+  :is(.tile, .logoTile).is-selected { box-shadow: 0 0 0 2px var(--g-60); }
 
   /* Karta pod wypustkami: róg prosty po stronie aktywnej skrajnej wypustki
      (wszystkie karty z wypustkami; bez :has w :has — przeglądarka by ją pominęła; warstwa states, bo strony ustawiają

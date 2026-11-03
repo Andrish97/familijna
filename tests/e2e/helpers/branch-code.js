@@ -32,7 +32,7 @@ const MIME = {
   ".png": "image/png",
 };
 
-function localFileFor(pathname, pages) {
+function localFileFor(pathname, pages, { productionHtml = false } = {}) {
   const rel = decodeURIComponent(pathname).replace(/^\/+/, "");
   if (rel === "404.html" && pages.includes("404")) return path.join(REPO_ROOT, "404.html");
   // Strona główna jest serwowana pod "/", a nie "/index". Bez tego
@@ -58,6 +58,9 @@ function localFileFor(pathname, pages) {
     if (abs.startsWith(REPO_ROOT + path.sep) && fs.existsSync(abs) && fs.statSync(abs).isFile()) return abs;
     // Nested page folders such as /logos/editor/draw/ have their own
     // index.html. Resolve that before the SPA fallback to /logos/index.html.
+    // productionHtml: HTML stron zawsze z produkcji (Worker wybiera stronę po
+    // UA, np. /connect/ dla telewizora to strona TV) — tv.spec.
+    if (productionHtml) return null;
     const nestedIndex = path.join(REPO_ROOT, rel, "index.html");
     if (nestedIndex.startsWith(REPO_ROOT + path.sep) && fs.existsSync(nestedIndex) && fs.statSync(nestedIndex).isFile()) return nestedIndex;
   }
@@ -86,9 +89,10 @@ function branchI18nParts() {
 
 /**
  * @param {import('@playwright/test').BrowserContext} context
- * @param {{ pages: string[] }} opts  np. { pages: ["bases"] } -> /bases z repo
+ * @param {{ pages: string[], productionHtml?: boolean }} opts  np. { pages: ["bases"] } -> /bases z repo;
+ *   productionHtml: katalogi stron (…/) bez index.html z repo — HTML wybiera Worker
  */
-async function serveBranchCode(context, { pages, safeAreaInsets = null }) {
+async function serveBranchCode(context, { pages, safeAreaInsets = null, productionHtml = false }) {
   if (context) context.__e2eBranchRouted = true;
   if (safeAreaInsets) {
     await context.addInitScript((insets) => {
@@ -125,7 +129,7 @@ async function serveBranchCode(context, { pages, safeAreaInsets = null }) {
   }, branchI18nParts());
   await context.route(`${PROD_ORIGIN}/**`, async (route) => {
     const url = new URL(route.request().url());
-    const file = localFileFor(url.pathname, pages);
+    const file = localFileFor(url.pathname, pages, { productionHtml });
     // Pozwól kolejnym handlerom Playwrighta dodać np. kontrolowany bypass
     // konserwacji dla testu; bez nich fallback zachowuje zwykłe żądanie sieciowe.
     if (!file) {
