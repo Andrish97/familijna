@@ -2587,8 +2587,13 @@
   /* Wygaszona krawędź przewijanych list (scroll-fade.js): element pod
      krawędzią zanika na 32 px, tylko gdy za krawędzią coś jest. Ramka
      listy zostaje cała — zanika tylko treść (maska exclude). */
+  /* Krawędź pojawia się i znika płynnie: stopnie maski jako zarejestrowane
+     kolory, więc przeglądarka przechodzi między nimi (bez @property — od razu). */
+  @property --sf-a { syntax: "<color>"; inherits: false; initial-value: transparent; }
+  @property --sf-b { syntax: "<color>"; inherits: false; initial-value: transparent; }
   .scroll-fade.has-more-above,
   .scroll-fade.has-more-below {
+    transition: --sf-a var(--dur-slow) var(--ease-out), --sf-b var(--dur-slow) var(--ease-out);
     --sf-size: var(--scroll-fade-size, 32px);
     --sf-top: var(--scroll-fade-top, 0px);
     mask-image:
@@ -3613,6 +3618,7 @@
     align-self: stretch;
     pointer-events: none;
     opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
   }
   .list-toolbar.is-scroll::before {
     order: -1;
