@@ -7,7 +7,7 @@ w starym systemie `mail.com` wycinało wszystkie adresy `@gmail.com`.
 
 import html
 import re
-from urllib.parse import urlparse
+from urllib.parse import unquote, urlparse
 
 from .config import load_lines
 
@@ -119,6 +119,40 @@ def has_keyword(text, keywords):
     return next((k for k in keywords if k in low), None)
 
 
+# Adres wpisu na blogu, poradnika lub aktualności — opis wyniku mówi wtedy o temacie
+# artykułu, nie o firmie (np. restauracja oceniona po poradniku o komunii).
+_ARTICLE_SEGMENT_RE = re.compile(
+    r'(^|[/_-])(blog|blogi|poradnik|poradniki|porady|artykul|artykuly|artykuł|artykuły|aktualnosci|aktualności|'
+    r'nowosc|nowości|nowosci|news|wpis|wpisy|post|posts)([/_.-]|$)')
+_ARTICLE_SLUG_RE = re.compile(r'(^|[/_-])(jak-|ile-kosztuj|co-warto|pomysly-na|pomysły-na|top-\d+)')
+_DATE_PATH_RE = re.compile(r'/20\d{2}/\d{1,2}(/|$)')
+
+
+def article_reason(url):
+    """Powód, gdy adres wygląda na artykuł/poradnik, albo None."""
+    try:
+        path = unquote(urlparse(url).path or '').lower()
+    except ValueError:
+        return None
+    if not path or path == '/':
+        return None
+    if _ARTICLE_SEGMENT_RE.search(path) or _ARTICLE_SLUG_RE.search(path) or _DATE_PATH_RE.search(path):
+        return 'artykuł/poradnik, nie strona firmy'
+    return None
+
+
+def _norm_quote(text):
+    t = html.unescape(str(text or '')).lower()
+    t = re.sub(r'[„”“"«»…]+|\.\.\.', ' ', t)
+    return ' '.join(t.split())
+
+
+def quote_in(quote, text, min_len=12):
+    """Czy cytat od AI (co najmniej min_len znaków) naprawdę stoi w tekście kandydata."""
+    q = _norm_quote(quote)
+    return len(q) >= min_len and q in _norm_quote(text)
+
+
 def rule_reason(url='', name='', snippet='', emails=()):
     """Odsiew przed AI. Zwraca powód albo None, gdy kandydat przechodzi."""
     domain = url_domain(url) if url else ''
@@ -126,6 +160,9 @@ def rule_reason(url='', name='', snippet='', emails=()):
         return 'plik, nie strona'
     if domain and domain_in(domain, BLOCKED_DOMAINS):
         return f'domena zablokowana ({domain})'
+    article = article_reason(url) if url else None
+    if article:
+        return article
     kw = has_keyword(f'{name} {snippet}', NEGATIVE_KEYWORDS)
     if kw:
         return f'słowo wykluczające ({kw})'

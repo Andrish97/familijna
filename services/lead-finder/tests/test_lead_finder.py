@@ -42,6 +42,32 @@ class FiltersTest(unittest.TestCase):
         self.assertIsNone(filters.best_email(['noreply@djmax.pl'], 'djmax.pl'))
 
 
+class ArticleAndVenueTest(unittest.TestCase):
+    """Poradnik na stronie restauracji nie jest leadem; lokal tylko z cytatem o rozrywce."""
+
+    def test_article_urls(self):
+        for url in ('https://www.restauracja3v6.pl/nowosc_jak-wybrac-lokal-na-komunie-w-bydgoszczy-praktyczny-poradnik-dla',
+                    'https://dj.pl/blog/wesele-2026', 'https://sala.pl/2025/04/wesele-u-nas', 'https://x.pl/porady/muzyka',
+                    'https://x.pl/aktualnosci/komunie', 'https://x.pl/ile-kosztuje-dj-na-wesele'):
+            self.assertEqual(filters.article_reason(url), 'artykuł/poradnik, nie strona firmy', url)
+            self.assertEqual(filters.rule_reason(url, 'Firma', '', ['a@x.pl']), 'artykuł/poradnik, nie strona firmy')
+        for url in ('https://djmax.pl/', 'https://djmax.pl/oferta', 'https://wodzirej.pl/kontakt',
+                    'https://animatorka-ola.pl/animacje-dla-dzieci-na-komunie', 'https://djmax.pl'):
+            self.assertIsNone(filters.article_reason(url), url)
+
+    def test_quote_in(self):
+        text = 'Sala bankietowa. W cenie animator dla dzieci i wodzirej!'
+        self.assertTrue(filters.quote_in('„w cenie animator dla dzieci”', text))
+        self.assertFalse(filters.quote_in('własny DJ i konkursy', text))  # zmyślone
+        self.assertFalse(filters.quote_in('animator', text))  # za krótkie
+
+    def test_parse_venue(self):
+        res = classify.parse_results(json.dumps({'results': [
+            {'id': 'c1', 'ok': 1, 'venue': 1, 'evidence': ' w cenie  animator ', 'reason': 'lokal z animatorem'},
+            {'id': 'c2', 'ok': 1, 'reason': 'DJ'}]}), ['c1', 'c2'])
+        self.assertEqual((res['c1']['venue'], res['c1']['evidence'], res['c2']['venue']), (True, 'w cenie animator', False))
+
+
 class SourcesTest(unittest.TestCase):
     def test_search_uses_searxng_engine_settings(self):
         class Client:
@@ -238,6 +264,22 @@ class PipelineTest(unittest.TestCase):
     def cand(self, ref, name, domain, emails, source='search', cat='k1'):
         return {'source': source, 'source_ref': ref, 'name': name, 'url': f'https://{domain}', 'domain': domain,
                 'emails': emails, 'snippet': '', 'category_id': cat}
+
+    def test_venue_needs_real_quote(self):
+        db, e = self.db, self.engine
+        run(e.load_known())
+        run(e.admit({**self.cand('https://sala-a.pl', 'Sala A', 'sala-a.pl', ['a@sala-a.pl']), 'snippet': 'Przyjęcia komunijne, catering.'}))
+        run(e.admit({**self.cand('https://sala-b.pl', 'Sala B', 'sala-b.pl', ['b@sala-b.pl']), 'snippet': 'Wesela z naszym wodzirejem w cenie.'}))
+
+        class VenueAi:
+            async def classify(self, items, category):
+                return {i['id']: {'ok': True, 'venue': True, 'title': i['name'], 'short_description': '', 'reason': 'lokal',
+                                  'evidence': 'własny wodzirej i konkursy' if i['name'] == 'Sala A' else 'z naszym wodzirejem w cenie'}
+                        for i in items}
+        run(e.classify_once(VenueAi(), CAT))
+        self.assertEqual([v['email'] for v in db.tables['marketing_verified_contacts']], ['b@sala-b.pl'])
+        a = next(c for c in db.tables['marketing_candidates'] if c['source_ref'] == 'https://sala-a.pl')
+        self.assertEqual((a['status'], a['reject_reason']), ('rejected', 'lokal bez potwierdzonej rozrywki dla gości'))
 
     def test_admit_and_classify_with_category(self):
         db, e = self.db, self.engine

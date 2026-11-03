@@ -1,18 +1,18 @@
 // js/pages/connect-device.js
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-02T17000";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-02T17000";
-import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-02T17000";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-02T17000";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-02T17000";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-02T17000";
-import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-02T17000";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-02T17000";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-02T17000";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-02T17000";
-import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-02T17000";
-import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-02T17000";
-import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-02T17000";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-03T22180";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-03T22180";
+import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-03T22180";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-03T22180";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-03T22180";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-03T22180";
+import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-03T22180";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-03T22180";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-03T22180";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-03T22180";
+import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-03T22180";
+import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-03T22180";
+import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-03T22180";
 
 
 const btnManual           = document.getElementById("btnManual");
@@ -184,7 +184,7 @@ async function loadJsQR() {
   if (window.jsQR) return;
   await new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-02T17000";
+    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-03T22180";
     s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });

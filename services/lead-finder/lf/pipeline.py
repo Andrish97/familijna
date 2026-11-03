@@ -309,6 +309,10 @@ class Engine:
                                      {'status': 'rejected', 'reject_reason': 'brak oceny AI'} if n >= 3 else {'status': 'new'},
                                      {'id': f'eq.{c["id"]}'})
                 continue
+            if res['ok'] and res.get('venue') and not filters.quote_in(
+                    res.get('evidence'), f'{c.get("name") or ""} {c.get("snippet") or ""}'):
+                # Lokal bez prawdziwego cytatu o własnej rozrywce (model zgadł albo zmyślił).
+                res = {**res, 'ok': False, 'reason': 'lokal bez potwierdzonej rozrywki dla gości'}
             if not res['ok']:
                 self.stats['ai_rejected'] += 1
                 await self.db.update('marketing_candidates', {'status': 'rejected', 'reject_reason': res['reason']},
