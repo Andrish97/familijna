@@ -59,7 +59,7 @@ function runPage(storageInit, href) {
   };
   const location = { pathname: u.pathname, search: u.search, hash: u.hash, replace: (x) => { replaced = x; } };
   const html = handoffPage("https://www.familijna.app", "https://www.familijna.app" + u.pathname + u.search);
-  const script = html.match(/<script>([\s\S]*)<\/script>/)[1];
+  const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].at(-1)[1];
   vm.runInNewContext(script, { localStorage, location, btoa, unescape, encodeURIComponent, JSON });
   return { replaced, store };
 }
@@ -89,4 +89,12 @@ test("http:// i narzędzia Google dostają 301 także w fazie przenosin", async 
   assert.equal(head.status, 301);
   const browser = await handle(new Request("https://familiada.online/", { headers: html }), env);
   assert.equal(browser.status, 200);
+});
+
+test("wygląd strony przenosin: logo, napis, przycisk, zapasowe odświeżenie", () => {
+  const html = handoffPage("https://www.familijna.app", "https://www.familijna.app/games/?a=1");
+  assert.match(html, /<svg class="logo"/);
+  assert.match(html, /Przenosimy Cię na nowy adres/);
+  assert.match(html, /<a class="btn" id="b" href="https:\/\/www.familijna.app\/games\/\?a=1">Przejdź teraz<\/a>/);
+  assert.match(html, /<meta http-equiv="refresh" content="3;url=https:\/\/www.familijna.app\/games\/\?a=1">/);
 });

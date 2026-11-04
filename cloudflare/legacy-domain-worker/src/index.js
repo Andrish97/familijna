@@ -36,9 +36,54 @@ const HTML_HEADERS = {
   "Referrer-Policy": "no-referrer",
 };
 
+// Wygląd wspólny dla strony przenosin i strony końcowej: tło i kolory aplikacji,
+// logo (ten sam rysunek co web/assets/img/familijna-icon.svg), napis w języku
+// użytkownika (zapisany uiLang albo język przeglądarki), przycisk przejścia.
+const LOGO = `<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="100" fill="#0f0f0f"/><g fill="#e5f34f"><circle cx="160" cy="116" r="28"/><circle cx="209" cy="116" r="28"/><circle cx="258" cy="116" r="28"/><circle cx="307" cy="116" r="28"/><circle cx="356" cy="116" r="28"/><circle cx="160" cy="165" r="28"/><circle cx="160" cy="214" r="28"/><circle cx="160" cy="263" r="28"/><circle cx="209" cy="263" r="28"/><circle cx="258" cy="263" r="28"/><circle cx="307" cy="263" r="28"/><circle cx="160" cy="312" r="28"/><circle cx="160" cy="361" r="28"/><circle cx="160" cy="410" r="28"/></g></svg>`;
+
+const TEXTS = {
+  pl: { moving: "Przenosimy Cię na nowy adres", moved: "Familijna działa pod nowym adresem", go: "Przejdź teraz" },
+  en: { moving: "Taking you to our new address", moved: "Familijna has moved to a new address", go: "Go now" },
+  uk: { moving: "Переносимо вас на нову адресу", moved: "Familijna працює за новою адресою", go: "Перейти зараз" },
+};
+
+const STYLE = `:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px;
+background:radial-gradient(120% 80% at 50% 0%,#14203d 0%,#050914 60%) #050914;color:#f4f6fb;
+font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center}
+main{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.logo{width:88px;height:88px;border-radius:22px;box-shadow:0 10px 40px rgba(229,243,79,.18)}
+h1{margin:10px 0 0;font-size:22px;font-weight:600;line-height:1.3}
+.addr{margin:0;font-size:18px;font-weight:700;letter-spacing:.02em;color:#e5f34f}
+.bar{width:180px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;width:40%;height:100%;border-radius:2px;background:#e5f34f;animation:slide 1.1s ease-in-out infinite}
+@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@media (prefers-reduced-motion:reduce){.bar i{animation:none;width:100%}}
+.btn{margin-top:8px;display:inline-block;padding:12px 22px;border-radius:12px;background:#e5f34f;color:#0b1020;
+font-weight:700;text-decoration:none}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}`;
+
+function langScript(key) {
+  // Podmienia teksty na język użytkownika; bez JS zostaje polski.
+  return `(function(){try{var T=${JSON.stringify(TEXTS)},l="";try{l=localStorage.getItem("uiLang")||"";}catch(e){}
+l=(l||navigator.language||"pl").slice(0,2).toLowerCase();
+if(l==="ua")l="uk";var t=T[l];if(!t||l==="pl")return;document.documentElement.lang=l;
+document.getElementById("t").textContent=t.${key};document.getElementById("b").textContent=t.go;}catch(e){}})();`;
+}
+
+function page({ title, key, href, extraHead = "", bar = false, script = "" }) {
+  const t = TEXTS.pl;
+  return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050914"><title>${title}</title>${extraHead}<style>${STYLE}</style></head>
+<body><main>${LOGO}<h1 id="t">${t[key]}</h1><p class="addr">familijna.app</p>${bar ? '<div class="bar" aria-hidden="true"><i></i></div>' : ""}
+<a class="btn" id="b" href="${href}">${t.go}</a></main><script>${langScript(key)}</script>${script ? `<script>${script}</script>` : ""}</body></html>`;
+}
+
 // Strona przenosin. Bez localStorage od razu przejście; po przeniesieniu znacznik
 // `fam:handoff:done`, żeby kolejne wejście (np. po wylogowaniu na nowej domenie)
 // nie przenosiło starej sesji drugi raz. Duża paczka → tylko najważniejsze klucze.
+// Odświeżenie po 3 s to zabezpieczenie, gdy skrypt nie zadziała (np. zablokowany):
+// wtedy przejście bez przenoszenia sesji zamiast pustej strony.
 export function handoffPage(origin, target) {
   const script = `(function(){var O=${JSON.stringify(origin)},T=O+location.pathname+location.search;
 try{var s=localStorage;if(s.getItem("fam:handoff:done")!=="1"){var it={},n=0;
@@ -49,19 +94,18 @@ var b=btoa(unescape(encodeURIComponent(j))).replace(/\\+/g,"-").replace(/\\//g,"
 s.setItem("fam:handoff:done","1");location.replace(T+"#fam-handoff="+b);return;}}}catch(e){}
 location.replace(T+location.hash);})();`;
   const href = escapeHtml(target);
-  return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Familijna</title><noscript><meta http-equiv="refresh" content="0;url=${href}"></noscript>
-<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#fff;font:16px system-ui,sans-serif}a{color:#ffeaa6}</style></head>
-<body><p><a href="${href}">familijna.app</a></p><script>${script}</script></body></html>`;
+  return page({
+    title: "Familijna — familijna.app",
+    key: "moving",
+    href,
+    bar: true,
+    extraHead: `<meta http-equiv="refresh" content="3;url=${href}">`,
+    script,
+  });
 }
 
 export function gonePage(origin) {
-  const href = escapeHtml(origin + "/");
-  return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Familijna</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#fff;font:18px/1.6 system-ui,sans-serif;text-align:center}a{color:#ffeaa6}p{margin:.4em 16px}</style></head>
-<body><main><p>Serwis działa pod adresem <a href="${href}">familijna.app</a>.</p>
-<p lang="en">The service has moved to <a href="${href}">familijna.app</a>.</p>
-<p lang="uk">Сервіс працює за адресою <a href="${href}">familijna.app</a>.</p></main></body></html>`;
+  return page({ title: "Familijna — familijna.app", key: "moved", href: escapeHtml(origin + "/") });
 }
 
 function wantsHtmlPage(request) {
