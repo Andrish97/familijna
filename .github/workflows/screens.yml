@@ -54,7 +54,7 @@ concurrency:
 jobs:
   screens:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 150
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -233,7 +233,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "Refresh help screenshots [skip ci]" -m "Rendered-From: $RENDERED"
           for attempt in 1 2 3 4 5; do
-            git pull --rebase origin main && git push origin HEAD:main && break
+            git fetch origin main
+            if ! git rebase origin/main; then
+              # Konflikt w wygenerowanej treści (np. ?v= z „update version hashes”):
+              # treść z main i od nowa z nowych zrzutów — zrzuty (img) zostają.
+              git checkout origin/main -- web/manual/content
+              node scripts/manual/build-content.mjs
+              git add web/manual/content
+              if git diff --name-only --diff-filter=U | grep -q .; then git rebase --abort; exit 1; fi
+              GIT_EDITOR=true git rebase --continue || { git rebase --abort; exit 1; }
+            fi
+            git push origin HEAD:main && break
             [ "$attempt" = 5 ] && exit 1
             sleep $((attempt * 5))
           done
