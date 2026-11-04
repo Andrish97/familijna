@@ -1096,7 +1096,15 @@ async function main() {
   const shareDevice = createShareDevice({
     currentUser: user,
     game,
-    onBadgesChanged: (badges) => { shareBadges = badges; renderCurrent(); },
+    // Przerysowanie tylko przy zmianie liczb: pełne renderCurrent() zastępuje
+    // wiersze urządzeń, a kliknięcie trafiające w tę chwilę ginęło (zwykle
+    // przychodzą same zera zaraz po wejściu).
+    onBadgesChanged: (badges) => {
+      const kinds = new Set([...Object.keys(shareBadges), ...Object.keys(badges)]);
+      const changed = [...kinds].some((kind) => (Number(shareBadges[kind]) || 0) !== (Number(badges[kind]) || 0));
+      shareBadges = badges;
+      if (changed) renderCurrent();
+    },
   });
   shareDevice.refreshBadges();
 
