@@ -1,18 +1,18 @@
-import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-04T18552";
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-04T19500";
 // base-explorerjs/render.js
 // Rysowanie menedżera bazy z magazynu (state.store / state.d) i jednego
 // modelu „co pokazać” (data/listing.js). Bez bazy i bez akcji. Zmiana samego
 // zaznaczenia przełącza tylko klasy (renderSelection), bez przebudowy.
 
-import { TYPE_DEFS, isTrash, currentFolderId, hasQuery } from "./state.js?v=v2026-11-04T18552";
-import { computeListing } from "./data/listing.js?v=v2026-11-04T18552";
-import { SUGGESTED_TYPES } from "./data/derived.js?v=v2026-11-04T18552";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-04T18552";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-04T18552";
-import { toolbarButtonsHtml, updateToolbarButtons } from "./ui/toolbar.js?v=v2026-11-04T18552";
-import { treeToggleHtml, treeIconName, treeRowInner, treeLines } from "./ui/tree-row.js?v=v2026-11-04T18552";
-import { emptyStateHtml } from "../../../shared/js/core/empty-state.js?v=v2026-11-04T18552";
-import { setWidth, widthAttr } from "../../../shared/js/core/geometry.js?v=v2026-11-04T18552";
+import { TYPE_DEFS, isTrash, currentFolderId, hasQuery } from "./state.js?v=v2026-11-04T19500";
+import { computeListing } from "./data/listing.js?v=v2026-11-04T19500";
+import { SUGGESTED_TYPES } from "./data/derived.js?v=v2026-11-04T19500";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-04T19500";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-04T19500";
+import { toolbarButtonsHtml, updateToolbarButtons } from "./ui/toolbar.js?v=v2026-11-04T19500";
+import { treeToggleHtml, treeIconName, treeRowInner, treeLines } from "./ui/tree-row.js?v=v2026-11-04T19500";
+import { emptyStateHtml } from "../../../shared/js/core/empty-state.js?v=v2026-11-04T19500";
+import { setWidth, widthAttr } from "../../../shared/js/core/geometry.js?v=v2026-11-04T19500";
 
 /* ================= DOM ================= */
 const elToolbar = document.getElementById("toolbar");
