@@ -5,6 +5,7 @@ const path = require('node:path');
 const { createRequire } = require('node:module');
 const { transform } = createRequire(path.join(__dirname, '../tests/package.json'))('esbuild');
 const { contentHashAssets } = require('./content-hash-assets.cjs');
+const { addModulePreloads } = require('./module-preload.cjs');
 const TEXT_EXT = new Set(['.html', '.js', '.css', '.json', '.webmanifest', '.svg', '.xml']);
 const stableVersions = source => source.replace(/\?v=[a-zA-Z0-9T:-]+/g, '?v=vASSET');
 
@@ -43,6 +44,7 @@ async function buildPublic({ source = path.join(__dirname, '../web'), out = path
     }
   }
   await copy(source);
+  totals.preload = await addModulePreloads(out);
   await fs.writeFile(marker, JSON.stringify({ format: 1, totals }, null, 2) + '\n');
   totals.hashes = contentHashAssets(out);
   return totals;

@@ -32,7 +32,15 @@ for (const p of paths) {
   const url = new URL(p, ORIGIN).href;
   for (const device of ["mobile", "desktop"]) {
     const reports = [];
-    for (let i = 0; i < runs; i++) reports.push(runOnce(url, device, i));
+    // Pojedynczy błąd Lighthouse (np. NO_FCP) nie przerywa całego pomiaru:
+    // jedna powtórka, potem przebieg pominięty (2026-11-04).
+    for (let i = 0; i < runs; i++) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        try { reports.push(runOnce(url, device, i)); break; }
+        catch (error) { console.log(`::warning title=Lighthouse ${device} ${p}::przebieg ${i + 1} próba ${attempt + 1}: ${String(error.message).split("\n")[0]}`); }
+      }
+    }
+    if (!reports.length) { process.exitCode = 1; continue; }
     reports.sort((a, b) => a.categories.performance.score - b.categories.performance.score);
     const lhr = reports[Math.floor(reports.length / 2)];
     const scores = reports.map((r) => Math.round(r.categories.performance.score * 100));
