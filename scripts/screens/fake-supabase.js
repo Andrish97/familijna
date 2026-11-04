@@ -14,7 +14,16 @@
   const miss = (kind, name) => { const key = `${kind}:${name}`; if (!misses.includes(key)) misses.push(key); };
   const clone = (v) => (v === undefined ? v : JSON.parse(JSON.stringify(v)));
   // db.latency (ms): opóźnienie odpowiedzi tabel i RPC -- podgląd stopniowego ładowania.
-  const respond = (v) => (db.latency ? new Promise((resolve) => setTimeout(() => resolve(v), db.latency)) : Promise.resolve(v));
+  // window.__SCREENS_TRACE__: każde zapytanie { name, start, end } (ms od startu strony) -- pomiar
+  // rund zapytań przy db.latency (scripts/screens/perf.cjs). getUser to w Supabase zapytanie do serwera.
+  const trace = (window.__SCREENS_TRACE__ = []);
+  const now = () => (globalThis.performance ? performance.now() : Date.now());
+  const respond = (v, name = "?") => {
+    const entry = { name, start: now(), end: null };
+    trace.push(entry);
+    const done = () => { entry.end = now(); return v; };
+    return db.latency ? new Promise((resolve) => setTimeout(() => resolve(done()), db.latency)) : Promise.resolve(done());
+  };
   let seq = 0;
   const newId = () => `00000000-0000-4000-9000-${String(++seq).padStart(12, "0")}`;
 
@@ -168,9 +177,9 @@
       let data = state.head ? null : rows;
       if (state.single) {
         data = rows?.[0] ?? null;
-        if (!data && state.single === "single") return respond({ data: null, error: { code: "PGRST116", message: "JSON object requested, multiple (or no) rows returned" }, count: null, status: 406 });
+        if (!data && state.single === "single") return respond({ data: null, error: { code: "PGRST116", message: "JSON object requested, multiple (or no) rows returned" }, count: null, status: 406 }, `${state.mode} ${table}`);
       }
-      return respond({ data, error: null, count: state.count ? total : null, status: 200 });
+      return respond({ data, error: null, count: state.count ? total : null, status: 200 }, `${state.mode} ${table}`);
     }
     return api;
   }
@@ -188,14 +197,14 @@
       const v = db.rpc[name];
       data = typeof v === "string" && v.startsWith("fn:") ? (0, eval)(`(${v.slice(3)})`)(args || {}, db) : clone(v);
     } else miss("rpc", name);
-    return chainable(respond({ data, error: null, status: 200 }));
+    return chainable(respond({ data, error: null, status: 200 }, `rpc ${name}`));
   }
 
   const channel = () => { const c = { on: () => c, subscribe: (cb) => { try { cb?.("SUBSCRIBED"); } catch {} return c; }, unsubscribe: async () => "ok", send: async () => "ok", track: async () => "ok", untrack: async () => "ok", presenceState: () => ({}) }; return c; };
   const client = {
     auth: {
       getSession: async () => ({ data: { session }, error: null }),
-      getUser: async () => (user ? { data: { user }, error: null } : { data: { user: null }, error: { name: "AuthSessionMissingError", message: "Auth session missing!" } }),
+      getUser: () => respond(user ? { data: { user }, error: null } : { data: { user: null }, error: { name: "AuthSessionMissingError", message: "Auth session missing!" } }, "auth getUser"),
       onAuthStateChange: (cb) => { setTimeout(() => { try { cb?.("INITIAL_SESSION", session); } catch {} }, 0); return { data: { subscription: { unsubscribe() {} } } }; },
       signOut: async () => ({ error: null }),
       refreshSession: async () => ({ data: { session, user }, error: user ? null : { message: "Auth session missing!" } }),
@@ -217,8 +226,8 @@
     }) },
     functions: { invoke: async (name) => {
       // Odpowiedź funkcji Edge z danych sceny (db.functions), inaczej zgłoszenie braku.
-      if (db.functions && Object.prototype.hasOwnProperty.call(db.functions, name)) return { data: db.functions[name], error: null };
-      miss("function", name); return { data: { ok: true }, error: null };
+      if (db.functions && Object.prototype.hasOwnProperty.call(db.functions, name)) return respond({ data: db.functions[name], error: null }, `function ${name}`);
+      miss("function", name); return respond({ data: { ok: true }, error: null }, `function ${name}`);
     } },
   };
   window.supabase = { createClient: () => client };

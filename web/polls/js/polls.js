@@ -6,28 +6,28 @@
 //   B. Karty Udostępnianie · Wyniki. Wyniki są jedne dla wszystkich stanów:
 //      na żywo, zatrzymane (surowe), podliczanie (poll-tally.js), ostateczne.
 // Stany gry: draft -> poll_open <-> poll_stopped -> ready (migracja 315).
-import { shareSectionEl, shareRowEl, shareCooldownEl, shareBulkActionsEl } from "../../shared/js/core/share-sections.js?v=v2026-11-04T21104";
-import { anonymousPollLink } from "../../shared/js/core/poll-links.js?v=v2026-11-04T21104";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T21104";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-04T21104";
-import { holdSkeletonLayout } from "../../shared/js/core/page-layout.js?v=v2026-11-04T21104";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T21104";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-04T21104";
-import { qrDataUrl } from "../../shared/js/core/qr-code.js?v=v2026-11-04T21104";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-04T21104";
-import { backHref, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-04T21104";
-import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-04T21104";
-import { guardResourceLock } from "../../shared/js/core/resource-lock.js?v=v2026-11-04T21104";
-import { validateGame, gameRuleErrorMessage, guardGameState } from "../../shared/js/core/game-validate.js?v=v2026-11-04T21104";
-import { sendPollInviteMails } from "../../shared/js/core/poll-mail.js?v=v2026-11-04T21104";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-04T21104";
-import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-04T21104";
-import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-04T21104";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-04T21104";
-import { toast, hideToast } from "../../shared/js/core/toast.js?v=v2026-11-04T21104";
-import { createTally } from "./poll-tally.js?v=v2026-11-04T21104";
+import { shareSectionEl, shareRowEl, shareCooldownEl, shareBulkActionsEl } from "../../shared/js/core/share-sections.js?v=v2026-11-04T23474";
+import { anonymousPollLink } from "../../shared/js/core/poll-links.js?v=v2026-11-04T23474";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T23474";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-04T23474";
+import { holdSkeletonLayout } from "../../shared/js/core/page-layout.js?v=v2026-11-04T23474";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T23474";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-04T23474";
+import { qrDataUrl } from "../../shared/js/core/qr-code.js?v=v2026-11-04T23474";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-04T23474";
+import { backHref, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-04T23474";
+import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-04T23474";
+import { guardResourceLock } from "../../shared/js/core/resource-lock.js?v=v2026-11-04T23474";
+import { validateGame, gameRuleErrorMessage, guardGameState } from "../../shared/js/core/game-validate.js?v=v2026-11-04T23474";
+import { sendPollInviteMails } from "../../shared/js/core/poll-mail.js?v=v2026-11-04T23474";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-04T23474";
+import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-04T23474";
+import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-04T23474";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-04T23474";
+import { toast, hideToast } from "../../shared/js/core/toast.js?v=v2026-11-04T23474";
+import { createTally } from "./poll-tally.js?v=v2026-11-04T23474";
 
-import { createCooldownTicker } from "../../shared/js/core/cooldown.js?v=v2026-11-04T21104";
+import { createCooldownTicker } from "../../shared/js/core/cooldown.js?v=v2026-11-04T23474";
 
 // initI18n is called at the start of DOMContentLoaded (see below)
 
@@ -328,7 +328,12 @@ function pollLink(g) {
    DB helpers
 ======================= */
 
+// Pierwsze wczytanie gry startuje razem z sesją i blokadą (wejście na
+// stronę); pierwsze refresh() bierze ten wynik zamiast nowego zapytania.
+let prefetchedGame = null;
+
 async function loadGame() {
+  if (prefetchedGame) { const p = prefetchedGame; prefetchedGame = null; return p; }
   const { data, error } = await sb()
     .from("games")
     .select("id,name,type,status,share_key_poll,poll_opened_at,poll_closed_at")
@@ -1265,6 +1270,7 @@ async function runStateAction(fn) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   const i18nP = initI18n({ withSwitcher: true });
+  if (gameId) { prefetchedGame = loadGame(); prefetchedGame.catch(() => {}); }
   // Poprawki podliczania zapisują się same (szkic w bazie); przed wyjściem
   // tylko dopychamy ostatni zapis.
   const userP = initPage("polls", {

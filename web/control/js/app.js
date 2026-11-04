@@ -1,4 +1,4 @@
-import { createRenderCompletionGate } from "../../shared/js/gameplay/renderCompletion.js?v=v2026-11-04T21104";
+import { createRenderCompletionGate } from "../../shared/js/gameplay/renderCompletion.js?v=v2026-11-04T23474";
 
 // control/js/app.js
 // Punkt wejścia Control v2 — spina store/engine/devices/presence/
@@ -8,20 +8,20 @@ import { createRenderCompletionGate } from "../../shared/js/gameplay/renderCompl
 // engine.js) — ale i tak przechodzi przez assertTransition(), żeby tabela
 // stanów była mechanizmem wszędzie, nie tylko wewnątrz silnika reguł gry.
 
-import { guardResourceLocks } from "../../shared/js/core/resource-lock.js?v=v2026-11-04T21104";
-import { openDialog, closeDialog } from "../../shared/js/core/modal-sheet.js?v=v2026-11-04T21104";
-import { initI18n, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-04T21104";
-import { backHref, linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-04T21104";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T21104";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T21104";
-import { loadQuestions, loadAnswers, guardGameState } from "../../shared/js/core/game-validate.js?v=v2026-11-04T21104";
-import { loadSfxManifest, initSfx, setCurrentGameId, unlockAudio, applySfxGameSettings, loadSfxFromCloud, playSfx, getSfxDurationAccurate as getSfxDuration, listSfx, isAnySfxPlaying, onSfxPlayback } from "../../shared/js/core/sfx.js?v=v2026-11-04T21104";
-import { listGameSounds } from "../../shared/js/core/sfx-cloud.js?v=v2026-11-04T21104";
-import { assertTransition } from "../../shared/js/gameplay/gameStateMachine.js?v=v2026-11-04T21104";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-04T21104";
-import { DEFAULT_SETTINGS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-04T21104";
-import { ROUND_ANSWER_TOTAL_MS, FINAL_ANSWER_TOTAL_MS, BOARD_TRANSITION_MS, LOGO_IN_MS } from "../../shared/js/gameplay/displayTiming.js?v=v2026-11-04T21104";
-import { qrDataUrl } from "../../shared/js/core/qr-code.js?v=v2026-11-04T21104";
+import { guardResourceLocks } from "../../shared/js/core/resource-lock.js?v=v2026-11-04T23474";
+import { openDialog, closeDialog } from "../../shared/js/core/modal-sheet.js?v=v2026-11-04T23474";
+import { initI18n, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-04T23474";
+import { backHref, linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-04T23474";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T23474";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T23474";
+import { loadQuestions, loadAnswers, guardGameState } from "../../shared/js/core/game-validate.js?v=v2026-11-04T23474";
+import { loadSfxManifest, initSfx, setCurrentGameId, unlockAudio, applySfxGameSettings, loadSfxFromCloud, playSfx, getSfxDurationAccurate as getSfxDuration, listSfx, isAnySfxPlaying, onSfxPlayback } from "../../shared/js/core/sfx.js?v=v2026-11-04T23474";
+import { listGameSounds } from "../../shared/js/core/sfx-cloud.js?v=v2026-11-04T23474";
+import { assertTransition } from "../../shared/js/gameplay/gameStateMachine.js?v=v2026-11-04T23474";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-04T23474";
+import { DEFAULT_SETTINGS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-04T23474";
+import { ROUND_ANSWER_TOTAL_MS, FINAL_ANSWER_TOTAL_MS, BOARD_TRANSITION_MS, LOGO_IN_MS } from "../../shared/js/gameplay/displayTiming.js?v=v2026-11-04T23474";
+import { qrDataUrl } from "../../shared/js/core/qr-code.js?v=v2026-11-04T23474";
 
 // QR generowany lokalnie i od razu (SVG w data:), bez zewnętrznego API:
 // wcześniej przez chwilę widać było samą białą ramkę <img>.
@@ -111,22 +111,22 @@ function applyGameSettingsToState(settings, state) {
   }
 }
 
-import { createStore } from "./store.js?v=v2026-11-04T21104";
-import { createRuntimeSession } from "./runtimeSession.js?v=v2026-11-04T21104";
-import { createEngine } from "./engine.js?v=v2026-11-04T21104";
-import { createActionGate } from "./actionGate.js?v=v2026-11-04T21104";
-import { createDevices } from "./devices.js?v=v2026-11-04T21104";
-import { createPresence } from "./presence.js?v=v2026-11-04T21104";
-import { missingDevices, blockingDevices, absenceCause } from "./deviceGate.js?v=v2026-11-04T21104";
-import { createSessionTelemetry } from "./sessionTelemetry.js?v=v2026-11-04T21104";
-import { createConnectivityIncidentTracker } from "./diagnostics.js?v=v2026-11-04T21104";
-import { compareBrowserContexts, getGameBrowserContextId } from "../../shared/js/core/device-context.js?v=v2026-11-04T21104";
-import { createSoundReactor } from "./soundReactor.js?v=v2026-11-04T21104";
-import { createControlTestMode, currentControlGeometry } from "./testMode.js?v=v2026-11-04T21104";
-import { createUI } from "./ui.js?v=v2026-11-04T21104";
-import { createShareDevice } from "./shareDevice.js?v=v2026-11-04T21104";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-04T21104";
-import { toast } from "../../shared/js/core/toast.js?v=v2026-11-04T21104";
+import { createStore } from "./store.js?v=v2026-11-04T23474";
+import { createRuntimeSession } from "./runtimeSession.js?v=v2026-11-04T23474";
+import { createEngine } from "./engine.js?v=v2026-11-04T23474";
+import { createActionGate } from "./actionGate.js?v=v2026-11-04T23474";
+import { createDevices } from "./devices.js?v=v2026-11-04T23474";
+import { createPresence } from "./presence.js?v=v2026-11-04T23474";
+import { missingDevices, blockingDevices, absenceCause } from "./deviceGate.js?v=v2026-11-04T23474";
+import { createSessionTelemetry } from "./sessionTelemetry.js?v=v2026-11-04T23474";
+import { createConnectivityIncidentTracker } from "./diagnostics.js?v=v2026-11-04T23474";
+import { compareBrowserContexts, getGameBrowserContextId } from "../../shared/js/core/device-context.js?v=v2026-11-04T23474";
+import { createSoundReactor } from "./soundReactor.js?v=v2026-11-04T23474";
+import { createControlTestMode, currentControlGeometry } from "./testMode.js?v=v2026-11-04T23474";
+import { createUI } from "./ui.js?v=v2026-11-04T23474";
+import { createShareDevice } from "./shareDevice.js?v=v2026-11-04T23474";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-04T23474";
+import { toast } from "../../shared/js/core/toast.js?v=v2026-11-04T23474";
 
 async function pickQuestionPool(state) {
   const all = await loadQuestions(state.gameId);
@@ -325,7 +325,7 @@ async function main() {
     if (customKeys.length > 0) {
       (async () => {
         try {
-          const { data: { user } } = await sb().auth.getUser();
+          // Zalogowany właściciel z initPage — bez zapytania do serwera logowania.
           if (user?.id) {
             const urlMap = await listGameSounds(sb(), user.id, gameId, customKeys);
             if (urlMap.size > 0) loadSfxFromCloud(urlMap);
@@ -1096,7 +1096,15 @@ async function main() {
   const shareDevice = createShareDevice({
     currentUser: user,
     game,
-    onBadgesChanged: (badges) => { shareBadges = badges; renderCurrent(); },
+    // Przerysowanie tylko przy zmianie liczb: pełne renderCurrent() zastępuje
+    // wiersze urządzeń, a kliknięcie trafiające w tę chwilę ginęło (zwykle
+    // przychodzą same zera zaraz po wejściu).
+    onBadgesChanged: (badges) => {
+      const kinds = new Set([...Object.keys(shareBadges), ...Object.keys(badges)]);
+      const changed = [...kinds].some((kind) => (Number(shareBadges[kind]) || 0) !== (Number(badges[kind]) || 0));
+      shareBadges = badges;
+      if (changed) renderCurrent();
+    },
   });
   shareDevice.refreshBadges();
 

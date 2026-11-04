@@ -3,26 +3,26 @@
 // pierwsze wczytanie (data/store.js), narysowanie (render.js) i podpięcie
 // wejść (ui/*). Logika akcji: actions/registry.js + commands.js.
 
-import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-04T21104";
-import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-04T21104";
-import { initI18n, t } from "../../../shared/translation/translation.js?v=v2026-11-04T21104";
-import { backHref } from "../../../shared/js/core/nav-map.js?v=v2026-11-04T21104";
-import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-04T21104";
-import { createState, setRole, goTo } from "./state.js?v=v2026-11-04T21104";
-import { reload } from "./data/store.js?v=v2026-11-04T21104";
-import { renderAll, renderToolbar, renderList, isNarrow } from "./render.js?v=v2026-11-04T21104";
-import { createHistory } from "./history.js?v=v2026-11-04T21104";
-import { getBaseMeta, getBaseRole } from "./repo.js?v=v2026-11-04T21104";
-import { openFolder, openTrash } from "./commands.js?v=v2026-11-04T21104";
-import { wireToolbarButtons } from "./ui/toolbar.js?v=v2026-11-04T21104";
-import { wireList } from "./ui/list.js?v=v2026-11-04T21104";
-import { wireTree } from "./ui/tree.js?v=v2026-11-04T21104";
-import { wireLeft } from "./ui/left.js?v=v2026-11-04T21104";
-import { wireDnd } from "./ui/dnd.js?v=v2026-11-04T21104";
-import { wireSearch } from "./ui/search.js?v=v2026-11-04T21104";
-import { guardRoutedSheet } from "./ui/sheet-guard.js?v=v2026-11-04T21104";
-import { wireLeftView } from "./ui/left-view.js?v=v2026-11-04T21104";
-import { wireKeyboard } from "./ui/keyboard.js?v=v2026-11-04T21104";
+import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-04T23474";
+import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-04T23474";
+import { initI18n, t } from "../../../shared/translation/translation.js?v=v2026-11-04T23474";
+import { backHref } from "../../../shared/js/core/nav-map.js?v=v2026-11-04T23474";
+import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-04T23474";
+import { createState, setRole, goTo } from "./state.js?v=v2026-11-04T23474";
+import { reload } from "./data/store.js?v=v2026-11-04T23474";
+import { renderAll, renderToolbar, renderList, isNarrow } from "./render.js?v=v2026-11-04T23474";
+import { createHistory } from "./history.js?v=v2026-11-04T23474";
+import { getBaseMeta, getBaseRole } from "./repo.js?v=v2026-11-04T23474";
+import { openFolder, openTrash } from "./commands.js?v=v2026-11-04T23474";
+import { wireToolbarButtons } from "./ui/toolbar.js?v=v2026-11-04T23474";
+import { wireList } from "./ui/list.js?v=v2026-11-04T23474";
+import { wireTree } from "./ui/tree.js?v=v2026-11-04T23474";
+import { wireLeft } from "./ui/left.js?v=v2026-11-04T23474";
+import { wireDnd } from "./ui/dnd.js?v=v2026-11-04T23474";
+import { wireSearch } from "./ui/search.js?v=v2026-11-04T23474";
+import { guardRoutedSheet } from "./ui/sheet-guard.js?v=v2026-11-04T23474";
+import { wireLeftView } from "./ui/left-view.js?v=v2026-11-04T23474";
+import { wireKeyboard } from "./ui/keyboard.js?v=v2026-11-04T23474";
 
 const baseNameEl = document.getElementById("baseName");
 
@@ -63,13 +63,17 @@ function wireBreadcrumbs(state) {
     // nazwa bazy w topbarze jest znana dopiero po pobraniu metadanych
     deferTopbarReady: true,
   });
+  // Metadane bazy od razu, równolegle z sesją (RLS i tak sprawdza token).
+  const earlyId = new URLSearchParams(location.search).get("id");
+  const metaP = earlyId ? getBaseMeta(earlyId) : null;
+  metaP?.catch(() => {});
   await i18nP;
   document.documentElement.classList.remove("page-loading");
 
   const user = await userP;
   if (!user) return; // initPage przekierował na logowanie
 
-  const baseId = new URLSearchParams(location.search).get("id");
+  const baseId = earlyId;
   if (!baseId) {
     topbarReady("");
     void alertModal({ text: t("baseExplorer.errors.missingBaseId") });
@@ -84,10 +88,10 @@ function wireBreadcrumbs(state) {
   state.history = createHistory({ onChange: () => renderToolbar(state) });
 
   try {
-    state.baseMeta = await getBaseMeta(baseId);
+    state.baseMeta = await metaP;
     topbarReady(state.baseMeta?.name || t("baseExplorer.defaults.baseName"));
 
-    const r = await getBaseRole(baseId, user.id);
+    const r = await getBaseRole(baseId, user.id, state.baseMeta);
     setRole(state, r.role);
 
     // Menedżer trzyma base:B współdzielenie (współpracownicy mogą mieć bazę

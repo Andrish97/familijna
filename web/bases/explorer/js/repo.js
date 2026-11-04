@@ -1,7 +1,7 @@
 // base-explorerjs/repo.js
 // Repozytorium danych (Supabase) dla menadżera bazy pytań.
 
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-04T21104";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-04T23474";
 
 
 /**
@@ -27,8 +27,9 @@ export async function getBaseMeta(baseId) {
  *
  * Zwraca: { role: "owner"|"editor"|"viewer" }
  */
-export async function getBaseRole(baseId, userId) {
-  const base = await getBaseMeta(baseId);
+export async function getBaseRole(baseId, userId, meta = null) {
+  // meta: już pobrane metadane (wejście na stronę) — bez drugiego zapytania.
+  const base = meta || await getBaseMeta(baseId);
 
   if (base?.owner_id === userId) {
     return { role: "owner" };

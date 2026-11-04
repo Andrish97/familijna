@@ -3,29 +3,29 @@
 // Każde pole zapisuje się samo (tekst: po pauzie w pisaniu i przy wyjściu z
 // pola, punkty: przy wyjściu z pola). Limity i obsługa pól są wspólne z
 // modalem pytania w bazie pytań (js/core/question-form.js).
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-04T21104";
-import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-04T21104";
-import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-04T21104";
-import { parseQaText } from "../../../shared/js/core/text-import.js?v=v2026-11-04T21104";
-import { gameRuleErrorMessage, guardGameState, editGate, RULES as GV_RULES, TYPES } from "../../../shared/js/core/game-validate.js?v=v2026-11-04T21104";
-import { readinessChecklist } from "../../../shared/js/core/game-rules.js?v=v2026-11-04T21104";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-04T23474";
+import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-04T23474";
+import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-04T23474";
+import { parseQaText } from "../../../shared/js/core/text-import.js?v=v2026-11-04T23474";
+import { gameRuleErrorMessage, guardGameState, editGate, RULES as GV_RULES, TYPES } from "../../../shared/js/core/game-validate.js?v=v2026-11-04T23474";
+import { readinessChecklist } from "../../../shared/js/core/game-rules.js?v=v2026-11-04T23474";
 
 import {
   LIMITS, normQuestionText, normAnswerText, parsePoints,
   wireTextLimit, wirePointsInput, sumPoints, renderSumPill, questionProblems,
   wireAnswerInput, answerFieldProblem, buildAnswerHints, loadAnswerGlyphs,
   buildAnswerRow, buildAddAnswerTile,
-} from "../../../shared/js/core/question-form.js?v=v2026-11-04T21104";
-import { guardResourceLock, showBlockingOverlay } from "../../../shared/js/core/resource-lock.js?v=v2026-11-04T21104";
-import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-04T21104";
-import { initI18n, t } from "../../../shared/translation/translation.js?v=v2026-11-04T21104";
-import { backHref, backLabel } from "../../../shared/js/core/nav-map.js?v=v2026-11-04T21104";
-import "../../../shared/js/core/contact-modal.js?v=v2026-11-04T21104";
-import { icon, iconText } from "../../../shared/js/core/icons.js?v=v2026-11-04T21104";
-import { questionFromSearch, questionHref } from "./question-url.js?v=v2026-11-04T21104";
-import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-04T21104";
-import { bindLocalizedFilePicker } from "../../../shared/js/core/file-picker.js?v=v2026-11-04T21104";
-import { toast } from "../../../shared/js/core/toast.js?v=v2026-11-04T21104";
+} from "../../../shared/js/core/question-form.js?v=v2026-11-04T23474";
+import { guardResourceLock, showBlockingOverlay } from "../../../shared/js/core/resource-lock.js?v=v2026-11-04T23474";
+import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-04T23474";
+import { initI18n, t } from "../../../shared/translation/translation.js?v=v2026-11-04T23474";
+import { backHref, backLabel } from "../../../shared/js/core/nav-map.js?v=v2026-11-04T23474";
+import "../../../shared/js/core/contact-modal.js?v=v2026-11-04T23474";
+import { icon, iconText } from "../../../shared/js/core/icons.js?v=v2026-11-04T23474";
+import { questionFromSearch, questionHref } from "./question-url.js?v=v2026-11-04T23474";
+import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-04T23474";
+import { bindLocalizedFilePicker } from "../../../shared/js/core/file-picker.js?v=v2026-11-04T23474";
+import { toast } from "../../../shared/js/core/toast.js?v=v2026-11-04T23474";
 
 // initI18n + remove('page-loading') są w boot() — przed requireAuth, żeby body pojawiło się przed auth/danymi
 
@@ -142,14 +142,17 @@ async function saveGameName(gameId, name) {
 // Pytania razem z liczbą odpowiedzi i sumą punktów -- jedno zapytanie
 // (wcześniej osobne zapytanie o odpowiedzi dla każdego pytania, po każdej
 // zmianie punktów).
+// Odpowiedzi z id i ord: pierwsze pytanie po wejściu pokazuje je bez
+// osobnego zapytania (selectQuestion z preloaded).
 async function listQuestionsWithStats(gameId) {
   const { data, error } = await sb()
     .from("questions")
-    .select("id,ord,text,answers(text,fixed_points)")
+    .select("id,ord,text,answers(id,ord,text,fixed_points)")
     .eq("game_id", gameId)
     .order("ord", { ascending: true });
   if (error) throw error;
-  return (data || []).map((q) => ({ id: q.id, ord: q.ord, text: q.text, answers: q.answers || [] }));
+  const byOrd = (a, b) => Number(a.ord) - Number(b.ord);
+  return (data || []).map((q) => ({ id: q.id, ord: q.ord, text: q.text, answers: [...(q.answers || [])].sort(byOrd) }));
 }
 
 async function listAnswers(questionId) {
@@ -317,6 +320,14 @@ async function boot() {
       location.href = href;
     },
   });
+  // Gra i pytania idą od razu, równolegle z sesją, blokadą i stanem gry
+  // (RLS i tak sprawdza token). Pokazane dopiero po przejściu blokady
+  // i stanu; po resecie ankiety / przenumerowaniu — wczytane ponownie.
+  const earlyId = new URLSearchParams(location.search).get("id");
+  const early = (load) => { const p = earlyId ? load(earlyId) : null; p?.catch(() => {}); return p; };
+  const gameP = early(loadGame);
+  let questionsP = early(listQuestionsWithStats);
+
   await i18nP;
   document.documentElement.classList.remove("page-loading");
 
@@ -342,7 +353,7 @@ async function boot() {
   const gameId = new URLSearchParams(location.search).get("id");
   if (!gameId) return leaveTo(t("editor.alert.missingId"));
 
-  let game = await loadGame(gameId);
+  let game = await gameP;
   if (!game) return leaveTo(MSG.gameNotFound());
 
   // resourceType: "game" — wspólny klucz z game-settings.js (i docelowo
@@ -371,6 +382,7 @@ async function boot() {
     if (!gate.ok) return leaveTo("");
     game = await loadGame(gameId);
     if (!game) return leaveTo(MSG.gameNotFound());
+    questionsP = null; // reset mógł zmienić pytania
   }
 
   let cfg = cfgFromGameType(game.type);
@@ -568,7 +580,8 @@ async function boot() {
     });
   }
 
-  async function selectQuestion(id) {
+  // preloaded: odpowiedzi tego pytania wczytane razem z listą (wejście na stronę).
+  async function selectQuestion(id, preloaded = null) {
     if (id === activeQId) return;
     // oczekujący zapis poprzedniego pytania idzie od razu (ze swoim id)
     saveQuestionDebounced.flush();
@@ -581,6 +594,11 @@ async function boot() {
 
     if (!cfg.allowAnswers || !id) return;
     const seq = ++answersSeq;
+    if (preloaded) {
+      answers = preloaded.map(({ id: aId, ord, text, fixed_points }) => ({ id: aId, ord, text, fixed_points }));
+      renderAnswers();
+      return;
+    }
     try {
       const rows = await listAnswers(id);
       // szybkie klikanie A -> B: odpowiedzi A nie mogą nadpisać B
@@ -1033,7 +1051,7 @@ async function boot() {
 
   /* ---------- init ---------- */
   renderHeader();
-  questions = await listQuestionsWithStats(gameId);
+  questions = await (questionsP || listQuestionsWithStats(gameId));
   // dziury w numeracji (stare dane / przerwane usuwanie sprzed migracji 276)
   if (questions.some((q, i) => Number(q.ord) !== i + 1)) {
     await renumberQuestionsRpc(gameId);
@@ -1041,7 +1059,8 @@ async function boot() {
   }
   renderQuestions();
   activeQId = undefined;
-  await selectQuestion(defaultActiveQuestionId());
+  const firstId = defaultActiveQuestionId();
+  await selectQuestion(firstId, questions.find((q) => q.id === firstId)?.answers || null);
   document.querySelector(".topbar")?.classList.add("topbar-ready");
   document.querySelectorAll("[data-skel-step]").forEach((el) => el.classList.add("skel-step-ready"));
 

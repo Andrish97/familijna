@@ -1,13 +1,13 @@
 // js/core/game-validate.js
-import { sb } from "./supabase.js?v=v2026-11-04T21104";
-import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-04T21104";
-import { showBlockingOverlay, isResourceBusy } from "./resource-lock.js?v=v2026-11-04T21104";
-import { confirmModal, alertModal } from "./modal.js?v=v2026-11-04T21104";
+import { sb } from "./supabase.js?v=v2026-11-04T23474";
+import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-04T23474";
+import { showBlockingOverlay, isResourceBusy } from "./resource-lock.js?v=v2026-11-04T23474";
+import { confirmModal, alertModal } from "./modal.js?v=v2026-11-04T23474";
 
 
 // Typy, statusy, progi i evaluateReadiness: game-rules.js (bez zależności
 // od przeglądarki, testowane jednostkowo i porównywane z SQL).
-export { TYPES, STATUS, RULES, evaluateReadiness } from "./game-rules.js?v=v2026-11-04T21104";
+export { TYPES, STATUS, RULES, evaluateReadiness } from "./game-rules.js?v=v2026-11-04T23474";
 
 /** Przetłumaczony opis braku z evaluateReadiness / readiness bazy. */
 export const readinessText = (issue) => t(`gameValidate.${issue?.code || "unknownType"}`, issue?.params || {});
@@ -127,10 +127,12 @@ export function gameRuleErrorMessage(err) {
  * @param {"edit"|"play"|"poll_entry"} action
  * @returns {Promise<object|null>} wynik akcji (ok) albo null (strona zablokowana)
  */
-export async function guardGameState(gameId, action, { backHref = "/games/" } = {}) {
+// check: już wysłane validateGame(gameId) (strona puszcza je równolegle
+// z innym sprawdzeniem po blokadzie) — bez drugiego zapytania.
+export async function guardGameState(gameId, action, { backHref = "/games/", check = null } = {}) {
   let res = null;
   try {
-    res = (await validateGame(gameId))[action];
+    res = (await (check || validateGame(gameId)))[action];
   } catch (e) {
     console.error("[game-validate] guardGameState:", e);
     res = { ok: false, reason: t("gameValidate.noGame") };

@@ -43,8 +43,8 @@
 // from strony, która go niesie; łańcuch dłuższy niż MAX_RET_DEPTH, obcy albo
 // zepsuty ret oznacza powrót do parent. Bez fallbacków i aliasów.
 
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-04T21104";
-import { iconText } from "./icons.js?v=v2026-11-04T21104";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-04T23474";
+import { iconText } from "./icons.js?v=v2026-11-04T23474";
 
 
 export const MAX_RET_DEPTH = 4;
@@ -114,6 +114,8 @@ export const PAGES = {
   pollVoteQr:    { path: "/polls/vote/qr/", access: "public", parent: null, from: [], kind: "standalone", standaloneReason: "Publiczny ekran QR dla głosowania, z własnym guardem urządzenia." },
   account: {
     path: "/account/", access: "guest", parent: "games",
+    // Konto pokazuje e-mail i stan jego zmiany — użytkownik prosto z serwera, nie z zapisanej sesji.
+    freshUser: true,
     from: ["games", "editor", "polls", "friends", "subscribers", "tasks", "bases", "baseExplorer", "logoEditor", "logoText", "logoDraw", "logoImage", "control", "gameSettings", "marketplace", "connectDevice", "manual", "privacy"],
     manual: "5",
   },
