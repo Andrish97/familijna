@@ -182,6 +182,9 @@ jobs:
           node scripts/screens/run.cjs $pick --homepage --lang=all --out=home-out || true
           [ -d home-out ] || { echo "Brak zmienionych kadrów strony głównej."; exit 0; }
           node scripts/screens/publish-homepage.cjs --out=home-out
+          # Jasny motyw (jasny-motyw-plan.md): te same sceny do shots/light/.
+          node scripts/screens/run.cjs $pick --homepage --theme=light --lang=all --out=home-out-light || true
+          [ -d home-out-light ] && node scripts/screens/publish-homepage.cjs --theme=light --out=home-out-light
           git add web/assets/img
           if git diff --cached --quiet; then echo "Kadry bez zmian."; exit 0; fi
           git config user.name "github-actions[bot]"

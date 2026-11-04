@@ -9,7 +9,7 @@ const ORIGIN = "https://www.familijna.app";
 test.use({ serviceWorkers: "block", colorScheme: "light" });
 
 test.beforeEach(async ({ context }) => {
-  if (process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: ["privacy", "404", "snake"] });
+  if (process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: ["privacy", "404", "snake", "index"] });
 });
 
 const bg = (page) => page.evaluate(() => getComputedStyle(document.documentElement).backgroundColor);
@@ -46,4 +46,14 @@ test("404 (flat.css) jest jasny, wąż (ekran gry) zostaje ciemny", async ({ pag
   await page.goto(`${ORIGIN}/snake/?qr=00000000-0000-4000-8000-000000000103&lang=pl`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await expect(page.locator('.theme-btn')).toHaveCount(0);
+});
+
+test("strona główna: kadry w motywie odwiedzającego, zmiana motywu je podmienia", async ({ page }) => {
+  await page.goto(`${ORIGIN}/?lang=pl`, { waitUntil: "domcontentloaded" });
+  const shot = page.locator(".tile-shot .shot-img").first();
+  await shot.scrollIntoViewIfNeeded();
+  await expect(shot).toHaveAttribute("src", /\/assets\/img\/pl\/shots\/light\/[a-z0-9-]+-preview\.webp/);
+  await page.locator(".theme-btn").click();
+  await page.locator('.theme-menu .menu-item[data-theme="dark"]').click();
+  await expect(shot).toHaveAttribute("src", /\/assets\/img\/pl\/shots\/(?!light\/)[a-z0-9-]+-preview\.webp/);
 });

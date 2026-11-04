@@ -7,6 +7,7 @@
 // Użycie (po zrzutach scen homepage we wszystkich językach):
 //   node scripts/screens/run.cjs --scenes=<homepage> --lang=all && node scripts/screens/publish-homepage.cjs
 //   opcje: --out=<katalog wyniku run.cjs> (domyślnie scripts/screens/out), --strict (wymaga wszystkich kadrów)
+//   --theme=light -- kadry z run.cjs --theme=light do web/assets/img/<język>/shots/light/ (bez og-image)
 const fs = require("node:fs");
 const path = require("node:path");
 const { repo, launch } = require("./lib.cjs");
@@ -52,14 +53,15 @@ async function toWebp(page, png, width, quality) {
   let written = 0;
   try {
     for (const lang of LANGS) {
-      const dir = path.join(repo, "web/assets/img", lang, "shots");
+      const dir = path.join(repo, "web/assets/img", lang, "shots", ...(args.theme === "light" ? ["light"] : []));
       fs.mkdirSync(dir, { recursive: true });
       for (const scene of homepage) {
         const file = sourceFile(scene, lang);
         if (!file) { missing.push(`${scene.id}/${lang}`); continue; }
         const png = fs.readFileSync(file);
         if (scene.id === "og-image") {
-          if (lang === "pl") {
+          // Podgląd linku i grafika maila są jedne dla wszystkich (bez motywu).
+          if (lang === "pl" && args.theme !== "light") {
             fs.writeFileSync(path.join(repo, "web/assets/img/og/og-image.webp"), await toWebp(page, png, 0, 0.9));
             // Pierwszy obraz maila „Zaproszenie” w prywatnym panelu:
             // 2× szerokości maila (516 px), odświeżany razem z grafiką OG.

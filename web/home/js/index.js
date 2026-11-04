@@ -1,13 +1,13 @@
-import { redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-04T01555";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-04T01555";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T01555";
-import { initI18n, withLangParam, applyTranslations, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-04T01555";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-04T01555";
-import { icon, starRating } from "../../shared/js/core/icons.js?v=v2026-11-04T01555";
-import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-04T01555";
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T01555";
-import { setProgress, setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-04T01555";
-import { homeSeo, homeSchemas, schemaJson } from "../../shared/js/core/home-seo.js?v=v2026-11-04T01555";
+import { redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-04T10120";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-04T10120";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-04T10120";
+import { initI18n, withLangParam, applyTranslations, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-04T10120";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-04T10120";
+import { icon, starRating } from "../../shared/js/core/icons.js?v=v2026-11-04T10120";
+import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-04T10120";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-04T10120";
+import { setProgress, setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-04T10120";
+import { homeSeo, homeSchemas, schemaJson } from "../../shared/js/core/home-seo.js?v=v2026-11-04T10120";
 
 
 async function redirectIfSession() {
@@ -92,8 +92,11 @@ function updateHomeSeo() {
 
 /* ---------- images (lang) ---------- */
 
+// Kadry w motywie odwiedzającego (jasny-motyw-plan.md): jasny komplet w
+// /assets/img/<język>/shots/light/; podgląd linku (og) jest jeden.
 function buildLangImgUrl(lang, file) {
-  return new URL(`/assets/img/${lang}/${file}`, location.href).toString();
+  const themed = document.documentElement.dataset.theme === "light" && file.startsWith("shots/") ? file.replace(/^shots\//, "shots/light/") : file;
+  return new URL(`/assets/img/${lang}/${themed}`, location.href).toString();
 }
 
 function setImgLoaded(img) {
@@ -366,7 +369,7 @@ function initShotCarousels() {
 function initImageViewer() {
   const main = document.querySelector("main.wrap");
   let viewerPromise;
-  const getViewer = () => viewerPromise ||= import("../../shared/js/core/image-viewer.js?v=v2026-11-04T01555").then(({ createImageViewer }) => createImageViewer({
+  const getViewer = () => viewerPromise ||= import("../../shared/js/core/image-viewer.js?v=v2026-11-04T10120").then(({ createImageViewer }) => createImageViewer({
     mount: main,
     before: main?.querySelector(":scope > .footer") || null,
     backBtn: document.getElementById("btnImageViewerBack"),
@@ -420,6 +423,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const lang = getUiLang();
   switchLandingImages(lang);
+  // Zmiana motywu: kadry w nowym motywie (podmiana dopiero po pobraniu).
+  window.addEventListener("theme:change", () => switchLandingImages(getUiLang()));
   window.addEventListener("i18n:lang", (e) => {
     switchLandingImages(e.detail.lang);
     updateInternalLinks();
