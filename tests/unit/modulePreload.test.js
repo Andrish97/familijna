@@ -45,8 +45,11 @@ test('artifact preloads the whole static module graph and the page dictionary pa
   const b = await fs.readFile(path.join(out, 'shared/b.js'), 'utf8');
   const cUrl = b.match(/\.\/c\.js(\?v=h[0-9a-f]{16})/)[1];
   assert.ok(preloads.includes(`/shared/c.js${cUrl}`));
-  // Preload przed pierwszym arkuszem, części słownika z wersją translation.js.
-  assert.ok(html.indexOf('modulepreload') < html.indexOf('rel="stylesheet"'));
+  // Moduły na końcu <head> z niskim priorytetem (CSS pierwszy), skrypt słownika przed arkuszem.
+  assert.ok(html.indexOf('<link rel="modulepreload"') > html.indexOf('rel="stylesheet"'));
+  assert.ok(html.indexOf('<link rel="modulepreload"') < html.indexOf('</head>'));
+  assert.equal((html.match(/<link rel="modulepreload"[^>]*fetchpriority="low"/g) || []).length, preloads.length);
+  assert.ok(html.indexOf('<script data-preload>') < html.indexOf('rel="stylesheet"'));
   const translationVersion = preloads.find(url => url.startsWith('/shared/translation/translation.js')).split('?')[1];
   assert.match(html, new RegExp(`new URL\\("/shared/translation/translation\\.js\\?${translationVersion}"`));
   assert.match(html, /\["common","page"\]\.forEach/);
