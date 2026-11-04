@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 const WORKER = 'cloudflare/maintenance-worker/src';
 
 test('public catalog is fetched once per TTL, shared by parallel requests, errors are not kept', async t => {
-  const { publicCatalog, resetCatalogCache, CATALOG_TTL_MS } = await import(`../../${WORKER}/lib/ssr/marketplace.js`);
+  const { cachedPublicCatalog: publicCatalog, resetCatalogCache, CATALOG_TTL_MS } = await import(`../../${WORKER}/lib/ssr/marketplace.js`);
   const realFetch = globalThis.fetch;
   t.after(() => { globalThis.fetch = realFetch; resetCatalogCache(); });
   resetCatalogCache();

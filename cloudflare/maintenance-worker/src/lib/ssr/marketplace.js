@@ -26,16 +26,20 @@ export async function publicMarketRpc(env,fn,body={}) {
   if(!Array.isArray(data)) throw new Error("public_market_invalid_response");
   return data;
 }
-// Publiczny katalog jest ten sam dla wszystkich: Worker trzyma go w pamięci
-// izolatu przez CATALOG_TTL_MS, żeby każde wejście na Społeczność nie czekało
+export async function publicCatalog(env) {
+  return (await publicMarketRpc(env,"market_public_catalog")).map(publicRow).filter((g)=>validSlug(g.slug));
+}
+// Strona Społeczności: publiczny katalog jest ten sam dla wszystkich, więc
+// Worker trzyma go w pamięci izolatu przez CATALOG_TTL_MS — wejście nie czeka
 // na bazę przed wysłaniem HTML (TTFB ~1 s, pomiar 2026-11-04). Równoległe
-// żądania czekają na jedno zapytanie. Błąd nie zostaje w pamięci.
+// żądania czekają na jedno zapytanie; błąd nie zostaje w pamięci. Mapa strony
+// (sitemap) czyta katalog bez pamięci — zawsze aktualna.
 export const CATALOG_TTL_MS=60_000;
 let catalogCache=null; // { at, promise }
 export function resetCatalogCache() { catalogCache=null; }
-export async function publicCatalog(env,now=Date.now()) {
+export async function cachedPublicCatalog(env,now=Date.now()) {
   if(catalogCache && now-catalogCache.at<CATALOG_TTL_MS) return catalogCache.promise;
-  const entry={at:now,promise:publicMarketRpc(env,"market_public_catalog").then((rows)=>rows.map(publicRow).filter((g)=>validSlug(g.slug)))};
+  const entry={at:now,promise:publicCatalog(env)};
   catalogCache=entry;
   entry.promise.catch(()=>{ if(catalogCache===entry) catalogCache=null; });
   return entry.promise;
@@ -48,7 +52,7 @@ export async function servePublicMarketplace(request,env,url) {
   try {
     const originUrl=new URL(url);originUrl.pathname="/marketplace/index.html";
     const [rows,detail,source]=await Promise.all([
-      publicCatalog(env),
+      cachedPublicCatalog(env),
       param ? publicMarketRpc(env,UUID_RE.test(param)?"market_game_detail":"market_game_by_slug",UUID_RE.test(param)?{p_id:param}:{p_slug:param}) : Promise.resolve([]),
       fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE),
     ]);
