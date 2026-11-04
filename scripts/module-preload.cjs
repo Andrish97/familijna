@@ -104,20 +104,27 @@ async function addModulePreloads(root) {
     const tags = [];
     for (const [target, queries] of graph) {
       const url = '/' + path.relative(root, target).split(path.sep).join('/');
-      for (const query of queries) tags.push(`<link rel="modulepreload" href="${url}${query}" ${MARK}>`);
+      for (const query of queries) tags.push(`<link rel="modulepreload" href="${url}${query}" fetchpriority="low" ${MARK}>`);
     }
     const parts = html.match(/<meta\s+name=["']i18n-parts["']\s+content=["']([^"']*)["']/i)?.[1];
     const usesTranslation = graph.has(path.join(root, TRANSLATION)) || entries.includes(path.join(root, TRANSLATION));
-    if (parts !== undefined && usesTranslation) tags.push(translationScript(parts.split(/\s+/).filter(Boolean)));
-    if (!tags.length) continue;
-    // Przed pierwszym arkuszem: skrypt inline za arkuszem czekałby na CSS.
+    const script = parts !== undefined && usesTranslation ? translationScript(parts.split(/\s+/).filter(Boolean)) : '';
+    if (!tags.length && !script) continue;
     const headStart = head.index + head[0].indexOf('>') + 1;
     const headEnd = head.index + head[0].length - '</head>'.length;
-    const rel = html.slice(headStart, headEnd).search(/<link\b[^>]*rel=["']stylesheet["']/i);
-    const at = rel >= 0 ? headStart + rel : headEnd;
-    html = html.slice(0, at) + tags.join('\n  ') + '\n  ' + html.slice(at);
+    // Moduły: koniec <head>, niski priorytet — arkusze CSS (pierwsze
+    // wyświetlenie) idą przed nimi. Pomiar 2026-11-04: preload przed CSS
+    // z wysokim priorytetem opóźniał FCP w Lighthouse (1,4 → 1,6 s).
+    if (tags.length) html = html.slice(0, headEnd) + '  ' + tags.join('\n  ') + '\n' + html.slice(headEnd);
+    // Słownik: przed pierwszym arkuszem (skrypt inline za arkuszem czekałby na
+    // CSS), zwykły priorytet — strona w innym języku czeka na niego z pokazaniem.
+    if (script) {
+      const rel = html.slice(headStart, headEnd).search(/<link\b[^>]*rel=["']stylesheet["']/i);
+      const at = rel >= 0 ? headStart + rel : headEnd;
+      html = html.slice(0, at) + script + '\n  ' + html.slice(at);
+    }
     fs.writeFileSync(file, html);
-    pages++; links += tags.length;
+    pages++; links += tags.length + (script ? 1 : 0);
   }
   return { pages, links };
 }
