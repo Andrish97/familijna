@@ -26,8 +26,19 @@ export async function publicMarketRpc(env,fn,body={}) {
   if(!Array.isArray(data)) throw new Error("public_market_invalid_response");
   return data;
 }
-export async function publicCatalog(env) {
-  return (await publicMarketRpc(env,"market_public_catalog")).map(publicRow).filter((g)=>validSlug(g.slug));
+// Publiczny katalog jest ten sam dla wszystkich: Worker trzyma go w pamięci
+// izolatu przez CATALOG_TTL_MS, żeby każde wejście na Społeczność nie czekało
+// na bazę przed wysłaniem HTML (TTFB ~1 s, pomiar 2026-11-04). Równoległe
+// żądania czekają na jedno zapytanie. Błąd nie zostaje w pamięci.
+export const CATALOG_TTL_MS=60_000;
+let catalogCache=null; // { at, promise }
+export function resetCatalogCache() { catalogCache=null; }
+export async function publicCatalog(env,now=Date.now()) {
+  if(catalogCache && now-catalogCache.at<CATALOG_TTL_MS) return catalogCache.promise;
+  const entry={at:now,promise:publicMarketRpc(env,"market_public_catalog").then((rows)=>rows.map(publicRow).filter((g)=>validSlug(g.slug)))};
+  catalogCache=entry;
+  entry.promise.catch(()=>{ if(catalogCache===entry) catalogCache=null; });
+  return entry.promise;
 }
 export async function servePublicMarketplace(request,env,url) {
   const param=url.pathname.startsWith("/marketplace/game/")?url.pathname.slice("/marketplace/game/".length):null;
