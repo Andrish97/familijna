@@ -61,14 +61,29 @@ test('HEAD agrees, public UUID redirects, unknown and withdrawn games are 404 fo
  delete state.game;
 });
 test('API or template failure is 503, never an empty 200 or a false 404',async()=>{
+ // Świeża instancja: bez katalogu w pamięci Workera (60 s), jak pierwsze wejście po błędzie bazy.
  for(const flag of ['fail','originFail']){
-  state[flag]=true;
-  for(const path of ['/marketplace','/marketplace/game/'+row.slug]){
-   const response=await mf.dispatchFetch('https://www.familijna.app'+path);
-   assert.equal(response.status,503);assert.equal(response.headers.get('Retry-After'),'60');await response.text();
-  }
-  delete state[flag];
+  const local={[flag]:true};
+  const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin(local,[])});
+  try {
+   for(const path of ['/marketplace','/marketplace/game/'+row.slug]){
+    const response=await fresh.dispatchFetch('https://www.familijna.app'+path);
+    assert.equal(response.status,503);assert.equal(response.headers.get('Retry-After'),'60');await response.text();
+   }
+  } finally { await fresh.dispose(); }
  }
+});
+test('catalogue page keeps the public catalogue in Worker memory; detail is always fresh',async()=>{
+ const calls=[];
+ const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin({},calls)});
+ try {
+  for(const path of ['/marketplace','/marketplace?lang=en','/marketplace/game/'+row.slug,'/marketplace/game/'+row.slug]){
+   const response=await fresh.dispatchFetch('https://www.familijna.app'+path);assert.equal(response.status,200);await response.text();
+  }
+  const rpc=name=>calls.filter(c=>c.path.endsWith('/rpc/'+name)).length;
+  assert.equal(rpc('market_public_catalog'),1);
+  assert.equal(rpc('market_game_by_slug'),2);
+ } finally { await fresh.dispose(); }
 });
 test('private preview URL has noindex and never contains non-public payload or account state',async()=>{
  const response=await mf.dispatchFetch('https://www.familijna.app/marketplace/?game='+gameId);
@@ -78,8 +93,10 @@ test('private preview URL has noindex and never contains non-public payload or a
 });
 test('sitemap is fresh and public; 105 games are not truncated and counter updates do not invent lastmod',async()=>{
  state.rows=Array.from({length:105},(_,i)=>({...row,id:`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`,slug:'public-game-'+i,updated_at:'2099-01-01'}));
- let response=await mf.dispatchFetch('https://www.familijna.app/marketplace');
- assert.equal(((await response.text()).match(/<a class="mkt-card/g)||[]).length,105);
+ // Świeża instancja: katalog Społeczności z poprzednich testów siedzi w pamięci Workera (60 s).
+ const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin(state,[])});
+ let response=await fresh.dispatchFetch('https://www.familijna.app/marketplace');
+ assert.equal(((await response.text()).match(/<a class="mkt-card/g)||[]).length,105);await fresh.dispose();
  response=await mf.dispatchFetch('https://www.familijna.app/sitemap.xml');let xml=await response.text();
  assert.equal(response.headers.get('Cache-Control'),'no-store');assert.equal((xml.match(/<loc>[^<]+\/marketplace\/game\//g)||[]).length,105);assert.doesNotMatch(xml,/2099/);
  state.rows=[];
