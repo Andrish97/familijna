@@ -518,17 +518,15 @@ const REDUCERS = {
 
     const allQuestions = await deps.loadQuestions(state.gameId);
     const byId = new Map(allQuestions.map((q) => [String(q.id), q]));
-    const questions = [];
-    for (const id of f.picked || []) {
-      const q = byId.get(String(id));
-      if (!q) continue;
-      const answers = sortAnswersByPoints(await deps.loadAnswers(q.id));
-      questions.push({
-        id: q.id,
-        text: q.text,
-        answers: answers.map((a) => ({ id: a.id, text: a.text, fixed_points: a.fixed_points })),
-      });
-    }
+    // Odpowiedzi pytań finału równolegle, w kolejności wylosowania
+    // (wcześniej po kolei: 5 rund przy wejściu w finał).
+    const pickedQuestions = (f.picked || []).map((id) => byId.get(String(id))).filter(Boolean);
+    const answerLists = await Promise.all(pickedQuestions.map((q) => deps.loadAnswers(q.id)));
+    const questions = pickedQuestions.map((q, i) => ({
+      id: q.id,
+      text: q.text,
+      answers: sortAnswersByPoints(answerLists[i]).map((a) => ({ id: a.id, text: a.text, fixed_points: a.fixed_points })),
+    }));
     if (questions.length !== 5) return null; // niekompletna pula — nie wchodzimy w finał w połowie skonfigurowany
 
     f.questions = questions;
