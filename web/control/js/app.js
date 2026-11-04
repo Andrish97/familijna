@@ -325,7 +325,7 @@ async function main() {
     if (customKeys.length > 0) {
       (async () => {
         try {
-          const { data: { user } } = await sb().auth.getUser();
+          // Zalogowany właściciel z initPage — bez zapytania do serwera logowania.
           if (user?.id) {
             const urlMap = await listGameSounds(sb(), user.id, gameId, customKeys);
             if (urlMap.size > 0) loadSfxFromCloud(urlMap);

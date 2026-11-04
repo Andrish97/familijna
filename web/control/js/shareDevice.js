@@ -347,11 +347,11 @@ export function createShareDevice({ currentUser, game, onBadgesChanged }) {
 
   async function refreshBadges() {
     try {
-      const badges = {};
-      for (const kind of deviceKinds) {
+      // Rodzaje urządzeń równolegle (wcześniej po kolei: 3 rundy).
+      const badges = Object.fromEntries(await Promise.all(deviceKinds.map(async (kind) => {
         const { data } = await sb().rpc("control_device_shares_list", { p_game_id: game.id, p_device_type: kind });
-        badges[kind] = (data || []).length;
-      }
+        return [kind, (data || []).length];
+      })));
       onBadgesChanged?.(badges);
       return badges;
     } catch {
