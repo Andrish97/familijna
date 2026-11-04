@@ -183,8 +183,8 @@ test('contact/manual document has no artificial action; rich editor body stays H
 });
 
 test('optional-action refactor preserves published invitation HTML apart from deliberate long-text wrapping', () => {
-  // Wzorzec po jasnym szablonie (2026-11-03): jasne style inline, ciemne w @media (prefers-color-scheme: dark).
-  const snapshots = { pl: 'cdef8af5b2a9f8f0dfcdd161af8000f2e14ff5b4980bdfd47c04a12321b49952', en: '7e4351d98857f86206056aceb5bac23650cfd14bb9918a254b37a9786cc8cc30', uk: '94d7d69a633febe7ca0006c47187d7a6e466babb973df5ec3bb28562601c3cb0' };
+  // Wzorzec po jasnym szablonie (2026-11-03, +.fm-line 2026-11-04): jasne style inline, ciemne w @media (prefers-color-scheme: dark).
+  const snapshots = { pl: '8a9e1a7989f204ea8a428d46cdf49de85324deaeb9a2f01c8930a1ef9342639e', en: '6cd42d1577f8d2e7976c7903d7804fe6eee9329941aab5b0351ccd0f5611a96d', uk: 'f5b7ac3997e7271916e3871d3ffba4073a70e3dcc971de15a97cba08e134ce10' };
   for (const lang of ['pl','en','uk']) {
     const html = renderMailDocument({ lang, title: 'Title', body: '<body>\nText', actionLabel: 'Open', actionUrl: 'https://example.com/?t=existing&lang=' + lang });
     assert.ok(html.includes('overflow-wrap:anywhere;word-break:break-word;'));

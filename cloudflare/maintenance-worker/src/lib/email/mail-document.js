@@ -24,6 +24,7 @@ const MAIL_DARK_CSS = ':root{color-scheme:light dark;supported-color-schemes:lig
   + '.fm-url{background:#0a0f1e!important;border-color:#303747!important}'
   + '.fm-foot{color:#a6adbc!important}'
   + '.fm-quote{background:#0a0f1e!important;border-color:#5f5838!important;color:#b8bcc6!important}'
+  + '.fm-line{background:#232a3a!important}'
   + '}';
 // Cytat w treści maila (kontakt: zgłoszenie, odpowiedź) — ten sam wygląd wszędzie.
 export const MAIL_QUOTE_ATTRS = 'class="fm-quote" style="margin:0 0 20px;padding:12px 16px;border-left:3px solid #d8c48f;background:#f6f4ee;border-radius:0 8px 8px 0;color:#4a5060;font-size:13px;"';
