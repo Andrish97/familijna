@@ -36,47 +36,88 @@ const HTML_HEADERS = {
   "Referrer-Policy": "no-referrer",
 };
 
-// Wygląd wspólny dla strony przenosin i strony końcowej: tło i kolory aplikacji,
-// logo (ten sam rysunek co web/assets/img/familijna-icon.svg), napis w języku
-// użytkownika (zapisany uiLang albo język przeglądarki), przycisk przejścia.
-const LOGO = `<svg class="logo" viewBox="0 0 512 512" aria-hidden="true"><rect width="512" height="512" rx="100" fill="#0f0f0f"/><g fill="#e5f34f"><circle cx="160" cy="116" r="28"/><circle cx="209" cy="116" r="28"/><circle cx="258" cy="116" r="28"/><circle cx="307" cy="116" r="28"/><circle cx="356" cy="116" r="28"/><circle cx="160" cy="165" r="28"/><circle cx="160" cy="214" r="28"/><circle cx="160" cy="263" r="28"/><circle cx="209" cy="263" r="28"/><circle cx="258" cy="263" r="28"/><circle cx="307" cy="263" r="28"/><circle cx="160" cy="312" r="28"/><circle cx="160" cy="361" r="28"/><circle cx="160" cy="410" r="28"/></g></svg>`;
+// Wygląd: ten sam wzorzec `.page--block` co strona 404 i przerwa techniczna
+// (web/404.html) — belka z marką, karta, złoty przycisk, stopka. Style aplikacji
+// z nowej domeny, podawane przez ten Worker spod STYLE_PATH (ten sam origin, więc
+// CSP strefy `style-src 'self'` ich nie blokuje). Własnych kolorów brak.
+// BOOT_PATH: skrypt startowy aplikacji (page-boot.js) — motyw jasny/ciemny
+// użytkownika i atrybuty urządzenia, od których zależą rozmiary w silniku.
+export const STYLE_PATH = "/__familijna/style.css";
+export const BOOT_PATH = "/__familijna/boot.js";
+const BOOT_FILE = "/shared/js/core/page-boot.js";
+const STYLE_FILES = [
+  "/shared/style/tokens.css",
+  "/shared/style/flat.css",
+  "/shared/css/tv-layout.css",
+  "/404/css/404.css",
+];
 
 const TEXTS = {
-  pl: { moving: "Przenosimy Cię na nowy adres", moved: "Familijna działa pod nowym adresem", go: "Przejdź teraz" },
-  en: { moving: "Taking you to our new address", moved: "Familijna has moved to a new address", go: "Go now" },
-  uk: { moving: "Переносимо вас на нову адресу", moved: "Familijna працює за новою адресою", go: "Перейти зараз" },
+  pl: { title: "Familijna ma nowy adres", moving: "Przenosimy Cię na familijna.app.", moved: "Serwis działa pod adresem familijna.app.",
+    go: "Przejdź na familijna.app", hint: "Za chwilę przejdziesz automatycznie.", footer: "© 2026 Familijna — system do gry na żywo", contact: "Masz pytania?" },
+  en: { title: "Familijna has a new address", moving: "Taking you to familijna.app.", moved: "The service now runs at familijna.app.",
+    go: "Go to familijna.app", hint: "You will be taken there in a moment.", footer: "© 2026 Familijna — live game system", contact: "Questions?" },
+  uk: { title: "Familijna має нову адресу", moving: "Переносимо вас на familijna.app.", moved: "Сервіс працює за адресою familijna.app.",
+    go: "Перейти на familijna.app", hint: "За мить вас буде перенаправлено.", footer: "© 2026 Familijna — система для гри наживо", contact: "Маєте питання?" },
 };
 
-const STYLE = `:root{color-scheme:dark}*{box-sizing:border-box}
-body{margin:0;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px;
-background:radial-gradient(120% 80% at 50% 0%,#14203d 0%,#050914 60%) #050914;color:#f4f6fb;
-font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;text-align:center}
-main{width:100%;max-width:420px;display:flex;flex-direction:column;align-items:center;gap:14px}
-.logo{width:88px;height:88px;border-radius:22px;box-shadow:0 10px 40px rgba(229,243,79,.18)}
-h1{margin:10px 0 0;font-size:22px;font-weight:600;line-height:1.3}
-.addr{margin:0;font-size:18px;font-weight:700;letter-spacing:.02em;color:#e5f34f}
-.bar{width:180px;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
-.bar i{display:block;width:40%;height:100%;border-radius:2px;background:#e5f34f;animation:slide 1.1s ease-in-out infinite}
-@keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
-@media (prefers-reduced-motion:reduce){.bar i{animation:none;width:100%}}
-.btn{margin-top:8px;display:inline-block;padding:12px 22px;border-radius:12px;background:#e5f34f;color:#0b1020;
-font-weight:700;text-decoration:none}
-.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}`;
-
 function langScript(key) {
-  // Podmienia teksty na język użytkownika; bez JS zostaje polski.
+  // Teksty w języku użytkownika (zapisany uiLang albo język przeglądarki); bez JS polski.
   return `(function(){try{var T=${JSON.stringify(TEXTS)},l="";try{l=localStorage.getItem("uiLang")||"";}catch(e){}
-l=(l||navigator.language||"pl").slice(0,2).toLowerCase();
-if(l==="ua")l="uk";var t=T[l];if(!t||l==="pl")return;document.documentElement.lang=l;
-document.getElementById("t").textContent=t.${key};document.getElementById("b").textContent=t.go;}catch(e){}})();`;
+l=(l||navigator.language||"pl").slice(0,2).toLowerCase();if(l==="ua")l="uk";var t=T[l];if(t&&l!=="pl"){
+document.documentElement.lang=l;["title","text","go","hint","footer","contact"].forEach(function(id){var e=document.getElementById("t-"+id);
+if(e)e.textContent=t[id==="text"?"${key}":id];});}}catch(e){}finally{
+/* page-boot.js zasłania stronę do zgłoszenia gotowości; tu treść jest od razu pełna */
+try{globalThis.FamilijnaPageBoot&&FamilijnaPageBoot.finish();}catch(e){}}})();`;
 }
 
-function page({ title, key, href, extraHead = "", bar = false, script = "" }) {
+function page({ key, href, extraHead = "", hint = false, script = "" }) {
   const t = TEXTS.pl;
-  return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#050914"><title>${title}</title>${extraHead}<style>${STYLE}</style></head>
-<body><main>${LOGO}<h1 id="t">${t[key]}</h1><p class="addr">familijna.app</p>${bar ? '<div class="bar" aria-hidden="true"><i></i></div>' : ""}
-<a class="btn" id="b" href="${href}">${t.go}</a></main><script>${langScript(key)}</script>${script ? `<script>${script}</script>` : ""}</body></html>`;
+  return `<!doctype html><html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex"><title>Familijna — familijna.app</title>
+${script ? `<script>${script}</script>` : ""}${extraHead}<script src="${BOOT_PATH}"></script><link rel="stylesheet" href="${STYLE_PATH}"></head>
+<body class="page--block">
+<header class="topbar topbar-layout-4 topbar-mobile-keep-brand">
+<div class="topbar-section topbar-section-1"><div class="brand brand-static">Familijna</div></div>
+<div class="topbar-section topbar-section-2"></div><div class="topbar-section topbar-section-3"></div><div class="topbar-section topbar-section-4"></div>
+</header>
+<main class="block-main"><section class="block-card notfound-card" role="status" aria-live="polite"><div class="block-card-top">
+<h1 class="block-title" id="t-title">${t.title}</h1>
+<p class="block-text" id="t-text">${t[key]}</p>
+<div class="cluster cluster--center notfound-actions"><a class="btn gold" id="t-go" href="${href}">${t.go}</a></div>
+${hint ? `<p class="hint notfound-redirect" id="t-hint">${t.hint}</p>` : ""}
+</div></section></main>
+<footer class="footer wrap"><span id="t-footer">${t.footer}</span><span><span id="t-contact">${t.contact}</span> <a href="mailto:kontakt@familijna.app">kontakt@familijna.app</a></span></footer>
+<script>${langScript(key)}</script></body></html>`;
+}
+
+// Arkusz stylów strony: pliki aplikacji z nowej domeny sklejone w jeden
+// (pamięć podręczna Cloudflare na dobę). Gdy któregoś nie ma — pomijany.
+// Skrypt startowy aplikacji spod tego samego originu (pamięć podręczna na dobę).
+export async function bootResponse(origin, upstream = fetch) {
+  let body = "";
+  try {
+    const res = await upstream(origin + BOOT_FILE, { cf: { cacheTtl: 86400, cacheEverything: true } });
+    if (res.ok) body = await res.text();
+  } catch {}
+  return new Response(body, {
+    status: 200,
+    headers: { "Content-Type": "text/javascript; charset=utf-8", "Cache-Control": "public, max-age=86400" },
+  });
+}
+
+export async function styleResponse(origin, upstream = fetch) {
+  const parts = await Promise.all(STYLE_FILES.map(async (path) => {
+    try {
+      const res = await upstream(origin + path, { cf: { cacheTtl: 86400, cacheEverything: true } });
+      return res.ok ? `/* ${path} */\n${await res.text()}` : "";
+    } catch { return ""; }
+  }));
+  return new Response(parts.join("\n"), {
+    status: 200,
+    headers: { "Content-Type": "text/css; charset=utf-8", "Cache-Control": "public, max-age=86400" },
+  });
 }
 
 // Strona przenosin. Bez localStorage od razu przejście; po przeniesieniu znacznik
@@ -95,17 +136,16 @@ s.setItem("fam:handoff:done","1");location.replace(T+"#fam-handoff="+b);return;}
 location.replace(T+location.hash);})();`;
   const href = escapeHtml(target);
   return page({
-    title: "Familijna — familijna.app",
     key: "moving",
     href,
-    bar: true,
+    hint: true,
     extraHead: `<meta http-equiv="refresh" content="3;url=${href}">`,
     script,
   });
 }
 
 export function gonePage(origin) {
-  return page({ title: "Familijna — familijna.app", key: "moved", href: escapeHtml(origin + "/") });
+  return page({ key: "moved", href: escapeHtml(origin + "/") });
 }
 
 function wantsHtmlPage(request) {
@@ -128,6 +168,8 @@ export async function handle(request, env, now = Date.now(), upstream = fetch) {
   }
   if (!PAGE_HOSTS.has(host)) return new Response("Not Found", { status: 404 });
 
+  if (url.pathname === STYLE_PATH && ["GET", "HEAD"].includes(request.method)) return styleResponse(origin, upstream);
+  if (url.pathname === BOOT_PATH && ["GET", "HEAD"].includes(request.method)) return bootResponse(origin, upstream);
   if (current === "gone") return new Response(gonePage(origin), { status: 410, headers: HTML_HEADERS });
 
   const target = origin + url.pathname + url.search;
