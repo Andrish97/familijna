@@ -8,7 +8,7 @@ import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-04T195
 import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-04T19500";
 import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-04T19500";
 import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-04T19500";
-import { loadQuestions, guardGameState } from "../../../shared/js/core/game-validate.js?v=v2026-11-04T19500";
+import { loadQuestions, guardGameState, validateGame } from "../../../shared/js/core/game-validate.js?v=v2026-11-04T19500";
 import { loadFont5x7, buildLogoPreviewCanvas } from "../../../shared/js/core/logo-preview.js?v=v2026-11-04T19500";
 import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-04T19500";
 import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-04T19500";
@@ -1812,6 +1812,7 @@ function renderGame() {
 // Persisted gameplay session guard. The resource lease protects simultaneous
 // page edits; this separate database record protects an in-progress match even
 // after the Control tab has been closed.
+let activeSessionGuardShown = false; // okno trwającej rozgrywki — stan gry mógł się zmienić
 async function guardActiveGameSession() {
   const requestStatus = async () => {
     const { data, error } = await sb().rpc("control_game_settings_status", { p_game_id: gameId });
@@ -1822,6 +1823,7 @@ async function guardActiveGameSession() {
 
   let status = await requestStatus();
   if (!status.in_progress) return true;
+  activeSessionGuardShown = true;
 
   // Ekran blokady (core/blocking-screen.js) + odliczanie i błąd nad przyciskami.
   const overlay = blockingScreen("ingameGuard", [
@@ -1915,6 +1917,15 @@ async function guardActiveGameSession() {
 
 // ===== MAIN =====
 async function main() {
+  // Gra, motywy i pytania idą od razu, równolegle z sesją (RLS i tak
+  // sprawdza token); pokazane dopiero po blokadzie i sprawdzeniach.
+  const dataP = gameId ? Promise.all([
+    sb().from("games").select("id,name,settings").eq("id", gameId).single(),
+    loadBuiltinThemes().catch(() => ({ themes: [] })),
+    loadQuestions(gameId).catch(() => []),
+    sb().rpc("my_display_themes").then(r => r.data).catch(() => null),
+  ]) : null;
+  dataP?.catch(() => {});
   // Dostęp, nakładka wąskiego okna / telefonu, „Wstecz”, „Wskazówki” i konto
   // wg mapy. Przy wyjściu pytamy o porzucenie niezapisanych zmian.
   const user = await initPage("gameSettings", {
@@ -1929,13 +1940,7 @@ async function main() {
     return;
   }
 
-  // Load game, themes and questions in parallel
-  const [gameResult, themesJson, questionsList, myThemes] = await Promise.all([
-    sb().from("games").select("id,name,settings").eq("id", gameId).single(),
-    loadBuiltinThemes().catch(() => ({ themes: [] })),
-    loadQuestions(gameId).catch(() => []),
-    sb().rpc("my_display_themes").then(r => r.data).catch(() => null),
-  ]);
+  const [gameResult, themesJson, questionsList, myThemes] = await dataP;
 
   const { data: game, error: gameErr } = gameResult;
   if (gameErr || !game) {
@@ -1953,20 +1958,23 @@ async function main() {
   // Blokady strony (familijna-server/docs/blokady-zasobow.md, sekcja 6): game:G wyłącznie
   // (wspólny klucz z edytorem, ankietą i Control) + logos współdzielone (cała
   // pula logo użytkownika; id = użytkownik). Najpierw gra, potem pula logo.
-  const { data: { user: lockUser } } = await sb().auth.getUser();
   const lock = await guardResourceLocks([
     { type: "game", id: gameId, mode: "exclusive", message: t("resourceLock.gameMessage") },
-    { type: "logos", id: lockUser?.id, mode: "shared", message: t("resourceLock.logoEditBlocksSettings") },
+    { type: "logos", id: user.id, mode: "shared", message: t("resourceLock.logoEditBlocksSettings") },
   ], { context: "settings", backHref: backHref("gameSettings") });
   if (!lock.ok) return;
   pageLock = lock;
 
   // The resource guard above handles an open Control tab with game:G held.
   // Only a released card can reach the persistent active-session guard.
+  // Stan gry sprawdzany równolegle ze stanem rozgrywki (oba po blokadzie).
+  const checkP = validateGame(gameId);
+  checkP.catch(() => {});
   if (!(await guardActiveGameSession())) return;
 
   // Blokada stanu: ustawienia gry tylko dla gry, którą da się grać.
-  if (!(await guardGameState(gameId, "play"))) return;
+  // Po oknie trwającej rozgrywki stan mógł się zmienić — sprawdzenie od nowa.
+  if (!(await guardGameState(gameId, "play", { check: activeSessionGuardShown ? null : checkP }))) return;
 
   lastSavedSettingsRaw = game.settings ?? {};
 

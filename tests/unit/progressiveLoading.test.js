@@ -10,7 +10,7 @@ const read = (file) => fs.readFileSync(path.join(here, '../../web', file), 'utf8
 test('guard poprzedza auth i odsłonięcie topbara', () => {
   const all = read('shared/js/core/page-init.js');
   const source = all.slice(all.indexOf('export async function initPage('));
-  assert.ok(source.indexOf('await guard.ready') < source.indexOf('d.requireAuth(loginUrl())'));
+  assert.ok(source.indexOf('await guard.ready') < source.indexOf('d.requireAuth(loginUrl()'));
   assert.ok(source.indexOf('await guard.ready') < source.indexOf('document.querySelector(".topbar")?.classList.add("topbar-ready")'));
 });
 

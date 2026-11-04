@@ -637,7 +637,7 @@ async function handleUnsubOwner() {
     if (!data?.ok) { showResolveError(data); return; }
     if (!goKindMatches("s", data.kind)) { showResolveError(null); return; }
     resolvedInviteData = data;
-    const user = await getUser();
+    const user = await getUser({ fresh: true });
     if (data.kind === "friend") { handleFriendInvite(data, user); return; }
     if (data.friend_conversion_required || data.registered_user_id || data.cancelled_at) {
       await handleSubInvite(data, user); return;
@@ -821,7 +821,7 @@ async function init() {
   }
 
   try {
-    const user = await getUser();
+    const user = await getUser({ fresh: true });
     const raw = await resolveToken();
     const data = await hydrateInviteIdentity(raw);
     resolvedInviteData = data || null;

@@ -223,6 +223,9 @@ function isPlaceholderUsername(v) {
 }
 
 // cache ~2 min per user: { userId, username, is_guest, guest_expires_at, ts }
+// Równoległe wywołania (initPage i przycisk konta w topbarze) czekają na
+// jedno zapytanie zamiast wysyłać dwa (pomiar 2026-11-04).
+let _profileInFlight = null; // { userId, promise }
 async function fetchProfileRow(user) {
   if (!user?.id) return null;
 
@@ -233,28 +236,34 @@ async function fetchProfileRow(user) {
   ) {
     return _unameCache;
   }
+  if (_profileInFlight?.userId === user.id) return _profileInFlight.promise;
 
-  try {
-    const { data, error } = await sb()
-      .from("profiles")
-      .select("username,is_guest,guest_expires_at")
-      .eq("id", user.id)
-      .maybeSingle();
+  const promise = (async () => {
+    try {
+      const { data, error } = await sb()
+        .from("profiles")
+        .select("username,is_guest,guest_expires_at")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (!error && data) {
-      const cached = {
-        userId: user.id,
-        username: data.username || null,
-        is_guest: !!data.is_guest,
-        guest_expires_at: data.guest_expires_at || null,
-        ts: now,
-      };
-      _unameCache = cached;
-      return cached;
-    }
-  } catch {}
-
-  return null;
+      if (!error && data) {
+        const cached = {
+          userId: user.id,
+          username: data.username || null,
+          is_guest: !!data.is_guest,
+          guest_expires_at: data.guest_expires_at || null,
+          ts: Date.now(),
+        };
+        _unameCache = cached;
+        return cached;
+      }
+    } catch {}
+    return null;
+  })();
+  const entry = { userId: user.id, promise };
+  _profileInFlight = entry;
+  promise.finally(() => { if (_profileInFlight === entry) _profileInFlight = null; });
+  return promise;
 }
 
 async function fetchUsername(user) {
@@ -309,19 +318,68 @@ async function enrichUser(u) {
   return { ...u, username, is_guest: isGuest, guest_expires_at: guestExpiresAt };
 }
 
-export async function getUser() {
+// Użytkownik z sesji zapisanej w przeglądarce (getSession) — bez zapytania
+// do serwera logowania przy każdym wejściu na stronę (jedna runda mniej,
+// pomiar 2026-11-04). Baza i tak sprawdza token przy każdym zapytaniu.
+// Raz na wczytanie strony sesję sprawdza serwer w tle; odrzucona (konto
+// usunięte, wylogowanie na innym urządzeniu) → wylogowanie lokalne
+// i przeładowanie, czyli zwykła ścieżka „brak sesji”.
+// fresh: true — rekord prosto z serwera (aktualny e-mail i metadane:
+// Konto, Go). Równoległe wywołania dzielą jedno zapytanie.
+let _userInFlight = { fast: null, fresh: null };
+let _sessionVerified = false;
+
+function isRejectedSession(error) {
+  if (!error) return false;
+  if (error.name === "AuthSessionMissingError") return true;
+  const status = Number(error.status || 0);
+  return status === 401 || status === 403 || status === 404;
+}
+
+function verifySessionInBackground() {
+  if (_sessionVerified) return;
+  _sessionVerified = true;
+  void (async () => {
+    try {
+      const { data, error } = await sb().auth.getUser();
+      if (isRejectedSession(error) || (!error && !data?.user)) {
+        try { await sb().auth.signOut({ scope: "local" }); } catch {}
+        _unameCache = { userId: null, username: null, ts: 0 };
+        location.reload();
+      }
+    } catch {}
+  })();
+}
+
+async function loadUser(fresh) {
   try {
+    if (!fresh) {
+      const { data } = await sb().auth.getSession();
+      const sessionUser = data?.session?.user || null;
+      if (!sessionUser) return null;
+      verifySessionInBackground();
+      return await enrichUser(sessionUser);
+    }
     const { data, error } = await sb().auth.getUser();
+    _sessionVerified = true;
     if (error) return null;
-    const u = data.user || null;
-    return await enrichUser(u);
+    return await enrichUser(data.user || null);
   } catch {
     return null;
   }
 }
 
-export async function requireAuth(redirect) {
-  const u = await getUser();
+export function getUser({ fresh = false } = {}) {
+  const key = fresh ? "fresh" : "fast";
+  if (_userInFlight[key]) return _userInFlight[key];
+  const promise = loadUser(fresh);
+  _userInFlight[key] = promise;
+  promise.finally(() => { if (_userInFlight[key] === promise) _userInFlight[key] = null; });
+  return promise;
+}
+
+export async function requireAuth(redirect, { fresh = false } = {}) {
+  const u = await getUser({ fresh });
   if (!u) {
     redirectPage(withLangParam(redirect));
     return null; // na wypadek, gdyby ktoś jednak kontynuował kod

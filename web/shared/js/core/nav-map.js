@@ -114,6 +114,8 @@ export const PAGES = {
   pollVoteQr:    { path: "/polls/vote/qr/", access: "public", parent: null, from: [], kind: "standalone", standaloneReason: "Publiczny ekran QR dla głosowania, z własnym guardem urządzenia." },
   account: {
     path: "/account/", access: "guest", parent: "games",
+    // Konto pokazuje e-mail i stan jego zmiany — użytkownik prosto z serwera, nie z zapisanej sesji.
+    freshUser: true,
     from: ["games", "editor", "polls", "friends", "subscribers", "tasks", "bases", "baseExplorer", "logoEditor", "logoText", "logoDraw", "logoImage", "control", "gameSettings", "marketplace", "connectDevice", "manual", "privacy"],
     manual: "5",
   },

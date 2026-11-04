@@ -146,8 +146,8 @@ async function refreshView({ withBadge = false } = {}) {
   if (basesRefreshInFlight) return basesRefreshInFlight;
   basesRefreshInFlight = (async () => {
     try {
-      await refreshBases();
-      if (withBadge) await refreshAltBadge();
+      // Plakietka Znajomych niezależna od listy baz — równolegle.
+      await Promise.all([refreshBases(), withBadge ? refreshAltBadge() : null]);
       render();
       setButtonsState();
       return true;
@@ -325,37 +325,33 @@ async function listSharedBases() {
 }
 
 async function refreshBases() {
-  const owned = await listOwnedBases();
-
-  // policz udostępnienia dla moich baz
-  const ownedBaseIds = owned.map((b) => b.id);
-  const shareCountByBase = new Map();
-
-  if (ownedBaseIds.length) {
-    const { data: shares, error } = await sb()
-      .from("question_base_shares")
-      .select("base_id")
-      .in("base_id", ownedBaseIds);
-
-    if (error) throw error;
-
-    for (const s of shares || []) {
-      shareCountByBase.set(s.base_id, (shareCountByBase.get(s.base_id) || 0) + 1);
+  // Trzy niezależne odczyty równolegle (wcześniej po kolei: 4 rundy).
+  const ownedP = (async () => {
+    const owned = await listOwnedBases();
+    // policz udostępnienia dla moich baz
+    const ownedBaseIds = owned.map((b) => b.id);
+    const shareCountByBase = new Map();
+    if (ownedBaseIds.length) {
+      const { data: shares, error } = await sb()
+        .from("question_base_shares")
+        .select("base_id")
+        .in("base_id", ownedBaseIds);
+      if (error) throw error;
+      for (const s of shares || []) {
+        shareCountByBase.set(s.base_id, (shareCountByBase.get(s.base_id) || 0) + 1);
+      }
     }
-  }
-
-  // dopisz shareCount do owned
-  const ownedWithStats = owned.map((b) => ({
-    ...b,
-    shareCount: shareCountByBase.get(b.id) || 0,
-  }));
-
-  const shared = guestMode ? [] : await listSharedBases();
-  if (!guestMode) {
+    // dopisz shareCount do owned
+    return owned.map((b) => ({ ...b, shareCount: shareCountByBase.get(b.id) || 0 }));
+  })();
+  const sharedP = guestMode ? Promise.resolve([]) : listSharedBases();
+  const declinesP = guestMode ? Promise.resolve([]) : (async () => {
     const { data, error } = await sb().rpc("base_declines_list_mine");
     if (error) throw error;
-    ownBaseDeclines = data || [];
-  } else ownBaseDeclines = [];
+    return data || [];
+  })();
+  const [ownedWithStats, shared, declines] = await Promise.all([ownedP, sharedP, declinesP]);
+  ownBaseDeclines = declines;
 
   ownedBases = ownedWithStats
     .slice()

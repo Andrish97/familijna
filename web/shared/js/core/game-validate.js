@@ -127,10 +127,12 @@ export function gameRuleErrorMessage(err) {
  * @param {"edit"|"play"|"poll_entry"} action
  * @returns {Promise<object|null>} wynik akcji (ok) albo null (strona zablokowana)
  */
-export async function guardGameState(gameId, action, { backHref = "/games/" } = {}) {
+// check: już wysłane validateGame(gameId) (strona puszcza je równolegle
+// z innym sprawdzeniem po blokadzie) — bez drugiego zapytania.
+export async function guardGameState(gameId, action, { backHref = "/games/", check = null } = {}) {
   let res = null;
   try {
-    res = (await validateGame(gameId))[action];
+    res = (await (check || validateGame(gameId)))[action];
   } catch (e) {
     console.error("[game-validate] guardGameState:", e);
     res = { ok: false, reason: t("gameValidate.noGame") };

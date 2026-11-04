@@ -63,13 +63,17 @@ function wireBreadcrumbs(state) {
     // nazwa bazy w topbarze jest znana dopiero po pobraniu metadanych
     deferTopbarReady: true,
   });
+  // Metadane bazy od razu, równolegle z sesją (RLS i tak sprawdza token).
+  const earlyId = new URLSearchParams(location.search).get("id");
+  const metaP = earlyId ? getBaseMeta(earlyId) : null;
+  metaP?.catch(() => {});
   await i18nP;
   document.documentElement.classList.remove("page-loading");
 
   const user = await userP;
   if (!user) return; // initPage przekierował na logowanie
 
-  const baseId = new URLSearchParams(location.search).get("id");
+  const baseId = earlyId;
   if (!baseId) {
     topbarReady("");
     void alertModal({ text: t("baseExplorer.errors.missingBaseId") });
@@ -84,10 +88,10 @@ function wireBreadcrumbs(state) {
   state.history = createHistory({ onChange: () => renderToolbar(state) });
 
   try {
-    state.baseMeta = await getBaseMeta(baseId);
+    state.baseMeta = await metaP;
     topbarReady(state.baseMeta?.name || t("baseExplorer.defaults.baseName"));
 
-    const r = await getBaseRole(baseId, user.id);
+    const r = await getBaseRole(baseId, user.id, state.baseMeta);
     setRole(state, r.role);
 
     // Menedżer trzyma base:B współdzielenie (współpracownicy mogą mieć bazę

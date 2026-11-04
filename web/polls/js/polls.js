@@ -328,7 +328,12 @@ function pollLink(g) {
    DB helpers
 ======================= */
 
+// Pierwsze wczytanie gry startuje razem z sesją i blokadą (wejście na
+// stronę); pierwsze refresh() bierze ten wynik zamiast nowego zapytania.
+let prefetchedGame = null;
+
 async function loadGame() {
+  if (prefetchedGame) { const p = prefetchedGame; prefetchedGame = null; return p; }
   const { data, error } = await sb()
     .from("games")
     .select("id,name,type,status,share_key_poll,poll_opened_at,poll_closed_at")
@@ -1265,6 +1270,7 @@ async function runStateAction(fn) {
 
 document.addEventListener("DOMContentLoaded", async () => {
   const i18nP = initI18n({ withSwitcher: true });
+  if (gameId) { prefetchedGame = loadGame(); prefetchedGame.catch(() => {}); }
   // Poprawki podliczania zapisują się same (szkic w bazie); przed wyjściem
   // tylko dopychamy ostatni zapis.
   const userP = initPage("polls", {

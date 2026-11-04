@@ -255,7 +255,7 @@ async function initializePage(id, opts, finishLayout) {
   // Auth startuje dopiero po przejściu guarda; może biec równolegle z i18n.
   const userP = p.access === "public"
     ? Promise.resolve(d.getUser()).catch(() => null)
-    : Promise.resolve(d.requireAuth(loginUrl()));
+    : Promise.resolve(d.requireAuth(loginUrl(), { fresh: !!p.freshUser }));
   userP.catch(() => {});
   if (opts.ready) await opts.ready;
 

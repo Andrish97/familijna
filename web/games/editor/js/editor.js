@@ -142,14 +142,17 @@ async function saveGameName(gameId, name) {
 // Pytania razem z liczbą odpowiedzi i sumą punktów -- jedno zapytanie
 // (wcześniej osobne zapytanie o odpowiedzi dla każdego pytania, po każdej
 // zmianie punktów).
+// Odpowiedzi z id i ord: pierwsze pytanie po wejściu pokazuje je bez
+// osobnego zapytania (selectQuestion z preloaded).
 async function listQuestionsWithStats(gameId) {
   const { data, error } = await sb()
     .from("questions")
-    .select("id,ord,text,answers(text,fixed_points)")
+    .select("id,ord,text,answers(id,ord,text,fixed_points)")
     .eq("game_id", gameId)
     .order("ord", { ascending: true });
   if (error) throw error;
-  return (data || []).map((q) => ({ id: q.id, ord: q.ord, text: q.text, answers: q.answers || [] }));
+  const byOrd = (a, b) => Number(a.ord) - Number(b.ord);
+  return (data || []).map((q) => ({ id: q.id, ord: q.ord, text: q.text, answers: [...(q.answers || [])].sort(byOrd) }));
 }
 
 async function listAnswers(questionId) {
@@ -317,6 +320,14 @@ async function boot() {
       location.href = href;
     },
   });
+  // Gra i pytania idą od razu, równolegle z sesją, blokadą i stanem gry
+  // (RLS i tak sprawdza token). Pokazane dopiero po przejściu blokady
+  // i stanu; po resecie ankiety / przenumerowaniu — wczytane ponownie.
+  const earlyId = new URLSearchParams(location.search).get("id");
+  const early = (load) => { const p = earlyId ? load(earlyId) : null; p?.catch(() => {}); return p; };
+  const gameP = early(loadGame);
+  let questionsP = early(listQuestionsWithStats);
+
   await i18nP;
   document.documentElement.classList.remove("page-loading");
 
@@ -342,7 +353,7 @@ async function boot() {
   const gameId = new URLSearchParams(location.search).get("id");
   if (!gameId) return leaveTo(t("editor.alert.missingId"));
 
-  let game = await loadGame(gameId);
+  let game = await gameP;
   if (!game) return leaveTo(MSG.gameNotFound());
 
   // resourceType: "game" — wspólny klucz z game-settings.js (i docelowo
@@ -371,6 +382,7 @@ async function boot() {
     if (!gate.ok) return leaveTo("");
     game = await loadGame(gameId);
     if (!game) return leaveTo(MSG.gameNotFound());
+    questionsP = null; // reset mógł zmienić pytania
   }
 
   let cfg = cfgFromGameType(game.type);
@@ -568,7 +580,8 @@ async function boot() {
     });
   }
 
-  async function selectQuestion(id) {
+  // preloaded: odpowiedzi tego pytania wczytane razem z listą (wejście na stronę).
+  async function selectQuestion(id, preloaded = null) {
     if (id === activeQId) return;
     // oczekujący zapis poprzedniego pytania idzie od razu (ze swoim id)
     saveQuestionDebounced.flush();
@@ -581,6 +594,11 @@ async function boot() {
 
     if (!cfg.allowAnswers || !id) return;
     const seq = ++answersSeq;
+    if (preloaded) {
+      answers = preloaded.map(({ id: aId, ord, text, fixed_points }) => ({ id: aId, ord, text, fixed_points }));
+      renderAnswers();
+      return;
+    }
     try {
       const rows = await listAnswers(id);
       // szybkie klikanie A -> B: odpowiedzi A nie mogą nadpisać B
@@ -1033,7 +1051,7 @@ async function boot() {
 
   /* ---------- init ---------- */
   renderHeader();
-  questions = await listQuestionsWithStats(gameId);
+  questions = await (questionsP || listQuestionsWithStats(gameId));
   // dziury w numeracji (stare dane / przerwane usuwanie sprzed migracji 276)
   if (questions.some((q, i) => Number(q.ord) !== i + 1)) {
     await renumberQuestionsRpc(gameId);
@@ -1041,7 +1059,8 @@ async function boot() {
   }
   renderQuestions();
   activeQId = undefined;
-  await selectQuestion(defaultActiveQuestionId());
+  const firstId = defaultActiveQuestionId();
+  await selectQuestion(firstId, questions.find((q) => q.id === firstId)?.answers || null);
   document.querySelector(".topbar")?.classList.add("topbar-ready");
   document.querySelectorAll("[data-skel-step]").forEach((el) => el.classList.add("skel-step-ready"));
 
