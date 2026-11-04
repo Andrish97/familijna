@@ -1,8 +1,8 @@
-import { redirectPage } from "./page-layout.js?v=v2026-11-04T10120";
+import { redirectPage } from "./page-layout.js?v=v2026-11-04T10143";
 // js/core/auth.js
-import { icon } from "./icons.js?v=v2026-11-04T10120";
-import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-04T10120";
-import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-04T10120";
+import { icon } from "./icons.js?v=v2026-11-04T10143";
+import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-04T10143";
+import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-04T10143";
 
 
 const GUEST_LOCAL_MARKER_KEY = "fam:guest:session_seen";
@@ -148,7 +148,7 @@ function authApiError(status, code) {
   return err;
 }
 
-import { reservedUsernameReason } from "./reserved-usernames.js?v=v2026-11-04T10120";
+import { reservedUsernameReason } from "./reserved-usernames.js?v=v2026-11-04T10143";
 
 
 export function validateUsername(un, { allowEmpty = false } = {}) {

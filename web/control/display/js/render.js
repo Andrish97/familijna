@@ -1,4 +1,4 @@
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-04T10120";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-04T10143";
 
 // control/display/js/render.js
 //
@@ -25,15 +25,15 @@ import { t } from "../../../shared/translation/translation.js?v=v2026-11-04T1012
 // opóźnienia między krokami tej samej zmiany) wymagają dostrojenia
 // wizualnego względem prawdziwego wyglądu — nie zgadywane tu na ślepo.
 
-import { deriveEvents } from "../../../shared/js/gameplay/deriveEvents.js?v=v2026-11-04T10120";
-import { resolveRoundsEndScreen, resolveFinalEndScreen, resolveEndScreenMode } from "../../../shared/js/gameplay/endScreen.js?v=v2026-11-04T10120";
-import { createTransitionTiming } from "../../../shared/js/gameplay/transitionTiming.js?v=v2026-11-04T10120";
+import { deriveEvents } from "../../../shared/js/gameplay/deriveEvents.js?v=v2026-11-04T10143";
+import { resolveRoundsEndScreen, resolveFinalEndScreen, resolveEndScreenMode } from "../../../shared/js/gameplay/endScreen.js?v=v2026-11-04T10143";
+import { createTransitionTiming } from "../../../shared/js/gameplay/transitionTiming.js?v=v2026-11-04T10143";
 
-import { ANSWER_ANIM, LOGO_IN_ANIM } from "../../../shared/js/gameplay/displayAnim.js?v=v2026-11-04T10120";
+import { ANSWER_ANIM, LOGO_IN_ANIM } from "../../../shared/js/gameplay/displayAnim.js?v=v2026-11-04T10143";
 import {
   ROUND_TEXT_MS, ROUND_POINTS_MS, ROUND_SUMA_MS, FINAL_TEXT_MS, FINAL_POINTS_MS,
   BOARD_TRANSITION, LOGO_IN_MS, DUEL_X_FLASH_MS,
-} from "../../../shared/js/gameplay/displayTiming.js?v=v2026-11-04T10120";
+} from "../../../shared/js/gameplay/displayTiming.js?v=v2026-11-04T10143";
 
 function pad3(n) { return String(Math.max(0, Number(n) || 0)).padStart(3, " "); }
 
