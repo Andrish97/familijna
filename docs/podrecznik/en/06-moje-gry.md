@@ -53,7 +53,7 @@ A copy received from a friend is marked "From: {name}".
 
 ![A copy from a friend — “From: …”](zrzut:games-prepared-received)
 
-Above the list you can choose a filter: DRAFT, READY TO LAUNCH, OPEN, STOPPED, READY or RECEIVED
+Above the list you can choose a filter: Draft, Ready to launch, Open, Stopped, Ready or Received
 (only copies from friends). The list refreshes by itself.
 
 ![Status filter](zrzut:games-filter-menu)

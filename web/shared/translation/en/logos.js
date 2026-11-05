@@ -15,7 +15,7 @@ const en = {
       export: "Export",
       import: "Import",
       delete: "Delete",
-      received: "RECEIVED",
+      received: "Received",
       filterLabel: "Filter logos",
     },
     status: {

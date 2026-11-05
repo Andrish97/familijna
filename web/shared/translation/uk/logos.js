@@ -15,7 +15,7 @@ const uk = {
       export: "Експорт",
       import: "Імпорт",
       delete: "Видалити",
-      received: "ОТРИМАНІ",
+      received: "Отримані",
       filterLabel: "Фільтрувати логотипи",
     },
     status: {

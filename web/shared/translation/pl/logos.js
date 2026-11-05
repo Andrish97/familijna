@@ -15,7 +15,7 @@ const pl = {
       export: "Eksport",
       import: "Import",
       delete: "Usuń",
-      received: "OTRZYMANE",
+      received: "Otrzymane",
       filterLabel: "Filtruj loga",
     },
     status: {

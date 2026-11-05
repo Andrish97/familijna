@@ -59,7 +59,7 @@ i białym; białe elementy zaświecą się na Wyświetlaczu.
 ![Zaznaczony element — ustawienia](zrzut:logos-market-draw-selected)
 
 Do dyspozycji są też: powiększanie i pomniejszanie widoku, tło sceny (czarne lub białe),
-grubość i styl linii, wypełnienie, [Cofnij], [Ponów], [Duplikuj], [Wyczyść] oraz [Podgląd]
+grubość i styl linii, wypełnienie, [Cofnij|undo], [Ponów|redo], [Duplikuj|duplicate], [Wyczyść|trash] oraz [Podgląd|eye]
 — pokazuje, jak logo będzie wyglądać na Wyświetlaczu.
 
 ![Tło sceny](zrzut:logos-market-draw-bg)
@@ -67,7 +67,7 @@ grubość i styl linii, wypełnienie, [Cofnij], [Ponów], [Duplikuj], [Wyczyść
 
 Przydatne skróty i zasady:
 
-- Delete (na Macu Fn+Backspace) albo × w pasku opcji usuwa zaznaczone elementy; [Wyczyść] usuwa
+- Delete (na Macu Fn+Backspace) albo × w pasku opcji usuwa zaznaczone elementy; [Wyczyść|trash] usuwa
   cały rysunek po potwierdzeniu.
 - Ctrl+Z (⌘Z) cofa, Ctrl+Shift+Z albo Ctrl+Y ponawia, Ctrl+D duplikuje; Ctrl+0 przywraca
   powiększenie 100%, a Ctrl + plus i Ctrl + minus powiększają i pomniejszają widok.
@@ -77,7 +77,7 @@ Przydatne skróty i zasady:
   Wskaźnik.
 - Z wciśniętym Shift narysujesz kwadrat lub koło, a linię i strzałkę — co 15°.
 - Wielokąt kończysz klawiszem Enter, Esc go anuluje, a Backspace usuwa ostatni punkt.
-- [Cofnij] i [Ponów] działają w bieżącej edycji — po ponownym otwarciu logo historia zaczyna się
+- [Cofnij|undo] i [Ponów|redo] działają w bieżącej edycji — po ponownym otwarciu logo historia zaczyna się
   od nowa.
 
 Skróty klawiszowe nie działają podczas wpisywania tekstu.
@@ -108,10 +108,10 @@ eksport do pliku `.famlogo`, [Import] oraz [Wyślij] — kopia dla znajomego (�
 Nazwę zmienisz dwuklikiem (na telefonie stuknij dwa razy), a logo usuniesz ikoną kosza.
 Nie zmieniaj ręcznie zawartości plików `.famlogo` — import takiego pliku może się nie udać.
 
-Logo otrzymane od znajomego ma oznaczenie „Od: {nazwa}”. Filtr OTRZYMANE na dolnym pasku
+Logo otrzymane od znajomego ma oznaczenie „Od: {nazwa}”. Filtr „Otrzymane” na dolnym pasku
 pokazuje tylko takie loga.
 
-![Logo od znajomego i filtr OTRZYMANE](zrzut:logos-received)
+![Logo od znajomego i filtr „Otrzymane”](zrzut:logos-received)
 
 ![Podgląd logo](zrzut:logos-market-logos-preview)
 ![Zmiana nazwy](zrzut:logos-market-logos-rename)

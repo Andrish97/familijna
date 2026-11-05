@@ -267,11 +267,12 @@ function collectTitles(markdownFiles) {
   return titles;
 }
 
-// Przycisk (.m-control) i odnośnik (.m-ref) to inline-flex: przeglądarka może
-// złamać wiersz tuż za nimi i kropka/przecinek spadał sam do nowej linii.
-// Element z następującą interpunkcją idzie do nierozdzielnego .m-nobr.
+// Przycisk (.m-control) to inline-flex: przeglądarka może złamać wiersz tuż za
+// nim i kropka/przecinek spadał sam do nowej linii. Przycisk z następującą
+// interpunkcją idzie do nierozdzielnego .m-nobr. Odnośnik (.m-ref) jest zwykłym
+// tekstem (inline) — łamie się jak tekst i kropka zostaje przy nim sama.
 export function glueTrailingPunctuation(html) {
-  return html.replace(/(<span class="m-control">(?:(?!<\/span>)[\s\S])*<\/span>|<a class="m-ref"[^>]*>(?:(?!<\/a>)[\s\S])*<\/a>)([.,;:!?…)\]»”]+)/g,
+  return html.replace(/(<span class="m-control">(?:(?!<\/span>)[\s\S])*<\/span>)([.,;:!?…)\]»”]+)/g,
     '<span class="m-nobr">$1$2</span>');
 }
 

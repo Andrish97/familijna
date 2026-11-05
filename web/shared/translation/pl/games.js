@@ -166,12 +166,12 @@ const pl = {
       label: "Filtruj wg stanu",
     },
     status: {
-      draft: "SZKIC",
-      open: "OTWARTA",
-      stopped: "ZATRZYMANA",
-      ready: "GOTOWA",
-      toOpen: "DO URUCHOMIENIA",
-      received: "OTRZYMANA",
+      draft: "Szkic",
+      open: "Otwarta",
+      stopped: "Zatrzymana",
+      ready: "Gotowa",
+      toOpen: "Do uruchomienia",
+      received: "Otrzymana",
     },
     badges: {
       votes: ({ n }) => {

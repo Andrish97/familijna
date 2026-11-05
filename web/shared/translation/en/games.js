@@ -166,12 +166,12 @@ const en = {
       label: "Filter by state",
     },
     status: {
-      draft: "DRAFT",
-      open: "OPEN",
-      stopped: "STOPPED",
-      ready: "READY",
-      toOpen: "READY TO LAUNCH",
-      received: "RECEIVED",
+      draft: "Draft",
+      open: "Open",
+      stopped: "Stopped",
+      ready: "Ready",
+      toOpen: "Ready to launch",
+      received: "Received",
     },
     badges: {
       votes: ({ n }) => (Math.abs(Number(n) || 0) === 1 ? "1 vote" : `${Math.abs(Number(n) || 0)} votes`),

@@ -309,22 +309,19 @@
   .m-doc a { color: var(--accent); text-underline-offset: 3px; }
 
   /* odnośnik do rozdziału lub podrozdziału — chip ze strzałką */
+  /* Odnośnik do rozdziału: zwykły tekst z podkreśleniem i strzałką — inny niż
+     opisywane przyciski (.m-control); łamie się jak tekst (uwaga 2026-11-05). */
   .m-ref {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 0 8px 0 6px;
-      border-radius: var(--r-pill);
-      background: var(--g-10);
+      display: inline;
       color: var(--accent);
       font-weight: 700;
-      line-height: 1.6;
-      text-decoration: none;
-      vertical-align: middle;
-      transition: background .15s;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      text-decoration-color: var(--g-60);
   }
-  .m-ref:hover { background: var(--g-10); }
-  .m-ref .ico { width: .85em; height: .85em; flex-shrink: 0; color: var(--text-muted); }
+  .m-ref:hover { text-decoration-color: currentColor; }
+  .m-ref .ico { width: .85em; height: .85em; margin-right: 3px; vertical-align: -.1em; }
 
   /* nazwa strony lub widoku */
   .m-page {

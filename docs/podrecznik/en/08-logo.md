@@ -59,7 +59,7 @@ and white; the white elements will light up on the Display.
 ![A selected element — settings](zrzut:logos-market-draw-selected)
 
 You also have: zooming the view in and out, the canvas background (black or white),
-line thickness and style, fill, [Undo], [Redo], [Duplicate], [Clear] and [Preview]
+line thickness and style, fill, [Undo|undo], [Redo|redo], [Duplicate|duplicate], [Clear|trash] and [Preview|eye]
 — which shows how the logo will look on the Display.
 
 ![Scene background](zrzut:logos-market-draw-bg)
@@ -67,7 +67,7 @@ line thickness and style, fill, [Undo], [Redo], [Duplicate], [Clear] and [Previe
 
 Useful shortcuts and rules:
 
-- Delete (on a Mac Fn+Backspace) or × in the options bar removes the selected elements; [Clear] removes
+- Delete (on a Mac Fn+Backspace) or × in the options bar removes the selected elements; [Clear|trash] removes
   the whole drawing after you confirm.
 - Ctrl+Z (⌘Z) undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+D duplicates; Ctrl+0 resets
   the zoom to 100%, and Ctrl + plus and Ctrl + minus zoom the view in and out.
@@ -77,7 +77,7 @@ Useful shortcuts and rules:
   to the Pointer.
 - Holding Shift draws a square or a circle, and a line or arrow snaps to 15° steps.
 - Press Enter to finish a polygon, Esc to cancel it, and Backspace to remove the last point.
-- [Undo] and [Redo] work within the current editing session — when you reopen the logo, the history starts
+- [Undo|undo] and [Redo|redo] work within the current editing session — when you reopen the logo, the history starts
   from scratch.
 
 Keyboard shortcuts do not work while you are typing text.
@@ -108,10 +108,10 @@ export to a `.famlogo` file, [Import] and [Send] — a copy for a friend (→ 11
 You rename a logo by double-clicking it (on a phone, tap twice), and delete it with the trash icon.
 Don't edit the contents of `.famlogo` files by hand — importing such a file may fail.
 
-A logo received from a friend is marked "From: {name}". The RECEIVED filter on the bottom bar
+A logo received from a friend is marked "From: {name}". The "Received" filter on the bottom bar
 shows only such logos.
 
-![A logo from a friend and the RECEIVED filter](zrzut:logos-received)
+![A logo from a friend and the "Received" filter](zrzut:logos-received)
 
 ![Logo preview](zrzut:logos-market-logos-preview)
 ![Renaming](zrzut:logos-market-logos-rename)

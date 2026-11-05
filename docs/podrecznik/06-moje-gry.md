@@ -53,7 +53,7 @@ Kopia otrzymana od znajomego ma oznaczenie „Od: {nazwa}”.
 
 ![Kopia od znajomego — „Od: …”](zrzut:games-prepared-received)
 
-Nad listą możesz wybrać filtr: SZKIC, DO URUCHOMIENIA, OTWARTA, ZATRZYMANA, GOTOWA albo OTRZYMANA
+Nad listą możesz wybrać filtr: Szkic, Do uruchomienia, Otwarta, Zatrzymana, Gotowa albo Otrzymana
 (tylko kopie od znajomych). Lista odświeża się sama.
 
 ![Filtr stanu](zrzut:games-filter-menu)

@@ -166,12 +166,12 @@ const uk = {
       label: "Фільтр за станом",
     },
     status: {
-      draft: "ЧЕРНЕТКА",
-      open: "ВІДКРИТА",
-      stopped: "ЗУПИНЕНА",
-      ready: "ГОТОВА",
-      toOpen: "МОЖНА ЗАПУСКАТИ",
-      received: "ОТРИМАНА",
+      draft: "Чернетка",
+      open: "Відкрита",
+      stopped: "Зупинена",
+      ready: "Готова",
+      toOpen: "Можна запускати",
+      received: "Отримана",
     },
     badges: {
       votes: ({ n }) => {
