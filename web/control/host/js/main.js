@@ -212,6 +212,9 @@ async function main() {
   startKeepAlive();
   // iPhone/iPad: blokada wygaszania wymaga dotknięcia (wake-prompt.js).
   initWakePrompt();
+  // Rejestr motywów nie zależy od lease — wczytywany równolegle z nim.
+  const hostThemeP = createHostThemeApplier();
+  hostThemeP.catch(() => {});
   let subscription = null;
   const lease = createDeviceLease({ gameId, deviceType: "host", key, onState: ({ state }) => {
     updateDeviceLeaseOverlay(state);
@@ -233,7 +236,7 @@ async function main() {
   window.addEventListener("i18n:lang", () => renderer.updateSwipeHint());
   const coverLogo = createCoverLogoRenderer({ gameId, key });
   coverLogo.apply({ step:null, detail:{} });
-  const hostTheme = await createHostThemeApplier();
+  const hostTheme = await hostThemeP;
   setupPeekSwipe(renderer);
 
   let appliedLang = null;

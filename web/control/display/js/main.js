@@ -294,6 +294,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   try {
     const { gameId, key } = parseParams();
+    // Manifest dźwięków i scena (motyw, plansza) nie zależą od gry ani lease —
+    // startują razem z autoryzacją zamiast po niej (start urządzenia).
+    const sfxManifestP = loadSfxManifest();
+    const sceneP = createScene();
+    sfxManifestP.catch(() => {});
+    sceneP.catch(() => {});
     const game = await authDisplayOrThrow(gameId, key);
     let subscription = null;
     let rendererInstance = null;
@@ -324,7 +330,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     // plików — patrz web/js/gameplay/gameStateShape.js) dociągane niżej z pierwszego
     // wiersza game_state, gdzie control/js/app.js je zdenormalizowało.
     setCurrentGameId(game.id);
-    await loadSfxManifest();
+    await sfxManifestP;
     await initSfx();
     const soundReactor = createDisplaySoundReactor();
     soundReactorInstance = soundReactor;
@@ -389,7 +395,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
     window.addEventListener("pagehide", stopUnlockLostWatch, { once: true });
 
-    const scene = await createScene();
+    const scene = await sceneP;
     scene.api = instrumentSceneApi(scene.api);
     const qrCtrl = createQRController({
       qrScreen: $("qrScreen"), gameScreen: $("gameScreen"),
