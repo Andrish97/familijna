@@ -1528,7 +1528,7 @@
      przycinał), mniejsza od zwykłej .badge */
   .left-view-btn .badge {
     position: absolute; top: 1px; right: 1px; margin: 0;
-    min-width: 14px; height: 14px; padding: 0 3px; font-size: 9px;
+    min-width: 14px; height: 14px; padding: 2px 3px 0; font-size: 9px;
     background: linear-gradient(var(--g-10), var(--g-10)) var(--surface-1); pointer-events: none;
   }
   .left-view-btn .badge:empty { display: none; }

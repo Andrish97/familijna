@@ -1692,7 +1692,10 @@
     flex-shrink: 0;
     min-width: 18px;
     height: 18px;
-    padding: 0 6px;
+    /* Cyfry na środku: czcionka zostawia miejsce na ogonki pod linią, więc
+       tekst siadał 1 px za wysoko — line-height 1 i 2 px u góry (pomiar). */
+    padding: 2px 6px 0;
+    line-height: 1;
     border-radius: var(--r-pill);
     background: linear-gradient(var(--g-10), var(--g-10)) var(--under, var(--bg));
     border: 1px solid var(--g-35);
