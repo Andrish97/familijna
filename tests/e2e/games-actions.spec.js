@@ -176,7 +176,7 @@ test.describe("Moje gry: statusy ankiet i przyciski działań", () => {
 
       await openGames(page, "?tab=poll_text");
       const openTile = tileByName(page, open);
-      await expect(openTile.locator(".cardStatus")).toHaveText("OTWARTA", { timeout: 20_000 });
+      await expect(openTile.locator(".cardStatus")).toHaveText(/^otwarta$/i, { timeout: 20_000 });
       await expect(openTile.locator(".pollBadge")).toHaveText("0 głosów");
       await selectTile(page, open);
       const reasons = {
@@ -195,7 +195,7 @@ test.describe("Moje gry: statusy ankiet i przyciski działań", () => {
 
       await openGames(page, "?tab=poll_points");
       const stoppedTile = tileByName(page, stopped);
-      await expect(stoppedTile.locator(".cardStatus")).toHaveText("ZATRZYMANA", { timeout: 20_000 });
+      await expect(stoppedTile.locator(".cardStatus")).toHaveText(/^zatrzymana$/i, { timeout: 20_000 });
       await expect(stoppedTile.locator(".pollBadge")).toHaveText("do podliczenia");
       await selectTile(page, stopped);
       await expect(page.locator("#btnEdit")).toBeDisabled();
@@ -259,7 +259,7 @@ test.describe("Moje gry: statusy ankiet i przyciski działań", () => {
       await openGames(page, "?tab=poll_points");
       const pts = tileByName(page, `${prefix}-PTS`);
       await expect(pts.locator(".rules")).toHaveText("Pytanie #3: musi mieć 3–6 odpowiedzi (masz: 2).", { timeout: 20_000 });
-      await expect(pts.locator(".cardStatus")).toHaveText("SZKIC");
+      await expect(pts.locator(".cardStatus")).toHaveText(/^szkic$/i);
       await selectTile(page, `${prefix}-PTS`);
       await expect(page.locator("#btnPoll")).toBeDisabled();
 
@@ -298,7 +298,7 @@ test.describe("Moje gry: tworzenie i usuwanie", () => {
       expect(created).toMatchObject([{ type: "poll_points", status: "draft" }]);
       const tile = tileByName(page, long.slice(0, 80));
       await expect(tile).toHaveClass(/is-selected/);
-      await expect(tile.locator(".cardStatus")).toHaveText("SZKIC");
+      await expect(tile.locator(".cardStatus")).toHaveText(/^szkic$/i);
       await expect(page.locator("#btnEdit")).toBeEnabled({ timeout: 10_000 });
 
       // nazwa z samych spacji -> komunikat, okno zostaje

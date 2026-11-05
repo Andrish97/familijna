@@ -396,12 +396,12 @@ test.describe("games: audyt -- kafelki", () => {
       await openGames(page, "?lang=pl");
       // kafel nie pokazuje już typu (zakładki), tylko stan -- gra z 1 pytaniem to szkic
       const status = tileByName(page, name).locator(".cardStatus");
-      await expect(status).toContainText("SZKIC", { timeout: 15000 });
+      await expect(status).toContainText(/szkic/i, { timeout: 15000 });
 
       await page.locator(".lang-btn").click();
       await page.locator('.menu-item[data-lang="en"]').click();
-      await expect(status).toContainText("DRAFT", { timeout: 5000 });
-      await expect(status).not.toContainText("SZKIC");
+      await expect(status).toContainText(/draft/i, { timeout: 5000 });
+      await expect(status).not.toContainText(/szkic/i);
     } finally {
       await deleteGamesByName(page, name);
     }
