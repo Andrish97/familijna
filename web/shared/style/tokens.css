@@ -35,8 +35,9 @@
 
   /* ── podłoża (kryjące) ──────────────────────────────────────── */
   --bg: #050914;                 /* tło strony */
-  /* tło stron logowania (.auth-body) */
-  --bg-auth: radial-gradient(circle at 20% 10%, var(--g-10), transparent 55%), radial-gradient(circle at 80% 90%, rgba(70,140,255,.18), transparent 55%), var(--bg);
+  /* tło stron logowania (.auth-body); u góry czyste --bg jak pasek stanu
+     (meta theme-color), poświata zaczyna się niżej — bez szwu pod paskiem */
+  --bg-auth: linear-gradient(var(--bg), transparent 140px), radial-gradient(circle at 20% 10%, var(--g-10), transparent 55%), radial-gradient(circle at 80% 90%, rgba(70,140,255,.18), transparent 55%), var(--bg);
   --surface-1: #111827;          /* karta, menu */
   --surface-modal: #121524;      /* okno */
   --surface-2: #0b1020;
@@ -194,7 +195,7 @@
   --g-60: rgb(var(--rgb-gold) / .75);
 
   --bg: #f3f0e8;
-  --bg-auth: radial-gradient(circle at 20% 10%, var(--g-10), transparent 55%), radial-gradient(circle at 80% 90%, rgb(var(--rgb-blue) / .10), transparent 55%), var(--bg);
+  --bg-auth: linear-gradient(var(--bg), transparent 140px), radial-gradient(circle at 20% 10%, var(--g-10), transparent 55%), radial-gradient(circle at 80% 90%, rgb(var(--rgb-blue) / .10), transparent 55%), var(--bg);
   --surface-1: #ffffff;
   --surface-modal: #ffffff;
   --surface-2: #e9e5db;

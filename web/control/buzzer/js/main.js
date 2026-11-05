@@ -10,16 +10,16 @@
 // autorytatywny wiersz już to wie), błąd sieci (przycisk wraca do ON,
 // można spróbować ponownie).
 
-import { initI18n, setUiLang } from "../../../shared/translation/translation.js?v=v2026-11-05T23293";
-import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-05T23293";
-import { initWakePrompt } from "../../../shared/js/core/wake-prompt.js?v=v2026-11-05T23293";
-import { guardViewportWidth } from "../../../shared/js/core/device-guard.js?v=v2026-11-05T23293";
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23293";
-import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-05T23293";
-import { createButtonRenderer, isLockedRow } from "./render.js?v=v2026-11-05T23293";
-import { createPressController } from "./press.js?v=v2026-11-05T23293";
-import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-05T23293";
-import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-05T23293";
+import { initI18n, setUiLang } from "../../../shared/translation/translation.js?v=v2026-11-05T23304";
+import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-05T23304";
+import { initWakePrompt } from "../../../shared/js/core/wake-prompt.js?v=v2026-11-05T23304";
+import { guardViewportWidth } from "../../../shared/js/core/device-guard.js?v=v2026-11-05T23304";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23304";
+import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-05T23304";
+import { createButtonRenderer, isLockedRow } from "./render.js?v=v2026-11-05T23304";
+import { createPressController } from "./press.js?v=v2026-11-05T23304";
+import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-05T23304";
+import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-05T23304";
 
 
 function parseParams() {

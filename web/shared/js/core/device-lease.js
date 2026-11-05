@@ -1,10 +1,10 @@
-import { sb, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23293";
-import { t } from "../../translation/translation.js?v=v2026-11-05T23293";
-import { getDevicePresenceMeta } from "./device-context.js?v=v2026-11-05T23293";
-import { startTicker } from "./background-ticker.js?v=v2026-11-05T23293";
-import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-05T23293";
-import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "./session-log.js?v=v2026-11-05T23293";
-import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-05T23293";
+import { sb, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23304";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23304";
+import { getDevicePresenceMeta } from "./device-context.js?v=v2026-11-05T23304";
+import { startTicker } from "./background-ticker.js?v=v2026-11-05T23304";
+import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-05T23304";
+import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "./session-log.js?v=v2026-11-05T23304";
+import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-05T23304";
 
 
 const HEARTBEAT_MS = 3_000;
