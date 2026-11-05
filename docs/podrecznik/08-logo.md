@@ -71,7 +71,7 @@ Przydatne skróty i zasady:
 - Ctrl+Z (⌘Z) cofa, Ctrl+Shift+Z albo Ctrl+Y ponawia, Ctrl+D duplikuje; Ctrl+0 przywraca
   powiększenie 100%, a Ctrl + plus i Ctrl + minus powiększają i pomniejszają widok.
 - L — linia, R — prostokąt, O — elipsa, P — wielokąt, U — następny kształt, F — wypełnienie;
-  [ i ] zmieniają grubość linii lub gumki.
+  `[` i `]` zmieniają grubość linii lub gumki.
 - Strzałki przesuwają zaznaczenie o 1 kropkę, a z Shift o 10. Przytrzymany Ctrl chwilowo włącza
   Wskaźnik.
 - Z wciśniętym Shift narysujesz kwadrat lub koło, a linię i strzałkę — co 15°.

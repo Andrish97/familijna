@@ -121,3 +121,8 @@ test("Wskazówki: przycisk i odnośnik trzymają kropkę/przecinek w tym samym w
     'zob. <span class="m-nobr"><a class="m-ref" href="?ch=1"><i></i>Final</a>),</span>');
   assert.equal(glueTrailingPunctuation('<span class="m-control">A</span> i dalej'), '<span class="m-control">A</span> i dalej');
 });
+
+test("Wskazówki: „[ i ]” (klawisze) nie staje się przyciskiem — budowanie się zatrzymuje", async () => {
+  const { parseManual } = await import("../../scripts/manual/build-content.mjs");
+  assert.throws(() => parseManual(["# 1. Test\n\nKlawisze [ i ] zmieniają grubość.\n"], new Map()), /klawisze/);
+});

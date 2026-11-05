@@ -71,7 +71,7 @@ Useful shortcuts and rules:
 - Ctrl+Z (⌘Z) undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+D duplicates; Ctrl+0 resets
   the zoom to 100%, and Ctrl + plus and Ctrl + minus zoom the view in and out.
 - L — line, R — rectangle, O — ellipse, P — polygon, U — next shape, F — fill;
-  [ and ] change the thickness of the line or eraser.
+  `[` and `]` change the thickness of the line or eraser.
 - The arrow keys move the selection by 1 dot, or by 10 with Shift. Holding Ctrl temporarily switches
   to the Pointer.
 - Holding Shift draws a square or a circle, and a line or arrow snaps to 15° steps.

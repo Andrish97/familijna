@@ -151,6 +151,8 @@ function inline(text, icons, titles = new Map()) {
   s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, (_, t, u) => keep(`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a>`));
   // [Etykieta] — przycisk; [Etykieta|ikona] — z jawnie wskazaną ikoną (gdy etykieta jest niejednoznaczna)
   s = s.replace(/\[([^\]\n|]+)(?:\|([\w-]+))?\]/g, (_, label, forced) => {
+    // „[ i ]” to klawisze [ i ], nie przycisk „i” — klawisze zapisuj jako `[` i `]`.
+    if (/^\s|\s$/.test(label)) throw new Error(`Wskazówki: „[${label}]” wygląda na klawisze, nie przycisk — użyj \`[\` / \`]\``);
     const ic = forced || icons.get(label.replace(/\s+/g, " ").trim());
     const iconHtml = ic ? `<i data-icon="${esc(ic)}"></i>` : "";
     return keep(`<span class="m-control">${iconHtml}${esc(label)}</span>`);
