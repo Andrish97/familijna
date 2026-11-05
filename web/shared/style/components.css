@@ -2405,6 +2405,8 @@
   }
   .scroll-fade.has-more-above { --sf-a: var(--mask-on); }
   .scroll-fade.has-more-below { --sf-b: var(--mask-on); }
+  /* Ciemny motyw: krótko — ciemny kafel gaśnie w jaśniejszą kartę (mgła). */
+  :root:not([data-theme="light"]) .scroll-fade { --scroll-fade-size: 12px; }
 
   /* Kontakt na stronach bez zwykłej stopki (ekrany urządzeń). */
   .contact-footer-entry { flex: 0 0 auto; justify-content: flex-end; }
