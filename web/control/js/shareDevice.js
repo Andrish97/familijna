@@ -154,6 +154,11 @@ export function createShareDevice({ currentUser, game, onBadgesChanged }) {
     const deviceType = _deviceType;
     clearMessage();
     cooldownTicker.resetBindings();
+    // Lista z poprzedniego otwarcia (inne urządzenie, nieaktualni znajomi)
+    // znika od razu — zaznaczenie w niej przepadało po dojściu nowej listy,
+    // a „Udostępnij” nic nie robiło.
+    subsList?.replaceChildren();
+    updateSelection();
     const current = await loadShares(version);
     if (!current || !subsList) return;
     const { data: friends, error: friendsError } = await sb().rpc("friends_list");
