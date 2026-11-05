@@ -1697,7 +1697,7 @@
   /* Język i wygląd zostają w topbarze także przy otwartym panelu hamburgera
      (telefon) — ich menu nad tym panelem, nie pod nim. */
   .lang-menu,
-  .theme-menu { z-index: calc(var(--z-mobile-menu) + 1); }
+  .theme-menu { z-index: var(--z-topbar-menu); }
   .account-wrap {
     position: relative;
     display: inline-flex;
@@ -1802,6 +1802,8 @@
     padding: 10px 12px;
     border-radius: var(--r-md);
   }
+  /* Otwarty panel pokazuje liczniki przy przyciskach — suma na ✕ znika. */
+  .topbar-menu-toggle[aria-expanded="true"] .badge { display: none; }
   :where(:root[data-compact]) .topbar-menu-toggle .badge {
     position: absolute;
     top: -6px;

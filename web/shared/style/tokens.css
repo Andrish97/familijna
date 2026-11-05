@@ -130,6 +130,7 @@
   --z-sheet: 1200;              /* okno od dołu; okna nad szufladą Eksploratora */
   --z-top: 9999;                /* nad oknami: menu kontekstowe, podgląd obrazu, błąd urządzenia */
   --z-mobile-menu: 10050;
+  --z-topbar-menu: 10060;       /* menu języka i wyglądu z topbara — nad panelem hamburgera */
   --z-toast: 10100;
   --z-tooltip: 2147483000;
   --z-block: 2147483647;        /* nakładka blokady (blocking-overlay.css) — nad wszystkim */
