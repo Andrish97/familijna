@@ -3747,6 +3747,9 @@
     white-space: nowrap;
   }
   .nav-more-dropdown .btn .badge { margin-left: auto; }
+  /* Ikona przed napisem, jak w menu języka i wyglądu (na pasku stoi za napisem). */
+  .nav-more-dropdown .btn > .ico { order: -1; flex: 0 0 auto; }
+  .nav-more-dropdown .btn > [data-i18n-icon-after] { display: inline-flex; flex-direction: row-reverse; align-items: center; gap: 8px; }
   @media (hover: hover) and (pointer: fine) {
     .nav-more-dropdown .btn:hover:not(:disabled) { background: var(--surface-inset); filter: none; transform: none; }
   }
