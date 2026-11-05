@@ -3,7 +3,11 @@
 // ocenić widoczność i dostępność akcji — liczone w jednym miejscu dla paska,
 // menu kontekstowego, skrótów, przeciągania i gestów.
 
-import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
+=======
+import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 // Zaznaczenie → elementy.
 export function selectionInfo(state) {

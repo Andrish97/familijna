@@ -79,7 +79,11 @@ const uk = {
         host_css: "Недозволене правило рамок ведучого: {detail}.",
         display: "Неправильна частина display: {detail}.",
         label: "Назви теми (label) мають мати версії pl, en і uk по 1–40 символів.",
-        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23304).",
+<<<<<<< HEAD
+        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23341).",
+=======
+        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23341).",
+>>>>>>> origin/main
         artwork_too_large: "SVG дисплея завеликий (щонайбільше 300 КБ).",
         svg_root: "Графіка має бути одним елементом <svg>.",
         svg_viewbox: "Графіка має мати viewBox=\"0 0 1280 720\".",

@@ -42,7 +42,11 @@
 // bindGame(id) — przekazanie tu logoPreview:null nadpisałoby to z powrotem
 // na domyślne.
 
-import { t } from "../../translation/translation.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+=======
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 export function buildDisplayPreviewRow({ teams, display, logoPreview } = {}) {
   const displayDetail = {
     mode: "GAME",

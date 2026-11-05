@@ -24,14 +24,25 @@
 // matematyki animacji/fontów od zera nie dałoby żadnej korzyści, tylko
 // ryzyko niezgodności z tym, jak wygląda dziś (ustalone wprost).
 
-import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-05T23304";
-import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-05T23304";
-import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-05T23304";
-import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-05T23304";
-import { createThemeManager } from "../../../shared/js/display/theme_manager.js?v=v2026-11-05T23304";
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23304";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23304";
-import { clipDisplayText } from "../../../shared/js/gameplay/displayText.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-05T23341";
+import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-05T23341";
+import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-05T23341";
+import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-05T23341";
+import { createThemeManager } from "../../../shared/js/display/theme_manager.js?v=v2026-11-05T23341";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { clipDisplayText } from "../../../shared/js/gameplay/displayText.js?v=v2026-11-05T23341";
+=======
+import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-05T23341";
+import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-05T23341";
+import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-05T23341";
+import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-05T23341";
+import { createThemeManager } from "../../../shared/js/display/theme_manager.js?v=v2026-11-05T23341";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { clipDisplayText } from "../../../shared/js/gameplay/displayText.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 export async function createScene() {
   let animationGeneration = 0;

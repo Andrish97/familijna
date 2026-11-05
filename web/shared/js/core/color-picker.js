@@ -3,8 +3,13 @@
 // w components.css). Identyfikatory części: <prefix>Preview, <prefix>Hex,
 // <prefix>R/G/B i <prefix>RVal/GVal/BVal.
 
-import { t } from "../../translation/translation.js?v=v2026-11-05T23304";
-import { hexToRgb, rgbToHex } from "./color.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { hexToRgb, rgbToHex } from "./color.js?v=v2026-11-05T23341";
+=======
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { hexToRgb, rgbToHex } from "./color.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 const CHANNELS = ["R", "G", "B"];
 

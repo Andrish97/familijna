@@ -1,5 +1,9 @@
 // Wspólny HTML Wskazówek: serwer i przeglądarka używają tych samych elementów.
-import { escapePublicHtml as esc } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { escapePublicHtml as esc } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23341";
+=======
+import { escapePublicHtml as esc } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 export function manualToc(manual, current, href) {
   const find = (id) => manual.chapters.find((c) => c.id === id);

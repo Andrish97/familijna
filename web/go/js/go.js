@@ -1,16 +1,32 @@
-import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-05T23341";
 // web/go/js/go.js
-import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-05T23304";
-import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-05T23304";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23304";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-05T23304";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23304";
-import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-05T23304";
-import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23304";
+import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-05T23341";
+import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-05T23341";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
 
-import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-05T23304";
-import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-05T23304";
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23304";
+import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-05T23341";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-05T23341";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23341";
+=======
+import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-05T23341";
+// web/go/js/go.js
+import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-05T23341";
+import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-05T23341";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
+
+import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-05T23341";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-05T23341";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 const i18nReady = initEntryPage("go", { ready: initI18n({ withSwitcher: true }) }).then(() => {
   document.querySelector("main[data-skel-step]")?.classList.add("skel-step-ready");

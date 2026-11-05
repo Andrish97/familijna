@@ -8,13 +8,23 @@
 // sam wygląd co sortowanie w Subskrypcjach; wartość w adresie (?param=).
 // Kafel niesie wartość w atrybucie data-* (filter.attr).
 
-import { t } from "../../translation/translation.js?v=v2026-11-05T23304";
-import { promptModal } from "./modal.js?v=v2026-11-05T23304";
-import { icon } from "./icons.js?v=v2026-11-05T23304";
-import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23304";
-import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23304";
-import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23304";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { promptModal } from "./modal.js?v=v2026-11-05T23341";
+import { icon } from "./icons.js?v=v2026-11-05T23341";
+import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23341";
+import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23341";
+import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23341";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+=======
+import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { promptModal } from "./modal.js?v=v2026-11-05T23341";
+import { icon } from "./icons.js?v=v2026-11-05T23341";
+import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23341";
+import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23341";
+import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23341";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 
 const norm = (s) => String(s || "").toLocaleLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();

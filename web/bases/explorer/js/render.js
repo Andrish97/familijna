@@ -1,18 +1,34 @@
-import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+=======
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 // base-explorerjs/render.js
 // Rysowanie menedżera bazy z magazynu (state.store / state.d) i jednego
 // modelu „co pokazać” (data/listing.js). Bez bazy i bez akcji. Zmiana samego
 // zaznaczenia przełącza tylko klasy (renderSelection), bez przebudowy.
 
-import { TYPE_DEFS, isTrash, currentFolderId, hasQuery } from "./state.js?v=v2026-11-05T23304";
-import { computeListing } from "./data/listing.js?v=v2026-11-05T23304";
-import { SUGGESTED_TYPES } from "./data/derived.js?v=v2026-11-05T23304";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23304";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23304";
-import { toolbarButtonsHtml, updateToolbarButtons } from "./ui/toolbar.js?v=v2026-11-05T23304";
-import { treeToggleHtml, treeIconName, treeRowInner, treeLines } from "./ui/tree-row.js?v=v2026-11-05T23304";
-import { emptyStateHtml } from "../../../shared/js/core/empty-state.js?v=v2026-11-05T23304";
-import { setWidth, widthAttr } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { TYPE_DEFS, isTrash, currentFolderId, hasQuery } from "./state.js?v=v2026-11-05T23341";
+import { computeListing } from "./data/listing.js?v=v2026-11-05T23341";
+import { SUGGESTED_TYPES } from "./data/derived.js?v=v2026-11-05T23341";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { toolbarButtonsHtml, updateToolbarButtons } from "./ui/toolbar.js?v=v2026-11-05T23341";
+import { treeToggleHtml, treeIconName, treeRowInner, treeLines } from "./ui/tree-row.js?v=v2026-11-05T23341";
+import { emptyStateHtml } from "../../../shared/js/core/empty-state.js?v=v2026-11-05T23341";
+import { setWidth, widthAttr } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
+=======
+import { TYPE_DEFS, isTrash, currentFolderId, hasQuery } from "./state.js?v=v2026-11-05T23341";
+import { computeListing } from "./data/listing.js?v=v2026-11-05T23341";
+import { SUGGESTED_TYPES } from "./data/derived.js?v=v2026-11-05T23341";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { toolbarButtonsHtml, updateToolbarButtons } from "./ui/toolbar.js?v=v2026-11-05T23341";
+import { treeToggleHtml, treeIconName, treeRowInner, treeLines } from "./ui/tree-row.js?v=v2026-11-05T23341";
+import { emptyStateHtml } from "../../../shared/js/core/empty-state.js?v=v2026-11-05T23341";
+import { setWidth, widthAttr } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 /* ================= DOM ================= */
 const elToolbar = document.getElementById("toolbar");

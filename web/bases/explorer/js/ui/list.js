@@ -3,13 +3,23 @@
 // (dwuklik / podwójne stuknięcie), menu kontekstowe (PPM / przytrzymanie)
 // i sortowanie klikiem w nagłówek.
 
-import { selectionClear, selectionSetSingle, selectionToggle, selectionRange, setSort } from "../state.js?v=v2026-11-05T23304";
-import { renderList, renderSelection, LIST_COLUMNS } from "../render.js?v=v2026-11-05T23304";
-import { openFolderFromList, editQuestion } from "../commands.js?v=v2026-11-05T23304";
-import { showContextMenu } from "../context-menu.js?v=v2026-11-05T23304";
-import { attachMarquee } from "./marquee.js?v=v2026-11-05T23304";
-import { addLongPress, addDoubleTap, isTouchContextMenuWindow } from "../mobile.js?v=v2026-11-05T23304";
-import { isModKey } from "../platform.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { selectionClear, selectionSetSingle, selectionToggle, selectionRange, setSort } from "../state.js?v=v2026-11-05T23341";
+import { renderList, renderSelection, LIST_COLUMNS } from "../render.js?v=v2026-11-05T23341";
+import { openFolderFromList, editQuestion } from "../commands.js?v=v2026-11-05T23341";
+import { showContextMenu } from "../context-menu.js?v=v2026-11-05T23341";
+import { attachMarquee } from "./marquee.js?v=v2026-11-05T23341";
+import { addLongPress, addDoubleTap, isTouchContextMenuWindow } from "../mobile.js?v=v2026-11-05T23341";
+import { isModKey } from "../platform.js?v=v2026-11-05T23341";
+=======
+import { selectionClear, selectionSetSingle, selectionToggle, selectionRange, setSort } from "../state.js?v=v2026-11-05T23341";
+import { renderList, renderSelection, LIST_COLUMNS } from "../render.js?v=v2026-11-05T23341";
+import { openFolderFromList, editQuestion } from "../commands.js?v=v2026-11-05T23341";
+import { showContextMenu } from "../context-menu.js?v=v2026-11-05T23341";
+import { attachMarquee } from "./marquee.js?v=v2026-11-05T23341";
+import { addLongPress, addDoubleTap, isTouchContextMenuWindow } from "../mobile.js?v=v2026-11-05T23341";
+import { isModKey } from "../platform.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 
 const ROW = ".row[data-key]";
 

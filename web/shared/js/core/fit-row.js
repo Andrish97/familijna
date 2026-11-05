@@ -1,4 +1,8 @@
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23304";
+<<<<<<< HEAD
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+=======
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+>>>>>>> origin/main
 // fit-row.js
 // Wiersz przycisków bez zawijania (zgłoszenie 2026-10-24: pasek ustawień gry
 // na telefonie łamał się na dwa rzędy). Element z klasą .fit-row stoi zawsze
