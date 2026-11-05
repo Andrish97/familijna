@@ -1266,6 +1266,31 @@ async function main() {
     return { urls, presenceFlags, displayAudioUnlocked, connectCodes, shareBadges, testModeChanging, typingPending:typingCommit, displayHiddenSameBrowser: displayHiddenSameBrowser(), busy: testModePanel?.blocked() || controlOffline || presenceReadBlocksGame() || waitingForDisplayAudioUnlock() || queuedGameAction || (soundBusy() && store.state.step !== "setup_finish") || (committing && !typingCommit) || waitingForDisplay() || Date.now() < lockedUntil || blockingDevices(store.state, presenceFlags).length > 0, devicesBlocked: presenceReadBlocksGame() || blockingDevices(store.state, presenceFlags).length > 0, devicesAbsent: absentDevicesNotice() };
   }
 
+  // Przerysowanie podczas wciśnięcia zastępowało element pod palcem/kursorem:
+  // wciśnięcie trafiało w stary, puszczenie w nowy i kliknięcie ginęło (krok
+  // urządzeń, gdy łączą się Wyświetlacz/Prowadzący/Przycisk; e2e control2
+  // „Przycisk fizyczny”, „tryb testowy”). Podmiana DOM czeka do końca
+  // kliknięcia (następne zadanie po puszczeniu), najdłużej RENDER_HOLD_MAX_MS.
+  const RENDER_HOLD_MAX_MS = 1500;
+  let pointerHeld = false;
+  let renderDeferred = false;
+  let pointerHoldTimer = null;
+  const releasePointerHold = () => {
+    if (!pointerHeld) return;
+    pointerHeld = false;
+    clearTimeout(pointerHoldTimer);
+    if (!renderDeferred) return;
+    renderDeferred = false;
+    setTimeout(() => renderCurrent(), 0);
+  };
+  document.addEventListener("pointerdown", () => {
+    pointerHeld = true;
+    clearTimeout(pointerHoldTimer);
+    pointerHoldTimer = setTimeout(releasePointerHold, RENDER_HOLD_MAX_MS);
+  }, true);
+  document.addEventListener("pointerup", releasePointerHold, true);
+  document.addEventListener("pointercancel", releasePointerHold, true);
+
   function renderCurrent() {
     // Network/audio callbacks may resolve while main() is still awaiting the
     // last bootstrap reads. The final render below covers their latest state.
@@ -1285,7 +1310,8 @@ async function main() {
     // bez żadnego śladu w konsoli, dlaczego.
     try {
       testModePanel.update(store.state.settings.testMode);
-      ui.render(store.state, { ...renderCtx(), testModeAvailable: testModePanel.canEnable() });
+      if (pointerHeld) renderDeferred = true;
+      else ui.render(store.state, { ...renderCtx(), testModeAvailable: testModePanel.canEnable() });
       document.querySelector("main[data-skel-step]")?.classList.add("skel-step-ready");
     } catch (e) {
       console.error("[control2] render() rzucił -- UI może zostać nieaktualne:", e);
