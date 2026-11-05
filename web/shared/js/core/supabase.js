@@ -9,8 +9,8 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // spóźnić do 10 s bez fałszywego zerwania na słabym łączu.
 export const REALTIME_OPTIONS = { heartbeatIntervalMs: 10_000 };
 
-import { startActivity } from "./activity.js?v=v2026-11-05T23552";
-import { applyLegacyHandoff } from "./legacy-handoff.js?v=v2026-11-05T23552";
+import { startActivity } from "./activity.js?v=v2026-11-05T23575";
+import { applyLegacyHandoff } from "./legacy-handoff.js?v=v2026-11-05T23575";
 
 
 let _client = null;
@@ -20,7 +20,7 @@ export function sb() {
 
   if (!window.supabase || typeof window.supabase.createClient !== "function") {
     throw new Error(
-      "supabase-js nie jest załadowany. Upewnij się, że <script src='/shared/vendor/supabase-js.js?v=v2026-11-05T23552' defer></script> jest przed modułami."
+      "supabase-js nie jest załadowany. Upewnij się, że <script src='/shared/vendor/supabase-js.js?v=v2026-11-05T23575' defer></script> jest przed modułami."
     );
   }
 
