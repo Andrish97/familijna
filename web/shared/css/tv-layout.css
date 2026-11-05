@@ -14,6 +14,7 @@ html[data-tv-layout="true"] .topbar .brand {
 html[data-tv-layout="true"] .footer {
   gap: 20px;
   margin-top: auto;
+  margin-bottom: 8px;
   padding: 30px calc(6vw + env(safe-area-inset-right, 0px)) max(18px, env(safe-area-inset-bottom)) calc(6vw + env(safe-area-inset-left, 0px));
   font-size: 20px;
 }

@@ -525,7 +525,8 @@
     background: transparent;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    /* dół: strefę paska gestów bierze stopka */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
   }
   .auth-shell { width: min(520px, 92vw); padding: 18px; }
   /* Treść karty: marka, formularz (pola na całą szerokość), podpowiedź. */
