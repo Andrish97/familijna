@@ -3,8 +3,8 @@
 // folderów, pytania w poddrzewach, tagi pytań, proponowana kategoria pytania
 // i folderu, liczniki. Czyste funkcje — bez DOM i bez bazy.
 
-import { normalizeText } from "./listing.js?v=v2026-11-05T18153";
-import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T18153";
+import { normalizeText } from "./listing.js?v=v2026-11-05T18324";
+import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T18324";
 
 // Proponowane kategorie (typy gry) w kolejności panelu.
 export const SUGGESTED_TYPES = [TYPES.PREPARED, TYPES.POLL_POINTS, TYPES.POLL_TEXT];
