@@ -10,6 +10,7 @@ You create and store logos on the *My logos* page. You can assign a different
 logo to each game (→ 8.5).
 
 ![My logos](zrzut:logos)
+![My logos — phone](zrzut:logos-phone@phone)
 ![A selected logo — action buttons](zrzut:logos-market-logos-selected)
 
 The Display has **150 × 70 dots**. Something that looks good in high resolution can become

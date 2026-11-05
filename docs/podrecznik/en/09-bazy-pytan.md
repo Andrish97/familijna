@@ -15,6 +15,7 @@ invited you to (→ 12). The filter above the list shows bases by role: Mine, Ed
 - You rename a base by double-clicking it (on a phone, tap twice), and delete it with the trash icon — only in your own bases.
 
 ![Question bases](zrzut:bases)
+![Question bases — phone](zrzut:bases-phone@phone)
 ![New base](zrzut:bases-name-create)
 
 You can move questions from a game to a base with the [Export to base] button in *My games* (→ 6.7).

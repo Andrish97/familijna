@@ -41,6 +41,7 @@ Na karcie „Udostępnianie” są dwa sposoby:
 Głosujący są anonimowi — widzisz tylko liczbę głosów. Na jednym urządzeniu kolejna osoba może zagłosować po 30 sekundach (np. gdy kilka osób dzieli się telefonem). Głosów z linku nie da się przypisać do osób — ktoś może zagłosować kilka razy, np. z innej przeglądarki. Gdy wynik ma znaczenie, zaproś odbiorców (niżej): każdy z nich zagłosuje raz.
 
 ![Udostępnianie — link i kod QR](zrzut:poll-share)
+![Udostępnianie — link i kod QR — telefon](zrzut:poll-share-phone@phone)
 ![Powiększony kod QR](zrzut:polls-qr-vote-modal)
 
 **Kod QR na telewizorze lub rzutniku.** [QR na wyświetlaczu] pokazuje 6-cyfrowy kod ekranu

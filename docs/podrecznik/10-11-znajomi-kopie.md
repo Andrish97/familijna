@@ -17,7 +17,7 @@ wiadomości e-mail o ankietach i udostępnionych urządzeniach (→ 14.1).
 3. Wybierz [Zaproś].
 
 ![Znajomi](zrzut:friends)
-
+![Znajomi — telefon](zrzut:friends-phone@phone)
 Zaproszenie pojawi się w sekcji „Oczekujące”. Jeśli zapraszana osoba ma włączone
 powiadomienia, dostanie wiadomość e-mail z przyciskiem „Otwórz zaproszenie”.
 

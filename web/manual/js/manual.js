@@ -1,4 +1,4 @@
-import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-05T20052";
+import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-05T20112";
 // manual/js/manual.js
 // Podręcznik (E13): części → rozdziały → podrozdziały. Treść z content/{lang}.js
 // (generowana z docs/podrecznik przez scripts/manual/build-content.mjs).
@@ -6,28 +6,28 @@ import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-05T20052";
 // Zmiana rozdziału to replaceState (jak karty, tabs.js): „Wstecz” wraca do poprzedniej strony.
 // Strona ma działać nawet bez auth: najpierw treść, potem initPage „miękko”.
 
-import { initI18n, setUiLang, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-05T20052";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T20052";
-import { hydrateIcons, icon } from "../../shared/js/core/icons.js?v=v2026-11-05T20052";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-05T20052";
-import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-05T20052";
-import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-05T20052";
-import { createImageViewer } from "../../shared/js/core/image-viewer.js?v=v2026-11-05T20052";
-import { buildIndex, initManualSearch, highlight } from "./search.js?v=v2026-11-05T20052";
-import chapterLoaders from "../content/chapter-loaders.js?v=v2026-11-05T20052";
+import { initI18n, setUiLang, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-05T20112";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T20112";
+import { hydrateIcons, icon } from "../../shared/js/core/icons.js?v=v2026-11-05T20112";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-05T20112";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-05T20112";
+import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-05T20112";
+import { createImageViewer } from "../../shared/js/core/image-viewer.js?v=v2026-11-05T20112";
+import { buildIndex, initManualSearch, highlight } from "./search.js?v=v2026-11-05T20112";
+import chapterLoaders from "../content/chapter-loaders.js?v=v2026-11-05T20112";
 
-import { manualToc, manualArticle } from "./render.js?v=v2026-11-05T20052";
-import { syncPublicSeo } from "../../shared/js/core/public-seo.js?v=v2026-11-05T20052";
+import { manualToc, manualArticle } from "./render.js?v=v2026-11-05T20112";
+import { syncPublicSeo } from "../../shared/js/core/public-seo.js?v=v2026-11-05T20112";
 
 const CONTENT = {
-  pl: () => import("../content/pl.js?v=v2026-11-05T20052"),
-  en: () => import("../content/en.js?v=v2026-11-05T20052"),
-  uk: () => import("../content/uk.js?v=v2026-11-05T20052"),
+  pl: () => import("../content/pl.js?v=v2026-11-05T20112"),
+  en: () => import("../content/en.js?v=v2026-11-05T20112"),
+  uk: () => import("../content/uk.js?v=v2026-11-05T20112"),
 };
 const META = {
-  pl: () => import("../content/meta/pl.js?v=v2026-11-05T20052"),
-  en: () => import("../content/meta/en.js?v=v2026-11-05T20052"),
-  uk: () => import("../content/meta/uk.js?v=v2026-11-05T20052"),
+  pl: () => import("../content/meta/pl.js?v=v2026-11-05T20112"),
+  en: () => import("../content/meta/en.js?v=v2026-11-05T20112"),
+  uk: () => import("../content/meta/uk.js?v=v2026-11-05T20112"),
 };
 export const CHAPTER_PARAM = "ch";
 // Skąd przyszedł czytelnik po kliknięciu odnośnika w treści (rozdział albo podrozdział, np. "6.7").
@@ -271,6 +271,7 @@ async function show(id, hash = "", { updateUrl = true, smooth = false, from = nu
   renderToc();
   currentLabel.textContent = ch ? ch.title : t("manual.pageTitle");
   hydrateIcons(article);
+  for (const img of article.querySelectorAll(".m-shot img")) markShotLoaded(img);
   wireCarousels(article);
   // Pierwsze wyświetlenie (i zmiana języka) nie zamyka panelu otwartego w trakcie wczytywania.
   if (!keepPanel) setTocOpen(false);
@@ -285,7 +286,14 @@ async function show(id, hash = "", { updateUrl = true, smooth = false, from = nu
 let tocDrawer;
 function setTocOpen(open) { tocDrawer?.setOpen(open); }
 
+// Zrzut wczytany: pole zrzutu bez połysku ładowania (manual.css .m-shot-zoom).
+function markShotLoaded(img) {
+  if (img?.complete && img.naturalWidth > 0) img.closest(".m-shot-zoom")?.classList.add("is-loaded");
+}
+
 function wireNavigation() {
+  // load nie wędruje w górę — nasłuch w fazie przechwytywania obejmuje wszystkie zrzuty.
+  document.addEventListener("load", (ev) => { if (ev.target?.matches?.(".m-shot img")) markShotLoaded(ev.target); }, true);
   // Odnośniki wewnątrz podręcznika (spis, karty części, „→ 7.3”, poprzedni/następny).
   document.addEventListener("click", (ev) => {
     const zoom = ev.target.closest?.(".m-shot-zoom");

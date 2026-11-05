@@ -15,6 +15,7 @@ zaprosili Cię inni (→ 12). Filtr nad listą pokaże bazy według roli: Moja, 
 - Nazwę bazy zmienisz dwuklikiem (na telefonie stuknij dwa razy), a bazę usuniesz ikoną kosza — tylko w swoich bazach.
 
 ![Bazy pytań](zrzut:bases)
+![Bazy pytań — telefon](zrzut:bases-phone@phone)
 ![Nowa baza](zrzut:bases-name-create)
 
 Pytania z gry przeniesiesz do bazy przyciskiem [Eksportuj do bazy] w *Moich grach* (→ 6.7).

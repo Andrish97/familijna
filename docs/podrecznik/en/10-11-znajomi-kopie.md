@@ -17,7 +17,7 @@ emails from you about polls and shared devices (→ 14.1).
 3. Choose [Invite].
 
 ![Friends](zrzut:friends)
-
+![Friends — phone](zrzut:friends-phone@phone)
 The invitation appears in the "Pending" section. If the invited person has
 notifications turned on, they get an email with an "Open invitation" button.
 

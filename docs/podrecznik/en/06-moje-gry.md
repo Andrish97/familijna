@@ -15,7 +15,7 @@ Familijna to your phone's home screen or your desktop. This is especially handy 
 as a buzzer and on the host's tablet (→ 17.1).
 
 ![My games — the “Prepared” tab](zrzut:games)
-
+![My games — the “Prepared” tab — phone](zrzut:games-phone@phone)
 The page is the library of your games, including copies received from friends. Games are divided
 into tabs:
 

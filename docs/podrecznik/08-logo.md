@@ -10,6 +10,7 @@ Logo tworzysz i przechowujesz na stronie *Moje loga*. Każdej grze możesz przyp
 logo (→ 8.5).
 
 ![Moje loga](zrzut:logos)
+![Moje loga — telefon](zrzut:logos-phone@phone)
 ![Zaznaczone logo — przyciski działań](zrzut:logos-market-logos-selected)
 
 Wyświetlacz ma **150 × 70 kropek**. To, co wygląda dobrze w dużej rozdzielczości, po zamianie na

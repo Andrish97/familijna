@@ -41,6 +41,7 @@ The "Sharing" card offers two ways:
 Voters are anonymous — you only see the number of votes. On one device the next person can vote after 30 seconds (e.g. when several people share a phone). Link votes cannot be tied to people — someone can vote several times, e.g. from another browser. When the result matters, invite recipients (below): each of them votes once.
 
 ![Sharing — link and QR code](zrzut:poll-share)
+![Sharing — link and QR code — phone](zrzut:poll-share-phone@phone)
 ![Enlarged QR code](zrzut:polls-qr-vote-modal)
 
 **QR code on a TV or projector.** [QR on display] shows the 6-digit code of the "QR Display"

@@ -449,3 +449,12 @@ module.exports.push({ id: "settings-drawer", category: "Dodatkowe", title: "Usta
   ready: "#gsContentInner", devices: ["phone"], steps: [async view => {
     if (await view.locator("#gsSidebarToggle").isVisible()) await view.locator("#gsSidebarToggle").click(); await view.waitForTimeout(300);
   }] });
+
+// Wskazówki: strony list wyglądają na telefonie wyraźnie inaczej (jedna kolumna,
+// ikony dolnego paska, okna od dołu) — obok zrzutu z komputera osobny zrzut z
+// telefonu (uwaga właściciela 2026-11-05). Bliźniaki scen kadrów strony głównej,
+// tylko na telefon i bez flagi homepage (kadry strony głównej bez zmian).
+for (const id of ["games", "bases", "friends", "subscribers", "poll-share", "marketplace", "logos"]) {
+  const base = module.exports.find((s) => s.id === id);
+  module.exports.push({ ...base, id: `${id}-phone`, homepage: false, devices: ["phone"], category: "Dodatkowe", title: `${base.title} — telefon` });
+}

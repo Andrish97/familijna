@@ -96,6 +96,7 @@ On the *Community Games* page:
 - "Sort" — Recommended, Top rated, Most added, Newest, Title A–Z.
 
 ![Community Games](zrzut:marketplace)
+![Community Games — phone](zrzut:marketplace-phone@phone)
 ![Language filter](zrzut:logos-market-market-filter)
 
 [Load more] shows more games.
@@ -194,6 +195,7 @@ is sent to that address. The recipient accepts or declines the invitation on the
 leads to.
 
 ![Subscribers](zrzut:subscribers)
+![Subscribers — phone](zrzut:subscribers-phone@phone)
 ![An address with an account — go to Friends](zrzut:people-subscribers-has-account)
 
 You cannot invite an address that belongs to an account (the app will suggest a friendship instead), or an address whose

@@ -15,7 +15,7 @@ Familijną do ekranu głównego telefonu lub pulpitu. Przydaje się szczególnie
 z przyciskiem do pojedynku i na tablecie prowadzącego (→ 17.1).
 
 ![Moje gry — zakładka „Preparowana”](zrzut:games)
-
+![Moje gry — zakładka „Preparowana” — telefon](zrzut:games-phone@phone)
 Strona jest biblioteką Twoich gier, także kopii otrzymanych od znajomych. Gry są podzielone
 na zakładki:
 

@@ -96,6 +96,7 @@ Na stronie *Gry Społeczności*:
 - „Sortowanie” — Polecane, Najlepiej oceniane, Najczęściej dodawane, Najnowsze, Tytuł A–Z.
 
 ![Gry Społeczności](zrzut:marketplace)
+![Gry Społeczności — telefon](zrzut:marketplace-phone@phone)
 ![Filtr języka](zrzut:logos-market-market-filter)
 
 Kolejne gry wyświetli [Pokaż więcej].
@@ -194,6 +195,7 @@ Na podany adres przyjdzie wiadomość „Zaproszenie do subskrypcji od użytkown
 wiadomość.
 
 ![Subskrybenci](zrzut:subscribers)
+![Subskrybenci — telefon](zrzut:subscribers-phone@phone)
 ![Adres z kontem — przejście do Znajomych](zrzut:people-subscribers-has-account)
 
 Nie zaprosisz adresu, który należy do konta (serwis zaproponuje znajomość), ani adresu, którego
