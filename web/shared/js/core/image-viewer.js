@@ -4,10 +4,10 @@
 // (pinch-zoom.js).
 // Zamyka [×], Esc, kliknięcie tła albo „Wstecz” na górnym pasku (backBtn).
 
-import { t } from "../../translation/translation.js?v=v2026-11-05T22122";
-import { icon } from "./icons.js?v=v2026-11-05T22122";
-import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T22122";
-import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T22122";
+import { t } from "../../translation/translation.js?v=v2026-11-05T22144";
+import { icon } from "./icons.js?v=v2026-11-05T22144";
+import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T22144";
+import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T22144";
 
 /**
  * @param {{ mount?: HTMLElement|null, before?: Node|null, backBtn?: HTMLElement|null }} opts

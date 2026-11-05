@@ -3,9 +3,9 @@
 // plik <klucz>.json ma ten sam format co motyw wgrany (theme-file.js).
 // Wspólne dla Wyświetlacza, Prowadzącego i Ustawień gry.
 // Zasady: familijna-server/docs/motywy.md.
-import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T22122";
+import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T22144";
 
-const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T22122";
+const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T22144";
 let registry = null;
 
 async function load() {
