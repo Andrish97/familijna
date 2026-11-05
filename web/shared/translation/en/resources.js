@@ -15,7 +15,6 @@ const en = {
   "action": "Send",
   "title": "Send to friends",
   "selectFriends": "Choose friends",
-  "receivedFilter": "Received",
   "proposedTitle": "Copy awaits your decision",
   "history": "Send history",
   "from": "From: {name}",

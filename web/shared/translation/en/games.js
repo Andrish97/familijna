@@ -171,6 +171,7 @@ const en = {
       stopped: "STOPPED",
       ready: "READY",
       toOpen: "READY TO LAUNCH",
+      received: "RECEIVED",
     },
     badges: {
       votes: ({ n }) => (Math.abs(Number(n) || 0) === 1 ? "1 vote" : `${Math.abs(Number(n) || 0)} votes`),

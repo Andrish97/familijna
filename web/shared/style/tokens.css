@@ -221,7 +221,8 @@
 
   --shadow-menu: 0 12px 32px var(--k-40);
   --shadow-popover: 0 20px 50px var(--k-40);
-  --shadow-card: 0 10px 28px rgb(var(--rgb-black) / .07);
+  /* Krótki cień: długi był ucinany do prostokąta przez rodziców z overflow: hidden. */
+  --shadow-card: 0 1px 3px rgb(var(--rgb-black) / .06);
   --shadow-lift: 0 8px 20px var(--k-40);
   --shadow-modal: 0 24px 70px var(--k-40);
   --shadow-sheet: 0 -12px 44px var(--k-40);
@@ -260,7 +261,7 @@
   :root[data-theme="light"] {
     --shadow-menu: 0 4px 14px var(--k-40);
     --shadow-popover: 0 6px 18px var(--k-40);
-    --shadow-card: 0 3px 10px rgb(var(--rgb-black) / .07);
+    --shadow-card: 0 1px 3px rgb(var(--rgb-black) / .06);
     --shadow-lift: 0 4px 10px var(--k-40);
     --shadow-modal: 0 8px 24px var(--k-40);
     --shadow-sheet: 0 -6px 20px var(--k-40);

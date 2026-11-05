@@ -15,7 +15,6 @@ const uk = {
   "action": "Надіслати",
   "title": "Надіслати друзям",
   "selectFriends": "Вибери друзів",
-  "receivedFilter": "Отримані",
   "proposedTitle": "Копія очікує на твоє рішення",
   "history": "Історія надсилань",
   "from": "Від: {name}",

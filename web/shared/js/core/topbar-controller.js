@@ -1,4 +1,4 @@
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T19195";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T19342";
 // js/core/topbar-controller.js
 // Zarządza całym topbarem:
 //  - Desktop: overflow nav ("Więcej") w section-2, dropdown .account-wrap w section-4
@@ -6,11 +6,11 @@ import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T19195";
 //
 // Eksportuje: setTopbarNavPriority, setTopbarAccount (alias: initTopbarAccountDropdown), autoInitTopbarAuthButton
 
-import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T19195";
-import { isGuestUser } from './guest-mode.js?v=v2026-11-05T19195';
-import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T19195';
-import { icon, iconText } from './icons.js?v=v2026-11-05T19195';
-import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T19195';
+import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T19342";
+import { isGuestUser } from './guest-mode.js?v=v2026-11-05T19342';
+import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T19342';
+import { icon, iconText } from './icons.js?v=v2026-11-05T19342';
+import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T19342';
 
 
 // ── Narzędzie: pozycjonowanie fixed dropdown ──────────────────────────────────
@@ -389,7 +389,7 @@ function applyTopbarAccount(user, {
       if (onLogout) {
         try { await onLogout(); } catch(e) { console.warn('logout callback error:', e); }
       }
-      const { signOut } = await import("./auth.js?v=v2026-11-05T19195");
+      const { signOut } = await import("./auth.js?v=v2026-11-05T19342");
       await signOut();
       location.href = withLangParam(loginHref);
     });
@@ -452,7 +452,7 @@ export { setTopbarAccount as initTopbarAccountDropdown };
 export async function autoInitTopbarAuthButton(btn = document.getElementById('btnLogout')) {
   if (!btn) return;
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
-  const { getUser } = await import('./auth.js?v=v2026-11-05T19195');
+  const { getUser } = await import('./auth.js?v=v2026-11-05T19342');
 
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
   const user = await getUser();
@@ -544,7 +544,16 @@ function initTopbarController() {
     if (focusInMenu) toggleBtn?.focus();
   };
 
+  // Separator tylko między dwiema niepustymi grupami (np. sam przycisk konta
+  // — bez linii nad nim). Widoczność przycisków zmienia się po montażu.
+  const syncSep = () => {
+    if (!sep) return;
+    const visible = (root) => !!root && [...root.querySelectorAll(menuContentSelector)].some((el) => !isHiddenWithin(el, mount));
+    sep.hidden = !((tabGroup?.childElementCount || 0) > 0 || visible(group2)) || !visible(group4);
+  };
+
   const open = () => {
+    syncSep();
     document.documentElement.toggleAttribute('data-menu-scrollbar', window.innerWidth > document.documentElement.clientWidth);
     document.dispatchEvent(new CustomEvent('drawer:open', { detail: { panel: overlay } }));
     if (overlay) overlay.inert = false;
@@ -617,6 +626,7 @@ function initTopbarController() {
     mount.append(group2, sep, group4);
 
     const visibleItems = (root) => [...root.querySelectorAll(menuContentSelector)].filter(isVisible);
+    syncSep();
     const hasAnything =
       (tabGroup?.childElementCount || 0) > 0 ||
       visibleItems(group2).length > 0 ||

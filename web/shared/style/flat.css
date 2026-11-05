@@ -2770,7 +2770,8 @@
   :is(.tab-label.active, .tab-slot.active > .tab-label)::before,
   :is(.tab-label.active, .tab-slot.active > .tab-label)::after {
     --tab-line: color-mix(in srgb, var(--text) 14%, var(--surface-1));
-    --tab-arc: transparent calc(var(--tab-r-in) - 1.5px), var(--tab-line) calc(var(--tab-r-in) - .5px), var(--surface-1) calc(var(--tab-r-in) + .5px);
+    /* Ostre przejścia (po 0,4 px): szerokie rozmywały łuk w smugę obok ostrej ramki na gęstych ekranach. */
+    --tab-arc: transparent calc(var(--tab-r-in) - 1.2px), var(--tab-line) calc(var(--tab-r-in) - .8px), var(--tab-line) calc(var(--tab-r-in) - .2px), var(--surface-1) calc(var(--tab-r-in) + .2px);
     content: "";
     display: block;
     position: absolute;

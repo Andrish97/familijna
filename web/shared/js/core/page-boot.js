@@ -112,8 +112,17 @@
     };
     let choice = readChoice();
     const resolve = () => choice === "auto" ? (media?.matches ? "light" : "dark") : choice;
+    // Kolor paska systemu (Android) wg motywu. Strona bez własnej mety dostaje
+    // ją tutaj — inaczej przeglądarka brała ciemny theme_color z manifestu.
     const paintMeta = () => {
-      const meta = document.querySelector?.('meta[name="theme-color"]');
+      if (typeof document.querySelector !== "function") return;
+      let meta = document.querySelector('meta[name="theme-color"]');
+      // Tworzymy dopiero po sparsowaniu <head> — wcześniej meta strony jeszcze nie istnieje.
+      if (!meta && document.readyState !== "loading" && document.head && typeof document.createElement === "function") {
+        meta = document.createElement("meta");
+        meta.setAttribute("name", "theme-color");
+        document.head.appendChild(meta);
+      }
       if (meta) meta.setAttribute("content", THEME_BG[root.dataset.theme] || THEME_BG.dark);
     };
     const apply = () => {

@@ -242,10 +242,12 @@ test("manual: przycisk na logowaniu otwiera rozdział o koncie, „←” wraca 
   if (process.env.TEST_BRANCH_CODE !== "0") await context.route(/^https:\/\/www\.familijna\.app\/login\/?(?:\?.*)?$/, serveBranchLoginHtml);
   await page.goto(`${ORIGIN}/login/?lang=en`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("#btnManual")).toHaveAttribute("href", /^\/manual\/\?ch=5&ret=%2Flogin%2F&lang=en$/);
-  // „i” po prawej, tuż przed przyciskiem języka (jak sekcja 3 topbara stron aplikacji).
-  await expect(page.locator(".login-top-right #btnManual + .lang-switcher .lang-btn")).toBeVisible();
-  const [info, lang] = await Promise.all([page.locator("#btnManual").boundingBox(), page.locator(".lang-btn").boundingBox()]);
-  expect(Math.round(lang.x - (info.x + info.width))).toBe(8);
+  // „i” po prawej, potem przycisk wyglądu i języka (jak sekcja 3 topbara stron aplikacji;
+  // przycisk wyglądu od 2026-11-03, jasny-motyw-plan.md).
+  await expect(page.locator(".login-top-right #btnManual + .theme-switcher + .lang-switcher .lang-btn")).toBeVisible();
+  const [info, theme, lang] = await Promise.all([page.locator("#btnManual").boundingBox(), page.locator(".theme-btn").boundingBox(), page.locator(".lang-btn").boundingBox()]);
+  expect(Math.round(theme.x - (info.x + info.width))).toBe(8);
+  expect(Math.round(lang.x - (theme.x + theme.width))).toBe(8);
   expect(Math.round(info.y)).toBe(Math.round(lang.y));
   expect(info.x).toBeGreaterThan(page.viewportSize().width / 2);
   await page.locator("#btnManual").click();
@@ -267,7 +269,8 @@ test("manual: zrzuty — karuzela widoków (strzałki, kropki) i powiększenie",
   await expect(dots.nth(1)).toHaveClass(/active/);
   await dots.nth(n - 1).click();
   await expect(dots.nth(n - 1)).toHaveClass(/active/);
-  await expect.poll(() => carousel.locator("img").nth(n - 1).evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+  // Zrzut ma wersję ciemną i jasną (jasny-motyw-plan.md) — sprawdzamy widoczną.
+  await expect.poll(() => carousel.locator(".m-shot").nth(n - 1).locator("img:visible").evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
   await carousel.locator(".m-shot-zoom").nth(n - 1).click();
   await expect(page.locator("#imgvOverlay.is-open .imgv-img")).toBeVisible();
   await page.keyboard.press("Escape");

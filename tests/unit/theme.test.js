@@ -96,3 +96,21 @@ test("zmiana motywu przenika (View Transitions); start i „ogranicz ruch” bez
   assert.deepEqual(reduced.transitions, []);
   assert.equal(reduced.root.dataset.theme, "light");
 });
+
+test("strona bez meta theme-color dostaje ją z kolorem motywu (pasek systemu Androida)", () => {
+  const added = [];
+  const root = { dataset: {}, hasAttribute: () => false, toggleAttribute() {}, setAttribute() {}, removeAttribute() {}, classList: { contains: () => false, remove() {} } };
+  const context = vm.createContext({
+    document: { documentElement: root, readyState: "complete", addEventListener() {}, querySelector: () => added[0] || null,
+      head: { appendChild: (el) => added.push(el) },
+      createElement: () => ({ attrs: {}, setAttribute(k, v) { this.attrs[k] = v; } }) },
+    window: { innerWidth: 390, innerHeight: 844, screen: { width: 390, height: 844 },
+      matchMedia: (q) => ({ matches: q.includes("prefers-color-scheme") }), addEventListener() {}, dispatchEvent() {} },
+    navigator: { maxTouchPoints: 1, userAgent: "" }, localStorage: { getItem: () => null, setItem() {}, removeItem() {} },
+    CustomEvent: class { constructor(type) { this.type = type; } },
+    MutationObserver: class { observe() {} disconnect() {} }, setTimeout() {}, clearTimeout() {},
+  });
+  vm.runInContext(BOOT, context);
+  assert.equal(added.length, 1);
+  assert.deepEqual(added[0].attrs, { name: "theme-color", content: "#f3f0e8" });
+});

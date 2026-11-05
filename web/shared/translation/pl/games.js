@@ -171,6 +171,7 @@ const pl = {
       stopped: "ZATRZYMANA",
       ready: "GOTOWA",
       toOpen: "DO URUCHOMIENIA",
+      received: "OTRZYMANA",
     },
     badges: {
       votes: ({ n }) => {

@@ -15,7 +15,6 @@ const pl = {
   "action": "Wyślij",
   "title": "Wyślij znajomym",
   "selectFriends": "Wybierz znajomych",
-  "receivedFilter": "Otrzymano",
   "proposedTitle": "Kopia czeka na Twoją decyzję",
   "history": "Historia wysyłek",
   "from": "Od: {name}",

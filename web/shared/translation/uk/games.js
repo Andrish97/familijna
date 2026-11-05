@@ -171,6 +171,7 @@ const uk = {
       stopped: "ЗУПИНЕНА",
       ready: "ГОТОВА",
       toOpen: "МОЖНА ЗАПУСКАТИ",
+      received: "ОТРИМАНА",
     },
     badges: {
       votes: ({ n }) => {
