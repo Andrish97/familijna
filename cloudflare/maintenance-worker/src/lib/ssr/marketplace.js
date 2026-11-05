@@ -37,9 +37,22 @@ export async function publicCatalog(env) {
 export const CATALOG_TTL_MS=60_000;
 let catalogCache=null; // { at, promise }
 export function resetCatalogCache() { catalogCache=null; }
+// Druga warstwa: Cache API Cloudflare, wspólna dla izolatów w danym centrum
+// danych (pamięć izolatu trafiała przypadkiem; pomiar 2026-11-05: chybienie
+// 250–450 ms, trafienie ~25 ms). Ten sam czas życia.
+const CATALOG_CACHE_KEY="https://cache.familijna.internal/market-public-catalog";
+async function sharedCatalog(env) {
+  const cache=globalThis.caches?.default;
+  if(!cache) return publicCatalog(env);
+  const hit=await cache.match(CATALOG_CACHE_KEY).catch(()=>null);
+  if(hit) return hit.json();
+  const rows=await publicCatalog(env);
+  await cache.put(CATALOG_CACHE_KEY,new Response(JSON.stringify(rows),{headers:{"Content-Type":"application/json","Cache-Control":`max-age=${Math.round(CATALOG_TTL_MS/1000)}`}})).catch(()=>{});
+  return rows;
+}
 export async function cachedPublicCatalog(env,now=Date.now()) {
   if(catalogCache && now-catalogCache.at<CATALOG_TTL_MS) return catalogCache.promise;
-  const entry={at:now,promise:publicCatalog(env)};
+  const entry={at:now,promise:sharedCatalog(env)};
   catalogCache=entry;
   entry.promise.catch(()=>{ if(catalogCache===entry) catalogCache=null; });
   return entry.promise;
