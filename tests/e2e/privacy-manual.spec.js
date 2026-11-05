@@ -389,7 +389,7 @@ test("manual: podgląd zrzutu — na komputerze cały obraz w oknie i przybliża
     await page.goto(`${ORIGIN}/manual/?lang=pl&ch=6#s-6-1`, { waitUntil: "domcontentloaded" });
     await manualReady(page);
     const shot = page.locator(".m-shot-zoom").first();
-    await expect.poll(() => shot.locator("img").evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
+    await expect.poll(() => shot.locator("img:visible").evaluate((img) => img.complete && img.naturalWidth > 0)).toBe(true);
     await shot.click();
     await expect(page.locator("#imgvOverlay.is-open .imgv-zoom .imgv-img")).toBeVisible();
     await page.waitForTimeout(400);
