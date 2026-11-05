@@ -49,12 +49,15 @@ export async function servePublicMarketplace(request,env,url) {
   if(param!==null && !validSlug(param) && !UUID_RE.test(param))
     return serveNotFoundPage(request,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE);
   let games,game=null,template;
+  const timings=[];
   try {
     const originUrl=new URL(url);originUrl.pathname="/marketplace/index.html";
+    // Server-Timing: czas każdego kroku (pomiar TTFB Społeczności, 2026-11-05).
+    const timed=(name,p)=>{const t0=Date.now();return p.finally(()=>{timings.push(`${name};dur=${Date.now()-t0}`);});};
     const [rows,detail,source]=await Promise.all([
-      cachedPublicCatalog(env),
-      param ? publicMarketRpc(env,UUID_RE.test(param)?"market_game_detail":"market_game_by_slug",UUID_RE.test(param)?{p_id:param}:{p_slug:param}) : Promise.resolve([]),
-      fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE),
+      timed("catalog",cachedPublicCatalog(env)),
+      param ? timed("detail",publicMarketRpc(env,UUID_RE.test(param)?"market_game_detail":"market_game_by_slug",UUID_RE.test(param)?{p_id:param}:{p_slug:param})) : Promise.resolve([]),
+      timed("origin",fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE)),
     ]);
     games=rows;template=source;
     if(param) {
@@ -103,6 +106,7 @@ export async function servePublicMarketplace(request,env,url) {
   const headers=new Headers(template.headers);
   headers.set("Content-Language",lang);headers.set("Cache-Control","no-store");headers.set("X-Robots-Tag",seo.robots);
   headers.delete("Content-Length");headers.delete("ETag");
+  if(timings.length) headers.set("Server-Timing",timings.join(", "));
   const response=rewriter.transform(new Response(template.body,{headers}));
   return request.method==="HEAD"?new Response(null,{headers:response.headers}):response;
 }

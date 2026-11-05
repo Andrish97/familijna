@@ -125,7 +125,9 @@ export async function fetchWith404(request, originBase, originHost, resolveOverr
   if (url.pathname === "/404.html") {
     return serveNotFoundPage(request, originBase, originHost, resolveOverride);
   }
+  const originStart = Date.now();
   const res = await fetchFromOrigin(request, url, originBase, originHost, resolveOverride);
+  const originMs = Date.now() - originStart;
   if (res.status >= 300 && res.status < 400) return res;
   if (res.status !== 404) {
     // HTML bez no-store = cache w przeglądarce → stale wersje
@@ -136,6 +138,8 @@ export async function fetchWith404(request, originBase, originHost, resolveOverr
         headers: {
           "Content-Type": ct,
           "Cache-Control": "no-store",
+          // Czas pobrania z originu (GitHub Pages) — pomiar TTFB, 2026-11-05.
+          "Server-Timing": `origin;dur=${originMs}`,
           ...(["/maintenance", "/maintenance/", "/maintenance/index.html"].includes(url.pathname)
             ? { "X-Robots-Tag": "noindex, follow" } : {}),
           "X-GitHub-Request-Id": res.headers.get("X-GitHub-Request-Id") || ""

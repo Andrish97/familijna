@@ -7,6 +7,8 @@ const path = require("node:path");
 
 const ORIGIN = "https://www.familijna.app";
 const paths = (process.env.PATHS || "/").split(/\s+/).filter(Boolean);
+// RUNS=0: tylko pomiar TTFB (bez Lighthouse).
+const probeOnly = process.env.RUNS === "0";
 const runs = Math.max(1, Math.min(5, Number(process.env.RUNS) || 3));
 const outDir = path.join(process.cwd(), "lighthouse");
 fs.mkdirSync(outDir, { recursive: true });
@@ -28,6 +30,22 @@ function runOnce(url, device, i) {
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
+// TTFB i Server-Timing Workera (origin, catalog…) — 5 zwykłych zapytań na adres.
+async function probeTtfb(url) {
+  const rows = [];
+  for (let i = 0; i < 5; i++) {
+    const t0 = Date.now();
+    const res = await fetch(url, { headers: { "Accept": "text/html", "Cache-Control": "no-cache" } });
+    const ttfb = Date.now() - t0;
+    await res.arrayBuffer();
+    rows.push(`${ttfb} ms [${res.headers.get("server-timing") || "-"}]`);
+  }
+  console.log(`::notice title=TTFB ${new URL(url).pathname}::${rows.join(" | ")}`);
+}
+
+(async () => {
+for (const p of paths) await probeTtfb(new URL(p, ORIGIN).href).catch((e) => console.log(`::warning::TTFB ${p}: ${e.message}`));
+if (probeOnly) return;
 for (const p of paths) {
   const url = new URL(p, ORIGIN).href;
   for (const device of ["mobile", "desktop"]) {
@@ -62,3 +80,4 @@ for (const p of paths) {
     console.log(`::notice title=Szczegóły ${device} ${p}::LCP: ${node?.selector || "?"} [${(node?.nodeLabel || "").slice(0, 60)}]; fazy: ${phases || "?"}; blokujące: ${blocking || "brak"}`);
   }
 }
+})();

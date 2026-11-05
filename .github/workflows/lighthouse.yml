@@ -16,7 +16,7 @@ on:
         required: false
         default: '/'
       runs:
-        description: 'Przebiegi na adres i urządzenie (mediana)'
+        description: 'Przebiegi na adres i urządzenie (mediana); 0 = tylko TTFB'
         required: false
         default: '3'
 
