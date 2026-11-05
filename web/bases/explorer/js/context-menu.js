@@ -6,17 +6,17 @@
 // od dołu wyglądające jak pozostałe okna (wzorzec „okno od dołu” z
 // shared/style/components.css i modal-sheet.js): przyciemnione tło, rogi 28 px,
 // pasek do przeciągania, wysuwanie i zjazd z animacją, safe area.
-import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T21201";
-import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T21201";
-import { selectionSetSingle } from "./state.js?v=v2026-11-05T21201";
-import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T21201";
-import { buildContext } from "./actions/context.js?v=v2026-11-05T21201";
-import { runAction } from "./actions/run.js?v=v2026-11-05T21201";
-import { formatShortcut } from "./platform.js?v=v2026-11-05T21201";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T21201";
-import { renderSelection } from "./render.js?v=v2026-11-05T21201";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T21201";
-import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T21201";
+import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T21204";
+import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T21204";
+import { selectionSetSingle } from "./state.js?v=v2026-11-05T21204";
+import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T21204";
+import { buildContext } from "./actions/context.js?v=v2026-11-05T21204";
+import { runAction } from "./actions/run.js?v=v2026-11-05T21204";
+import { formatShortcut } from "./platform.js?v=v2026-11-05T21204";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T21204";
+import { renderSelection } from "./render.js?v=v2026-11-05T21204";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T21204";
+import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T21204";
 
 const CLOSE_MS = 230;
 // Palec puszczony po przytrzymaniu daje „klik” bez wciśnięcia w menu —
