@@ -2723,7 +2723,8 @@
     top: 8px;
     bottom: 8px;
     width: 1px;
-    background: var(--k-40);
+    /* Kolor linii silnika: widoczny w obu motywach (czarny ginął w ciemnym). */
+    background: var(--line);
     display: none;
   }
   .tab-label::before {
