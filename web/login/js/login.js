@@ -17,6 +17,7 @@ import {
   updateUserLanguage,
   validatePassword,
   validateUsername,
+  preloadUsernameRules,
   niceAuthError,
   getPasswordRulesText,
   hasGuestLocalMarker,
@@ -836,6 +837,7 @@ async function resolveInitialRoute(syncLanguage) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  preloadUsernameRules(); // pole nazwy: lista zastrzeżonych przedrostków z bazy
   try {
     await initI18n({ withSwitcher: true });
   } catch (e) {

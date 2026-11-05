@@ -148,10 +148,14 @@ function authApiError(status, code) {
   return err;
 }
 
-import { reservedUsernameReason } from "./reserved-usernames.js?v=v2026-11-05T01142";
+import { reservedUsernameReason, loadReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-05T01142";
+
+// Strony z polem nazwy (logowanie, Konto) pobierają listę zastrzeżonych przedrostków od wejścia.
+export function preloadUsernameRules() { loadReservedUsernamePrefixes(sb()); }
 
 
 export function validateUsername(un, { allowEmpty = false } = {}) {
+  preloadUsernameRules();
   const v = String(un || "").trim();
   if (!v) {
     if (allowEmpty) return "";

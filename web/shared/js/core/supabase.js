@@ -10,7 +10,6 @@ export const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 export const REALTIME_OPTIONS = { heartbeatIntervalMs: 10_000 };
 
 import { startActivity } from "./activity.js?v=v2026-11-05T01142";
-import { setReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-05T01142";
 import { applyLegacyHandoff } from "./legacy-handoff.js?v=v2026-11-05T01142";
 
 
@@ -31,9 +30,6 @@ export function sb() {
   // żeby reszta stron mogła używać window.supabaseClient
   window.supabaseClient = _client;
   startActivity(_client);
-  void _client.rpc("reserved_username_prefixes_list").then(({data,error})=>{
-    if (!error) setReservedUsernamePrefixes(data);
-  }).catch(()=>{});
 
   return _client;
 }

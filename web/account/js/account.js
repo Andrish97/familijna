@@ -1,7 +1,7 @@
 import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-05T01142";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T01142";
 import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-05T01142";
-import { updateUserLanguage, validatePassword, validateUsername, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-05T01142";
+import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-05T01142";
 import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-05T01142";
 import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T01142";
 import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js?v=v2026-11-05T01142";
@@ -857,6 +857,7 @@ async function handleDeleteAccount() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  preloadUsernameRules(); // pole nazwy: lista zastrzeżonych przedrostków z bazy
   const i18nP = initI18n({ withSwitcher: true });
   // Dostęp, „Wstecz”, „Wskazówki” i konto w topbarze wg mapy (auth równolegle z i18n).
   const userP = initPage("account", { ready: i18nP, back: backToGames });
