@@ -361,6 +361,12 @@ async function loadUser(fresh) {
       const { data } = await sb().auth.getSession();
       const sessionUser = data?.session?.user || null;
       if (!sessionUser) return null;
+      // Zapisanej sesji ufamy tylko, gdy baza przyjęła token (profil się
+      // wczytał). Brak profilu (nieważny token, konto usunięte, świeża
+      // rejestracja) — sprawdzenie u serwera jak dawniej, zanim strona
+      // cokolwiek zdecyduje (inaczej nieważna sesja przekierowywała na
+      // „ustaw nazwę”, e2e index „fałszywa sesja”, 2026-11-05).
+      if (!(await fetchProfileRow(sessionUser))) return await loadUser(true);
       verifySessionInBackground();
       return await enrichUser(sessionUser);
     }
