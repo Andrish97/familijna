@@ -34,27 +34,28 @@
   .m-actionbar-return { display: none; }
   .m-search-toggle { display: none; }
 
+  /* Spis: wyszukiwarka u góry na stałe, przewija się (i wygasza krawędź —
+     scroll-fade.js) tylko lista rozdziałów. Szuflada na telefonie nie dostaje
+     maski, więc jej tło nie zanika i nie prześwituje strona pod spodem. */
   .m-side {
       grid-column: 1;
       grid-row: 1 / -1;
       display: flex;
       flex-direction: column;
       gap: 3px;
+      min-height: 0;
       padding: 14px 10px;
       border-right: 1px solid var(--line);
-      overflow-y: auto;
+      overflow: hidden;
   }
 
-  .m-side-list { display: flex; flex-direction: column; gap: 3px; }
+  .m-side-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+  .m-side-list > * { flex-shrink: 0; }
 
   /* ---------- wyszukiwarka (to samo pole co wyszukiwarki list) ---------- */
   .m-search {
-      position: sticky;
-      top: -14px;
-      z-index: 2;
-      margin: -14px -10px 6px;
-      padding: 14px 10px 8px;
-      background: var(--bg, var(--bg));
+      flex: 0 0 auto;
+      margin: 0 0 6px;
   }
 
   .m-search-results {
@@ -474,7 +475,6 @@
           background: var(--g-10);
       }
       .m-actionbar-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; font-size: 14px; }
-      .m-search { background: var(--surface-1); }
       .m-search-toggle { display: inline-flex; margin-left: auto; flex: 0 0 auto; }
       .m-head .m-sections { display: block; }
       /* „Wróć do: …” mieści się w pasku ze „Spis treści” — zamiast tytułu rozdziału. */
