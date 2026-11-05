@@ -289,12 +289,9 @@
     padding: 0;
   }
   .fontPickPop .fontPickSearch{
-    display: flex;
-    gap: 6px;
     padding: 10px;
     border-bottom: 1px solid var(--w-8);
   }
-  .fontPickPop .fontPickSearch .inp{ flex: 1; height: 30px; font-size: 13px; }
   .fontPickPop .fontPickList{
     padding: 6px;
     overflow-y: auto;

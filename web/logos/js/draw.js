@@ -15,17 +15,17 @@
 // Każda zakończona zmiana woła commit() -- jedno miejsce, które zapisuje
 // snapshot, oznacza „niezapisane zmiany” i odświeża podgląd.
 
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T20153";
-import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-05T20153";
-import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-05T20153";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T20153";
-import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-05T20153";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-05T20153";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-05T20153";
-import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-05T20153";
-import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-05T20153";
-import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-05T20153";
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-05T20153";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T20162";
+import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-05T20162";
+import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-05T20162";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T20162";
+import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-05T20162";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-05T20162";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-05T20162";
+import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-05T20162";
+import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-05T20162";
+import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-05T20162";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-05T20162";
 
 
 const TOOL = { SELECT: "SELECT", PAN: "PAN", TEXT: "TEXT", BRUSH: "BRUSH", ERASER: "ERASER", SHAPES: "SHAPES" };
@@ -1031,6 +1031,7 @@ export function initDrawEditor(ctx) {
     placeDropdown($("toolsDraw"), fontPop, { align: "start" });
     fontPop.hidden = false;
     fontSearch.value = "";
+    if ($("drawFontSearchClear")) $("drawFontSearchClear").hidden = true;
     renderFontList();
     fontSearch.focus();
   }
@@ -1040,8 +1041,10 @@ export function initDrawEditor(ctx) {
     fontOnSelect = null;
   }
 
-  fontSearch?.addEventListener("input", renderFontList);
-  $("drawFontSearchClear")?.addEventListener("click", () => { fontSearch.value = ""; renderFontList(); fontSearch.focus(); });
+  // X w polu tylko z wpisanym tekstem — jak w polach szukania list.
+  const syncFontClear = () => { const c = $("drawFontSearchClear"); if (c) c.hidden = !fontSearch?.value; };
+  fontSearch?.addEventListener("input", () => { syncFontClear(); renderFontList(); });
+  $("drawFontSearchClear")?.addEventListener("click", () => { fontSearch.value = ""; syncFontClear(); renderFontList(); fontSearch.focus(); });
   document.addEventListener("pointerdown", (e) => {
     if (fontPop && !fontPop.hidden && !fontPop.contains(e.target)) closeFontPicker();
   }, true);
