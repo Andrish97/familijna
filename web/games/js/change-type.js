@@ -4,11 +4,11 @@
 // 2026-10-21): bez osobnego pytania o reset -- to okno jest potwierdzeniem; głosy
 // ankiety znikają, a wyniki (odpowiedzi, punkty) można zachować, gdy nowy typ je
 // wykorzysta (migracja 441, p_keep).
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T10213";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T10213";
-import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T10213";
-import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T10213";
-import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T10213";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T10353";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T10353";
+import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T10353";
+import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T10353";
+import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T10353";
 
 const SOURCE_TYPES = [TYPES.PREPARED, TYPES.POLL_POINTS, TYPES.POLL_TEXT];
 // Nazwy typów jak na zakładkach Gier.

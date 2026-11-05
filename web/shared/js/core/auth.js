@@ -1,8 +1,8 @@
-import { redirectPage } from "./page-layout.js?v=v2026-11-05T10213";
+import { redirectPage } from "./page-layout.js?v=v2026-11-05T10353";
 // js/core/auth.js
-import { icon } from "./icons.js?v=v2026-11-05T10213";
-import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-05T10213";
-import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-05T10213";
+import { icon } from "./icons.js?v=v2026-11-05T10353";
+import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-05T10353";
+import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-05T10353";
 
 
 const GUEST_LOCAL_MARKER_KEY = "fam:guest:session_seen";
@@ -148,7 +148,7 @@ function authApiError(status, code) {
   return err;
 }
 
-import { reservedUsernameReason, loadReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-05T10213";
+import { reservedUsernameReason, loadReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-05T10353";
 
 // Strony z polem nazwy (logowanie, Konto) pobierają listę zastrzeżonych przedrostków od wejścia.
 export function preloadUsernameRules() { loadReservedUsernamePrefixes(sb()); }
@@ -361,6 +361,12 @@ async function loadUser(fresh) {
       const { data } = await sb().auth.getSession();
       const sessionUser = data?.session?.user || null;
       if (!sessionUser) return null;
+      // Zapisanej sesji ufamy tylko, gdy baza przyjęła token (profil się
+      // wczytał). Brak profilu (nieważny token, konto usunięte, świeża
+      // rejestracja) — sprawdzenie u serwera jak dawniej, zanim strona
+      // cokolwiek zdecyduje (inaczej nieważna sesja przekierowywała na
+      // „ustaw nazwę”, e2e index „fałszywa sesja”, 2026-11-05).
+      if (!(await fetchProfileRow(sessionUser))) return await loadUser(true);
       verifySessionInBackground();
       return await enrichUser(sessionUser);
     }
