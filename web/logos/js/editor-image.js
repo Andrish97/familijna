@@ -1,8 +1,8 @@
 // familiada/logos/js/editor-image.js
 // Strona /logos/editor/image/?id=<logo> -- edytor trybu IMAGE (editor-page.js).
 
-import { bootEditorPage } from "./editor-page.js?v=v2026-11-05T23063";
-import { initImageEditor } from "./image.js?v=v2026-11-05T23063";
+import { bootEditorPage } from "./editor-page.js?v=v2026-11-05T23184";
+import { initImageEditor } from "./image.js?v=v2026-11-05T23184";
 
 
 bootEditorPage({ mode: "IMAGE", initEditor: initImageEditor });

@@ -21,7 +21,8 @@ html[data-tv-layout="true"] .footer {
 
 html[data-tv-layout="true"] .footer::before {
   top: 8px;
-  width: 88vw;
+  left: 6vw;
+  right: 6vw;
 }
 
 @media (max-height: 650px) {

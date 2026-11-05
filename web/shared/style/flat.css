@@ -678,16 +678,20 @@
   }
 
   /* ── Stopka ───────────────────────────────────────────────────── */
-  /* Tekst stopki: ten sam odstęp od linii nad nim i od końca strony
-     (--footer-gap); strefa paska gestów (edge-to-edge) dochodzi pod spodem. */
+  /* Tekst stopki: ten sam odstęp (--footer-gap) od linii nad nim, od końców
+     linii i od końca strony; strefa paska gestów (edge-to-edge) dochodzi pod
+     spodem. Linia na szerokość treści: w .wrap brzegi stopki, stopka na całą
+     szerokość okna (--footer-edge-*) — marginesy strony. */
   .footer {
     --footer-gap: 10px;
+    --footer-edge-l: 0px;
+    --footer-edge-r: 0px;
     position: relative;
     margin: auto 0 0; /* krótka strona: na dole okna */
     padding-top: 20px;
-    padding-right: calc(16px + env(safe-area-inset-right, 0px));
+    padding-right: calc(var(--footer-edge-r) + var(--footer-gap));
     padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
-    padding-left: calc(16px + env(safe-area-inset-left, 0px));
+    padding-left: calc(var(--footer-edge-l) + var(--footer-gap));
     display: flex;
     flex-wrap: nowrap;
     justify-content: space-between;
@@ -700,12 +704,14 @@
   }
   /* stopka poza main: pełna szerokość, .wrap nie odbiera jej safe area */
   .footer.wrap {
+    --footer-edge-l: var(--page-pad-left);
+    --footer-edge-r: var(--page-pad-right);
     width: auto;
     margin-inline: 0;
     padding-top: 20px;
-    padding-right: calc(16px + env(safe-area-inset-right, 0px));
+    padding-right: calc(var(--footer-edge-r) + var(--footer-gap));
     padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
-    padding-left: calc(16px + env(safe-area-inset-left, 0px));
+    padding-left: calc(var(--footer-edge-l) + var(--footer-gap));
   }
   /* Stopka w .wrap: dolny odstęp .wrap przechodzi do stopki. */
   .wrap:has(> .footer) { padding-bottom: 0; }
@@ -718,11 +724,10 @@
     content: "";
     position: absolute;
     top: 8px;
-    left: 50%;
-    width: min(96vw, 1400px);
+    left: var(--footer-edge-l);
+    right: var(--footer-edge-r);
     height: 1px;
     background: var(--line);
-    transform: translateX(-50%);
   }
   .footer a {
     color: var(--accent);
@@ -3829,15 +3834,8 @@
   .auth-shell .hint { display: block; margin-top: 12px; }
   .auth-body .footer {
     width: 100%;
-    padding-left: calc(18px + env(safe-area-inset-left, 0px));
-    padding-right: calc(18px + env(safe-area-inset-right, 0px));
-  }
-  .auth-body .footer::before { width: 92%; }
-  @media (max-width: 980px) {
-    .auth-body .footer {
-      padding-left: calc(15px + env(safe-area-inset-left, 0px));
-      padding-right: calc(15px + env(safe-area-inset-right, 0px));
-    }
+    --footer-edge-l: var(--page-pad-left);
+    --footer-edge-r: var(--page-pad-right);
   }
 
 /* ── utilities.css ── */
