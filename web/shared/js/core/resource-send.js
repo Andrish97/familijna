@@ -1,11 +1,11 @@
-import { sb } from "./supabase.js?v=v2026-11-05T19475";
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T19475";
-import { toast } from "./toast.js?v=v2026-11-05T19475";
-import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T19475";
-import { icon, iconText } from "./icons.js?v=v2026-11-05T19475";
-import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T19475";
-import { attachListTools } from "./share-sections.js?v=v2026-11-05T19475";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T19475";
+import { sb } from "./supabase.js?v=v2026-11-05T19482";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T19482";
+import { toast } from "./toast.js?v=v2026-11-05T19482";
+import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T19482";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T19482";
+import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T19482";
+import { attachListTools } from "./share-sections.js?v=v2026-11-05T19482";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T19482";
 
 
 const attempts = new Map();

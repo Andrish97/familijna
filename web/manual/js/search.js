@@ -3,8 +3,8 @@
 // searchClear), wyniki od razu podczas pisania — podrozdział, rozdział i fragment
 // z zaznaczonym trafieniem. Strzałki + Enter, Esc czyści. Szukanej frazy nie zapamiętujemy.
 
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T19475";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-05T19475";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T19482";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-05T19482";
 
 export const norm = (s) => String(s || "").toLocaleLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));

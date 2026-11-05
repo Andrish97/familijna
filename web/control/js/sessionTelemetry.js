@@ -2,9 +2,9 @@
 // aktywność i lokalne obserwacje; telemetryka nie blokuje akcji gry.
 // Obserwacje idą dziennikiem sesji (session-log.js, control2_control_log,
 // migracje 468–469) — także przed startem gry, do sesji uruchomienia Control.
-import { sb, SUPABASE_URL } from "../../shared/js/core/supabase.js?v=v2026-11-05T19475";
-import { createNetworkMonitor, measureNetwork } from "../../shared/js/core/network-probe.js?v=v2026-11-05T19475";
-import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "../../shared/js/core/session-log.js?v=v2026-11-05T19475";
+import { sb, SUPABASE_URL } from "../../shared/js/core/supabase.js?v=v2026-11-05T19482";
+import { createNetworkMonitor, measureNetwork } from "../../shared/js/core/network-probe.js?v=v2026-11-05T19482";
+import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "../../shared/js/core/session-log.js?v=v2026-11-05T19482";
 
 
 export function createSessionTelemetry(gameId, getState, subscribe = () => () => {}) {
