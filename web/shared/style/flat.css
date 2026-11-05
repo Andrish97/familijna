@@ -3725,17 +3725,36 @@
     min-width: 180px;
   }
   .nav-more-dropdown[hidden] { display: none; }
+  /* Pozycje „Więcej” i „Narzędzia” wyglądają jak każde menu (.menu-item):
+     kopie przycisków paska bez ramki i tła przycisku. Panel hamburgera
+     zostaje przy przyciskach (to oryginały, nie kopie w tym menu). */
   .nav-more-dropdown .btn {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
     width: 100%;
-    text-align: left;
-    padding: 10px 14px;
+    min-height: 36px;
+    padding: 8px 12px;
+    border: 0;
     border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--text);
+    text-align: left;
     font-size: 13px;
     font-weight: 800;
-    letter-spacing: 0.04em;
+    letter-spacing: .03em;
     white-space: nowrap;
   }
+  .nav-more-dropdown .btn .badge { margin-left: auto; }
+  @media (hover: hover) and (pointer: fine) {
+    .nav-more-dropdown .btn:hover:not(:disabled) { background: var(--surface-inset); filter: none; transform: none; }
+  }
+  .nav-more-dropdown .btn:is(.is-active, [aria-pressed="true"], [aria-current="page"]) {
+    background: linear-gradient(var(--g-10), var(--g-10)) var(--under, var(--surface-1));
+    color: var(--accent);
+  }
+  :where(:root:is([data-compact], [data-input="touch"])) .nav-more-dropdown .btn { min-height: 44px; font-size: 14px; }
 
   /* ── Okno „Zmień typ” i uwagi importu (E21) ─────────────────── */
   .import-note { margin-top: 6px; font-size: .8rem; color: var(--accent); }
