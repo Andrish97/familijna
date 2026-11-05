@@ -8,6 +8,7 @@ import { baseExportSnapshot } from "../../shared/js/core/base-transfer-format.js
 import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-05T01142";
 
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T01142";
+import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-05T01142";
 import { ROW_GONE } from "../../shared/js/core/db-guard.js?v=v2026-11-05T01142";
 import { acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T01142";
 import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-05T01142";
@@ -1337,9 +1338,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function refreshAltBadge() {
   try {
-    const { data, error } = await sb().rpc("badges_get");
-    if (error) throw error;
-    const row = Array.isArray(data) ? data[0] : data;
+    const row = await fetchBadges();
     const n = Number(row?.friends_pending || 0);
     if (!altBadgeEl || !btnFriends) return;
     altBadgeEl.textContent = n > 99 ? "99+" : (n > 0 ? String(n) : "");

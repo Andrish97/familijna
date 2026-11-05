@@ -3,6 +3,24 @@
 // Subskrybenci: aktywne adresy na liście właściciela (contacts_list).
 import { sb } from "./supabase.js?v=v2026-11-05T01142";
 
+// badges_get wołają topbar (Znajomi), Gry (Zadania) i Bazy — równoczesne
+// wywołania dzielą jedno zapytanie, wynik ważny BADGES_TTL_MS (wcześniej
+// dwa identyczne zapytania przy każdym wejściu na Gry).
+const BADGES_TTL_MS = 2000;
+let badgesCache = null; // { at, promise }
+export function fetchBadges() {
+  const now = Date.now();
+  if (badgesCache && now - badgesCache.at < BADGES_TTL_MS) return badgesCache.promise;
+  const promise = Promise.resolve(sb().rpc("badges_get")).then(({ data, error }) => {
+    if (error) throw error;
+    return (Array.isArray(data) ? data[0] : data) || {};
+  });
+  const entry = { at: now, promise };
+  badgesCache = entry;
+  promise.catch(() => { if (badgesCache === entry) badgesCache = null; });
+  return promise;
+}
+
 const writeCount = (target, value) => {
   const count = Math.max(0, Number(value) || 0);
   const text = count > 99 ? "99+" : count > 0 ? String(count) : "";
@@ -22,9 +40,7 @@ export function initNavContactBadges(targets) {
       const client = sb();
       const jobs = [];
       if (activeTargets.has("friends")) {
-        jobs.push(client.rpc("badges_get").then(({ data, error }) => {
-          if (error) throw error;
-          const row = Array.isArray(data) ? data[0] : data;
+        jobs.push(fetchBadges().then((row) => {
           writeCount("friends", row?.friends_pending);
         }).catch(() => writeCount("friends", 0)));
       }

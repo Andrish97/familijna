@@ -8,6 +8,7 @@ import { tileTagsHtml, proposedTags, proposedActionsHtml, bindProposedActions } 
 import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-05T01142";
 import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-05T01142";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T01142";
+import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-05T01142";
 import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-05T01142";
 import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T01142";
 import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-05T01142";
@@ -1322,9 +1323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Zadania (tylko ankiety): badges_get().tasks_pending.
   async function refreshTasksBadge(){
     try{
-      const { data, error } = await sb().rpc("badges_get");
-      if (error) throw error;
-      const row = Array.isArray(data) ? data[0] : data;
+      const row = await fetchBadges();
       setNavBadge(tasksBadge, Number(row?.tasks_pending ?? 0));
       setNavBadge(friendsBadge, Number(row?.friends_pending ?? 0));
     } catch (e){
