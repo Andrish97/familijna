@@ -678,15 +678,15 @@
   }
 
   /* ── Stopka ───────────────────────────────────────────────────── */
-  /* Odstęp tekstu stopki od dołu okna: --footer-gap albo strefa paska gestów
-     (+8 px), nie suma — przy edge-to-edge stopka nie podskakuje. */
+  /* Tekst stopki: ten sam odstęp od linii nad nim i od końca strony
+     (--footer-gap); strefa paska gestów (edge-to-edge) dochodzi pod spodem. */
   .footer {
-    --footer-gap: 16px;
+    --footer-gap: 10px;
     position: relative;
     margin: auto 0 0; /* krótka strona: na dole okna */
     padding-top: 20px;
     padding-right: calc(16px + env(safe-area-inset-right, 0px));
-    padding-bottom: max(var(--footer-gap), calc(env(safe-area-inset-bottom, 0px) + 8px));
+    padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
     padding-left: calc(16px + env(safe-area-inset-left, 0px));
     display: flex;
     flex-wrap: nowrap;
@@ -704,12 +704,11 @@
     margin-inline: 0;
     padding-top: 20px;
     padding-right: calc(16px + env(safe-area-inset-right, 0px));
-    padding-bottom: max(var(--footer-gap), calc(env(safe-area-inset-bottom, 0px) + 8px));
+    padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
     padding-left: calc(16px + env(safe-area-inset-left, 0px));
   }
   /* Stopka w .wrap: dolny odstęp .wrap przechodzi do stopki. */
   .wrap:has(> .footer) { padding-bottom: 0; }
-  .wrap > .footer { --footer-gap: 34px; }
   .footer > * { min-width: 0; max-width: 100%; flex: 0 1 auto; overflow-wrap: break-word; hyphens: auto; text-wrap: pretty; }
   .footer > :first-child { text-align: left; }
   .footer > :last-child { text-align: right; }
@@ -734,14 +733,14 @@
   .footer-actions { display: inline-flex; align-items: center; justify-content: flex-end; gap: 12px; }
   @media (max-width: 600px) {
     .footer {
-      --footer-gap: 14px;
+      --footer-gap: 7px;
       margin: auto 0 0;
       padding-top: 15px;
       gap: 6px;
       font-size: 11px;
     }
+    .footer.wrap { padding-top: 15px; }
     .footer::before { top: 6px; }
-    .wrap > .footer { --footer-gap: 29px; }
   }
   .no-footer-line .footer::before { display: none; }
 
