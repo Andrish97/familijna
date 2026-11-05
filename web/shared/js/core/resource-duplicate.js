@@ -1,6 +1,6 @@
-import {sb} from './supabase.js?v=v2026-11-05T23242';
-import {getUiLang,t} from '../../translation/translation.js?v=v2026-11-05T23242';
-import {toast} from './toast.js?v=v2026-11-05T23242';
+import {sb} from './supabase.js?v=v2026-11-05T23260';
+import {getUiLang,t} from '../../translation/translation.js?v=v2026-11-05T23260';
+import {toast} from './toast.js?v=v2026-11-05T23260';
 
 
 const attempts=new Map();
