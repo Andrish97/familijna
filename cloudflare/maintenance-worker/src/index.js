@@ -225,7 +225,7 @@ async function handleFetch(request, env, ctx) {
     if (state.enabled && state.mode !== "off" && !isBypass && !await authorizeE2EApi(request, env)) {
       return serveMaintenance(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
     }
-    return servePublicMarketplace(request, env, url);
+    return servePublicMarketplace(request, env, url, ctx);
   }
 
   // Dynamic sitemap — includes all published game URLs

@@ -38,26 +38,45 @@ export const CATALOG_TTL_MS=60_000;
 let catalogCache=null; // { at, promise }
 export function resetCatalogCache() { catalogCache=null; }
 // Druga warstwa: Cache API Cloudflare, wspólna dla izolatów w danym centrum
-// danych (pamięć izolatu trafiała przypadkiem; pomiar 2026-11-05: chybienie
-// 250–450 ms, trafienie ~25 ms). Ten sam czas życia.
+// danych. Pomiar 2026-11-05: samo zapytanie w bazie 0 ms (90 gier), ale
+// pierwsze połączenie Workera z serwerem bazy ~600 ms. Dlatego
+// stale-while-revalidate: wpis starszy niż CATALOG_TTL_MS idzie od razu,
+// a świeży katalog pobiera się w tle (ctx.waitUntil); po CATALOG_STALE_MS
+// wpis wygasa i wejście czeka na bazę jak dawniej.
 const CATALOG_CACHE_KEY="https://cache.familijna.internal/market-public-catalog";
-async function sharedCatalog(env) {
+export const CATALOG_STALE_MS=600_000;
+let catalogRefresh=null;
+async function refreshSharedCatalog(env,cache) {
+  const rows=await publicCatalog(env);
+  await cache.put(CATALOG_CACHE_KEY,new Response(JSON.stringify(rows),{headers:{
+    "Content-Type":"application/json",
+    "Cache-Control":`max-age=${Math.round(CATALOG_STALE_MS/1000)}`,
+    "X-Fetched-At":String(Date.now()),
+  }})).catch(()=>{});
+  return rows;
+}
+async function sharedCatalog(env,ctx) {
   const cache=globalThis.caches?.default;
   if(!cache) return publicCatalog(env);
   const hit=await cache.match(CATALOG_CACHE_KEY).catch(()=>null);
-  if(hit) return hit.json();
-  const rows=await publicCatalog(env);
-  await cache.put(CATALOG_CACHE_KEY,new Response(JSON.stringify(rows),{headers:{"Content-Type":"application/json","Cache-Control":`max-age=${Math.round(CATALOG_TTL_MS/1000)}`}})).catch(()=>{});
-  return rows;
+  if(hit) {
+    const age=Date.now()-Number(hit.headers.get("X-Fetched-At")||0);
+    if(age>CATALOG_TTL_MS && !catalogRefresh) {
+      catalogRefresh=refreshSharedCatalog(env,cache).catch(()=>{}).finally(()=>{catalogRefresh=null;});
+      ctx?.waitUntil?.(catalogRefresh);
+    }
+    return hit.json();
+  }
+  return refreshSharedCatalog(env,cache);
 }
-export async function cachedPublicCatalog(env,now=Date.now()) {
+export async function cachedPublicCatalog(env,now=Date.now(),ctx=null) {
   if(catalogCache && now-catalogCache.at<CATALOG_TTL_MS) return catalogCache.promise;
-  const entry={at:now,promise:sharedCatalog(env)};
+  const entry={at:now,promise:sharedCatalog(env,ctx)};
   catalogCache=entry;
   entry.promise.catch(()=>{ if(catalogCache===entry) catalogCache=null; });
   return entry.promise;
 }
-export async function servePublicMarketplace(request,env,url) {
+export async function servePublicMarketplace(request,env,url,ctx=null) {
   const param=url.pathname.startsWith("/marketplace/game/")?url.pathname.slice("/marketplace/game/".length):null;
   if(param!==null && !validSlug(param) && !UUID_RE.test(param))
     return serveNotFoundPage(request,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE);
@@ -68,7 +87,7 @@ export async function servePublicMarketplace(request,env,url) {
     // Server-Timing: czas każdego kroku (pomiar TTFB Społeczności, 2026-11-05).
     const timed=(name,p)=>{const t0=Date.now();return p.finally(()=>{timings.push(`${name};dur=${Date.now()-t0}`);});};
     const [rows,detail,source]=await Promise.all([
-      timed("catalog",cachedPublicCatalog(env)),
+      timed("catalog",cachedPublicCatalog(env,Date.now(),ctx)),
       param ? timed("detail",publicMarketRpc(env,UUID_RE.test(param)?"market_game_detail":"market_game_by_slug",UUID_RE.test(param)?{p_id:param}:{p_slug:param})) : Promise.resolve([]),
       timed("origin",fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE)),
     ]);
