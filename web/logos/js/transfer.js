@@ -5,10 +5,10 @@
 //   (A) { kind:"GLYPH"|"PIX", name, payload:{ rows | layers | bits_b64, source } }  -- nasz eksport
 //   (B) { type:"GLYPH_30x10"|"PIX_150x70", name, payload }                          -- stary zrzut z bazy
 
-import { standaloneLogoSource } from "../../shared/js/core/logo-transfer-source.js?v=v2026-11-04T23482";
-import { parseLogoPackage, sanitizeLogoFileImport } from "./package.js?v=v2026-11-04T23482";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-04T23482";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-04T23482";
+import { standaloneLogoSource } from "../../shared/js/core/logo-transfer-source.js?v=v2026-11-05T00192";
+import { parseLogoPackage, sanitizeLogoFileImport } from "./package.js?v=v2026-11-05T00192";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T00192";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-05T00192";
 
 
 /** Nazwa pliku z nazwy logo -- zostawia litery każdego alfabetu, wycina znaki zakazane w systemach plików. */
