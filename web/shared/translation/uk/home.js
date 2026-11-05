@@ -25,7 +25,7 @@ const uk = {
       games: "Мої ігри", "game-editor": "Редагування гри", bases: "Бази питань", "base-explorer": "Менеджер бази",
       friends: "Друзі", subscribers: "Підписники", tasks: "Завдання", "poll-share": "Поширення опитування", "poll-vote-mobile": "Голосування на телефоні", "poll-results": "Голоси та результати опитування",
       appearance: "Вигляд табло та логотипу", sound: "Звуки", logos: "Бібліотека логотипів", "logo-draw": "Редактор малюнка",
-      "control-round": "Панель керування — раунд", "host-round": "Екран ведучого", "display-round": "Дисплей — раунд", "control-finale": "Панель керування — фінал", "main-display": "Дисплей",
+      "control-round": "Панель керування — раунд", "host-round": "Екран ведучого", "display-round": "Дисплей — раунд", "control-finale": "Панель керування — фінал",
     },
     about: {
       title: "Як працює Familijna",

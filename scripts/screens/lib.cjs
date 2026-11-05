@@ -126,12 +126,12 @@ async function emulateSafeArea(context, origin, safe) {
   context.__screensSafeArea = { top: 0, right: 0, bottom: 0, left: 0, ...safe };
 }
 
-// Ramka iPhone'a na czarnym tle (jak kadr głosowania w dawnym panelu admina:
+// Ramka iPhone'a na tle strony w motywie zrzutu (background) (jak kadr głosowania w dawnym panelu admina:
 // web/admin/js/homepage-screenshots.js, composeIPhoneFrame). screen -- PNG
 // ekranu telefonu; wynik -- PNG outputWidth × outputHeight.
-async function composeIPhone(browser, screen, outputWidth = 1440, outputHeight = 900, scale = 1) {
+async function composeIPhone(browser, screen, outputWidth = 1440, outputHeight = 900, scale = 1, background = "#000000") {
   const page = await browser.newPage({ deviceScaleFactor: 1 });
-  const data = await page.evaluate(async ({ src, outputWidth, outputHeight, scale }) => {
+  const data = await page.evaluate(async ({ src, outputWidth, outputHeight, scale, background }) => {
     const img = new Image();
     img.src = src;
     await img.decode();
@@ -151,7 +151,7 @@ async function composeIPhone(browser, screen, outputWidth = 1440, outputHeight =
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext("2d");
     const rounded = (x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, Math.min(r, w / 2, h / 2)); };
-    ctx.fillStyle = "#000000"; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = background; ctx.fillRect(0, 0, W, H);
     ctx.save(); ctx.shadowColor = "#000b"; ctx.shadowBlur = 24 * scale;
     rounded(deviceX, 0, deviceWidth, H, cornerRadius); ctx.fillStyle = "#d7d9df"; ctx.fill(); ctx.restore();
     rounded(deviceX + whiteEdge, whiteEdge, deviceWidth - 2 * whiteEdge, H - 2 * whiteEdge, cornerRadius - whiteEdge); ctx.fillStyle = "#030407"; ctx.fill();
@@ -168,7 +168,7 @@ async function composeIPhone(browser, screen, outputWidth = 1440, outputHeight =
     ctx.fillStyle = "#ffffffa8"; ctx.beginPath(); ctx.roundRect(sx + (screenWidth - screenWidth * 0.344) / 2, sy + screenHeight - 13 * unit, screenWidth * 0.344, 5 * unit, 99); ctx.fill();
     ctx.restore();
     return canvas.toDataURL("image/png");
-  }, { src: `data:image/png;base64,${screen.toString("base64")}`, outputWidth, outputHeight, scale });
+  }, { src: `data:image/png;base64,${screen.toString("base64")}`, outputWidth, outputHeight, scale, background });
   await page.close();
   return Buffer.from(data.split(",")[1], "base64");
 }

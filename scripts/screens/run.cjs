@@ -13,6 +13,8 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { execSync } = require("node:child_process");
+// Tło wokół ramki telefonu = tło strony (--bg) w motywie zrzutu.
+const PAGE_BG = { dark: "#050914", light: "#f3f0e8" };
 const { repo, startServer, stopServer, launch, newContext, emulateSafeArea, composeIPhone } = require("./lib.cjs");
 const scenes = require("./scenes.cjs");
 const { observeLayoutShifts, inspectLayout, allowDocScroll, NO_WRAP } = require("./audit-layout.cjs");
@@ -169,7 +171,7 @@ async function capture(browser, origin, scene, lang, deviceName, outDir) {
     try { fs.writeFileSync(file.replace(/\.png$/, ".styles.json"), JSON.stringify(await view.evaluate(dumpStyles))); } catch {}
   }
   // deviceFrame: "iphone" -- ekran telefonu w ramce iPhone'a na czarnym tle (kadr strony głównej).
-  fs.writeFileSync(file, scene.deviceFrame === "iphone" ? await composeIPhone(browser, shot, scene.frameSize?.width, scene.frameSize?.height, scene.frameSize?.scale) : shot);
+  fs.writeFileSync(file, scene.deviceFrame === "iphone" ? await composeIPhone(browser, shot, scene.frameSize?.width, scene.frameSize?.height, scene.frameSize?.scale, PAGE_BG[args.theme === "light" ? "light" : "dark"]) : shot);
   await context.close();
   return { scene: scene.id, title: scene.title, lang, device: scene.size ? `${scene.size.width}×${scene.size.height}` : deviceName, file: path.relative(outDir, file), errors, misses, readyError, initialLayout, audit };
 }

@@ -25,7 +25,7 @@ const pl = {
       games: "Moje gry", "game-editor": "Edycja gry", bases: "Bazy pytań", "base-explorer": "Eksplorator bazy",
       friends: "Znajomi", subscribers: "Subskrybenci", tasks: "Zadania", "poll-share": "Udostępnianie ankiety", "poll-vote-mobile": "Głosowanie na telefonie", "poll-results": "Głosy i wyniki ankiety",
       appearance: "Wygląd planszy i logo", sound: "Dźwięki", logos: "Biblioteka logo", "logo-draw": "Edytor rysunku",
-      "control-round": "Panel sterowania — runda", "host-round": "Widok prowadzącego", "display-round": "Wyświetlacz — runda", "control-finale": "Panel sterowania — finał", "main-display": "Wyświetlacz",
+      "control-round": "Panel sterowania — runda", "host-round": "Widok prowadzącego", "display-round": "Wyświetlacz — runda", "control-finale": "Panel sterowania — finał",
     },
     about: {
       title: "Jak działa Familijna",

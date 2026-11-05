@@ -25,7 +25,7 @@ const en = {
       games: "My games", "game-editor": "Game editor", bases: "Question bases", "base-explorer": "Base manager",
       friends: "Friends", subscribers: "Subscribers", tasks: "Tasks", "poll-share": "Sharing a poll", "poll-vote-mobile": "Voting on a phone", "poll-results": "Poll votes and results",
       appearance: "Board look and logo", sound: "Sounds", logos: "Logo library", "logo-draw": "Drawing editor",
-      "control-round": "Control panel — round", "host-round": "Host view", "display-round": "Display — round", "control-finale": "Control panel — final", "main-display": "Display",
+      "control-round": "Control panel — round", "host-round": "Host view", "display-round": "Display — round", "control-finale": "Control panel — final",
     },
     about: {
       title: "How Familijna works",
