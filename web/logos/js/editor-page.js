@@ -18,23 +18,23 @@
 //     samo guardResourceLock, przy każdym zapisie RPC update_logo_checked:
 //     komunikat z powrotem na listę.
 
-import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T19482";
-import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T19482";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T19482";
-import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-05T19482";
-import { isPhoneScreen } from "../../shared/js/core/device-guard.js?v=v2026-11-05T19482";
-import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-05T19482";
-import { guardResourceLock, showBlockingOverlay } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T19482";
-import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-05T19482";
+import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T19534";
+import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T19534";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T19534";
+import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-05T19534";
+import { isPhoneScreen } from "../../shared/js/core/device-guard.js?v=v2026-11-05T19534";
+import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-05T19534";
+import { guardResourceLock, showBlockingOverlay } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T19534";
+import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-05T19534";
 
-import { renderPreview } from "./render.js?v=v2026-11-05T19482";
-import { listLogos, fetchLogo, updateLogo, isUniqueViolation } from "./db.js?v=v2026-11-05T19482";
-import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "../../shared/js/core/pinch-zoom.js?v=v2026-11-05T19482";
-import { cannotEditReason } from "./text.js?v=v2026-11-05T19482";
-import { EDITOR_PAGE_IDS, editModeFor, listBackUrl } from "./routes.js?v=v2026-11-05T19482";
+import { renderPreview } from "./render.js?v=v2026-11-05T19534";
+import { listLogos, fetchLogo, updateLogo, isUniqueViolation } from "./db.js?v=v2026-11-05T19534";
+import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "../../shared/js/core/pinch-zoom.js?v=v2026-11-05T19534";
+import { cannotEditReason } from "./text.js?v=v2026-11-05T19534";
+import { EDITOR_PAGE_IDS, editModeFor, listBackUrl } from "./routes.js?v=v2026-11-05T19534";
 
-const FONT_3x10_URL = "/shared/fonts/display/font_3x10.json?v=v2026-11-05T19482";
-const FONT_5x7_URL = "/shared/fonts/display/font_5x7.json?v=v2026-11-05T19482";
+const FONT_3x10_URL = "/shared/fonts/display/font_3x10.json?v=v2026-11-05T19534";
+const FONT_5x7_URL = "/shared/fonts/display/font_5x7.json?v=v2026-11-05T19534";
 
 const DEBOUNCE_MS = 700;
 const RETRY_MS = 5000;
