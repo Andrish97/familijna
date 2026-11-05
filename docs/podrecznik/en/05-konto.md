@@ -213,8 +213,8 @@ appearance button next to it changes the colours of the app:
 - **Automatic** — light or dark, following your phone or computer settings,
 - **Light** or **Dark** — always the same, regardless of the device.
 
-The browser remembers your choice, also without signing in. Game screens (Display,
-Host, Buzzer) are always dark. Emails follow the colours of your email app.
+The browser remembers your choice, also without signing in. Emails follow the colours
+of your email app.
 
 ![Appearance menu](zrzut:theme-menu)
 

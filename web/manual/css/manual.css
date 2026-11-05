@@ -359,6 +359,8 @@
   }
 
   .m-control .ico { width: 1em; height: 1em; flex-shrink: 0; }
+  /* Przycisk/odnośnik z kropką lub przecinkiem za nim — w jednym wierszu (build-content.mjs). */
+  .m-nobr { white-space: nowrap; }
 
   .m-code, .m-pre {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

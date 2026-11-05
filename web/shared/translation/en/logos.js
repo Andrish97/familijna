@@ -15,6 +15,8 @@ const en = {
       export: "Export",
       import: "Import",
       delete: "Delete",
+      received: "RECEIVED",
+      filterLabel: "Filter logos",
     },
     status: {
       saveRetry: "Saving failed — retrying… (leaving again will skip saving)",

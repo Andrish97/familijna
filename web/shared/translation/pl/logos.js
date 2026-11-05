@@ -15,6 +15,8 @@ const pl = {
       export: "Eksport",
       import: "Import",
       delete: "Usuń",
+      received: "OTRZYMANE",
+      filterLabel: "Filtruj loga",
     },
     status: {
       saveRetry: "Błąd zapisu — ponawiam… (drugie wyjście ze strony pominie zapis)",

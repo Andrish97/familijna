@@ -72,11 +72,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .logoMeta{ opacity: .75; font-size: 12px; }
   /* Kafel propozycji (proposed-tile.js): ✓/✕ w rogu obok nazwy, oznaczenia
      w jednej linii pod nimi na całą szerokość (długie „Od: …” z wielokropkiem);
      podgląd o tyle niższy, żeby kafel miał tę samą wysokość co pozostałe. */
-  .grid .logoTile[data-proposed] .logoTileTop{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; }
+  .grid .logoTile:is([data-proposed], [data-received="1"]) .logoTileTop{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: start; }
   .grid .logoTileTop > .tileTags{ grid-column: 1 / -1; margin-top: 0; padding-top: 0; flex-wrap: nowrap; overflow: hidden; }
   .grid .logoTileTop .tileTags .tag:not([data-kind="from"]){ flex: 0 0 auto; }
   .grid .logoTileTop .tileTags .tag{ display: block; line-height: 20px; white-space: nowrap; }

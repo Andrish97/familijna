@@ -265,6 +265,14 @@ function collectTitles(markdownFiles) {
   return titles;
 }
 
+// Przycisk (.m-control) i odnośnik (.m-ref) to inline-flex: przeglądarka może
+// złamać wiersz tuż za nimi i kropka/przecinek spadał sam do nowej linii.
+// Element z następującą interpunkcją idzie do nierozdzielnego .m-nobr.
+export function glueTrailingPunctuation(html) {
+  return html.replace(/(<span class="m-control">(?:(?!<\/span>)[\s\S])*<\/span>|<a class="m-ref"[^>]*>(?:(?!<\/a>)[\s\S])*<\/a>)([.,;:!?…)\]»”]+)/g,
+    '<span class="m-nobr">$1$2</span>');
+}
+
 export function parseManual(markdownFiles, icons) {
   TITLES = collectTitles(markdownFiles);
   const parts = [{ title: "", chapters: [] }, { title: "", chapters: [] }, { title: "", chapters: [] }];
@@ -329,7 +337,7 @@ export function parseManual(markdownFiles, icons) {
     }
     emit();
     c.sections = sections;
-    c.html = html.join("\n");
+    c.html = glueTrailingPunctuation(html.join("\n"));
     // Opis rozdziału pochodzi z tej samej treści co dokument, nie z osobnej kopii SEO.
     const summary = c.html.match(/<p class="m-p">([\s\S]*?)<\/p>/)?.[1] || c.sections.map((s) => s.title).join(". ");
     c.description = summary.replace(/<[^>]+>/g, " ")

@@ -107,6 +107,11 @@ eksport do pliku `.famlogo`, [Import] oraz [Wyślij] — kopia dla znajomego (�
 Nazwę zmienisz dwuklikiem (na telefonie stuknij dwa razy), a logo usuniesz ikoną kosza.
 Nie zmieniaj ręcznie zawartości plików `.famlogo` — import takiego pliku może się nie udać.
 
+Logo otrzymane od znajomego ma oznaczenie „Od: {nazwa}”. Filtr OTRZYMANE na dolnym pasku
+pokazuje tylko takie loga.
+
+![Logo od znajomego i filtr OTRZYMANE](zrzut:logos-received)
+
 ![Podgląd logo](zrzut:logos-market-logos-preview)
 ![Zmiana nazwy](zrzut:logos-market-logos-rename)
 ![Usuwanie logo](zrzut:logos-market-logos-delete)

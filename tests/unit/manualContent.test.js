@@ -112,3 +112,12 @@ test("zrzuty w treści mają scenę w scripts/screens i opublikowany plik", asyn
     }
   }
 });
+
+test("Wskazówki: przycisk i odnośnik trzymają kropkę/przecinek w tym samym wierszu", async () => {
+  const { glueTrailingPunctuation } = await import("../../scripts/manual/build-content.mjs");
+  assert.equal(glueTrailingPunctuation('wybierz <span class="m-control"><i data-icon="x"></i>Zapisz</span>.'),
+    'wybierz <span class="m-nobr"><span class="m-control"><i data-icon="x"></i>Zapisz</span>.</span>');
+  assert.equal(glueTrailingPunctuation('zob. <a class="m-ref" href="?ch=1"><i></i>Final</a>),'),
+    'zob. <span class="m-nobr"><a class="m-ref" href="?ch=1"><i></i>Final</a>),</span>');
+  assert.equal(glueTrailingPunctuation('<span class="m-control">A</span> i dalej'), '<span class="m-control">A</span> i dalej');
+});

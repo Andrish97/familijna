@@ -107,6 +107,11 @@ export to a `.famlogo` file, [Import] and [Send] — a copy for a friend (→ 11
 You rename a logo by double-clicking it (on a phone, tap twice), and delete it with the trash icon.
 Don't edit the contents of `.famlogo` files by hand — importing such a file may fail.
 
+A logo received from a friend is marked "From: {name}". The RECEIVED filter on the bottom bar
+shows only such logos.
+
+![A logo from a friend and the RECEIVED filter](zrzut:logos-received)
+
 ![Logo preview](zrzut:logos-market-logos-preview)
 ![Renaming](zrzut:logos-market-logos-rename)
 ![Deleting a logo](zrzut:logos-market-logos-delete)

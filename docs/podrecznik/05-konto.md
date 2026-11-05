@@ -213,8 +213,8 @@ wyglądu obok niego — kolory serwisu:
 - **Automatyczny** — jasny albo ciemny, tak jak ustawienia telefonu lub komputera,
 - **Jasny** albo **Ciemny** — zawsze ten sam, niezależnie od urządzenia.
 
-Wybór zapamiętuje przeglądarka, także bez logowania. Ekrany rozgrywki (Wyświetlacz,
-Prowadzący, Przycisk) są zawsze ciemne. Wiadomości e-mail mają kolory programu pocztowego.
+Wybór zapamiętuje przeglądarka, także bez logowania. Wiadomości e-mail mają kolory
+programu pocztowego.
 
 ![Menu wyglądu](zrzut:theme-menu)
 

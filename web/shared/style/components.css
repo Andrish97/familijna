@@ -2490,6 +2490,10 @@
   .tabs-strip .tab-label > .badge:empty { display: none; }
   .tab-label.active,
   .tab-slot.active .tab-label { color: var(--text); }
+  /* Wyłączona wypustka (np. Udostępnianie gotowej ankiety): kolor „wyłączone”,
+     jak wyłączony przycisk — inaczej nie różniła się od zwykłej nieaktywnej. */
+  .tab-label:disabled,
+  .tab-label[aria-disabled="true"] { color: var(--disabled-text); cursor: not-allowed; }
   /* Separator (::after) i podświetlenie najechania (::before) nieaktywnych. */
   .tab-label::after {
     content: "";

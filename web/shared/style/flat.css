@@ -2721,6 +2721,10 @@
   .tabs-strip .tab-label > .badge:empty { display: none; }
   .tab-label.active,
   .tab-slot.active .tab-label { color: var(--text); }
+  /* Wyłączona wypustka (np. Udostępnianie gotowej ankiety): kolor „wyłączone”,
+     jak wyłączony przycisk — inaczej nie różniła się od zwykłej nieaktywnej. */
+  .tab-label:disabled,
+  .tab-label[aria-disabled="true"] { color: var(--disabled-text); cursor: not-allowed; }
   /* Separator (::after) i podświetlenie najechania (::before) nieaktywnych. */
   .tab-label::after {
     content: "";
@@ -3411,6 +3415,9 @@
   /* Cień ma tylko karta na tle strony; karta w karcie (kafel w liście) bez
      cienia — przewijana lista ucinała go do prostokąta (jasny motyw). */
   .card .card { box-shadow: none; }
+  /* Otwarta lista wyboru w karcie: karta (izolowana warstwa) nad sąsiadami,
+     np. stopką — lista nie wchodzi pod linię i tekst stopki. */
+  .card:has(.ui-select.open) { position: relative; z-index: var(--z-float); }
   .card--inset {
     --under: var(--surface-inset);
     padding: 12px;
