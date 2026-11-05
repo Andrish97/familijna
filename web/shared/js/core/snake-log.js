@@ -2,7 +2,7 @@
 // (scan -- wejście z kodu QR na kadrze, enter, start, finish z wynikiem).
 // Przeglądarkę rozpoznaje losowy identyfikator w localStorage; zalogowanym
 // RPC zwraca też postęp (best, games). Błąd zapisu nie przeszkadza w grze.
-import { sb } from "./supabase.js?v=v2026-11-05T21204";
+import { sb } from "./supabase.js?v=v2026-11-05T22122";
 
 const VISITOR_KEY = "familijna:snake:visitor";
 
