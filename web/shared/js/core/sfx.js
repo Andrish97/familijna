@@ -2,9 +2,9 @@
 // Rozszerzony moduł dźwięku: manifest, warianty, głośności, własne pliki (IndexedDB).
 
 <<<<<<< HEAD
-const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-05T23341";
+const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-05T23344";
 =======
-const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-05T23341";
+const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const AUDIO_BASE    = "/assets/audio/";
@@ -571,9 +571,9 @@ export async function unlockAudio() {
     const a = new Audio();
     a.volume = 0;
 <<<<<<< HEAD
-    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-05T23341";
+    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-05T23344";
 =======
-    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-05T23341";
+    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
     // Call play() synchronously in the gesture handler, then trust its
@@ -617,9 +617,9 @@ export async function initSfx() {
 /**
  * Nadpisuje ustawienia z game.settings.sound (per-game).
 <<<<<<< HEAD
- * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-05T23341" }
+ * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-05T23344" }
 =======
- * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-05T23341" }
+ * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-05T23344" }
 >>>>>>> origin/main
 
  */

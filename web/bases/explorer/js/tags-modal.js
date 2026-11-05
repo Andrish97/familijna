@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23344";
 =======
-import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 // base-explorerjs/tags-modal.js
 // Nowy modal tagów (3 warstwy) – spójny z założeniami:
@@ -13,25 +13,25 @@ import { escapeHtmlAttribute as esc } from "../../../shared/js/core/html-escape.
 // UWAGA: ten plik nie zna nic o SEARCH/TAG view. To jest czysty modal.
 
 <<<<<<< HEAD
-import * as ops from "./ops.js?v=v2026-11-05T23341";
-import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23341";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-05T23341";
-import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-05T23341";
-import { normalizeText } from "./data/listing.js?v=v2026-11-05T23341";
-import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-05T23341";
+import * as ops from "./ops.js?v=v2026-11-05T23344";
+import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23344";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-05T23344";
+import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-05T23344";
+import { normalizeText } from "./data/listing.js?v=v2026-11-05T23344";
+import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-05T23344";
 =======
-import * as ops from "./ops.js?v=v2026-11-05T23341";
-import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23341";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-05T23341";
-import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-05T23341";
-import { normalizeText } from "./data/listing.js?v=v2026-11-05T23341";
-import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-05T23341";
+import * as ops from "./ops.js?v=v2026-11-05T23344";
+import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, showModalLayer } from "../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23344";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-05T23344";
+import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-05T23344";
+import { normalizeText } from "./data/listing.js?v=v2026-11-05T23344";
+import { listTags, listQuestionTagLinks } from "./repo.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Nazwa i kolor tagu pochodzą od użytkownika (także współdzielących bazę).

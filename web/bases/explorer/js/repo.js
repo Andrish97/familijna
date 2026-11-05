@@ -2,9 +2,9 @@
 // Repozytorium danych (Supabase) dla menadżera bazy pytań.
 
 <<<<<<< HEAD
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23344";
 =======
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23341";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

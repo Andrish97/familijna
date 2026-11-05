@@ -7,29 +7,29 @@
 // shared/style/components.css i modal-sheet.js): przyciemnione tło, rogi 28 px,
 // pasek do przeciągania, wysuwanie i zjazd z animacją, safe area.
 <<<<<<< HEAD
-import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T23341";
-import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
-import { selectionSetSingle } from "./state.js?v=v2026-11-05T23341";
-import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T23341";
-import { buildContext } from "./actions/context.js?v=v2026-11-05T23341";
-import { runAction } from "./actions/run.js?v=v2026-11-05T23341";
-import { formatShortcut } from "./platform.js?v=v2026-11-05T23341";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { renderSelection } from "./render.js?v=v2026-11-05T23341";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23341";
-import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T23341";
+import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T23344";
+import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23344";
+import { selectionSetSingle } from "./state.js?v=v2026-11-05T23344";
+import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T23344";
+import { buildContext } from "./actions/context.js?v=v2026-11-05T23344";
+import { runAction } from "./actions/run.js?v=v2026-11-05T23344";
+import { formatShortcut } from "./platform.js?v=v2026-11-05T23344";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { renderSelection } from "./render.js?v=v2026-11-05T23344";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23344";
+import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T23344";
 =======
-import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T23341";
-import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
-import { selectionSetSingle } from "./state.js?v=v2026-11-05T23341";
-import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T23341";
-import { buildContext } from "./actions/context.js?v=v2026-11-05T23341";
-import { runAction } from "./actions/run.js?v=v2026-11-05T23341";
-import { formatShortcut } from "./platform.js?v=v2026-11-05T23341";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { renderSelection } from "./render.js?v=v2026-11-05T23341";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23341";
-import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T23341";
+import { placeAtPoint } from "../../../shared/js/core/popover.js?v=v2026-11-05T23344";
+import { clearFloat } from "../../../shared/js/core/geometry.js?v=v2026-11-05T23344";
+import { selectionSetSingle } from "./state.js?v=v2026-11-05T23344";
+import { ACTIONS, MENU_GROUPS, actionState } from "./actions/registry.js?v=v2026-11-05T23344";
+import { buildContext } from "./actions/context.js?v=v2026-11-05T23344";
+import { runAction } from "./actions/run.js?v=v2026-11-05T23344";
+import { formatShortcut } from "./platform.js?v=v2026-11-05T23344";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { renderSelection } from "./render.js?v=v2026-11-05T23344";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-05T23344";
+import { isSheetLayout } from "../../../shared/js/core/device-attrs.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const CLOSE_MS = 230;

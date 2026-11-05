@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { hasDisplayGlyph } from "./fonts.js?v=v2026-11-05T23341";
+import { hasDisplayGlyph } from "./fonts.js?v=v2026-11-05T23344";
 =======
-import { hasDisplayGlyph } from "./fonts.js?v=v2026-11-05T23341";
+import { hasDisplayGlyph } from "./fonts.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Długie pola Wyświetlacza (long1/long2 -- nazwy drużyn): 95 kolumn kropek.

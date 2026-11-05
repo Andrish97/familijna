@@ -5,15 +5,15 @@
 // Zamyka [×], Esc, kliknięcie tła albo „Wstecz” na górnym pasku (backBtn).
 
 <<<<<<< HEAD
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T23344";
 =======
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, setOverlayOpen, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "./pinch-zoom.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 /**

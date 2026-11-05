@@ -4,9 +4,9 @@
 // kropki: js/core/logo-preview.js (ta sama co na wyświetlaczu).
 
 <<<<<<< HEAD
-import { rows30x10ToBits150 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23341";
+import { rows30x10ToBits150 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23344";
 =======
-import { rows30x10ToBits150 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23341";
+import { rows30x10ToBits150 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

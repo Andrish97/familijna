@@ -1,12 +1,12 @@
 // Ten sam publiczny model i HTML w Workerze i w przeglądarce.
 <<<<<<< HEAD
-import { iconText, starRating } from "../../shared/js/core/icons.js?v=v2026-11-05T23341";
-import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-05T23341";
-import { escapePublicHtml as esc, publicLang } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23341";
+import { iconText, starRating } from "../../shared/js/core/icons.js?v=v2026-11-05T23344";
+import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-05T23344";
+import { escapePublicHtml as esc, publicLang } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23344";
 =======
-import { iconText, starRating } from "../../shared/js/core/icons.js?v=v2026-11-05T23341";
-import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-05T23341";
-import { escapePublicHtml as esc, publicLang } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23341";
+import { iconText, starRating } from "../../shared/js/core/icons.js?v=v2026-11-05T23344";
+import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-05T23344";
+import { escapePublicHtml as esc, publicLang } from "../../shared/js/core/public-seo.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 export { esc };
 export const validSlug = (s) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(s || ""));

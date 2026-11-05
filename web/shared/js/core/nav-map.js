@@ -44,11 +44,11 @@
 // zepsuty ret oznacza powrót do parent. Bez fallbacków i aliasów.
 
 <<<<<<< HEAD
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { iconText } from "./icons.js?v=v2026-11-05T23341";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { iconText } from "./icons.js?v=v2026-11-05T23344";
 =======
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { iconText } from "./icons.js?v=v2026-11-05T23341";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { iconText } from "./icons.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

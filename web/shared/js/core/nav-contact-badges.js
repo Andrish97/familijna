@@ -2,9 +2,9 @@
 // Znajomi: oczekujące zaproszenia przychodzące (badges_get).
 // Subskrybenci: aktywne adresy na liście właściciela (contacts_list).
 <<<<<<< HEAD
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
 =======
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // badges_get wołają topbar (Znajomi), Gry (Zadania) i Bazy — równoczesne

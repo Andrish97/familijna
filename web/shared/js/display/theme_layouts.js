@@ -5,9 +5,9 @@
 // display.motion: płynne przejście wyjść przy zmianie stanu (stała czasowa, ms).
 // Silnik nie zna żadnego konkretnego motywu. Schemat: familijna-server/docs/motywy.md.
 <<<<<<< HEAD
-import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-05T23341";
+import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-05T23344";
 =======
-import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-05T23341";
+import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Nazwy wyświetlaczy w pliku (display.panels) → nazwy w createDisplays().

@@ -4,11 +4,11 @@
 // i folderu, liczniki. Czyste funkcje — bez DOM i bez bazy.
 
 <<<<<<< HEAD
-import { normalizeText } from "./listing.js?v=v2026-11-05T23341";
-import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T23341";
+import { normalizeText } from "./listing.js?v=v2026-11-05T23344";
+import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T23344";
 =======
-import { normalizeText } from "./listing.js?v=v2026-11-05T23341";
-import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T23341";
+import { normalizeText } from "./listing.js?v=v2026-11-05T23344";
+import { evaluateReadiness, TYPES } from "../../../../shared/js/core/game-rules.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Proponowane kategorie (typy gry) w kolejności panelu.

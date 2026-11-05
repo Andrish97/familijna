@@ -1,9 +1,9 @@
 <<<<<<< HEAD
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
 =======
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // „Postaw kawę”: dobrowolne wsparcie twórcy, bez żadnych korzyści w aplikacji.
@@ -56,9 +56,9 @@ export async function openSupportModal() {
   await translationsReady();
   const [{ confirmModal }, { isSheetViewport }] = await Promise.all([
 <<<<<<< HEAD
-    import("./modal.js?v=v2026-11-05T23341"), import("./modal-sheet.js?v=v2026-11-05T23341"),
+    import("./modal.js?v=v2026-11-05T23344"), import("./modal-sheet.js?v=v2026-11-05T23344"),
 =======
-    import("./modal.js?v=v2026-11-05T23341"), import("./modal-sheet.js?v=v2026-11-05T23341"),
+    import("./modal.js?v=v2026-11-05T23344"), import("./modal-sheet.js?v=v2026-11-05T23344"),
 >>>>>>> origin/main
   ]);
   const box = document.createElement("div");

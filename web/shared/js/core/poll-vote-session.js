@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-05T23341";
+import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-05T23344";
 =======
-import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-05T23341";
+import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Wspólny cykl ankiety; strony zachowują renderowanie i walidację swoich odpowiedzi.

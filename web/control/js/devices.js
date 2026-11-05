@@ -13,13 +13,13 @@
 // komendami, nie wymaga żadnej zmiany dla v2.
 
 <<<<<<< HEAD
-import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
 =======
-import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

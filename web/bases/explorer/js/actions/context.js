@@ -4,9 +4,9 @@
 // menu kontekstowego, skrótów, przeciągania i gestów.
 
 <<<<<<< HEAD
-import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
+import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23344";
 =======
-import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
+import { currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Zaznaczenie → elementy.

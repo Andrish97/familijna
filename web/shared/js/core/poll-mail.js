@@ -3,11 +3,11 @@
 // send-mail z szablonów serwera. Tu: wysyłka po tokenach i oznaczenie
 // zaproszeń jako wysłanych.
 <<<<<<< HEAD
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
-import { sendNotificationMails, goLinkToken } from "./notify-mail.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
+import { sendNotificationMails, goLinkToken } from "./notify-mail.js?v=v2026-11-05T23344";
 =======
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
-import { sendNotificationMails, goLinkToken } from "./notify-mail.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
+import { sendNotificationMails, goLinkToken } from "./notify-mail.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 /**

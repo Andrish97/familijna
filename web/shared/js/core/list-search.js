@@ -9,21 +9,21 @@
 // Kafel niesie wartość w atrybucie data-* (filter.attr).
 
 <<<<<<< HEAD
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { promptModal } from "./modal.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23341";
-import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23341";
-import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23341";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { promptModal } from "./modal.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23344";
+import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23344";
+import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23344";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23344";
 =======
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { promptModal } from "./modal.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23341";
-import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23341";
-import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23341";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { promptModal } from "./modal.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { initUiSelect } from "./ui-select.js?v=v2026-11-05T23344";
+import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-05T23344";
+import { scrollFade } from "./scroll-fade.js?v=v2026-11-05T23344";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

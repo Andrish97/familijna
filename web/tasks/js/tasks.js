@@ -1,20 +1,20 @@
 // Zadania: wyłącznie ankiety. Do zrobienia / Zrobione (5 dni).
 <<<<<<< HEAD
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { toast } from "../../shared/js/core/toast.js?v=v2026-11-05T23341";
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23341";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-05T23341";
-import { renderRowSections } from "../../shared/js/core/share-sections.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { toast } from "../../shared/js/core/toast.js?v=v2026-11-05T23344";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23344";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-05T23344";
+import { renderRowSections } from "../../shared/js/core/share-sections.js?v=v2026-11-05T23344";
 =======
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { toast } from "../../shared/js/core/toast.js?v=v2026-11-05T23341";
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23341";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-05T23341";
-import { renderRowSections } from "../../shared/js/core/share-sections.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { toast } from "../../shared/js/core/toast.js?v=v2026-11-05T23344";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-05T23344";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-05T23344";
+import { renderRowSections } from "../../shared/js/core/share-sections.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

@@ -7,11 +7,11 @@
 // pozwala go pominąć, żeby nie skasował zaznaczenia z ramki.
 
 <<<<<<< HEAD
-import { isModKey } from "../platform.js?v=v2026-11-05T23341";
-import { setBox, anchorBox } from "../../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
+import { isModKey } from "../platform.js?v=v2026-11-05T23344";
+import { setBox, anchorBox } from "../../../../shared/js/core/geometry.js?v=v2026-11-05T23344";
 =======
-import { isModKey } from "../platform.js?v=v2026-11-05T23341";
-import { setBox, anchorBox } from "../../../../shared/js/core/geometry.js?v=v2026-11-05T23341";
+import { isModKey } from "../platform.js?v=v2026-11-05T23344";
+import { setBox, anchorBox } from "../../../../shared/js/core/geometry.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 /**

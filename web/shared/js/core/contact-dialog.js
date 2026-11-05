@@ -1,13 +1,13 @@
 <<<<<<< HEAD
-import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { getTurnstileToken } from "./turnstile.js?v=v2026-11-05T23341";
+import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { getTurnstileToken } from "./turnstile.js?v=v2026-11-05T23344";
 =======
-import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { getTurnstileToken } from "./turnstile.js?v=v2026-11-05T23341";
+import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, isSheetViewport } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { getTurnstileToken } from "./turnstile.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 
@@ -170,9 +170,9 @@ function ensureModal() {
 async function prefillEmail() {
   try {
 <<<<<<< HEAD
-    const { sb } = await import("./supabase.js?v=v2026-11-05T23341");
+    const { sb } = await import("./supabase.js?v=v2026-11-05T23344");
 =======
-    const { sb } = await import("./supabase.js?v=v2026-11-05T23341");
+    const { sb } = await import("./supabase.js?v=v2026-11-05T23344");
 >>>>>>> origin/main
 
     const { data } = await sb().auth.getSession();

@@ -11,17 +11,17 @@
 // czy grę wolno otworzyć / grać, decyduje baza (js/core/game-validate.js).
 
 <<<<<<< HEAD
-import { RULES, TYPES } from "./game-rules.js?v=v2026-11-05T23341";
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { loadFont5x7 } from "./logo-preview.js?v=v2026-11-05T23341";
-import { QUESTION_MAX, ANSWER_MAX, FINAL_DISPLAY_MAX, clipChars, nfc, answerInvalidChars } from "./answer-text.js?v=v2026-11-05T23341";
+import { RULES, TYPES } from "./game-rules.js?v=v2026-11-05T23344";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { loadFont5x7 } from "./logo-preview.js?v=v2026-11-05T23344";
+import { QUESTION_MAX, ANSWER_MAX, FINAL_DISPLAY_MAX, clipChars, nfc, answerInvalidChars } from "./answer-text.js?v=v2026-11-05T23344";
 =======
-import { RULES, TYPES } from "./game-rules.js?v=v2026-11-05T23341";
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "./icons.js?v=v2026-11-05T23341";
-import { loadFont5x7 } from "./logo-preview.js?v=v2026-11-05T23341";
-import { QUESTION_MAX, ANSWER_MAX, FINAL_DISPLAY_MAX, clipChars, nfc, answerInvalidChars } from "./answer-text.js?v=v2026-11-05T23341";
+import { RULES, TYPES } from "./game-rules.js?v=v2026-11-05T23344";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "./icons.js?v=v2026-11-05T23344";
+import { loadFont5x7 } from "./logo-preview.js?v=v2026-11-05T23344";
+import { QUESTION_MAX, ANSWER_MAX, FINAL_DISPLAY_MAX, clipChars, nfc, answerInvalidChars } from "./answer-text.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

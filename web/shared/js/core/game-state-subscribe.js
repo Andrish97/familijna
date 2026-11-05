@@ -14,17 +14,17 @@
 // odpytywania.
 
 <<<<<<< HEAD
-import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23341";
-import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-05T23341";
-import { createRowSync } from "./game-state-sync.js?v=v2026-11-05T23341";
-import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-05T23341";
-import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-05T23341";
+import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23344";
+import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-05T23344";
+import { createRowSync } from "./game-state-sync.js?v=v2026-11-05T23344";
+import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-05T23344";
+import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-05T23344";
 =======
-import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23341";
-import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-05T23341";
-import { createRowSync } from "./game-state-sync.js?v=v2026-11-05T23341";
-import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-05T23341";
-import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-05T23341";
+import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23344";
+import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-05T23344";
+import { createRowSync } from "./game-state-sync.js?v=v2026-11-05T23344";
+import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-05T23344";
+import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const TRANSPORT = "broadcast";

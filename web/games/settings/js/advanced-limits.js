@@ -5,9 +5,9 @@
 // Zero importów przeglądarkowych — testowalne w gołym Node.
 
 <<<<<<< HEAD
-import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-05T23341";
+import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-05T23344";
 =======
-import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-05T23341";
+import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Twardy limit celu finału: gracz 2 nie może powtórzyć odpowiedzi gracza 1,

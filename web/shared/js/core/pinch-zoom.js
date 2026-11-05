@@ -6,9 +6,9 @@
 // całej strony przeglądarki (patrz touch-action:none w logo.css —
 // bez tego dwa palce na canvasie zoomowałyby cały layout, nie samą treść).
 <<<<<<< HEAD
-import { setShift } from "./geometry.js?v=v2026-11-05T23341";
+import { setShift } from "./geometry.js?v=v2026-11-05T23344";
 =======
-import { setShift } from "./geometry.js?v=v2026-11-05T23341";
+import { setShift } from "./geometry.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 export function initPinchZoom(container, canvas, { maxScale = 6 } = {}) {
   // Model: canvas ma transform-origin 0 0, a jego NIEPRZEKSZTAŁCONY

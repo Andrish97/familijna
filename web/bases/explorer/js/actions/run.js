@@ -3,13 +3,13 @@
 // przeciągania i gestów: widoczność → dostępność → wykonanie → komunikat.
 
 <<<<<<< HEAD
-import { actionById, actionState } from "./registry.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { actionById, actionState } from "./registry.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
 =======
-import { actionById, actionState } from "./registry.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { actionById, actionState } from "./registry.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Powody, które ze skrótu klawiszowego warto powiedzieć głośno. Brak

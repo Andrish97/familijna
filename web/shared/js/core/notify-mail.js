@@ -2,11 +2,11 @@
 // wskazuje tylko akcję i token powiadomienia z linku /go/; treść, odbiorcę
 // i linki buduje funkcja Edge send-mail z danych w bazie (audyt E24).
 <<<<<<< HEAD
-import { sb, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23341";
-import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { sb, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23344";
+import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23344";
 =======
-import { sb, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23341";
-import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23341";
+import { sb, SUPABASE_URL } from "./supabase.js?v=v2026-11-05T23344";
+import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const MAIL_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/send-mail`;

@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23344";
 =======
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 // fit-row.js
 // Wiersz przycisków bez zawijania (zgłoszenie 2026-10-24: pasek ustawień gry

@@ -8,19 +8,19 @@
 // - → tag w lewym panelu: nadaj tag (całe poddrzewa folderów).
 
 <<<<<<< HEAD
-import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
-import { renderSelection } from "../render.js?v=v2026-11-05T23341";
-import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-05T23341";
-import { isCopyDragModifier } from "../platform.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23344";
+import { renderSelection } from "../render.js?v=v2026-11-05T23344";
+import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-05T23344";
+import { isCopyDragModifier } from "../platform.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
 =======
-import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23341";
-import { renderSelection } from "../render.js?v=v2026-11-05T23341";
-import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-05T23341";
-import { isCopyDragModifier } from "../platform.js?v=v2026-11-05T23341";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
+import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-05T23344";
+import { renderSelection } from "../render.js?v=v2026-11-05T23344";
+import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-05T23344";
+import { isCopyDragModifier } from "../platform.js?v=v2026-11-05T23344";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const MARKS = ["is-drop-target", "is-drop-before", "is-drop-after", "is-drop-into"];

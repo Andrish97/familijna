@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-05T23344";
 =======
-import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-05T23341";
+import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 export { esc };
 // base-explorerjs/ui/tree-row.js
@@ -11,11 +11,11 @@ export { esc };
 // z --depth, strzałka, folder otwarty/zamknięty, nazwa, kropki i liczba pytań.
 
 <<<<<<< HEAD
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-05T23344";
 =======
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-05T23341";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

@@ -6,13 +6,13 @@
 // przycisk otwiera panel z tym widokiem, ponowne stuknięcie go zamyka.
 
 <<<<<<< HEAD
-import { renderAll, renderToolbar, isNarrow } from "../render.js?v=v2026-11-05T23341";
-import { selectionClear } from "../state.js?v=v2026-11-05T23341";
-import { initDrawer } from "../mobile.js?v=v2026-11-05T23341";
+import { renderAll, renderToolbar, isNarrow } from "../render.js?v=v2026-11-05T23344";
+import { selectionClear } from "../state.js?v=v2026-11-05T23344";
+import { initDrawer } from "../mobile.js?v=v2026-11-05T23344";
 =======
-import { renderAll, renderToolbar, isNarrow } from "../render.js?v=v2026-11-05T23341";
-import { selectionClear } from "../state.js?v=v2026-11-05T23341";
-import { initDrawer } from "../mobile.js?v=v2026-11-05T23341";
+import { renderAll, renderToolbar, isNarrow } from "../render.js?v=v2026-11-05T23344";
+import { selectionClear } from "../state.js?v=v2026-11-05T23344";
+import { initDrawer } from "../mobile.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Schowane drzewo nie trzyma zaznaczenia — skróty (Usuń, F2…) działałyby

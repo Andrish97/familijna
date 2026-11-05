@@ -4,13 +4,13 @@
 // Wspólne dla Wyświetlacza, Prowadzącego i Ustawień gry.
 // Zasady: familijna-server/docs/motywy.md.
 <<<<<<< HEAD
-import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T23341";
+import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T23344";
 
-const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T23341";
+const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T23344";
 =======
-import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T23341";
+import { parseThemeFile } from "./theme-file.js?v=v2026-11-05T23344";
 
-const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T23341";
+const INDEX_URL = "/shared/themes/index.json?v=v2026-11-05T23344";
 >>>>>>> origin/main
 let registry = null;
 

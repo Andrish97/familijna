@@ -80,9 +80,9 @@ const uk = {
         display: "Неправильна частина display: {detail}.",
         label: "Назви теми (label) мають мати версії pl, en і uk по 1–40 символів.",
 <<<<<<< HEAD
-        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23341).",
+        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23344).",
 =======
-        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23341).",
+        artwork_missing: "Немає SVG дисплея (поле display.svg?v=v2026-11-05T23344).",
 >>>>>>> origin/main
         artwork_too_large: "SVG дисплея завеликий (щонайбільше 300 КБ).",
         svg_root: "Графіка має бути одним елементом <svg>.",

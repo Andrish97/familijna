@@ -1,11 +1,11 @@
 <<<<<<< HEAD
-import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-05T23341";
-import { icon, iconText } from "../js/core/icons.js?v=v2026-11-05T23341";
-import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-05T23341";
+import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-05T23344";
+import { icon, iconText } from "../js/core/icons.js?v=v2026-11-05T23344";
+import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-05T23344";
 =======
-import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-05T23341";
-import { icon, iconText } from "../js/core/icons.js?v=v2026-11-05T23341";
-import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-05T23341";
+import { holdPageLayout } from "../js/core/page-layout.js?v=v2026-11-05T23344";
+import { icon, iconText } from "../js/core/icons.js?v=v2026-11-05T23344";
+import { applyLegacyHandoff } from "../js/core/legacy-handoff.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Przenosiny ze starej domeny przed pierwszym odczytem uiLang (do usunięcia po 2026-12-01).
@@ -22,11 +22,11 @@ const LANG_META = {
 };
 const ASSET_VERSION = new URL(import.meta.url).search;
 <<<<<<< HEAD
-import { placeDropdown } from "../js/core/popover.js?v=v2026-11-05T23341";
-import { injectThemeSwitcher, refreshThemeSwitcher } from "../js/core/theme-switcher.js?v=v2026-11-05T23341";
+import { placeDropdown } from "../js/core/popover.js?v=v2026-11-05T23344";
+import { injectThemeSwitcher, refreshThemeSwitcher } from "../js/core/theme-switcher.js?v=v2026-11-05T23344";
 =======
-import { placeDropdown } from "../js/core/popover.js?v=v2026-11-05T23341";
-import { injectThemeSwitcher, refreshThemeSwitcher } from "../js/core/theme-switcher.js?v=v2026-11-05T23341";
+import { placeDropdown } from "../js/core/popover.js?v=v2026-11-05T23344";
+import { injectThemeSwitcher, refreshThemeSwitcher } from "../js/core/theme-switcher.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const LANG_ORDER = ["pl", "en", "uk"];

@@ -123,11 +123,11 @@ async function acquireScreenWakeLock() {
 // MP4 (H.264) dla Safari; WebM dla Chromium bez H.264 (np. Linux).
 const KEEP_AWAKE_SOURCES = [
 <<<<<<< HEAD
-  ["/assets/video/keep-awake.mp4?v=v2026-11-05T23341", "video/mp4"],
-  ["/assets/video/keep-awake.webm?v=v2026-11-05T23341", "video/webm"],
+  ["/assets/video/keep-awake.mp4?v=v2026-11-05T23344", "video/mp4"],
+  ["/assets/video/keep-awake.webm?v=v2026-11-05T23344", "video/webm"],
 =======
-  ["/assets/video/keep-awake.mp4?v=v2026-11-05T23341", "video/mp4"],
-  ["/assets/video/keep-awake.webm?v=v2026-11-05T23341", "video/webm"],
+  ["/assets/video/keep-awake.mp4?v=v2026-11-05T23344", "video/mp4"],
+  ["/assets/video/keep-awake.webm?v=v2026-11-05T23344", "video/webm"],
 >>>>>>> origin/main
 ];
 function startVideoWakeLockFallback() {

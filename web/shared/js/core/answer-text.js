@@ -5,9 +5,9 @@
 // hasDisplayGlyph; SQL stosuje tę samą regułę (public.fam_answer_invalid_chars,
 // public.fam_answer_clean).
 <<<<<<< HEAD
-import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-05T23341";
+import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-05T23344";
 =======
-import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-05T23341";
+import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 export const GAME_NAME_MAX = 80;

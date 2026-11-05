@@ -3,9 +3,9 @@
 // Przeglądarkę rozpoznaje losowy identyfikator w localStorage; zalogowanym
 // RPC zwraca też postęp (best, games). Błąd zapisu nie przeszkadza w grze.
 <<<<<<< HEAD
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
 =======
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const VISITOR_KEY = "familijna:snake:visitor";

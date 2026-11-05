@@ -3,11 +3,11 @@
 // Stan trzyma page-boot.js (FamilijnaTheme); ekrany gry mają motyw zablokowany
 // i nie dostają przycisku.
 <<<<<<< HEAD
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { placeDropdown } from "./popover.js?v=v2026-11-05T23341";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { placeDropdown } from "./popover.js?v=v2026-11-05T23344";
 =======
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { placeDropdown } from "./popover.js?v=v2026-11-05T23341";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { placeDropdown } from "./popover.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const ICONS = { auto: "theme-auto", light: "theme-light", dark: "theme-dark" };

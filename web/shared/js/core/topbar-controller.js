@@ -1,7 +1,7 @@
 <<<<<<< HEAD
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23344";
 =======
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 // js/core/topbar-controller.js
 // Zarządza całym topbarem:
@@ -11,17 +11,17 @@ import { registerPageLayout } from "./page-layout.js?v=v2026-11-05T23341";
 // Eksportuje: setTopbarNavPriority, setTopbarAccount (alias: initTopbarAccountDropdown), autoInitTopbarAuthButton
 
 <<<<<<< HEAD
-import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T23341";
-import { isGuestUser } from './guest-mode.js?v=v2026-11-05T23341';
-import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T23341';
-import { icon, iconText } from './icons.js?v=v2026-11-05T23341';
-import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T23341';
+import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T23344";
+import { isGuestUser } from './guest-mode.js?v=v2026-11-05T23344';
+import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T23344';
+import { icon, iconText } from './icons.js?v=v2026-11-05T23344';
+import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T23344';
 =======
-import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T23341";
-import { isGuestUser } from './guest-mode.js?v=v2026-11-05T23341';
-import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T23341';
-import { icon, iconText } from './icons.js?v=v2026-11-05T23341';
-import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T23341';
+import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-05T23344";
+import { isGuestUser } from './guest-mode.js?v=v2026-11-05T23344';
+import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-05T23344';
+import { icon, iconText } from './icons.js?v=v2026-11-05T23344';
+import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-05T23344';
 >>>>>>> origin/main
 
 
@@ -402,9 +402,9 @@ function applyTopbarAccount(user, {
         try { await onLogout(); } catch(e) { console.warn('logout callback error:', e); }
       }
 <<<<<<< HEAD
-      const { signOut } = await import("./auth.js?v=v2026-11-05T23341");
+      const { signOut } = await import("./auth.js?v=v2026-11-05T23344");
 =======
-      const { signOut } = await import("./auth.js?v=v2026-11-05T23341");
+      const { signOut } = await import("./auth.js?v=v2026-11-05T23344");
 >>>>>>> origin/main
       await signOut();
       location.href = withLangParam(loginHref);
@@ -469,9 +469,9 @@ export async function autoInitTopbarAuthButton(btn = document.getElementById('bt
   if (!btn) return;
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
 <<<<<<< HEAD
-  const { getUser } = await import('./auth.js?v=v2026-11-05T23341');
+  const { getUser } = await import('./auth.js?v=v2026-11-05T23344');
 =======
-  const { getUser } = await import('./auth.js?v=v2026-11-05T23341');
+  const { getUser } = await import('./auth.js?v=v2026-11-05T23344');
 >>>>>>> origin/main
 
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;

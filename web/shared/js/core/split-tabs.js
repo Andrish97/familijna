@@ -13,11 +13,11 @@
 // w trybie wąskim.
 
 <<<<<<< HEAD
-import { markActiveTab } from "./tabs.js?v=v2026-11-05T23341";
-import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23341";
+import { markActiveTab } from "./tabs.js?v=v2026-11-05T23344";
+import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23344";
 =======
-import { markActiveTab } from "./tabs.js?v=v2026-11-05T23341";
-import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23341";
+import { markActiveTab } from "./tabs.js?v=v2026-11-05T23344";
+import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 /**

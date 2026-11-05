@@ -10,13 +10,13 @@
 // jak editor.js/editor.css robi to swoim jedynym `btnBack`.
 
 <<<<<<< HEAD
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { dialogAllowed } from "./nav-map.js?v=v2026-11-05T23341";
-import { isSheetLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { dialogAllowed } from "./nav-map.js?v=v2026-11-05T23344";
+import { isSheetLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23344";
 =======
-import { t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { dialogAllowed } from "./nav-map.js?v=v2026-11-05T23341";
-import { isSheetLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23341";
+import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { dialogAllowed } from "./nav-map.js?v=v2026-11-05T23344";
+import { isSheetLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 // Esc zamyka najwyższe widoczne okno tak samo jak jego X w nagłówku (jedna
@@ -26,9 +26,9 @@ import { isSheetLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-05T2
 // zostają otwarte.
 const ESC_CLOSE_SELECTOR = [".mHead", ".uni-head", ".tagsHead", ".bld-preview-head", ".mkt-detail-head", ".previewModalTitle"]
 <<<<<<< HEAD
-  .map((head) => `${head} button:has(use[href*="/close.svg?v=v2026-11-05T23341"])`).join(", ");
+  .map((head) => `${head} button:has(use[href*="/close.svg?v=v2026-11-05T23344"])`).join(", ");
 =======
-  .map((head) => `${head} button:has(use[href*="/close.svg?v=v2026-11-05T23341"])`).join(", ");
+  .map((head) => `${head} button:has(use[href*="/close.svg?v=v2026-11-05T23344"])`).join(", ");
 >>>>>>> origin/main
 // Na telefonie (arkusz) X bywa ukryty — wtedy bierzemy pierwszy dostępny.
 const visibleCloseButton = (root) => {
@@ -158,9 +158,9 @@ export function setModalSheetPage(pageId) {
     setTimeout(() => {
       if (urlDialog() !== key) return;
 <<<<<<< HEAD
-      import("./contact-modal.js?v=v2026-11-05T23341").then((module) => module.openContactModal());
+      import("./contact-modal.js?v=v2026-11-05T23344").then((module) => module.openContactModal());
 =======
-      import("./contact-modal.js?v=v2026-11-05T23341").then((module) => module.openContactModal());
+      import("./contact-modal.js?v=v2026-11-05T23344").then((module) => module.openContactModal());
 >>>>>>> origin/main
 
     }, 0);

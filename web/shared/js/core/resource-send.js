@@ -1,21 +1,21 @@
 <<<<<<< HEAD
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { toast } from "./toast.js?v=v2026-11-05T23341";
-import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T23341";
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { attachListTools } from "./share-sections.js?v=v2026-11-05T23341";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { toast } from "./toast.js?v=v2026-11-05T23344";
+import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T23344";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { attachListTools } from "./share-sections.js?v=v2026-11-05T23344";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23344";
 =======
-import { sb } from "./supabase.js?v=v2026-11-05T23341";
-import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23341";
-import { toast } from "./toast.js?v=v2026-11-05T23341";
-import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T23341";
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23341";
-import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T23341";
-import { attachListTools } from "./share-sections.js?v=v2026-11-05T23341";
-import { emptyState } from "./empty-state.js?v=v2026-11-05T23341";
+import { sb } from "./supabase.js?v=v2026-11-05T23344";
+import { getUiLang, t } from "../../translation/translation.js?v=v2026-11-05T23344";
+import { toast } from "./toast.js?v=v2026-11-05T23344";
+import { sendResourceCopyMail } from "./invite-mail.js?v=v2026-11-05T23344";
+import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
+import { openDialog, closeDialog, setOverlayOpen } from "./modal-sheet.js?v=v2026-11-05T23344";
+import { attachListTools } from "./share-sections.js?v=v2026-11-05T23344";
+import { emptyState } from "./empty-state.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

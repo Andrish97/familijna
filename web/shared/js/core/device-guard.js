@@ -17,15 +17,15 @@
 // (komputer, telewizor albo strona, której obrót nie pomoże, np. próg 980 px).
 
 <<<<<<< HEAD
-import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-05T23341";
+import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-05T23344";
 
 
-import "./page-boot.js?v=v2026-11-05T23341";
+import "./page-boot.js?v=v2026-11-05T23344";
 =======
-import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-05T23341";
+import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-05T23344";
 
 
-import "./page-boot.js?v=v2026-11-05T23341";
+import "./page-boot.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 export const { getDeviceProfile, editableFocused, PHONE_MAX_SHORT_SIDE } = globalThis.FamilijnaDevice;
 const { keyboardLikely, KEYBOARD_CLOSE_MS } = globalThis.FamilijnaDevice;

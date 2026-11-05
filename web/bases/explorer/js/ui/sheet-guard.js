@@ -8,9 +8,9 @@
 // modal-sheet.js (data-routed); otwarcie naszym kodem (openDialog) go zdejmuje.
 
 <<<<<<< HEAD
-import { closeDialog, isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23341";
+import { closeDialog, isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23344";
 =======
-import { closeDialog, isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23341";
+import { closeDialog, isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 export function guardRoutedSheet(overlay, isOpen = () => overlay?.dataset.routed !== "true") {

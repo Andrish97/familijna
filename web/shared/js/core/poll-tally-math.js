@@ -9,9 +9,9 @@
 //    najwyżej 6 kwalifikujących; remis głosów na granicy szóstki rozstrzyga
 //    użytkownik (cykliczny wybór), SQL sprawdza wybór.
 <<<<<<< HEAD
-import { cleanAnswerText } from "./answer-text.js?v=v2026-11-05T23341";
+import { cleanAnswerText } from "./answer-text.js?v=v2026-11-05T23344";
 =======
-import { cleanAnswerText } from "./answer-text.js?v=v2026-11-05T23341";
+import { cleanAnswerText } from "./answer-text.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 export const ANSWERS_MIN = 3;

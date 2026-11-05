@@ -3,9 +3,9 @@
 // jest już wierszem games/user_logos odbiorcy — strona rysuje ją jak
 // zaproszenie do bazy, zaraz po kaflu „+”, z ✓/✕ zamiast kosza.
 <<<<<<< HEAD
-import {sb} from './supabase.js?v=v2026-11-05T23341';
+import {sb} from './supabase.js?v=v2026-11-05T23344';
 =======
-import {sb} from './supabase.js?v=v2026-11-05T23341';
+import {sb} from './supabase.js?v=v2026-11-05T23344';
 >>>>>>> origin/main
 
 

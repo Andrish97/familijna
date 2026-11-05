@@ -9,11 +9,11 @@
 // wyświetlaczu, a proporcje zgadzają się z tym, co widać na scenie.
 
 <<<<<<< HEAD
-import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-05T23341";
-import { DOT_W, DOT_H } from "../render.js?v=v2026-11-05T23341";
+import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-05T23344";
+import { DOT_W, DOT_H } from "../render.js?v=v2026-11-05T23344";
 =======
-import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-05T23341";
-import { DOT_W, DOT_H } from "../render.js?v=v2026-11-05T23341";
+import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-05T23344";
+import { DOT_W, DOT_H } from "../render.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 

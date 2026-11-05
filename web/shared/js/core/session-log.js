@@ -6,11 +6,11 @@
 // pomocniczy: nigdy nie blokuje gry i nie zgłasza błędów użytkownikowi.
 
 <<<<<<< HEAD
-import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-05T23341";
-import { getDeviceProfile } from "./device-guard.js?v=v2026-11-05T23341";
+import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-05T23344";
+import { getDeviceProfile } from "./device-guard.js?v=v2026-11-05T23344";
 =======
-import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-05T23341";
-import { getDeviceProfile } from "./device-guard.js?v=v2026-11-05T23341";
+import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-05T23344";
+import { getDeviceProfile } from "./device-guard.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const BATCH = 20;

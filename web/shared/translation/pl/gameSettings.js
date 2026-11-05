@@ -80,9 +80,9 @@ const pl = {
         display: "Niepoprawna część display: {detail}.",
         label: "Nazwy motywu (label) muszą mieć wersje pl, en i uk po 1–40 znaków.",
 <<<<<<< HEAD
-        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-05T23341).",
+        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-05T23344).",
 =======
-        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-05T23341).",
+        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-05T23344).",
 >>>>>>> origin/main
         artwork_too_large: "SVG Wyświetlacza jest za duże (najwyżej 300 KB).",
         svg_root: "Grafika musi być jednym elementem <svg>.",

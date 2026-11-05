@@ -5,17 +5,17 @@
 // ankiety znikają, a wyniki (odpowiedzi, punkty) można zachować, gdy nowy typ je
 // wykorzysta (migracja 441, p_keep).
 <<<<<<< HEAD
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T23341";
-import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T23344";
+import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T23344";
 =======
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23341";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23341";
-import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23341";
-import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T23341";
-import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T23341";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
+import { confirmModal, alertModal } from "../../shared/js/core/modal.js?v=v2026-11-05T23344";
+import { isResourceBusy } from "../../shared/js/core/resource-lock.js?v=v2026-11-05T23344";
+import { validateGame, TYPES } from "../../shared/js/core/game-validate.js?v=v2026-11-05T23344";
 >>>>>>> origin/main
 
 const SOURCE_TYPES = [TYPES.PREPARED, TYPES.POLL_POINTS, TYPES.POLL_TEXT];

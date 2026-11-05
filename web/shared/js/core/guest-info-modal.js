@@ -2,11 +2,11 @@
 // Jednorazowy modal informacyjny dla konta gościa.
 
 <<<<<<< HEAD
-import { alertModal } from './modal.js?v=v2026-11-05T23341';
-import { t } from '../../translation/translation.js?v=v2026-11-05T23341';
+import { alertModal } from './modal.js?v=v2026-11-05T23344';
+import { t } from '../../translation/translation.js?v=v2026-11-05T23344';
 =======
-import { alertModal } from './modal.js?v=v2026-11-05T23341';
-import { t } from '../../translation/translation.js?v=v2026-11-05T23341';
+import { alertModal } from './modal.js?v=v2026-11-05T23344';
+import { t } from '../../translation/translation.js?v=v2026-11-05T23344';
 >>>>>>> origin/main
 
 
