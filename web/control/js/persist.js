@@ -8,11 +8,7 @@
 // pełny nowy wiersz, błąd zawsze rzuca (z rozróżnieniem stale_write, żeby
 // UI mogło pokazać "gra sterowana z innej zakładki" zamiast zgadywać).
 
-<<<<<<< HEAD
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
-=======
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-05T23344";
->>>>>>> origin/main
 
 
 export class StaleWriteError extends Error {

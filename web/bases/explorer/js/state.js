@@ -4,11 +4,7 @@
 // w state.store (data/store.js), pochodne w state.d (data/derived.js), a „co
 // pokazać” liczy data/listing.js — tu nie ma żadnej pamięci podręcznej.
 
-<<<<<<< HEAD
 import { emptyQuery, isQueryEmpty } from "./data/listing.js?v=v2026-11-05T23344";
-=======
-import { emptyQuery, isQueryEmpty } from "./data/listing.js?v=v2026-11-05T23344";
->>>>>>> origin/main
 
 // Proponowane kategorie (typy gry, game-rules.js) — etykieta i kolor kropki.
 export const TYPE_DEFS = {

@@ -16,7 +16,6 @@
 // setStealMsg/setRevealMsg/ROUNDS_MSG/FINAL_MSG, ale jako czysta funkcja
 // bieżącego game_state (web/js/gameplay/hints.js), nie ulotny stan ustawiany przy
 // każdym zdarzeniu — "wszystko idzie przez tabelę stanów".
-<<<<<<< HEAD
 import { getRoundsHint, getFinalHint, getFinalEntryShortcuts, teamName } from "../../shared/js/gameplay/hints.js?v=v2026-11-05T23344";
 import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
 import { getSfxCategories, getSfxVariant, isSfxPlaying, playSfxPreview, stopSfxPreview, stopSfx, onSfxEnd, setSfxVolume } from "../../shared/js/core/sfx.js?v=v2026-11-05T23344";
@@ -31,22 +30,6 @@ import { hasDisplayGlyph } from "../../shared/js/display/fonts.js?v=v2026-11-05T
 import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23344";
 import { FINAL_DISPLAY_MAX } from "../../shared/js/core/answer-text.js?v=v2026-11-05T23344";
 import { setCell } from "../../shared/js/core/geometry.js?v=v2026-11-05T23344";
-=======
-import { getRoundsHint, getFinalHint, getFinalEntryShortcuts, teamName } from "../../shared/js/gameplay/hints.js?v=v2026-11-05T23344";
-import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-05T23344";
-import { getSfxCategories, getSfxVariant, isSfxPlaying, playSfxPreview, stopSfxPreview, stopSfx, onSfxEnd, setSfxVolume } from "../../shared/js/core/sfx.js?v=v2026-11-05T23344";
-import { buildDisplayPreviewRow } from "../../shared/js/gameplay/previewRow.js?v=v2026-11-05T23344";
-import { DEFAULT_SETTINGS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-05T23344";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-05T23344";
-
-import { previewPendingRoundEndDestination } from "./engine.js?v=v2026-11-05T23344";
-import { fitGameplayText, watchGameplayText } from "./fit-text.js?v=v2026-11-05T23344";
-import { displayTextSegments } from "../../shared/js/gameplay/displayText.js?v=v2026-11-05T23344";
-import { hasDisplayGlyph } from "../../shared/js/display/fonts.js?v=v2026-11-05T23344";
-import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-05T23344";
-import { FINAL_DISPLAY_MAX } from "../../shared/js/core/answer-text.js?v=v2026-11-05T23344";
-import { setCell } from "../../shared/js/core/geometry.js?v=v2026-11-05T23344";
->>>>>>> origin/main
 
 
 const $ = (id) => document.getElementById(id);

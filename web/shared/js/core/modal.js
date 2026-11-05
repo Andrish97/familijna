@@ -1,16 +1,8 @@
-<<<<<<< HEAD
 import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
 import { setMessage } from "./toast.js?v=v2026-11-05T23344";
 import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
 import { openDialog, closeDialog, isSheetViewport, animateClose } from "./modal-sheet.js?v=v2026-11-05T23344";
 import { setProgress, ratioPct } from "./ui-metrics.js?v=v2026-11-05T23344";
-=======
-import { icon, iconText } from "./icons.js?v=v2026-11-05T23344";
-import { setMessage } from "./toast.js?v=v2026-11-05T23344";
-import { t } from "../../translation/translation.js?v=v2026-11-05T23344";
-import { openDialog, closeDialog, isSheetViewport, animateClose } from "./modal-sheet.js?v=v2026-11-05T23344";
-import { setProgress, ratioPct } from "./ui-metrics.js?v=v2026-11-05T23344";
->>>>>>> origin/main
 
 let modalSeq = 0;
 
