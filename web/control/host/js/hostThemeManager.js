@@ -4,9 +4,9 @@
 // Krój i jego miary ustawia CSS motywu (--host-font…), kroje mogą być wszyte
 // w plik (host.fonts); linie papieru i tablica to stałe przełączniki z pliku.
 // Schemat: familijna-server/docs/motywy.md.
-import { isCustomThemeKey, loadCustomTheme } from "../../../shared/js/display/custom-themes.js?v=v2026-11-05T16132";
-import { loadBuiltinThemes, resolveHost } from "../../../shared/js/display/theme-registry.js?v=v2026-11-05T16132";
-import { evaluateOutputs, hostRulesCss } from "../../../shared/js/display/theme-file.js?v=v2026-11-05T16132";
+import { isCustomThemeKey, loadCustomTheme } from "../../../shared/js/display/custom-themes.js?v=v2026-11-05T18040";
+import { loadBuiltinThemes, resolveHost } from "../../../shared/js/display/theme-registry.js?v=v2026-11-05T18040";
+import { evaluateOutputs, hostRulesCss } from "../../../shared/js/display/theme-file.js?v=v2026-11-05T18040";
 
 const FALLBACK_KEY = "wings";
 const DEFAULT_COLORS = { A: "#ff8c1a", B: "#138a50", DOT: "#d7ff3d" };

@@ -1694,6 +1694,10 @@
     animation: popover-in var(--dur-fast) var(--ease-out);
   }
   .lang-menu { max-width: calc(100vw - 24px); }
+  /* Język i wygląd zostają w topbarze także przy otwartym panelu hamburgera
+     (telefon) — ich menu nad tym panelem, nie pod nim. */
+  .lang-menu,
+  .theme-menu { z-index: calc(var(--z-mobile-menu) + 1); }
   .account-wrap {
     position: relative;
     display: inline-flex;
