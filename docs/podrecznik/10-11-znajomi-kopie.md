@@ -149,3 +149,5 @@ edytować, powielać ani usuwać.
 W oknie „Wyślij znajomym” rozwiń sekcję „Historia wysyłek”. Zobaczysz, komu i kiedy
 wysłałeś kopie w ciągu ostatnich 30 dni. Historia służy tylko do podglądu — nie pokazuje,
 czy kopia została przyjęta, i nie pozwala cofnąć wysyłki.
+
+![Historia wysyłek w oknie „Wyślij znajomym”](zrzut:games-send-history)

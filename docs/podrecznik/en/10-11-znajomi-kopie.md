@@ -149,3 +149,5 @@ be edited, duplicated or deleted.
 In the "Send to friends" window, expand the "Send history" section. You can see who you
 sent copies to, and when, over the last 30 days. The history is for viewing only — it does not show
 whether a copy was accepted, and it does not let you take back a sent copy.
+
+![Send history in the "Send to friends" window](zrzut:games-send-history)
