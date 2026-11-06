@@ -1,7 +1,7 @@
-import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-06T00485";
-import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-06T00485";
+import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-06T01185";
+import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-06T01185";
 // js/pages/login.js
-import { guardViewportWidth } from "../../shared/js/core/device-guard.js?v=v2026-11-06T00485";
+import { guardViewportWidth } from "../../shared/js/core/device-guard.js?v=v2026-11-06T01185";
 
 guardViewportWidth({ minWidth: 0 });
 import {
@@ -24,17 +24,17 @@ import {
   clearGuestLocalMarker,
   initPasswordToggles,
   resetPasswordToggles,
-} from "../../shared/js/core/auth.js?v=v2026-11-06T00485";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-06T00485";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-06T00485";
+} from "../../shared/js/core/auth.js?v=v2026-11-06T01185";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-06T01185";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-06T01185";
 
-import { PAGES, manualHref } from "../../shared/js/core/nav-map.js?v=v2026-11-06T00485";
-import { copyGoReturnUrl, isScreenshotId } from "../../shared/js/core/poll-links.js?v=v2026-11-06T00485";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-06T00485";
-import { mailCooldownEmailCheck, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-06T00485";
-import { initI18n, t, getUiLang, withLangParam, applyTranslations } from "../../shared/translation/translation.js?v=v2026-11-06T00485";
-import { iconText } from "../../shared/js/core/icons.js?v=v2026-11-06T00485";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-06T00485";
+import { PAGES, manualHref } from "../../shared/js/core/nav-map.js?v=v2026-11-06T01185";
+import { copyGoReturnUrl, isScreenshotId } from "../../shared/js/core/poll-links.js?v=v2026-11-06T01185";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-06T01185";
+import { mailCooldownEmailCheck, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-06T01185";
+import { initI18n, t, getUiLang, withLangParam, applyTranslations } from "../../shared/translation/translation.js?v=v2026-11-06T01185";
+import { iconText } from "../../shared/js/core/icons.js?v=v2026-11-06T01185";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-06T01185";
 
 const $ = (s) => document.querySelector(s);
 const email = $("#email");

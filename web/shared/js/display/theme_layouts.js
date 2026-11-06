@@ -4,7 +4,7 @@
 //   → SVG motywu (atrybuty "@nazwa") i wypełnienie ekranu (display.page, var(--t-nazwa)).
 // display.motion: płynne przejście wyjść przy zmianie stanu (stała czasowa, ms).
 // Silnik nie zna żadnego konkretnego motywu. Schemat: familijna-server/docs/motywy.md.
-import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-06T00485";
+import { evaluateOutputs, OUTPUT_ATTRIBUTES } from "./theme-file.js?v=v2026-11-06T01185";
 
 // Nazwy wyświetlaczy w pliku (display.panels) → nazwy w createDisplays().
 const PANEL_NAMES = { big: "big", left: "leftPanel", right: "rightPanel", top: "topPanel", longA: "long1", longB: "long2" };
