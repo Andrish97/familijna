@@ -1383,7 +1383,7 @@
     border-top: 1px solid var(--line, var(--w-14));
     background: var(--surface-modal);
     box-shadow: 0 -18px 60px var(--k-70);
-    padding: 32px calc(16px + env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+    padding: 32px calc(16px + env(safe-area-inset-right, 0px)) calc(14px + var(--safe-bottom)) calc(16px + env(safe-area-inset-left, 0px));
     transform: translateY(var(--cm-drag, 0px));
     animation: cmSheetUp .34s cubic-bezier(.2,.8,.2,1) both;
     will-change: transform;

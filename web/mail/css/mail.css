@@ -68,6 +68,6 @@
 
   @media(max-height:500px) and (min-width:601px){.mail-wrap{padding:12px 20px;gap:10px}.mail-preference{padding:8px 0 0}.mail-discover{padding:8px 16px}.mail-discover>span{display:none}}
 
-  .mail-footer{flex:0 0 auto;width:100%;margin:0 auto;padding:14px 24px max(18px,env(safe-area-inset-bottom));box-sizing:border-box}
-  @media(max-width:600px){.mail-footer{padding:12px 14px max(18px,env(safe-area-inset-bottom))}}
+  .mail-footer{flex:0 0 auto;width:100%;margin:0 auto;padding:14px 24px max(18px,var(--safe-bottom));box-sizing:border-box}
+  @media(max-width:600px){.mail-footer{padding:12px 14px max(18px,var(--safe-bottom))}}
 }

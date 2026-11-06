@@ -690,7 +690,7 @@
     margin: auto 0 0; /* krótka strona: na dole okna */
     padding-top: 20px;
     padding-right: calc(var(--footer-edge-r) + var(--footer-gap));
-    padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--footer-gap) + var(--safe-bottom));
     padding-left: calc(var(--footer-edge-l) + var(--footer-gap));
     display: flex;
     flex-wrap: nowrap;
@@ -710,7 +710,7 @@
     margin-inline: 0;
     padding-top: 20px;
     padding-right: calc(var(--footer-edge-r) + var(--footer-gap));
-    padding-bottom: calc(var(--footer-gap) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--footer-gap) + var(--safe-bottom));
     padding-left: calc(var(--footer-edge-l) + var(--footer-gap));
   }
   /* Stopka w .wrap: dolny odstęp .wrap przechodzi do stopki. */
@@ -1430,7 +1430,7 @@
     place-items: center;
     box-sizing: border-box;
     padding: calc(env(safe-area-inset-top, 0px) + 20px) calc(env(safe-area-inset-right, 0px) + 20px)
-      calc(env(safe-area-inset-bottom, 0px) + 20px) calc(env(safe-area-inset-left, 0px) + 20px);
+      calc(var(--safe-bottom) + 20px) calc(env(safe-area-inset-left, 0px) + 20px);
     background: var(--k-70);
   }
   html.showA2HS .a2hs { display: grid; }
@@ -1780,7 +1780,7 @@
     border: 1px solid var(--line);
     border-right: 0;
     border-radius: var(--r-md) 0 0 var(--r-md);
-    padding: 14px calc(10px + env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) 10px;
+    padding: 14px calc(10px + env(safe-area-inset-right, 0px)) calc(14px + var(--safe-bottom)) 10px;
     width: calc(min(320px, 86vw) + env(safe-area-inset-right, 0px));
     min-width: 0;
     height: 100%;
@@ -2241,7 +2241,7 @@
       align-items: flex-start;
       overflow-y: auto;
       overscroll-behavior: contain;
-      padding: max(12px, env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left, 0px));
+      padding: max(12px, env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right, 0px)) max(12px, var(--safe-bottom)) calc(16px + env(safe-area-inset-left, 0px));
     }
     .block-card { padding: 16px 18px; }
   }
@@ -2261,7 +2261,7 @@
     position: fixed;
     left: 50%;
     /* nad dolnym paskiem stron z listą i nad wskaźnikiem home */
-    bottom: calc(max(12px, env(safe-area-inset-bottom)) + 64px);
+    bottom: calc(max(12px, var(--safe-bottom)) + 64px);
     transform: translate(-50%, 12px);
     display: flex;
     align-items: center;
@@ -2644,7 +2644,7 @@
 
   /* Kontakt na stronach bez zwykłej stopki (ekrany urządzeń). */
   .contact-footer-entry { flex: 0 0 auto; justify-content: flex-end; }
-  .contact-footer-entry--floating { position: fixed; right: calc(10px + env(safe-area-inset-right, 0px)); bottom: calc(8px + env(safe-area-inset-bottom, 0px)); width: auto; margin: 0; padding: 5px 9px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-1); z-index: var(--z-float); }
+  .contact-footer-entry--floating { position: fixed; right: calc(10px + env(safe-area-inset-right, 0px)); bottom: calc(8px + var(--safe-bottom)); width: auto; margin: 0; padding: 5px 9px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-1); z-index: var(--z-float); }
   .contact-footer-entry--floating .btn-contact-footer { font-size: 11px; }
 
   /* Okno postępu (modal.js progressModal). */
@@ -2922,6 +2922,23 @@
   /* Klawiatura ekranowa zasłania stronę (device-attrs.js): układ się nie
      zmienia. Pole z samego dołu strony: zapas wysokości klawiatury za
      <body> (html::after), żeby dało się je postawić nad klawiaturą. */
+  /* Zainstalowana aplikacja na Androidzie, jasny motyw: Chrome kończy stronę
+     nad cienkim paskiem nawigacji, a zaokrąglone rogi ekranu ścinały jej dół.
+     Ciemny pas 32 px w kolorze paska (decyzja właściciela 2026-11-06);
+     --safe-bottom go omija. data-os ustawia page-boot.js. */
+  @media (display-mode: standalone) {
+    :root[data-os="android"][data-theme="light"]::before {
+      content: "";
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: var(--app-bottom-band);
+      background: var(--app-bar-color);
+      z-index: var(--z-app-band);
+      pointer-events: none;
+    }
+  }
   :root[data-keyboard-room]::after {
     content: "";
     display: block;
@@ -2961,7 +2978,7 @@
     background: var(--surface-modal);
     --under: var(--surface-modal);
     box-shadow: var(--shadow-sheet);
-    padding: 32px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    padding: 32px 16px calc(14px + var(--safe-bottom));
     padding-left: calc(16px + env(safe-area-inset-left, 0px));
     padding-right: calc(16px + env(safe-area-inset-right, 0px));
     display: flex;
@@ -3226,7 +3243,7 @@
       box-sizing: border-box;
       width: calc(min(320px, 86vw) + env(safe-area-inset-left, 0px));
       /* Strefa bezpieczna: wycięcie z lewej (telefon poziomo), pasek gestu na dole. */
-      padding: 14px 10px calc(14px + env(safe-area-inset-bottom, 0px)) calc(10px + env(safe-area-inset-left, 0px));
+      padding: 14px 10px calc(14px + var(--safe-bottom)) calc(10px + env(safe-area-inset-left, 0px));
       border: 1px solid var(--line);
       border-left: 0;
       border-radius: 0 var(--r-md) var(--r-md) 0;

@@ -178,6 +178,9 @@
   if (typeof document === "undefined" || typeof window === "undefined") return;
   const root = document.documentElement;
   setupTheme(root);
+  // System na <html> (data-os): Android — ciemny pas na dole zainstalowanej
+  // aplikacji (components.css). Telewizory z Androidem pomijamy.
+  if (/Android/i.test(navigator.userAgent || "") && getDeviceProfile().formFactor !== "tv") root.dataset.os = "android";
   const next = deviceLayout();
   root.dataset.device = next.device;
   root.dataset.input = next.input;

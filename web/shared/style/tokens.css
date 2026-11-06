@@ -134,6 +134,7 @@
   --z-topbar-menu: 10060;       /* menu języka i wyglądu z topbara — nad panelem hamburgera */
   --z-toast: 10100;
   --z-tooltip: 2147483000;
+  --z-app-band: 2147483600;     /* ciemny pas na dole aplikacji (Android) */
   --z-block: 2147483647;        /* nakładka blokady (blocking-overlay.css) — nad wszystkim */
 
   /* ── ruch ───────────────────────────────────────────────────── */
@@ -150,6 +151,12 @@
   --page-gutter: 18px;           /* boczny margines treści; ≤980 px — 15 px */
   --page-pad-left: calc(var(--page-gutter) + env(safe-area-inset-left, 0px));
   --page-pad-right: calc(var(--page-gutter) + env(safe-area-inset-right, 0px));
+  /* Dół okna: strefa paska systemu. W zainstalowanej aplikacji na Androidzie
+     (jasny motyw) ciemny pas w kolorze paska nawigacji (components.css) —
+     zakrywa zaokrąglone rogi ekranu; strona kończy się prostą linią. */
+  --app-bottom-band: 0px;
+  --app-bar-color: #050914;      /* = background_color w manifest.json */
+  --safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--app-bottom-band));
   --topbar-ctl-h: 37px;          /* wysokość kontrolek topbara */
 
   /* Podłoże kryjących przycisków: odcień (--btn-tint) nakładany na kolor
@@ -233,11 +240,16 @@
 @supports (height: calc(1dvh - env(safe-area-inset-top, 0px))) {
   :root {
     --modal-vw: calc(94vw - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
-    --modal-vh: calc(92dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    --modal-vh: calc(92dvh - env(safe-area-inset-top, 0px) - var(--safe-bottom));
   }
 }
 @media (max-width: 980px) {
   :root { --page-gutter: 15px; }
+}
+/* Zainstalowana aplikacja na Androidzie, jasny motyw: ciemny pas na dole
+   (components.css, data-os z page-boot.js; decyzja właściciela 2026-11-06). */
+@media (display-mode: standalone) {
+  :root[data-os="android"][data-theme="light"] { --app-bottom-band: 32px; }
 }
 @media (max-width: 600px) {
   :root {

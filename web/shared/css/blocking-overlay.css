@@ -9,7 +9,7 @@
   box-sizing: border-box;
   width: 100vw;
   height: 100vh;
-  padding: max(16px, env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left, 0px));
+  padding: max(16px, env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right, 0px)) max(16px, var(--safe-bottom)) calc(16px + env(safe-area-inset-left, 0px));
   overflow: auto;
   overscroll-behavior: none;
   /* Kryjące tło bez rozmycia: przyciski z ikonami na Androidzie (2026-10-23). */
