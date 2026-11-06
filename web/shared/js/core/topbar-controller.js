@@ -1,4 +1,4 @@
-import { registerPageLayout } from "./page-layout.js?v=v2026-11-06T00320";
+import { registerPageLayout } from "./page-layout.js?v=v2026-11-06T00354";
 // js/core/topbar-controller.js
 // Zarządza całym topbarem:
 //  - Desktop: overflow nav ("Więcej") w section-2, dropdown .account-wrap w section-4
@@ -6,11 +6,11 @@ import { registerPageLayout } from "./page-layout.js?v=v2026-11-06T00320";
 //
 // Eksportuje: setTopbarNavPriority, setTopbarAccount (alias: initTopbarAccountDropdown), autoInitTopbarAuthButton
 
-import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-06T00320";
-import { isGuestUser } from './guest-mode.js?v=v2026-11-06T00320';
-import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-06T00320';
-import { icon, iconText } from './icons.js?v=v2026-11-06T00320';
-import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-06T00320';
+import { placeDropdown, clearPlacement } from "./popover.js?v=v2026-11-06T00354";
+import { isGuestUser } from './guest-mode.js?v=v2026-11-06T00354';
+import { t, withLangParam } from '../../translation/translation.js?v=v2026-11-06T00354';
+import { icon, iconText } from './icons.js?v=v2026-11-06T00354';
+import { isCompactLayout, onDeviceChange } from './device-attrs.js?v=v2026-11-06T00354';
 
 
 // ── Narzędzie: pozycjonowanie fixed dropdown ──────────────────────────────────
@@ -389,7 +389,7 @@ function applyTopbarAccount(user, {
       if (onLogout) {
         try { await onLogout(); } catch(e) { console.warn('logout callback error:', e); }
       }
-      const { signOut } = await import("./auth.js?v=v2026-11-06T00320");
+      const { signOut } = await import("./auth.js?v=v2026-11-06T00354");
       await signOut();
       location.href = withLangParam(loginHref);
     });
@@ -452,7 +452,7 @@ export { setTopbarAccount as initTopbarAccountDropdown };
 export async function autoInitTopbarAuthButton(btn = document.getElementById('btnLogout')) {
   if (!btn) return;
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
-  const { getUser } = await import('./auth.js?v=v2026-11-06T00320');
+  const { getUser } = await import('./auth.js?v=v2026-11-06T00354');
 
   if (btn.dataset.topbarAuthReady === '1' || _accountByPage) return;
   const user = await getUser();
