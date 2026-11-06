@@ -249,7 +249,7 @@
 /* Zainstalowana aplikacja na Androidzie, jasny motyw: ciemny pas na dole
    (components.css, data-os z page-boot.js; decyzja właściciela 2026-11-06). */
 @media (display-mode: standalone) {
-  :root[data-os="android"][data-theme="light"] { --app-bottom-band: 32px; }
+  :root[data-os="android"][data-theme="light"]:not([data-edge-to-edge]) { --app-bottom-band: 32px; }
 }
 @media (max-width: 600px) {
   :root {

@@ -79,7 +79,7 @@ const pl = {
         host_css: "Niedozwolona reguła ramek Prowadzącego: {detail}.",
         display: "Niepoprawna część display: {detail}.",
         label: "Nazwy motywu (label) muszą mieć wersje pl, en i uk po 1–40 znaków.",
-        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-06T00303).",
+        artwork_missing: "Brak SVG Wyświetlacza (pole display.svg?v=v2026-11-06T00320).",
         artwork_too_large: "SVG Wyświetlacza jest za duże (najwyżej 300 KB).",
         svg_root: "Grafika musi być jednym elementem <svg>.",
         svg_viewbox: "Grafika musi mieć viewBox=\"0 0 1280 720\".",
