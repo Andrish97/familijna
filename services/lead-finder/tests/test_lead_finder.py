@@ -5,6 +5,7 @@ import json
 import os
 import sys
 import unittest
+from unittest.mock import AsyncMock, patch
 import unittest.mock
 
 import httpx
@@ -140,17 +141,21 @@ class DeepSeekOnlyTest(unittest.TestCase):
     """Lead Finder używa wyłącznie DeepSeeka (decyzja 2026-10-25)."""
 
     class Db:
-        def __init__(self, available):
+        def __init__(self, available, provider=None):
             self.available, self.cooldowns = available, []
+            self.provider = provider or {'is_active': True, 'cooldown_until': None}
 
         async def rpc(self, fn, params=None):
             if fn == 'get_available_ai_providers':
-                return self.available
+                return self.available.pop(0) if self.available and isinstance(self.available[0], list) else self.available
             self.cooldowns.append(params)
             return True
 
-    def ask(self, available, reply):
-        db = self.Db(available)
+        async def select(self, table, params=None):
+            return [self.provider]
+
+    def ask(self, available, reply, provider=None):
+        db = self.Db(available, provider)
         c = classify.Classifier(db, None)
 
         async def fake_call(prompt):
@@ -168,6 +173,23 @@ class DeepSeekOnlyTest(unittest.TestCase):
         self.assertEqual(db.cooldowns[0]['p_name'], 'deepseek')
         res, db = self.ask([{'name': 'deepseek'}], (503, None, 'busy'))
         self.assertEqual(res, {})
+
+    def test_short_cooldown_is_waited_not_treated_as_quota(self):
+        # 30 s po złym formacie odpowiedzi: czekamy i pytamy dalej (wcześniej przerywało przebieg).
+        from datetime import datetime, timedelta, timezone
+        soon = (datetime.now(timezone.utc) + timedelta(seconds=2)).isoformat()
+        with patch('lf.classify.asyncio.sleep', new=AsyncMock()) as slept:
+            res, _ = self.ask([[], [{'name': 'deepseek'}]], (200, 'x', None), {'is_active': True, 'cooldown_until': soon})
+        self.assertEqual(res, {'ok': 'x'})
+        slept.assert_awaited()
+
+    def test_long_cooldown_or_disabled_stops(self):
+        from datetime import datetime, timedelta, timezone
+        day = (datetime.now(timezone.utc) + timedelta(hours=20)).isoformat()
+        res, _ = self.ask([[]], (200, 'x', None), {'is_active': True, 'cooldown_until': day})
+        self.assertIsNone(res)
+        res, _ = self.ask([[]], (200, 'x', None), {'is_active': False, 'cooldown_until': None})
+        self.assertIsNone(res)
 
 
 class FakeDb:

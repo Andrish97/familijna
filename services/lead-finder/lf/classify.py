@@ -4,10 +4,12 @@ AI nie podaje e-maila (e-mail zawsze ze źródła). Każdy id z paczki musi
 wrócić dokładnie raz; brakujące i błędne pozycje wracają do kolejnej paczki.
 """
 
+import asyncio
 import json
 import logging
 import os
 import re
+from datetime import datetime, timezone
 
 from .config import cfg, load_text
 from .resources import deepseek, BudgetUnavailable, ProviderUnavailable
@@ -160,15 +162,37 @@ class Classifier:
         except ProviderUnavailable as error:
             return 503, None, str(error)
 
+    async def _provider_ready(self):
+        """True = DeepSeek dostępny. Krótka przerwa (np. 30 s po złym formacie
+        odpowiedzi) jest odczekiwana — wcześniej przerywała cały przebieg jak
+        wyczerpany limit. False tylko przy wyłączonym dostawcy albo długiej
+        przerwie (limit dzienny, błąd autoryzacji)."""
+        for _ in range(4):
+            available = await self.db.rpc('get_available_ai_providers')
+            rows = available if isinstance(available, list) else [available] if available else []
+            if any(isinstance(p, dict) and p.get('name') == PROVIDER for p in rows):
+                return True
+            info = await self.db.select('marketing_ai_providers', {'select': 'is_active,cooldown_until', 'name': f'eq.{PROVIDER}', 'limit': 1})
+            if not info or not info[0].get('is_active') or not info[0].get('cooldown_until'):
+                return False
+            try:
+                until = datetime.fromisoformat(str(info[0]['cooldown_until']).replace('Z', '+00:00'))
+            except ValueError:
+                return False
+            wait = (until - datetime.now(timezone.utc)).total_seconds()
+            if wait > cfg('PROVIDER_SHORT_COOLDOWN_WAIT', 600):
+                return False
+            log.info(f'DeepSeek: chwilowa przerwa — czekam {max(1, int(wait))} s i próbuję dalej.')
+            await asyncio.sleep(max(1.0, wait + 1))
+        return False
+
     async def _cooldown(self, name, seconds, msg):
         await self.db.rpc('set_ai_provider_cooldown', {'p_name': name, 'p_seconds': seconds, 'p_error': msg[:500]})
 
     async def _ask(self, prompt, parse):
         """Odpowiedź DeepSeeka po parse(); None = DeepSeek wyłączony albo
         zablokowany limitem, {} = chwilowy błąd (ponowić później)."""
-        available = await self.db.rpc('get_available_ai_providers')
-        rows = available if isinstance(available, list) else [available] if available else []
-        if not any(isinstance(p, dict) and p.get('name') == PROVIDER for p in rows):
+        if not await self._provider_ready():
             return None
         if self.stats:
             self.stats['ai_calls'] += 1
