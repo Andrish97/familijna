@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GZ7GEiWLEazA6O6sfY1n4gxxUwMykZdhf4cXKWR9ZfrusH2LS2NvrxhjGTvihby
+\restrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -15068,6 +15068,22 @@ END $$;
 
 
 --
+-- Name: mk_run_release("uuid", "uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_release"("p_run" "uuid", "p_lease" "uuid", "p_verified" integer) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET verified=greatest(verified,p_verified), lease_until=now()-interval '1 second', updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested');
+ RETURN FOUND;
+END $$;
+
+
+--
 -- Name: my_display_themes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -27419,5 +27435,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GZ7GEiWLEazA6O6sfY1n4gxxUwMykZdhf4cXKWR9ZfrusH2LS2NvrxhjGTvihby
+\unrestrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
 
