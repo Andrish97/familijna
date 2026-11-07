@@ -454,22 +454,6 @@ export function initImageEditor(ctx) {
     show(cropFrame, false); // ramka pojawia się, gdy obraz jest gotowy (showImage)
   }
 
-  // Obraz z assetów strony (demo „Obraz” ma na sztywno
-  // https://www.familiada.online/logos/assets/demo-image.png -- migracja 308;
-  // nowe kopie: familijna.app) ładujemy
-  // z bieżącego originu: pod domeną bez www, na podglądzie czy
-  // lokalnie byłby to request cross-origin zależny od nagłówków CORS.
-  // Zapisany adres się nie zmienia.
-  function sameSiteSrc(src) {
-    try {
-      const u = new URL(src);
-      if (/^(www\.)?(familiada\.online|familijna\.app)$/i.test(u.hostname) && u.pathname.startsWith("/logos/assets/")) {
-        return new URL(u.pathname, location.origin).href;
-      }
-    } catch {}
-    return src;
-  }
-
   // crossOrigin=anonymous jest konieczne: bez CORS canvas jest „skażony”
   // i getImageData() rzuca wyjątek -- podgląd i zapis by nie działały.
   function loadImg(src) {
@@ -488,7 +472,6 @@ export function initImageEditor(ctx) {
     imageStatus = "loading";
     imgObj = null;
     work = null;
-    src = sameSiteSrc(src);
     try {
       const img = await loadImg(src);
       if (seq !== loadSeq) return;

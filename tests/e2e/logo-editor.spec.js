@@ -21,7 +21,7 @@ const { test, expect } = require("./helpers/e2e-test");
 const { startLocalSite, captureSession, useSession } = require("./helpers/local-site");
 const L = require("./helpers/logo-editor");
 
-const DEMO_IMAGE = path.resolve(__dirname, "../../web/logos/assets/demo-image.png");
+const DEMO_IMAGE = path.resolve(__dirname, "../fixtures/demo-image.png");
 const OTHER_IMAGE = path.resolve(__dirname, "../../web/assets/img/icon-512.png");
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" });
@@ -1092,9 +1092,6 @@ test.describe("zgodność ze starymi danymi", () => {
     };
 
     for (const d of demos) {
-      // Adres obrazu demo jak po migracji 308 (/logo-editor/assets -> /logos/assets),
-      // także zanim migracja trafi do bazy (testy na branchu przed wdrożeniem).
-      d.payload = JSON.parse(JSON.stringify(d.payload).replaceAll("/logo-editor/assets/demo-image.png", "/logos/assets/demo-image.png"));
       const id = await L.insertLogo(page, { name: L.uniq(`demo-${d.type}`), type: d.type, payload: d.payload });
       const first = await openAndSave(id);
       const src = d.payload.source || {};
@@ -1108,6 +1105,7 @@ test.describe("zgodność ze starymi danymi", () => {
         expect(first.payload.source.fabricData.objects).toHaveLength(src.fabricData.objects.length);
       }
       if (src.mode === "IMAGE") {
+        // Edycja kopii nie rusza pliku wzorca (bucket demo-assets, migracje 523–524).
         expect(first.payload.source.imageUrl, "adres obrazu demo bez zmian").toBe(src.imageUrl);
         expect(first.payload.source.crop).toMatchObject({ v: 2 });
       }
