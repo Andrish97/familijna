@@ -191,6 +191,30 @@ export function watchPageLifecycle(push, { onExit } = {}) {
   };
 }
 
+// Diagnostyka przyjmuje tylko krótkie teksty z [A-Za-z0-9_.:/+-] (serwer odrzuca
+// resztę). Treść błędu: e-maile i liczby (np. kody, identyfikatory) zastąpione,
+// pozostałe znaki -> "_".
+const safeText = (value, max = 80) => String(value ?? "")
+  .replace(/[^\s@]+@[^\s@]+/g, "e-mail")
+  .replace(/\d{4,}/g, "N")
+  .replace(/[^A-Za-z0-9_.:/+-]+/g, "_")
+  .replace(/^_+|_+$/g, "")
+  .slice(0, max);
+
+// Skąd jest błąd: plik naszej strony (ścieżka bez parametrów), obcy skrypt
+// (ext:host — rozszerzenie, wtyczka przeglądarki) albo brak pliku (none —
+// zwykle zamaskowany błąd obcego skryptu, „Script error.”).
+export function errorSource(filename, origin = globalThis.location?.origin) {
+  if (!filename) return "none";
+  try {
+    const url = new URL(filename, origin);
+    if (url.origin === origin) return safeText(url.pathname);
+    return safeText(`ext:${url.protocol.replace(":", "")}:${url.host}`);
+  } catch {
+    return "invalid";
+  }
+}
+
 /** Capture uncaught script failures without storing user input or stack traces. */
 export function watchRuntimeErrors(push, page) {
   const onError = (event) => {
@@ -198,7 +222,9 @@ export function watchRuntimeErrors(push, page) {
     push({
       event_type: "runtime_error",
       phase: "uncaught_error",
-      error_name: String(error?.name || "Error").replace(/[^A-Za-z0-9_.:+/-]/g, "").slice(0, 80) || "Error",
+      error_name: safeText(error?.name || "Error") || "Error",
+      error_message: safeText(error?.message ?? event?.message) || undefined,
+      error_source: errorSource(event?.filename),
       page,
       line: Number.isFinite(event?.lineno) ? event.lineno : undefined,
       column: Number.isFinite(event?.colno) ? event.colno : undefined,
@@ -211,7 +237,8 @@ export function watchRuntimeErrors(push, page) {
     push({
       event_type: "runtime_error",
       phase: "unhandled_rejection",
-      error_name: String(reason?.name || "UnhandledRejection").replace(/[^A-Za-z0-9_.:+/-]/g, "").slice(0, 80) || "UnhandledRejection",
+      error_name: safeText(reason?.name || "UnhandledRejection") || "UnhandledRejection",
+      error_message: safeText(reason?.message ?? (typeof reason === "string" ? reason : "")) || undefined,
       page,
       visibility: document.visibilityState || "unknown",
       focused: !!document.hasFocus?.(),
