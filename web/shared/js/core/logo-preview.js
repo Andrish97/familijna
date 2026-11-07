@@ -30,9 +30,9 @@ function resolveGlyph(glyphs, ch) {
   return v;
 }
 
-import { v } from './cache-bust.js?v=v2026-11-07T22232';
+import { v } from './cache-bust.js?v=v2026-11-07T22354';
 
-export async function loadFont5x7(url = "/shared/fonts/display/font_5x7.json?v=v2026-11-07T22232") {
+export async function loadFont5x7(url = "/shared/fonts/display/font_5x7.json?v=v2026-11-07T22354") {
 
   const r = await fetch(await v(url), { cache: "force-cache" });
   if (!r.ok) throw new Error(`Font 5x7: HTTP ${r.status}`);
@@ -150,4 +150,60 @@ export function buildLogoPreviewCanvas(logo, glyphs, width = 300, height = 140, 
   c.height = height;
   drawThumbFlat150x70(c, logoToBits150(logo, glyphs));
   return c;
+}
+
+/* ---------- podgląd „jak na wyświetlaczu” (30x10 kafli po 5x7 okrągłych kropek) ---------- */
+// Ten sam w edytorze logo, imporcie pliku i w panelu admina (podgląd demo).
+
+const COLORS = { bg: "#1f1f23", cell: "#000000", dotOff: "#1f1f23", dotOn: "#d7ff3d" };
+
+function layoutFor(canvas) {
+  for (let d = 16; d >= 2; d--) {
+    const gap = Math.max(1, Math.round(d / 4));
+    const tileGap = 2 * d;
+    const tileW = 5 * d + 6 * gap;
+    const tileH = 7 * d + 8 * gap;
+    const panelW = TILES_X * tileW + (TILES_X - 1) * tileGap;
+    const panelH = TILES_Y * tileH + (TILES_Y - 1) * tileGap;
+    if (panelW <= canvas.width - 20 && panelH <= canvas.height - 20) {
+      return { d, gap, tileGap, tileW, tileH, panelW, panelH };
+    }
+  }
+  const d = 2, gap = 1, tileGap = 4, tileW = 5 * d + 6 * gap, tileH = 7 * d + 8 * gap;
+  return {
+    d, gap, tileGap, tileW, tileH,
+    panelW: TILES_X * tileW + (TILES_X - 1) * tileGap,
+    panelH: TILES_Y * tileH + (TILES_Y - 1) * tileGap,
+  };
+}
+
+/** Rysuje 150x70 bitów jako tablicę kropek na canvasie. */
+export function renderBitsToCanvas(bits, canvas) {
+  if (!canvas) return;
+  const g = canvas.getContext("2d");
+  const L = layoutFor(canvas);
+  g.fillStyle = COLORS.bg;
+  g.fillRect(0, 0, canvas.width, canvas.height);
+
+  const x0 = Math.floor((canvas.width - L.panelW) / 2);
+  const y0 = Math.floor((canvas.height - L.panelH) / 2);
+  const r = L.d / 2;
+  const step = L.d + L.gap;
+
+  for (let ty = 0; ty < TILES_Y; ty++) {
+    for (let tx = 0; tx < TILES_X; tx++) {
+      const tileX = x0 + tx * (L.tileW + L.tileGap);
+      const tileY = y0 + ty * (L.tileH + L.tileGap);
+      g.fillStyle = COLORS.cell;
+      g.fillRect(tileX, tileY, L.tileW, L.tileH);
+      for (let py = 0; py < 7; py++) {
+        for (let px = 0; px < 5; px++) {
+          g.beginPath();
+          g.arc(tileX + L.gap + r + px * step, tileY + L.gap + r + py * step, r, 0, Math.PI * 2);
+          g.fillStyle = bits[(ty * 7 + py) * DOT_W + tx * 5 + px] ? COLORS.dotOn : COLORS.dotOff;
+          g.fill();
+        }
+      }
+    }
+  }
 }
