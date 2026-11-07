@@ -31,3 +31,9 @@ test("funkcja: sekret w nagłówku, adres wewnętrzny Dockera, bez CORS", () => 
   assert.doesNotMatch(src, /Access-Control-Allow-Origin/);
   assert.doesNotMatch(src, /leads\.(familiada\.online|familijna\.app)/);
 });
+
+test("question-bank: pytania w osobnym kontenerze (podział usług wyszukiwania)", () => {
+  const src = readFileSync(new URL("../../supabase/functions/question-bank/index.ts", import.meta.url), "utf8");
+  assert.match(src, /http:\/\/familijna-question-finder:8001/);
+  assert.doesNotMatch(src, /familijna-lead-finder/);
+});
