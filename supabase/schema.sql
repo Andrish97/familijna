@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict YZ6PnW7pOD9wgRIgVAsbBtQ14bKf7JZzUsO2ywrsChJ4geDGdetpLZMca3kaw2X
+\restrict Y5IwqOQLJA9ftYQalTOTzpfgQdeztQrjweJOmlWO9GLhPh9cuMOpXND3fl29bv3
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -1303,6 +1303,68 @@ $_$;
 
 
 --
+-- Name: _demo_apply_pending("text", "uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_demo_apply_pending"("p_type" "text", "p_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE r record;
+BEGIN
+ IF p_type NOT IN ('game','logo','logos','base') THEN RETURN; END IF;
+ FOR r IN SELECT t.update_id, t.resource_id FROM admin_demo_targets t
+   WHERE t.status='queued' AND (
+    (p_type IN ('game','logo','base') AND t.kind=p_type AND t.resource_id=p_id) OR
+    (p_type='logos' AND t.kind='logo' AND t.resource_id IN (SELECT id FROM user_logos WHERE user_id=p_id AND is_demo)))
+   ORDER BY t.update_id LOOP
+  PERFORM public._demo_apply_target(r.update_id, r.resource_id);
+ END LOOP;
+END $$;
+
+
+--
+-- Name: _demo_apply_target("uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_demo_apply_target"("p_update" "uuid", "p_resource" "uuid") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE t admin_demo_targets; job admin_demo_updates; cur jsonb; owner uuid; key text;
+BEGIN
+ SELECT * INTO t FROM admin_demo_targets WHERE update_id=p_update AND resource_id=p_resource AND status='queued' FOR UPDATE SKIP LOCKED;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ SELECT * INTO job FROM admin_demo_updates WHERE id=t.update_id;
+ key := public._demo_lock_key(t.kind, t.resource_id);
+ IF key IS NOT NULL THEN PERFORM pg_advisory_xact_lock(hashtextextended(key,0)); END IF;
+ BEGIN
+  IF t.kind='game' THEN SELECT owner_id INTO owner FROM games WHERE id=t.resource_id FOR UPDATE NOWAIT;
+  ELSIF t.kind='base' THEN SELECT owner_id INTO owner FROM question_bases WHERE id=t.resource_id FOR UPDATE NOWAIT;
+  ELSE SELECT user_id INTO owner FROM user_logos WHERE id=t.resource_id FOR UPDATE NOWAIT; END IF;
+  cur := public._demo_current_definition(t.kind, t.resource_id);
+  IF cur IS NULL THEN
+   UPDATE admin_demo_targets SET status='removed',message='' WHERE update_id=t.update_id AND resource_id=t.resource_id; RETURN 'removed';
+  END IF;
+  IF cur IS DISTINCT FROM coalesce(t.expected_definition, job.old_definition) THEN
+   UPDATE admin_demo_targets SET status='edited',message='' WHERE update_id=t.update_id AND resource_id=t.resource_id; RETURN 'edited';
+  END IF;
+  IF public._demo_in_use(t.kind, t.resource_id) THEN RAISE lock_not_available; END IF;
+  PERFORM public._demo_write(t.kind, t.resource_id, job.slot, job.new_payload);
+  UPDATE admin_demo_targets SET status='updated',message='' WHERE update_id=t.update_id AND resource_id=t.resource_id;
+  RETURN 'updated';
+ EXCEPTION WHEN lock_not_available THEN
+  UPDATE admin_demo_targets SET message='Czeka: materiał jest używany; zaktualizuje się po zwolnieniu albo przy następnym otwarciu.'
+   WHERE update_id=t.update_id AND resource_id=t.resource_id;
+  RETURN 'waiting';
+ WHEN OTHERS THEN
+  UPDATE admin_demo_targets SET status='failed',message=left(SQLSTATE||': '||SQLERRM,200) WHERE update_id=t.update_id AND resource_id=t.resource_id;
+  RETURN 'failed';
+ END;
+END $$;
+
+
+--
 -- Name: _demo_base_canonical("jsonb"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1355,6 +1417,36 @@ BEGIN
  END IF;
  RETURN result;
 END $$;
+
+
+--
+-- Name: _demo_in_use("text", "uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_demo_in_use"("p_kind" "text", "p_id" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+ SELECT EXISTS (SELECT 1 FROM public.edit_lock_blockers(p_kind, p_id, 'exclusive', 'demo-update'))
+  OR (p_kind='base' AND EXISTS (SELECT 1 FROM public.edit_locks l
+       WHERE l.heartbeat_at > now() - public.edit_lock_ttl() AND (
+        (l.resource_type='base_question' AND l.resource_id IN (SELECT id FROM qb_questions WHERE base_id=p_id)) OR
+        (l.resource_type='base_folder' AND l.resource_id IN (SELECT id FROM qb_categories WHERE base_id=p_id)) OR
+        (l.resource_type='base_tag' AND l.resource_id IN (SELECT id FROM qb_tags WHERE base_id=p_id)))))
+$$;
+
+
+--
+-- Name: _demo_lock_key("text", "uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_demo_lock_key"("p_kind" "text", "p_id" "uuid") RETURNS "text"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+ SELECT CASE p_kind WHEN 'logo' THEN 'logos:'||(SELECT user_id FROM user_logos WHERE id=p_id)::text
+                    ELSE p_kind||':'||p_id::text END
+$$;
 
 
 --
@@ -5284,6 +5376,14 @@ begin
       'blocker_mode', v_row.mode, 'blocker_context', v_row.holder_context);
   end if;
 
+  -- 522: otwarcie zasobu (nie odświeżenie własnej blokady) najpierw wpisuje
+  -- czekającą aktualizację demo — w tej chwili nikt inny go nie trzyma.
+  if not exists (select 1 from public.edit_locks
+                  where resource_type = p_resource_type and resource_id = p_resource_id
+                    and holder_tab_id = p_tab_id and heartbeat_at > now() - public.edit_lock_ttl()) then
+    perform public._demo_apply_pending(p_resource_type, p_resource_id);
+  end if;
+
   insert into public.edit_locks
     (resource_type, resource_id, holder_tab_id, holder_user_id, holder_context, mode, acquired_at, heartbeat_at)
   values
@@ -5341,40 +5441,25 @@ $$;
 
 
 --
--- Name: admin_demo_apply_next(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: admin_demo_apply_batch(integer, "uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION "public"."admin_demo_apply_next"() RETURNS "jsonb"
+CREATE FUNCTION "public"."admin_demo_apply_batch"("p_limit" integer DEFAULT 50, "p_after_update" "uuid" DEFAULT NULL::"uuid", "p_after_resource" "uuid" DEFAULT NULL::"uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'pg_temp'
     AS $$
-DECLARE target admin_demo_targets; job admin_demo_updates; current_def jsonb; owner uuid;
+DECLARE r record; st text; n jsonb := '{"updated":0,"edited":0,"removed":0,"waiting":0,"failed":0}'; last_u uuid; last_r uuid; cnt int := 0;
 BEGIN
- SELECT * INTO target FROM admin_demo_targets WHERE status='queued' AND next_run_at<=now() ORDER BY update_id,resource_id FOR UPDATE SKIP LOCKED LIMIT 1;
- IF NOT FOUND THEN RETURN NULL; END IF;
- SELECT * INTO job FROM admin_demo_updates WHERE id=target.update_id;
- BEGIN
-  IF target.kind='game' THEN SELECT owner_id INTO owner FROM games WHERE id=target.resource_id FOR UPDATE NOWAIT;
-  ELSIF target.kind='base' THEN SELECT owner_id INTO owner FROM question_bases WHERE id=target.resource_id FOR UPDATE NOWAIT;
-  ELSE SELECT user_id INTO owner FROM user_logos WHERE id=target.resource_id FOR UPDATE NOWAIT; END IF;
-  current_def:=public._demo_current_definition(target.kind,target.resource_id);
-  IF current_def IS NULL THEN UPDATE admin_demo_targets SET status='removed' WHERE update_id=target.update_id AND resource_id=target.resource_id; RETURN jsonb_build_object('status','removed'); END IF;
-  IF current_def IS DISTINCT FROM job.old_definition THEN UPDATE admin_demo_targets SET status='edited' WHERE update_id=target.update_id AND resource_id=target.resource_id; RETURN jsonb_build_object('status','edited'); END IF;
-  IF (target.kind='game' AND public._game_control_active(target.resource_id)) OR EXISTS(SELECT 1 FROM edit_locks l WHERE heartbeat_at>clock_timestamp()-public.edit_lock_ttl() AND
-   ((l.resource_type=target.kind AND l.resource_id=target.resource_id) OR (target.kind='logo' AND l.resource_type='logos' AND l.resource_id=owner) OR
-    (target.kind='base' AND ((l.resource_type='base_question' AND l.resource_id IN(SELECT id FROM qb_questions WHERE base_id=target.resource_id)) OR (l.resource_type='base_folder' AND l.resource_id IN(SELECT id FROM qb_categories WHERE base_id=target.resource_id)) OR (l.resource_type='base_tag' AND l.resource_id IN(SELECT id FROM qb_tags WHERE base_id=target.resource_id)))))) THEN
-    RAISE lock_not_available;
-  END IF;
-  PERFORM public._demo_write(target.kind,target.resource_id,job.slot,job.new_payload);
-  UPDATE admin_demo_targets SET status='updated',message='' WHERE update_id=target.update_id AND resource_id=target.resource_id;
-  RETURN jsonb_build_object('status','updated');
- EXCEPTION WHEN lock_not_available THEN
-  UPDATE admin_demo_targets SET next_run_at=now()+interval '30 seconds',message='Materiał jest używany; aktualizacja po zwolnieniu.' WHERE update_id=target.update_id AND resource_id=target.resource_id;
-  RETURN jsonb_build_object('status','busy');
- WHEN OTHERS THEN
-  UPDATE admin_demo_targets SET status='failed',message=left(SQLSTATE||': '||SQLERRM,200) WHERE update_id=target.update_id AND resource_id=target.resource_id;
-  RETURN jsonb_build_object('status','failed');
- END;
+ IF p_limit < 1 OR p_limit > 200 THEN RAISE EXCEPTION 'admin_demo_bad_args'; END IF;
+ FOR r IN SELECT update_id, resource_id FROM admin_demo_targets
+   WHERE status='queued' AND (p_after_update IS NULL OR (update_id, resource_id) > (p_after_update, p_after_resource))
+   ORDER BY update_id, resource_id LIMIT p_limit LOOP
+  st := public._demo_apply_target(r.update_id, r.resource_id);
+  IF st IS NOT NULL THEN n := jsonb_set(n, ARRAY[st], to_jsonb((n->>st)::int + 1)); END IF;
+  last_u := r.update_id; last_r := r.resource_id; cnt := cnt + 1;
+ END LOOP;
+ RETURN n || jsonb_build_object('done', cnt < p_limit, 'after_update', last_u, 'after_resource', last_r,
+  'queued', (SELECT count(*) FROM admin_demo_targets WHERE status='queued'));
 END $$;
 
 
@@ -5410,7 +5495,7 @@ CREATE FUNCTION "public"."admin_demo_replace"("p_request" "uuid", "p_lang" "text
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'pg_temp'
     AS $$
-DECLARE old jsonb; check_result jsonb; upd uuid; kind text;
+DECLARE old jsonb; check_result jsonb; upd uuid; kind text; old_def jsonb;
 BEGIN
  PERFORM pg_advisory_xact_lock(hashtextextended('admin-demo',0));
  SELECT id INTO upd FROM admin_demo_updates WHERE request_id=p_request;
@@ -5418,32 +5503,22 @@ BEGIN
  SELECT payload INTO old FROM demo_template_data WHERE lang=p_lang AND slot=p_slot FOR UPDATE;
  IF old IS NULL OR encode(sha256(convert_to(old::text,'UTF8')),'hex') IS DISTINCT FROM p_revision THEN RAISE EXCEPTION 'demo_version_changed_refresh_preview'; END IF;
  check_result:=public.admin_demo_preview(p_lang,p_slot,p_payload);kind:=check_result->>'kind';
- -- Type/shape checked independently of the browser by the private API and SQL definition builder.
  IF check_result->'definition' IS NULL THEN RAISE EXCEPTION 'invalid_demo_payload'; END IF;
- INSERT INTO admin_demo_updates(request_id,lang,slot,old_payload,new_payload,old_definition) VALUES(p_request,p_lang,p_slot,old,p_payload,public._demo_template_definition(p_slot,old)) RETURNING id INTO upd;
+ old_def:=public._demo_template_definition(p_slot,old);
+ INSERT INTO admin_demo_updates(request_id,lang,slot,old_payload,new_payload,old_definition) VALUES(p_request,p_lang,p_slot,old,p_payload,old_def) RETURNING id INTO upd;
+ -- kopie czekające na starszą wersję tego demo: nowy wpis z ich oczekiwaną treścią
+ INSERT INTO admin_demo_targets(update_id,kind,resource_id,expected_definition)
+  SELECT upd,t.kind,t.resource_id,coalesce(t.expected_definition,u.old_definition)
+  FROM admin_demo_targets t JOIN admin_demo_updates u ON u.id=t.update_id
+  WHERE t.status='queued' AND u.lang=p_lang AND u.slot=p_slot AND u.id<>upd;
+ UPDATE admin_demo_targets t SET status='superseded',message=''
+  FROM admin_demo_updates u WHERE u.id=t.update_id AND t.status='queued' AND u.lang=p_lang AND u.slot=p_slot AND u.id<>upd;
  INSERT INTO admin_demo_targets(update_id,kind,resource_id)
   SELECT upd,kind,x.id FROM (SELECT id FROM games WHERE is_demo AND kind='game' UNION ALL SELECT id FROM user_logos WHERE is_demo AND kind='logo' UNION ALL SELECT id FROM question_bases WHERE is_demo AND kind='base') x
-  WHERE public._demo_current_definition(kind,x.id)=public._demo_template_definition(p_slot,old);
+  WHERE public._demo_current_definition(kind,x.id)=old_def
+  ON CONFLICT DO NOTHING;
  UPDATE demo_template_data SET payload=p_payload WHERE lang=p_lang AND slot=p_slot;
  RETURN jsonb_build_object('ok',true,'id',upd,'eligible',check_result->'eligible');
-END $$;
-
-
---
--- Name: admin_demo_run_queue(integer); Type: PROCEDURE; Schema: public; Owner: -
---
-
-CREATE PROCEDURE "public"."admin_demo_run_queue"(IN "p_seconds" integer DEFAULT 50)
-    LANGUAGE "plpgsql"
-    AS $$
-DECLARE started timestamptz := pg_catalog.clock_timestamp(); r jsonb;
-BEGIN
- IF p_seconds < 1 OR p_seconds > 55 THEN RAISE EXCEPTION 'admin_demo_bad_args'; END IF;
- LOOP
-  r := public.admin_demo_apply_next();
-  COMMIT;
-  EXIT WHEN r IS NULL OR pg_catalog.clock_timestamp() - started > pg_catalog.make_interval(secs => p_seconds);
- END LOOP;
 END $$;
 
 
@@ -18292,6 +18367,9 @@ begin
     and holder_tab_id = p_tab_id
     and holder_user_id = auth.uid();  -- 479: tylko własne
 
+  -- 522: koniec użycia — czekająca aktualizacja demo, jeśli zasób jest już wolny.
+  perform public._demo_apply_pending(p_resource_type, p_resource_id);
+
   return jsonb_build_object('ok', true);
 end;
 $$;
@@ -19897,8 +19975,9 @@ CREATE TABLE "public"."admin_demo_targets" (
     "status" "text" DEFAULT 'queued'::"text" NOT NULL,
     "next_run_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "message" "text" DEFAULT ''::"text" NOT NULL,
+    "expected_definition" "jsonb",
     CONSTRAINT "admin_demo_targets_kind_check" CHECK (("kind" = ANY (ARRAY['game'::"text", 'logo'::"text", 'base'::"text"]))),
-    CONSTRAINT "admin_demo_targets_status_check" CHECK (("status" = ANY (ARRAY['queued'::"text", 'updated'::"text", 'edited'::"text", 'removed'::"text", 'failed'::"text"])))
+    CONSTRAINT "admin_demo_targets_status_check" CHECK (("status" = ANY (ARRAY['queued'::"text", 'updated'::"text", 'edited'::"text", 'removed'::"text", 'failed'::"text", 'superseded'::"text"])))
 );
 
 
@@ -23001,6 +23080,13 @@ ALTER TABLE ONLY "public"."user_logos"
 
 ALTER TABLE ONLY "public"."user_market_library"
     ADD CONSTRAINT "user_market_library_pkey" PRIMARY KEY ("user_id", "market_game_id");
+
+
+--
+-- Name: admin_demo_targets_queued_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "admin_demo_targets_queued_idx" ON "public"."admin_demo_targets" USING "btree" ("kind", "resource_id") WHERE ("status" = 'queued'::"text");
 
 
 --
@@ -27453,5 +27539,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict YZ6PnW7pOD9wgRIgVAsbBtQ14bKf7JZzUsO2ywrsChJ4geDGdetpLZMca3kaw2X
+\unrestrict Y5IwqOQLJA9ftYQalTOTzpfgQdeztQrjweJOmlWO9GLhPh9cuMOpXND3fl29bv3
 
