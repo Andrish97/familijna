@@ -18,10 +18,10 @@
 //
 // settings.display.colors.A/B/BACKGROUND nie mają tu wpływu.
 
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-07T22200";
-import { loadFont5x7, logoToBits150 } from "../../../shared/js/core/logo-preview.js?v=v2026-11-07T22200";
-import { logoFaceColor, renderLogoSource, renderTextLogo } from "./sourceLogo.js?v=v2026-11-07T22200";
-import { loadJson } from "../../../shared/js/display/fonts.js?v=v2026-11-07T22200";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-07T22232";
+import { loadFont5x7, logoToBits150 } from "../../../shared/js/core/logo-preview.js?v=v2026-11-07T22232";
+import { logoFaceColor, renderLogoSource, renderTextLogo } from "./sourceLogo.js?v=v2026-11-07T22232";
+import { loadJson } from "../../../shared/js/display/fonts.js?v=v2026-11-07T22232";
 
 
 const DOT_W = 150, DOT_H = 70;
