@@ -112,8 +112,9 @@ app.add_middleware(CORSMiddleware, allow_origins=[ADMIN_ORIGIN], allow_methods=[
                    allow_headers=['Authorization', 'Content-Type'])
 
 # Rola kontenera (podział: familijna-server/docs/wyszukiwarka-podzial-plan.md):
-# leads = kontakty (Marketing), questions = pytania i aktualizacje demo,
+# leads = kontakty (Marketing), questions = pytania (Pytania i gry),
 # all = obie (jeden kontener). Limity SearXNG/DeepSeeka wspólne przez bazę.
+# Aktualizacje kopii demo robi baza (pg_cron, migracja 521) — bez procesu tutaj.
 SERVICE_ROLE = os.getenv('SERVICE_ROLE', 'all').strip() or 'all'
 if SERVICE_ROLE not in ('leads', 'questions', 'all'):
     raise SystemExit(f'Nieznana rola SERVICE_ROLE={SERVICE_ROLE!r}')
@@ -130,20 +131,8 @@ if RUN_QUESTIONS:
 async def start_question_worker():
     if RUN_QUESTIONS:
         question_bank.task = asyncio.create_task(question_bank.worker())
-        question_bank.demo_task = asyncio.create_task(demo_updates())
     if RUN_LEADS:
         engine.supervisor = asyncio.create_task(engine.supervise())
-
-
-async def demo_updates():
-    while True:
-        try:
-            result = await db.rpc('admin_demo_apply_next')
-            await asyncio.sleep(0.2 if result and result.get('status') == 'updated' else 3)
-        except asyncio.CancelledError:
-            raise
-        except Exception:
-            await asyncio.sleep(15)
 
 
 @app.on_event('shutdown')
@@ -155,8 +144,6 @@ async def stop_question_worker():
             await asyncio.wait_for(engine.supervisor, 10)
         except (asyncio.CancelledError, asyncio.TimeoutError):
             pass
-    if getattr(question_bank, 'demo_task', None):
-        question_bank.demo_task.cancel()
     if getattr(question_bank, 'task', None):
         question_bank.task.cancel()
         try:
