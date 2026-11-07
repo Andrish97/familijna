@@ -126,12 +126,15 @@
 
   /* karta edytora —
      .card.games-card (specificity 0,2,0) ma overflow:hidden, więc
-     musimy bić go selektorem o tej samej lub wyższej specyficzności */
+     musimy bić go selektorem o tej samej lub wyższej specyficzności.
+     Jedna warstwa: pasek narzędzi i treść leżą wprost na karcie (bez
+     własnych ciemnych teł i ramek — uwaga użytkownika 2026-11-07). */
   .card.games-card.editorCard{
     flex: 1;
     min-height: 0;
     display:flex;
     flex-direction: column;
+    padding: 0;
     overflow: visible; /* tooltipy i popovery nie mogą być ucinane */
   }
 
@@ -139,9 +142,8 @@
      TOOLBAR: wspólne
   ========================================================= */
   .editorToolbar{
-    padding: 12px;
+    padding: 14px 16px 12px;
     border-bottom: 1px solid var(--line-faint);
-    background: var(--k-20);
     display: flex;
     flex-direction: column;
     gap: 10px;
@@ -308,7 +310,7 @@
   .editorContent{
     flex:1;
     min-height: 0;
-    padding: 12px;
+    padding: 14px 16px 16px;
     overflow: hidden; /* ewentualny scroll robią wewnętrzne panele */
     position: relative;
     z-index: 1;
@@ -324,17 +326,14 @@
   /* =========================================================
      DRAW STAGE
   ========================================================= */
+  /* bez własnej ramki i tła: czarne pole rysowania leży wprost na karcie */
   .drawStageWrap{
     height: 100%;
     min-height: 0;
-    border-radius: var(--r-lg);
-    border: 1px solid var(--line-faint);
-    background: var(--k-20);
     overflow:hidden;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding: 10px;
     /* pole rysowania dopasowuje się do MNIEJSZEGO z wymiarów (jak obraz
        „zmieść w ramce”) — przy niskim oknie (tablet/telefon w poziomie,
        powiększona strona) samo width:100% dawało wyższe pole niż okno
@@ -448,7 +447,7 @@
     height: 100%;
     min-height: 0;
     display:grid;
-    gap: 12px;
+    gap: 20px;
     grid-template-columns: 1fr 1fr;
   }
   @media (max-width: 980px) {
@@ -460,11 +459,9 @@
     }
   }
 
+  /* kolumna panelu (tytuł + pole) bez własnej ramki i tła — karta edytora
+     jest jedyną warstwą; obrysowane jest tylko pole obrazu z ramką kadru */
   .imgCard{
-    border-radius: var(--r-lg);
-    border: 1px solid var(--line-faint);
-    background: var(--k-20);
-    padding: 10px;
     display:flex;
     flex-direction: column;
     min-height: 0;
@@ -477,7 +474,7 @@
     margin-bottom: 8px;
   }
 
-  #paneText > .imgCard{ height: 100%; box-sizing: border-box; }
+  #paneText > .imgCard{ height: 100%; }
 
   .imgStage{
     position: relative;
@@ -485,7 +482,6 @@
     min-height: 0;
     border-radius: var(--r-md);
     border: 1px solid var(--line-faint);
-    background: var(--k-20);
     overflow:hidden;
     display:flex;
     align-items:center;
@@ -493,17 +489,14 @@
   }
   #imgPreview{ display: block; max-width: 100%; max-height: 100%; }
 
+  /* podgląd rysuje własną tablicę wyświetlacza — bez dodatkowego tła */
   .imgPrevWrap{
     flex:1;
     min-height: 0;
-    border-radius: var(--r-md);
-    border: 1px solid var(--line-faint);
-    background: var(--k-20);
     overflow:hidden;
     display:flex;
     align-items:center;
     justify-content:center;
-    padding: 8px;
   }
   /* object-fit:contain — gdy max-height przycina wysokość (niskie okno,
      klawiatura), szerokość zostaje 100%; bez tego bufor canvasa rozciągał
