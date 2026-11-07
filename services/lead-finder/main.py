@@ -25,6 +25,7 @@ from lf.filters import FREEMAIL_DOMAINS
 from lf.pipeline import Engine
 from lf.sources.ceidg import Ceidg
 from lf.question_bank import QuestionBank, router_for
+from lf.resources import bind_db
 
 logger = logging.getLogger('lead_finder')
 logger.setLevel(logging.INFO)
@@ -42,6 +43,8 @@ ADMIN_ORIGIN = 'https://admin.familijna.app'
 
 http = httpx.AsyncClient(timeout=60)
 db = Supabase(SUPABASE_URL, SUPABASE_KEY)
+# Limity SearXNG i DeepSeeka wspólne z drugą usługą (dzierżawy w bazie, migracja 518).
+bind_db(db)
 
 
 _db_handler = DbLogHandler(db)
