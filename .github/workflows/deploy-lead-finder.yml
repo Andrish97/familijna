@@ -16,6 +16,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Podział na dwie role (familijna-server/docs/wyszukiwarka-podzial-plan.md):
+      # restart tylko kontenera, którego pliki się zmieniły; wspólne pliki → oba.
+      - name: Która rola do restartu
+        id: role
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "${{ github.event_name }}" != push ] || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "role=both" >> "$GITHUB_OUTPUT"; echo "rola: both (ręcznie albo brak poprzedniego commita)"; exit 0
+          fi
+          role=$(git diff --name-only "$BEFORE" "$GITHUB_SHA" -- services/lead-finder | python3 services/lead-finder/deploy_role.py)
+          echo "role=$role" >> "$GITHUB_OUTPUT"; echo "rola: $role"
 
       - name: Python
         uses: actions/setup-python@v5
@@ -28,11 +43,13 @@ jobs:
           python3 -m unittest discover -s services/lead-finder/tests -v
 
       - name: Install rsync + ssh
+        if: steps.role.outputs.role != 'none'
         run: |
           sudo apt-get update
           sudo apt-get install -y rsync openssh-client
 
       - name: Setup SSH key
+        if: steps.role.outputs.role != 'none'
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
@@ -41,11 +58,13 @@ jobs:
           printf '%s\n' "${{ secrets.SERVER_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts  # odcisk przypięty (nowy serwer)
 
       - name: Cleanup old deployments
+        if: steps.role.outputs.role != 'none'
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
             "mkdir -p /home/deploy/staging/lead-finder/ && find /home/deploy/staging/lead-finder/ -maxdepth 1 -mindepth 1 -exec rm -rf {} +"
 
       - name: Sync to server staging
+        if: steps.role.outputs.role != 'none'
         run: |
           STAGING="/home/deploy/staging/lead-finder/${{ github.sha }}"
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" "mkdir -p \"$STAGING\""
@@ -58,13 +77,14 @@ jobs:
             "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:$STAGING/"
 
       - name: Run deploy script (server-side)
+        if: steps.role.outputs.role != 'none'
         run: |
           STAGING="/home/deploy/staging/lead-finder/${{ github.sha }}"
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" \
-            "sudo familijna-deploy-lead-finder ${{ github.sha }}"
+            "sudo familijna-deploy-lead-finder ${{ github.sha }} ${{ steps.role.outputs.role }}"
 
       - name: Cleanup staging
-        if: always()
+        if: always() && steps.role.outputs.role != 'none'
         run: |
           STAGING="/home/deploy/staging/lead-finder/${{ github.sha }}"
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" "rm -rf \"$STAGING\""
