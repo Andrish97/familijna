@@ -36,6 +36,7 @@ przepisuje CI), Supabase, Cloudflare Worker. Strony w `web/`.
   Sprzątanie bazy (audyt 2026-10-23, do decyzji): `familijna-server/docs/audyt-sprzatania-bazy.md`.
   Podręcznik (E13): plan rozdziałów `familijna-server/docs/podrecznik-plan.md`.
   Lead Finder 2 (nowy system bez odwiedzania stron): `familijna-server/docs/lead-finder-nowy-plan.md`.
+  Podział Lead Findera na kontakty i pytania (2026-11-07): `familijna-server/docs/wyszukiwarka-podzial-plan.md`.
 
 ## Cykl wdrożenia (decyzja 2026-10-10) — każda zmiana potwierdzona testem na produkcji
 
