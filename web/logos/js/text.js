@@ -145,6 +145,7 @@ export function initTextEditor(ctx) {
   const font = () => ctx.getFont3x10?.() || {};
 
   let lastCompiled = null;
+  let lastWarnText = null;
 
   // Klawisze dozwolonych znaków w grupach bez podpisów, oddzielonych kreską
   // (decyzja użytkownika 2026-11-07): cyfry i znaki (ze spacją jako napisem),
@@ -235,7 +236,10 @@ export function initTextEditor(ctx) {
     // Liczbę pokazuje pomiar pod polem -- ostrzeżenie mówi tylko, co zrobić.
     if (!c.fit) parts.push(t("logoEditor.text.fixTooWide"));
     if (textWarn) textWarn.textContent = parts.join("\n");
+    const warnText = parts.join("\n");
     show(textWarn, parts.length > 0);
+    // ostrzeżenie zabiera wysokość kolumny -- klawisze przeliczane od razu
+    if (warnText !== lastWarnText) { lastWarnText = warnText; fitKeys(); }
     if (textMeasure) {
       textMeasure.textContent = t("logoEditor.text.widthStatus", { width: c.usedW });
     }
