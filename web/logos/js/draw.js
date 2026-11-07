@@ -15,17 +15,17 @@
 // Każda zakończona zmiana woła commit() -- jedno miejsce, które zapisuje
 // snapshot, oznacza „niezapisane zmiany” i odświeża podgląd.
 
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-07T20215";
-import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-07T20215";
-import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T20215";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-07T20215";
-import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-07T20215";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-07T20215";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-07T20215";
-import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-07T20215";
-import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-07T20215";
-import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-07T20215";
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T20215";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-07T22145";
+import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-07T22145";
+import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T22145";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-07T22145";
+import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-07T22145";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-07T22145";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-07T22145";
+import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-07T22145";
+import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-07T22145";
+import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-07T22145";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22145";
 
 
 const TOOL = { SELECT: "SELECT", PAN: "PAN", TEXT: "TEXT", BRUSH: "BRUSH", ERASER: "ERASER", SHAPES: "SHAPES" };

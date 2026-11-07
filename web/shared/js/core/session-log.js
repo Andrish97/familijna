@@ -5,8 +5,8 @@
 // z rosnącą przerwą, deduplikacja w bazie po event_id. Zapis jest
 // pomocniczy: nigdy nie blokuje gry i nie zgłasza błędów użytkownikowi.
 
-import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-07T20215";
-import { getDeviceProfile } from "./device-guard.js?v=v2026-11-07T20215";
+import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-07T22145";
+import { getDeviceProfile } from "./device-guard.js?v=v2026-11-07T22145";
 
 const BATCH = 20;
 const MAX_QUEUE = 200;
@@ -106,6 +106,8 @@ export function createSessionLog({ rpc, params, canSend = () => true, accessToke
 }
 
 function browserFamily(ua) {
+  // Brave udaje Chrome/Safari w UA; na komputerze i Androidzie ma navigator.brave.
+  if (typeof navigator !== "undefined" && navigator.brave) return "brave";
   if (/SamsungBrowser/i.test(ua)) return "samsung";
   if (/Edg(A|iOS)?\//.test(ua)) return "edge";
   if (/OPR\/|Opera/.test(ua)) return "opera";
@@ -139,6 +141,11 @@ export async function collectDeviceInfo() {
     standalone: !!(window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone),
     wake_lock_api: !!navigator.wakeLock,
   };
+  // Skrypty wstrzykiwane przez przeglądarkę (bez treści, tylko obecność):
+  // __firefox__ — Firefox na iOS i przeglądarki z jego kodu (np. Brave na iOS),
+  // ethereum — portfel kryptowalut w przeglądarce. Tłumaczą obce błędy JS.
+  const injected = [window.__firefox__ && "firefox_ns", window.ethereum && "ethereum", navigator.brave && "brave"].filter(Boolean);
+  if (injected.length) info.injected_scripts = injected.join("+");
   const memory = Number(navigator.deviceMemory);
   if (Number.isFinite(memory)) info.memory_gb = memory;
   const connection = navigator.connection;
@@ -215,6 +222,14 @@ export function errorSource(filename, origin = globalThis.location?.origin) {
   }
 }
 
+// Plik pierwszej ramki stosu (bez treści stosu): wstrzyknięte skrypty Safari/WebKit
+// mają adresy user-script:… albo webkit-masked-url:…, choć zdarzenie podaje adres strony.
+export function errorFrame(stack, origin = globalThis.location?.origin) {
+  const frame = /(?:@|\(|at\s+)([a-z][\w+.-]*:[^\s()]*?)(?::\d+){1,2}\)?\s*$/i;
+  const url = String(stack || "").split("\n").map(l => l.match(frame)?.[1]).find(Boolean);
+  return url ? errorSource(url, origin) : undefined;
+}
+
 /** Capture uncaught script failures without storing user input or stack traces. */
 export function watchRuntimeErrors(push, page) {
   const onError = (event) => {
@@ -225,6 +240,7 @@ export function watchRuntimeErrors(push, page) {
       error_name: safeText(error?.name || "Error") || "Error",
       error_message: safeText(error?.message ?? event?.message) || undefined,
       error_source: errorSource(event?.filename),
+      error_frame: errorFrame(error?.stack),
       page,
       line: Number.isFinite(event?.lineno) ? event.lineno : undefined,
       column: Number.isFinite(event?.colno) ? event.colno : undefined,
