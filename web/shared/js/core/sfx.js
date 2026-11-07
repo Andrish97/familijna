@@ -1,7 +1,7 @@
 // js/core/sfx.js
 // Rozszerzony moduł dźwięku: manifest, warianty, głośności, własne pliki (IndexedDB).
 
-const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-07T19322";
+const MANIFEST_PATH = "/shared/data/sounds.json?v=v2026-11-07T20025";
 
 const AUDIO_BASE    = "/assets/audio/";
 const IDB_NAME      = "familijna-sfx";
@@ -41,8 +41,13 @@ function getCategoryMeta(key) {
 
 /* ========= CACHE AUDIO ========= */
 
-const cache = new Map();     // key → Audio
-const failedAudio = new WeakSet();
+// Dźwięki gry: zdekodowane z góry bufory odtwarzane przez Web Audio.
+// Element <audio> na telewizorze (Samsung) startował drugi dźwięk w trakcie
+// pierwszego z opóźnieniem 1,4–2 s (eksport 7.11, reveal przy muzyce przejścia);
+// bufor startuje w milisekundach i miesza się z innymi bez opóźnień.
+// Odtwarzacze <audio> zostają tylko dla podglądu plików w ustawieniach gry
+// (createSfxAudio / playSfxAudio).
+const cache = new Map();     // key → dźwięk (bufor, wzmocnienie, bieżące odtworzenie)
 let globalMuted = false;
 let previewSfxKey = null;
 
@@ -120,9 +125,8 @@ export function createSfxAudio(url) {
   audio.preload = "auto";
   audio.src = url;
   audio.addEventListener("error", () => {
-    // A failed fetch/decode may leave some browsers with an Audio element
-    // that is neither paused nor ended. It must not hold the gameplay gate.
-    failedAudio.add(audio);
+    // Nieudane pobranie/dekodowanie: odsłuch w ustawieniach nie może
+    // zostać w stanie „gra”.
     stopSfxAudio(audio);
   });
   const source = context.createMediaElementSource(audio);
@@ -157,12 +161,61 @@ export function stopSfxAudio(audio, { dispose = false } = {}) {
   }
 }
 
-function _cancelFade(key) {
-  const nodes = audioNodes.get(cache.get(key));
-  if (!nodes) return;
-  nodes.generation++;
-  nodes.gain.gain.cancelScheduledValues(audioContext.currentTime);
-  nodes.gain.gain.setValueAtTime(0, audioContext.currentTime);
+function decodeBuffer(context, bytes) {
+  // Starsze Safari zna tylko wersję z wywołaniami zwrotnymi.
+  return new Promise((resolve, reject) => {
+    const pending = context.decodeAudioData(bytes, resolve, reject);
+    if (pending?.then) pending.then(resolve, reject);
+  });
+}
+
+function createSound(url) {
+  const context = getAudioContext();
+  const gain = context.createGain();
+  gain.gain.value = 0;
+  gain.connect(masterGain);
+  const sound = { src: url, gain, volume: 1, buffer: null, failed: false, error: null, source: null, startedAt: 0, generation: 0, endListeners: new Set() };
+  sound.ready = (async () => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      sound.buffer = await decodeBuffer(context, await response.arrayBuffer());
+    } catch (error) {
+      sound.failed = true;
+      sound.error = String(error?.name || "sound_load_failed");
+    }
+    return sound.buffer;
+  })();
+  return sound;
+}
+
+function stopSound(sound) {
+  sound.generation++;
+  const source = sound.source;
+  sound.source = null;
+  sound.gain.gain.cancelScheduledValues(audioContext.currentTime);
+  sound.gain.gain.setValueAtTime(0, audioContext.currentTime);
+  if (source) {
+    source.onended = null;
+    try { source.stop(); } catch {}
+    source.disconnect();
+  }
+}
+
+function disposeSound(sound) {
+  stopSound(sound);
+  sound.gain.disconnect();
+  if (sound.src.startsWith("blob:")) URL.revokeObjectURL(sound.src);
+}
+
+function setSoundVolume(sound, volume) {
+  sound.volume = Math.max(0, Math.min(1, volume));
+  if (sound.source) scheduleSoundFade(sound);
+}
+
+function scheduleSoundFade(sound) {
+  const position = audioContext.currentTime - sound.startedAt;
+  scheduleGainFade(sound.gain.gain, sound.volume, position, sound.buffer?.duration);
 }
 
 export function buildSfxUrl(folder, file) {
@@ -171,16 +224,11 @@ export function buildSfxUrl(folder, file) {
 }
 
 function loadIntoCache(key, url) {
-  _cancelFade(key);
   const old = cache.get(key);
-  if (old) {
-    stopSfxAudio(old, { dispose: true });
-    if (old.src.startsWith("blob:")) URL.revokeObjectURL(old.src);
-  }
-  durationPromises.delete(key);
-  const a = createSfxAudio(url);
-  cache.set(key, a);
-  return a;
+  if (old) disposeSound(old);
+  const sound = createSound(url);
+  cache.set(key, sound);
+  return sound;
 }
 
 /* ========= WARIANTY ========= */
@@ -223,13 +271,13 @@ export function getSfxVolumes() {
 export function setSfxVolume(key, v) {
   const clamped = Math.max(0, Math.min(1, v));
   localStorage.setItem(`sfx_vol_${key}`, String(clamped));
-  const a = cache.get(key);
-  if (a) setSfxAudioVolume(a, _getEffectiveVolume(key));
+  const sound = cache.get(key);
+  if (sound) setSoundVolume(sound, _getEffectiveVolume(key));
 }
 
 function _applySfxVolume(key) {
-  const a = cache.get(key);
-  if (a) setSfxAudioVolume(a, _getEffectiveVolume(key));
+  const sound = cache.get(key);
+  if (sound) setSoundVolume(sound, _getEffectiveVolume(key));
 }
 
 // Głośności sesyjne (nadpisują localStorage na czas sesji, nie zapisują)
@@ -240,8 +288,8 @@ export function setSessionSfxVolume(key, v) {
   const clamped = Math.max(0, Math.min(1, v));
   _sessionVolumes.set(key, clamped);
   // Zmiana poziomu nie restartuje odtwarzania ani procentowego fade.
-  const a = cache.get(key);
-  if (a) setSfxAudioVolume(a, clamped);
+  const sound = cache.get(key);
+  if (sound) setSoundVolume(sound, clamped);
 }
 
 function _getEffectiveVolume(key) {
@@ -257,8 +305,8 @@ export function applySfxVolumes() {
 export function resetSfxVolumes() {
   for (const cat of getSfxCategories()) {
     localStorage.removeItem(`sfx_vol_${cat.key}`);
-    const a = cache.get(cat.key);
-    if (a) setSfxAudioVolume(a, _getEffectiveVolume(cat.key));
+    const sound = cache.get(cat.key);
+    if (sound) setSoundVolume(sound, _getEffectiveVolume(cat.key));
   }
 }
 
@@ -320,8 +368,6 @@ export async function getSfxCustomFiles(gameId = _currentGameId) {
 
 export async function clearSfxCustomFile(key, gameId = _currentGameId) {
   const k = idbKey(key, gameId);
-  const old = cache.get(key);
-  if (old?.src?.startsWith("blob:")) URL.revokeObjectURL(old.src);
   const meta = getCategoryMeta(key);
   if (meta) {
     loadIntoCache(key, buildSfxUrl(meta.folder, getSfxVariant(key)));
@@ -376,11 +422,12 @@ function fadeOutCurve(target, from) {
 function scheduleFade(audio) {
   const nodes = audioNodes.get(audio);
   if (!nodes) return;
+  scheduleGainFade(nodes.gain.gain, nodes.volume, audio.currentTime || 0, audio.duration);
+}
+
+// Wejście i wyjście dla odtwarzania od pozycji `position` (s) pliku o długości `duration`.
+function scheduleGainFade(gain, target, position, duration) {
   const now = audioContext.currentTime;
-  const position = audio.currentTime || 0;
-  const duration = audio.duration;
-  const gain = nodes.gain.gain;
-  const target = nodes.volume;
   gain.cancelScheduledValues(now);
   if (!Number.isFinite(duration) || duration <= 0) {
     gain.setValueAtTime(target, now);
@@ -414,7 +461,6 @@ function scheduleCurve(gain, curve, start, duration) {
 export function playSfxAudio(audio, volume = 1) {
   const context = getAudioContext();
   const nodes = audioNodes.get(audio);
-  failedAudio.delete(audio);
   nodes.generation++;
   const generation = nodes.generation;
   nodes.gain.gain.cancelScheduledValues(context.currentTime);
@@ -433,20 +479,17 @@ export function playSfxAudio(audio, volume = 1) {
 /* ========= ODTWARZANIE ========= */
 
 export function stopSfx(key) {
-  _cancelFade(key);
-  const a = cache.get(key);
-  if (!a) return;
-  stopSfxAudio(a);
+  const sound = cache.get(key);
+  if (sound) stopSound(sound);
 }
 
 export function isSfxPlaying(key) {
-  const a = cache.get(key);
-  return !!a && !failedAudio.has(a) && !a.error && !a.paused && !a.ended;
+  return !!cache.get(key)?.source;
 }
 
 // Actual audio state, used in addition to timing estimates for action gates.
 export function isAnySfxPlaying() {
-  return [...cache.values()].some(audio => !failedAudio.has(audio) && !audio.error && !audio.paused && !audio.ended);
+  return [...cache.values()].some(sound => !!sound.source);
 }
 
 // Koniec dowolnego dźwięku gry (playSfx). Wyświetlacz wysyła potwierdzenie
@@ -463,11 +506,12 @@ function reportEnded(key) {
   }
 }
 
+// Jednorazowo na najbliższy naturalny koniec dźwięku (nie na zatrzymanie).
 export function onSfxEnd(key, fn) {
-  const a = cache.get(key);
-  if (!a) return () => {};
-  a.addEventListener("ended", fn, { once: true });
-  return () => a.removeEventListener("ended", fn);
+  const sound = cache.get(key);
+  if (!sound || typeof fn !== "function") return () => {};
+  sound.endListeners.add(fn);
+  return () => sound.endListeners.delete(fn);
 }
 
 // Instrumentacja WYŁĄCZNIE do obserwacji w E2E (tests/e2e/control.spec.js) —
@@ -480,24 +524,50 @@ export function playSfx(key) {
   if (typeof window !== "undefined") {
     (window.__sfxLog ??= []).push({ key, at: Date.now(), muted: globalMuted });
   }
-  const a = cache.get(key);
-  if (!a) {
+  const sound = cache.get(key);
+  if (!sound) {
     reportPlayback({ key, failed: true, error: "sound_not_loaded", delayMs: 0 });
     return;
   }
-  a.addEventListener("ended", () => reportEnded(key), { once: true });
-  try {
-    const started = playSfxAudio(a, _getEffectiveVolume(key));
-    if (started?.then) started.then(() => {
-      reportPlayback({ key, failed: false, delayMs: Math.max(0, Math.round(performance.now() - requestedAt)) });
-    }).catch(error => {
-      // Odmowa odtwarzania przez politykę autoplay: gest trzeba powtórzyć.
-      if (error?.name === "NotAllowedError") notifyAudioUnlockLost("not_allowed");
-      reportPlayback({ key, failed: true, error: String(error?.name || "play_rejected"), delayMs: Math.max(0, Math.round(performance.now() - requestedAt)) });
-    });
-  } catch (error) {
-    reportPlayback({ key, failed: true, error: String(error?.name || "play_failed"), delayMs: Math.max(0, Math.round(performance.now() - requestedAt)) });
-  }
+  const context = getAudioContext();
+  // Ponowne odtworzenie zaczyna dźwięk od początku (jak dotąd).
+  stopSound(sound);
+  const generation = sound.generation;
+  const delayMs = () => Math.max(0, Math.round(performance.now() - requestedAt));
+  const start = () => {
+    if (generation !== sound.generation) return;
+    if (!sound.buffer) {
+      reportPlayback({ key, failed: true, error: sound.error || "sound_not_loaded", delayMs: delayMs() });
+      return;
+    }
+    if (context.state !== "running") {
+      // Zawieszony kontekst nie gra: przeglądarka wymaga gestu (autoplay).
+      notifyAudioUnlockLost("not_allowed");
+      reportPlayback({ key, failed: true, error: "NotAllowedError", delayMs: delayMs() });
+      return;
+    }
+    const source = context.createBufferSource();
+    source.buffer = sound.buffer;
+    source.connect(sound.gain);
+    source.onended = () => {
+      if (sound.source !== source) return;
+      sound.source = null;
+      source.disconnect();
+      const listeners = [...sound.endListeners];
+      sound.endListeners.clear();
+      for (const fn of listeners) { try { fn(); } catch {} }
+      reportEnded(key);
+    };
+    sound.source = source;
+    sound.startedAt = context.currentTime;
+    scheduleSoundFade(sound);
+    source.start();
+    reportPlayback({ key, failed: false, delayMs: delayMs() });
+  };
+  // Gotowy bufor i działający kontekst: start od razu, w tym samym takcie.
+  if (sound.buffer && context.state === "running") { start(); return; }
+  const resumed = context.state === "running" ? null : context.resume().catch(() => {});
+  Promise.all([sound.ready, resumed]).then(start);
 }
 
 // Sound previews are mutually exclusive, while gameplay cues may still
@@ -514,45 +584,18 @@ export function stopSfxPreview(key = null) {
   previewSfxKey = null;
 }
 
-const durationPromises = new Map();
-
-export function getSfxDuration(key) {
-  if (durationPromises.has(key)) return durationPromises.get(key);
-  const a = cache.get(key);
-  if (!a) { const p = Promise.resolve(0); durationPromises.set(key, p); return p; }
-  const p = new Promise((resolve) => {
-    if (!Number.isNaN(a.duration) && a.duration > 0) { resolve(a.duration); return; }
-    const onMeta = () => { a.removeEventListener("loadedmetadata", onMeta); resolve(a.duration || 0); };
-    a.addEventListener("loadedmetadata", onMeta);
-    setTimeout(() => { a.removeEventListener("loadedmetadata", onMeta); resolve(a.duration || 0); }, 5000);
-  });
-  durationPromises.set(key, p);
-  return p;
+// Długość z zdekodowanego bufora (metadane MP3 bywają przybliżone). Czekamy
+// najwyżej 5 s na wczytanie; 0 = nieznana (transitionTiming przyjmuje wtedy zapas).
+const DURATION_WAIT_MS = 5000;
+export async function getSfxDuration(key) {
+  const sound = cache.get(key);
+  if (!sound) return 0;
+  const buffer = await Promise.race([sound.ready, new Promise(resolve => setTimeout(() => resolve(null), DURATION_WAIT_MS))]);
+  return buffer?.duration || 0;
 }
 
-// Control2 and Display2 use decoded duration: MP3 metadata may initially
-// estimate a different length. Cache by the actual source, including uploads.
-const decodedDurations = new Map();
-export async function getSfxDurationAccurate(key) {
-  const source = cache.get(key)?.src;
-  const Decoder = globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext;
-  if (!source || !Decoder) return getSfxDuration(key);
-  if (!decodedDurations.has(source)) {
-    const pending = (async () => {
-      const response = await fetch(source, { signal: AbortSignal.timeout(5000) });
-      if (!response.ok) throw new Error("Audio duration fetch failed");
-      const bytes = await response.arrayBuffer();
-      const context = new Decoder(1, 1, 44100);
-      const buffer = await context.decodeAudioData(bytes);
-      if (!Number.isFinite(buffer.duration) || buffer.duration <= 0) throw new Error("Invalid decoded duration");
-      return buffer.duration;
-    })();
-    decodedDurations.set(source, pending);
-    pending.catch(() => decodedDurations.delete(source));
-  }
-  try { return await decodedDurations.get(source); }
-  catch { return getSfxDuration(key); }
-}
+// Ta sama miara co getSfxDuration (Control 2 i Wyświetlacz importują tę nazwę).
+export const getSfxDurationAccurate = getSfxDuration;
 
 /* ========= AUDIO UNLOCK ========= */
 
@@ -566,7 +609,7 @@ export async function unlockAudio() {
   try {
     const a = new Audio();
     a.volume = 0;
-    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-07T19322";
+    a.src = "/assets/audio/reveal/classic.mp3?v=v2026-11-07T20025";
 
     // Call play() synchronously in the gesture handler, then trust its
     // promise. Previously a rejected autoplay attempt still returned true,
@@ -608,7 +651,7 @@ export async function initSfx() {
 
 /**
  * Nadpisuje ustawienia z game.settings.sound (per-game).
- * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-07T19322" }
+ * volumes: { key: 0–100 }, variants: { key: "classic.mp3?v=v2026-11-07T20025" }
 
  */
 export function applySfxGameSettings({ volumes = {}, variants = {} } = {}) {

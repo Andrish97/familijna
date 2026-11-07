@@ -1,48 +1,35 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { AudioContextStub } from "./helpers/web-audio.js";
-import { isAnySfxPlaying, isSfxPlaying, loadSfxFromCloud, playSfxPreview, stopSfxPreview } from "../../web/shared/js/core/sfx.js";
+import { AudioContextStub, fetchStub } from "./helpers/web-audio.js";
+import { isAnySfxPlaying, isSfxPlaying, loadSfxFromCloud, playSfxPreview, stopSfxPreview, onSfxEnd, onAnySfxEnded, getSfxDuration } from "../../web/shared/js/core/sfx.js";
 
-test("sound previews stop the previous preview without changing gameplay playback policy", async () => {
-  const saved = {
-    Audio: globalThis.Audio,
-    AudioContext: globalThis.AudioContext,
-    localStorage: globalThis.localStorage,
-    window: globalThis.window,
-  };
-  class AudioStub {
-    static instances = [];
-    currentTime = 0;
-    duration = 2;
-    paused = true;
-    ended = false;
-    listeners = new Map();
-    constructor() { this.src = ""; AudioStub.instances.push(this); }
-    addEventListener(type, fn) { const handlers = this.listeners.get(type) || new Set(); handlers.add(fn); this.listeners.set(type, handlers); }
-    emit(type) { for (const fn of this.listeners.get(type) || []) fn({ type, target: this }); }
-    pause() { this.paused = true; }
-    play() { this.paused = false; return Promise.resolve(); }
-  }
-  globalThis.Audio = AudioStub;
+test("previews stop the previous one; natural end notifies listeners, stop does not", async () => {
+  const saved = { AudioContext: globalThis.AudioContext, localStorage: globalThis.localStorage, window: globalThis.window, fetch: globalThis.fetch };
   globalThis.AudioContext = AudioContextStub;
   globalThis.localStorage = { getItem: () => null, setItem() {} };
   globalThis.window = {};
+  globalThis.fetch = fetchStub();
   try {
     loadSfxFromCloud(new Map([["preview_a", "/preview-a.mp3"], ["preview_b", "/preview-b.mp3"]]));
-    playSfxPreview("preview_a");
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(isSfxPlaying("preview_a"), true);
+    await getSfxDuration("preview_a");
+    await getSfxDuration("preview_b");
+    const context = AudioContextStub.instances.at(-1);
+    const ended = [];
+    onAnySfxEnded(key => ended.push(key));
+    let endA = 0;
+    onSfxEnd("preview_a", () => { endA++; });
 
+    playSfxPreview("preview_a");
+    assert.equal(isSfxPlaying("preview_a"), true);
     playSfxPreview("preview_b");
-    await new Promise(resolve => setImmediate(resolve));
     assert.equal(isSfxPlaying("preview_a"), false);
     assert.equal(isSfxPlaying("preview_b"), true);
+    assert.equal(endA, 0, "zatrzymanie to nie koniec dźwięku");
 
-    const failedAudio = AudioStub.instances.find(audio => audio.src === "/preview-b.mp3");
-    failedAudio.error = { code: 4 };
-    failedAudio.emit("error");
+    context.sources.at(-1).finish();
     assert.equal(isSfxPlaying("preview_b"), false);
     assert.equal(isAnySfxPlaying(), false);
+    assert.deepEqual(ended, ["preview_b"]);
 
     stopSfxPreview("preview_b");
     assert.equal(isSfxPlaying("preview_b"), false);
