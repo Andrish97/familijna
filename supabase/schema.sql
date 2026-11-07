@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict f6XSCMTEpHK30t0U0cxECEHaXCPuBxnSmekv4sl3JY8PvHIXU9JwD8tN4RMqpGi
+\restrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -14959,6 +14959,131 @@ $$;
 
 
 --
+-- Name: mk_run_active(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_active"() RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+ SELECT to_jsonb(r)-'lease' FROM marketing_runs r WHERE status IN ('running','paused','cancel_requested') LIMIT 1
+$$;
+
+
+--
+-- Name: mk_run_claim("uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_claim"("p_lease" "uuid", "p_ttl_s" integer DEFAULT 120) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE r marketing_runs;
+BEGIN
+ IF p_ttl_s < 30 OR p_ttl_s > 900 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ SELECT * INTO r FROM marketing_runs WHERE status IN ('running','paused','cancel_requested')
+  AND (lease_until IS NULL OR lease_until < now()) FOR UPDATE SKIP LOCKED LIMIT 1;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ UPDATE marketing_runs SET lease=p_lease, lease_until=now()+make_interval(secs=>p_ttl_s),
+  resumed=resumed+CASE WHEN r.lease IS NULL THEN 0 ELSE 1 END, updated_at=now()
+  WHERE run_id=r.run_id RETURNING * INTO r;
+ RETURN to_jsonb(r)-'lease';
+END $$;
+
+
+--
+-- Name: mk_run_command("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_command"("p_run" "uuid", "p_command" "text") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE st text;
+BEGIN
+ UPDATE marketing_runs SET status=CASE p_command
+   WHEN 'pause' THEN 'paused' WHEN 'resume' THEN 'running' WHEN 'cancel' THEN 'cancel_requested' END,
+  updated_at=now()
+  WHERE run_id=p_run AND (
+   (p_command='pause' AND status='running') OR
+   (p_command='resume' AND status='paused') OR
+   (p_command='cancel' AND status IN ('running','paused')))
+  RETURNING status INTO st;
+ RETURN st;
+END $$;
+
+
+--
+-- Name: mk_run_create("uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_create"("p_run" "uuid", "p_target" integer) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE r marketing_runs;
+BEGIN
+ IF p_target < 1 OR p_target > 1000 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ BEGIN
+  INSERT INTO marketing_runs(run_id,target) VALUES(p_run,p_target) RETURNING * INTO r;
+ EXCEPTION WHEN unique_violation THEN RETURN NULL;
+ END;
+ RETURN to_jsonb(r)-'lease';
+END $$;
+
+
+--
+-- Name: mk_run_finish("uuid", "uuid", "text", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_finish"("p_run" "uuid", "p_lease" "uuid", "p_status" "text", "p_verified" integer) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_status NOT IN ('completed','cancelled','error') OR p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET status=p_status, verified=greatest(verified,p_verified), lease=NULL, lease_until=NULL,
+  finished_at=now(), updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested');
+ RETURN FOUND;
+END $$;
+
+
+--
+-- Name: mk_run_heartbeat("uuid", "uuid", integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_heartbeat"("p_run" "uuid", "p_lease" "uuid", "p_verified" integer, "p_ttl_s" integer DEFAULT 120) RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE st text;
+BEGIN
+ IF p_ttl_s < 30 OR p_ttl_s > 900 OR p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET verified=greatest(verified,p_verified), lease_until=now()+make_interval(secs=>p_ttl_s), updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested')
+  RETURNING status INTO st;
+ RETURN st;
+END $$;
+
+
+--
+-- Name: mk_run_release("uuid", "uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_release"("p_run" "uuid", "p_lease" "uuid", "p_verified" integer) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET verified=greatest(verified,p_verified), lease_until=now()-interval '1 second', updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested');
+ RETURN FOUND;
+END $$;
+
+
+--
 -- Name: my_display_themes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -19133,6 +19258,97 @@ END $$;
 
 
 --
+-- Name: svc_cooldown_left("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."svc_cooldown_left"("p_resource" "text") RETURNS double precision
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+ SELECT greatest(0, coalesce(extract(epoch FROM (SELECT cooldown_until FROM service_resource_state WHERE resource=p_resource) - now()), 0))::double precision
+$$;
+
+
+--
+-- Name: svc_cooldown_set("text", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."svc_cooldown_set"("p_resource" "text", "p_seconds" integer) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_resource NOT IN ('search','ai') OR p_seconds < 1 OR p_seconds > 3600 THEN RAISE EXCEPTION 'svc_slot_bad_args'; END IF;
+ INSERT INTO service_resource_state(resource,cooldown_until) VALUES(p_resource,now()+make_interval(secs=>p_seconds))
+  ON CONFLICT(resource) DO UPDATE SET cooldown_until=greatest(coalesce(service_resource_state.cooldown_until,now()),excluded.cooldown_until);
+ RETURN true;
+END $$;
+
+
+--
+-- Name: svc_slot_acquire("text", integer, "text", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."svc_slot_acquire"("p_resource" "text", "p_capacity" integer, "p_owner" "text", "p_ttl_s" integer DEFAULT 180) RETURNS "uuid"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE active integer; last text; h uuid;
+BEGIN
+ IF p_resource NOT IN ('search','ai') OR p_owner NOT IN ('marketing','questions')
+    OR p_capacity < 1 OR p_capacity > 8 OR p_ttl_s < 10 OR p_ttl_s > 900 THEN
+  RAISE EXCEPTION 'svc_slot_bad_args';
+ END IF;
+ PERFORM pg_advisory_xact_lock(hashtextextended('svc-slot:'||p_resource,0));
+ DELETE FROM service_slots WHERE resource=p_resource AND lease_until < now();
+ DELETE FROM service_slot_waits WHERE resource=p_resource AND seen_at < now() - interval '10 seconds';
+ INSERT INTO service_slot_waits(resource,owner,seen_at) VALUES(p_resource,p_owner,now())
+  ON CONFLICT(resource,owner) DO UPDATE SET seen_at=excluded.seen_at;
+ SELECT count(*) INTO active FROM service_slots WHERE resource=p_resource;
+ IF active >= p_capacity THEN RETURN NULL; END IF;
+ SELECT last_owner INTO last FROM service_resource_state WHERE resource=p_resource;
+ IF last = p_owner AND EXISTS (SELECT 1 FROM service_slot_waits WHERE resource=p_resource AND owner<>p_owner) THEN
+  RETURN NULL;
+ END IF;
+ INSERT INTO service_slots(resource,owner,lease_until) VALUES(p_resource,p_owner,now()+make_interval(secs=>p_ttl_s))
+  RETURNING holder INTO h;
+ INSERT INTO service_resource_state(resource,last_owner) VALUES(p_resource,p_owner)
+  ON CONFLICT(resource) DO UPDATE SET last_owner=excluded.last_owner;
+ DELETE FROM service_slot_waits WHERE resource=p_resource AND owner=p_owner;
+ RETURN h;
+END $$;
+
+
+--
+-- Name: svc_slot_release("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."svc_slot_release"("p_holder" "uuid") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ DELETE FROM service_slots WHERE holder=p_holder;
+ RETURN FOUND;
+END $$;
+
+
+--
+-- Name: svc_slot_renew("uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."svc_slot_renew"("p_holder" "uuid", "p_ttl_s" integer DEFAULT 180) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_ttl_s < 10 OR p_ttl_s > 900 THEN RAISE EXCEPTION 'svc_slot_bad_args'; END IF;
+ UPDATE service_slots SET lease_until=now()+make_interval(secs=>p_ttl_s) WHERE holder=p_holder AND lease_until >= now();
+ RETURN FOUND;
+END $$;
+
+
+--
 -- Name: sync_market_game_rating_stats(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -20644,6 +20860,27 @@ CREATE TABLE "public"."marketing_run_stats" (
 
 
 --
+-- Name: marketing_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."marketing_runs" (
+    "run_id" "uuid" NOT NULL,
+    "target" integer NOT NULL,
+    "verified" integer DEFAULT 0 NOT NULL,
+    "status" "text" DEFAULT 'running'::"text" NOT NULL,
+    "lease" "uuid",
+    "lease_until" timestamp with time zone,
+    "resumed" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "finished_at" timestamp with time zone,
+    CONSTRAINT "marketing_runs_status_check" CHECK (("status" = ANY (ARRAY['running'::"text", 'paused'::"text", 'cancel_requested'::"text", 'completed'::"text", 'cancelled'::"text", 'error'::"text"]))),
+    CONSTRAINT "marketing_runs_target_check" CHECK ((("target" >= 1) AND ("target" <= 1000))),
+    CONSTRAINT "marketing_runs_verified_check" CHECK (("verified" >= 0))
+);
+
+
+--
 -- Name: marketing_search_logs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -21309,6 +21546,44 @@ CREATE TABLE "public"."schema_migrations" (
     "checksum" "text" NOT NULL,
     "applied_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "git_sha" "text"
+);
+
+
+--
+-- Name: service_resource_state; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."service_resource_state" (
+    "resource" "text" NOT NULL,
+    "last_owner" "text",
+    "cooldown_until" timestamp with time zone,
+    CONSTRAINT "service_resource_state_resource_check" CHECK (("resource" = ANY (ARRAY['search'::"text", 'ai'::"text"])))
+);
+
+
+--
+-- Name: service_slot_waits; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."service_slot_waits" (
+    "resource" "text" NOT NULL,
+    "owner" "text" NOT NULL,
+    "seen_at" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+--
+-- Name: service_slots; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."service_slots" (
+    "holder" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "resource" "text" NOT NULL,
+    "owner" "text" NOT NULL,
+    "lease_until" timestamp with time zone NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "service_slots_owner_check" CHECK (("owner" = ANY (ARRAY['marketing'::"text", 'questions'::"text"]))),
+    CONSTRAINT "service_slots_resource_check" CHECK (("resource" = ANY (ARRAY['search'::"text", 'ai'::"text"])))
 );
 
 
@@ -22109,6 +22384,14 @@ ALTER TABLE ONLY "public"."marketing_run_stats"
 
 
 --
+-- Name: marketing_runs marketing_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."marketing_runs"
+    ADD CONSTRAINT "marketing_runs_pkey" PRIMARY KEY ("run_id");
+
+
+--
 -- Name: marketing_search_logs marketing_search_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -22580,6 +22863,30 @@ ALTER TABLE ONLY "public"."resource_demo_origins"
 
 ALTER TABLE ONLY "public"."schema_migrations"
     ADD CONSTRAINT "schema_migrations_pkey" PRIMARY KEY ("filename");
+
+
+--
+-- Name: service_resource_state service_resource_state_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."service_resource_state"
+    ADD CONSTRAINT "service_resource_state_pkey" PRIMARY KEY ("resource");
+
+
+--
+-- Name: service_slot_waits service_slot_waits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."service_slot_waits"
+    ADD CONSTRAINT "service_slot_waits_pkey" PRIMARY KEY ("resource", "owner");
+
+
+--
+-- Name: service_slots service_slots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."service_slots"
+    ADD CONSTRAINT "service_slots_pkey" PRIMARY KEY ("holder");
 
 
 --
@@ -23253,6 +23560,13 @@ CREATE UNIQUE INDEX "marketing_categories_name_key" ON "public"."marketing_categ
 
 
 --
+-- Name: marketing_runs_one_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX "marketing_runs_one_active" ON "public"."marketing_runs" USING "btree" ((true)) WHERE ("status" = ANY (ARRAY['running'::"text", 'paused'::"text", 'cancel_requested'::"text"]));
+
+
+--
 -- Name: message_attachments_message_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -23579,6 +23893,13 @@ CREATE INDEX "reports_status_idx" ON "public"."reports" USING "btree" ("status")
 --
 
 CREATE INDEX "resource_copy_history_retention" ON "public"."resource_copy_history" USING "btree" ("sent_at");
+
+
+--
+-- Name: service_slots_resource_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "service_slots_resource_idx" ON "public"."service_slots" USING "btree" ("resource", "lease_until");
 
 
 --
@@ -26219,6 +26540,12 @@ ALTER TABLE "public"."marketing_raw_contacts" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."marketing_run_stats" ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: marketing_runs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."marketing_runs" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: marketing_search_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -26924,6 +27251,24 @@ ALTER TABLE "public"."resource_demo_origins" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."schema_migrations" ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: service_resource_state; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."service_resource_state" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: service_slot_waits; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."service_slot_waits" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: service_slots; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."service_slots" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: site_activity; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -27090,5 +27435,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict f6XSCMTEpHK30t0U0cxECEHaXCPuBxnSmekv4sl3JY8PvHIXU9JwD8tN4RMqpGi
+\unrestrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
 
