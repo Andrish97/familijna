@@ -230,11 +230,33 @@ export function errorFrame(stack, origin = globalThis.location?.origin) {
   return url ? errorSource(url, origin) : undefined;
 }
 
+// Nasz kod to wyłącznie pliki .js z tej domeny (strony nie mają skryptów w HTML).
+// Wszystko inne — brak pliku („Script error.”), inna domena, skrypty doklejane
+// przez przeglądarkę lub rozszerzenie (user-script:, adres samej strony) — to
+// obcy skrypt. Rozstrzyga pierwsza ramka stosu, a bez niej plik ze zdarzenia.
+const ownScript = (path) => typeof path === "string" && path.startsWith("/") && /\.m?js$/.test(path);
+export function isForeignError({ source, frame } = {}) {
+  if (frame) return !ownScript(frame);
+  return !ownScript(source);
+}
+
+// Ten sam błąd na jednej stronie: obcy zapisujemy raz, nasz najwyżej 3 razy
+// (pętla nie zalewa dziennika, a pierwsze wystąpienia zostają).
+const MAX_SAME_OWN_ERROR = 3;
+
 /** Capture uncaught script failures without storing user input or stack traces. */
 export function watchRuntimeErrors(push, page) {
+  const seen = new Map();
+  const report = (event, { foreign }) => {
+    const key = [event.phase, event.error_name, event.error_message, event.error_frame || event.error_source].join("|");
+    const count = (seen.get(key) || 0) + 1;
+    seen.set(key, count);
+    if (count > (foreign ? 1 : MAX_SAME_OWN_ERROR)) return;
+    push(foreign ? { ...event, foreign: true } : event);
+  };
   const onError = (event) => {
     const error = event?.error;
-    push({
+    const entry = {
       event_type: "runtime_error",
       phase: "uncaught_error",
       error_name: safeText(error?.name || "Error") || "Error",
@@ -246,19 +268,23 @@ export function watchRuntimeErrors(push, page) {
       column: Number.isFinite(event?.colno) ? event.colno : undefined,
       visibility: document.visibilityState || "unknown",
       focused: !!document.hasFocus?.(),
-    });
+    };
+    report(entry, { foreign: isForeignError({ source: entry.error_source, frame: entry.error_frame }) });
   };
   const onRejection = (event) => {
     const reason = event?.reason;
-    push({
+    const frame = errorFrame(reason?.stack);
+    report({
       event_type: "runtime_error",
       phase: "unhandled_rejection",
       error_name: safeText(reason?.name || "UnhandledRejection") || "UnhandledRejection",
       error_message: safeText(reason?.message ?? (typeof reason === "string" ? reason : "")) || undefined,
+      error_frame: frame,
       page,
       visibility: document.visibilityState || "unknown",
       focused: !!document.hasFocus?.(),
-    });
+    // Odrzucenie bez stosu (np. nieudane żądanie) traktujemy jak nasze.
+    }, { foreign: !!frame && !ownScript(frame) });
   };
   window.addEventListener("error", onError);
   window.addEventListener("unhandledrejection", onRejection);
