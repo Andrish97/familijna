@@ -15,7 +15,7 @@ function setup() {
     URL, globalThis: { location: { origin: "https://familijna.app" } },
     document: { visibilityState: "visible", hasFocus: () => true },
   };
-  vm.runInNewContext(`${block}; this.errorSource = errorSource; this.watch = watchRuntimeErrors;`, context);
+  vm.runInNewContext(`${block}; this.errorSource = errorSource; this.errorFrame = errorFrame; this.watch = watchRuntimeErrors;`, context);
   const pushed = [];
   const handlers = context.watch((event) => pushed.push(event), "host");
   return { context, handlers, pushed, listeners };
@@ -41,4 +41,12 @@ test("błąd zapisuje nazwę, krótką treść i źródło w znakach dopuszczany
   assert.equal(event.line, 12);
   handlers.onRejection({ reason: new Error("Load failed") });
   assert.equal(pushed[1].error_message, "Load_failed");
+});
+
+test("pierwsza ramka stosu pokazuje skrypt wstrzyknięty przez przeglądarkę", () => {
+  const { context } = setup();
+  assert.equal(context.errorFrame("readerCheck@user-script:4:120:19\nglobal code@user-script:4:1", "https://familijna.app"), "ext:user-script:");
+  assert.equal(context.errorFrame("render@https://familijna.app/control/host/js/render.js?v=1:12:7", "https://familijna.app"), "/control/host/js/render.js");
+  assert.equal(context.errorFrame("TypeError: x\n    at render (https://familijna.app/shared/js/a.js:3:9)", "https://familijna.app"), "/shared/js/a.js");
+  assert.equal(context.errorFrame(undefined), undefined);
 });
