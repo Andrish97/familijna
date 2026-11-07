@@ -4,7 +4,6 @@ import {supabaseRpc, supabaseRequest, getSupabaseConfig, normalizeRpcValue} from
 import {prepareResourceClone} from '../../../../../web/shared/js/core/resource-clone-plan.js';
 import {decodeImportedLogoImage} from '../../../../../web/shared/js/core/logo-image-data.js';
 import {copyLogoStorageImage} from './storage-copy.js';
-import {ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE, fetchFromOrigin} from '../origin/origin.js';
 import {uploadCloneLogoImage, uploadCloneLogoBytes} from './image.js';
 import {isCopyUuid, isOwnedLogoStoragePath} from './paths.js';
 
@@ -59,14 +58,19 @@ async function cloneResource(env,actor,input,action,recipient){
  const cached=kind==='logo'?await supabaseRequest(env,`/rest/v1/resource_clone_assets?job_id=eq.${job.id}&select=*`):{ok:true,data:[]};
  if(!cached.ok||!Array.isArray(cached.data))throw new Error('copy_database_failed');
  const demoBytes=new Map();
+ // Obraz wzorca demo: tylko bucket demo-assets (migracje 523–524), nazwa = SHA-256
+ // treści — po pobraniu suma musi się zgadzać (plik wzorca nie jest nadpisywany).
+ const DEMO_PREFIX='/storage/v1/object/public/demo-assets/';
+ const isDemoAsset=url=>url.origin===cfg.baseUrl&&url.pathname.startsWith(DEMO_PREFIX)&&/^[0-9a-f]{64}\.(png|jpg|webp)$/.test(url.pathname.slice(DEMO_PREFIX.length))&&!url.search&&!url.hash;
  async function loadDemo(image){
   if(demoBytes.has(image))return demoBytes.get(image);
   const url=new URL(image);
-  if(!['https://www.familijna.app','https://familijna.app'].includes(url.origin)||url.pathname!=='/logos/assets/demo-image.png'||url.search||url.hash)throw new Error('unsupported_copy_image_source');
-  const response=await fetchFromOrigin(new Request(image),url,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE);
+  if(!isDemoAsset(url))throw new Error('unsupported_copy_image_source');
+  const response=await fetch(image);
   if(!response.ok||Number(response.headers.get('Content-Length'))>5*1024*1024)throw new Error('copy_image_source_changed');
   const decoded={bytes:new Uint8Array(await response.arrayBuffer()),mime:response.headers.get('Content-Type')?.split(';')[0].trim().toLowerCase()};
-  if(decoded.mime!=='image/png'||decoded.bytes.length<1||decoded.bytes.length>5*1024*1024)throw new Error('invalid_copy_storage_plan');
+  if(!['image/png','image/jpeg','image/webp'].includes(decoded.mime)||decoded.bytes.length<1||decoded.bytes.length>5*1024*1024)throw new Error('invalid_copy_storage_plan');
+  if(await sha256(decoded.bytes)!==url.pathname.slice(DEMO_PREFIX.length).split('.')[0])throw new Error('copy_image_source_changed');
   demoBytes.set(image,decoded);return decoded;
  }
  const completedAssets=new Map(cached.data.map(asset=>[asset.reference,asset]));
@@ -82,7 +86,7 @@ async function cloneResource(env,actor,input,action,recipient){
     let url;try{url=new URL(image);}catch{throw new Error('unsupported_copy_image_source');}
     if(url.username||url.password)throw new Error('unsupported_copy_image_source');
     const prefix='/storage/v1/object/public/user-logos/';
-    if(url.origin!==cfg.baseUrl){
+    if(isDemoAsset(url)){
      const decoded=await loadDemo(image);
      recipe={p_kind:'demo_asset',p_mime:decoded.mime,p_size:decoded.bytes.length,p_content_hash:await sha256(decoded.bytes),p_source_path:null,p_etag:null};
     }else{

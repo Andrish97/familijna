@@ -94,20 +94,34 @@ test('lost database response replays the completed result without cleaning insta
   assert.fail('completed result must not be cleaned');
  },async()=>assert.deepEqual(await duplicateResource(env,actor,input('base')),{ok:true,id:target,already:true}));
 });
-test('demo IMAGE bytes come only from the known bundled asset and upload directly without base64 conversion',async()=>{
+test('demo IMAGE bytes come only from demo-assets (name = SHA-256 of content) and upload directly without base64 conversion',async()=>{
  const state=begin('logo');state.snapshot.demo_origin=true;
- const reference='https://www.familijna.app/logos/assets/demo-image.png';
+ const reference=`${env.SUPABASE_URL}/storage/v1/object/public/demo-assets/039058c6f2c0cb492c533b0a4d14ef77cc0f78abccced5287d84a1a2011cfb81.png`;
  state.snapshot.logo={id:source,name:'Demo',is_demo:true,type:'PIX_150x70',payload:{bits_b64:'AA==',source:{mode:'IMAGE',imageUrl:reference}}};
  const path=`${actor}/copies/${job}/${assetId}.png`;
  await mocked(call=>{
   if(call.url.endsWith('/_resource_clone_begin'))return reply(state);
   if(call.url.includes('?'))return reply([]);
-  if(call.url==='https://familijna.app/logos/assets/demo-image.png')return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'image/png','Content-Length':'3'}});
+  if(call.url===reference)return new Response(new Uint8Array([1,2,3]),{headers:{'Content-Type':'image/png','Content-Length':'3'}});
   if(call.url.endsWith('/_resource_clone_asset_register')){assert.equal(call.body.p_kind,'demo_asset');assert.equal(call.body.p_reference,reference);return reply({id:assetId,job_id:job,source_kind:'demo_asset',destination_path:path,content_hash:call.body.p_content_hash});}
   if(call.url.endsWith(path)){assert.deepEqual([...call.body],[1,2,3]);return reply({});}
   if(call.url.endsWith('/_resource_clone_finish_duplicate')){assert.equal(call.body.p_demo,true);assert.ok(call.body.p_definition.payload.source.imageUrl.endsWith(path));assert.equal(call.body.p_definition.payload.source.imageData,undefined);return reply({ok:true,id:target});}
   assert.fail('unrecognized source fetch');
  },async()=>await duplicateResource(env,actor,input('logo')));
+});
+
+test('demo IMAGE: adres pliku strony i plik o innej treści niż nazwa — odrzucone',async()=>{
+ for(const [reference,bytes] of [['https://www.familijna.app/logos/assets/demo-image.png',[1,2,3]],[`${env.SUPABASE_URL}/storage/v1/object/public/demo-assets/0000000000000000000000000000000000000000000000000000000000000000.png`,[1,2,3]]]){
+  const state=begin('logo');state.snapshot.demo_origin=true;
+  state.snapshot.logo={id:source,name:'Demo',is_demo:true,type:'PIX_150x70',payload:{bits_b64:'AA==',source:{mode:'IMAGE',imageUrl:reference}}};
+  await assert.rejects(mocked(call=>{
+   if(call.url.endsWith('/_resource_clone_begin'))return reply(state);
+   if(call.url.includes('?'))return reply([]);
+   if(call.url===reference)return new Response(new Uint8Array(bytes),{headers:{'Content-Type':'image/png','Content-Length':'3'}});
+   if(call.url.endsWith('/_resource_clone_asset_register'))assert.fail('nie powinno rejestrować');
+   return reply({});
+  },async()=>await duplicateResource(env,actor,input('logo'))),/unsupported_copy_image_source|copy_image_source_changed/);
+ }
 });
 
 test('Send shares definition pipeline for game and logo while deriving source owner from Auth and destination from bound job',async()=>{
