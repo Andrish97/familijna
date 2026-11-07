@@ -1,7 +1,7 @@
 // Host-only renderer for the source preserved in a logo's payload.
 // Logo editors and their stored formats are deliberately not changed here.
 
-import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-07T19530";
+import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-07T20025";
 
 const FRAME_W = 1280;
 const FRAME_H = 720;
@@ -32,7 +32,7 @@ function canvasOf(width, height) {
 function loadWordmarkFont() {
   if (!fontPromise) {
     fontPromise = (async () => {
-      const font = new FontFace("HostUnbounded", 'url("/control/host/fonts/Unbounded-Variable.ttf?v=v2026-11-07T19530")', { weight: "200 900" });
+      const font = new FontFace("HostUnbounded", 'url("/control/host/fonts/Unbounded-Variable.ttf?v=v2026-11-07T20025")', { weight: "200 900" });
 
       await font.load();
       document.fonts.add(font);
@@ -47,7 +47,7 @@ function loadFabric() {
   if (!fabricPromise) {
     fabricPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "/shared/vendor/fabric.min.js?v=v2026-11-07T19530";
+      script.src = "/shared/vendor/fabric.min.js?v=v2026-11-07T20025";
       script.async = true;
       script.onload = () => globalThis.fabric?.StaticCanvas ? resolve(prepareFabric(globalThis.fabric)) : reject(new Error("Fabric.js did not initialize"));
       script.onerror = () => reject(new Error("Fabric.js could not be loaded"));
