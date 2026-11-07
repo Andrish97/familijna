@@ -52,6 +52,7 @@ test("Tekst: klawisze dozwolonych znaków zawsze widoczne i wstawiają znak w mi
   await list.locator(".charKey.is-space").click();
   await expect(page.locator("#textValue")).toHaveValue("AB C");
 
+  await page.fill("#textValue", "");
   const width = async () => Number((await page.locator("#textMeasure").textContent()).match(/(\d+)\/30/)[1]);
   await expect(page.locator("#textMeasure")).toHaveText("Szerokość: 0/30.");
   await page.fill("#textValue", "AB");

@@ -408,7 +408,8 @@
   .editorContent{ display: flex; flex-direction: column; }
   .pane{ flex: 1 1 0; min-height: 0; }
   .pane:not([hidden]){ display: flex; flex-direction: column; }
-  .pane > *{ flex: 1 1 0; min-height: 0; }
+  /* wysokość dostaje tylko główne pole panelu (nie np. pusty #drawSettings) */
+  .pane > :is(.imgCard, .imgTopGrid, .drawStageWrap){ flex: 1 1 0; min-height: 0; }
 
 
   /* =========================================================
