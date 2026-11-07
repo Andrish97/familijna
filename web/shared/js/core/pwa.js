@@ -5,7 +5,7 @@
 
 const LS_KEY = "pwa:install_dismissed";
 
-export function initPwa({ serviceWorkerUrl = "/sw.js?v=v2026-11-07T22145", scope = "/", registerServiceWorker = true } = {}) {
+export function initPwa({ serviceWorkerUrl = "/sw.js?v=v2026-11-07T22200", scope = "/", registerServiceWorker = true } = {}) {
   if (registerServiceWorker && "serviceWorker" in navigator) {
     navigator.serviceWorker.register(serviceWorkerUrl, { scope }).catch(() => {});
   }
