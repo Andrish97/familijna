@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict eKYzKeXsSyCPVKBGZpD8jAwQgf3RYUqnDd3jEsH415nj6E1z7U2wCet7UY4Ujzs
+\restrict GZ7GEiWLEazA6O6sfY1n4gxxUwMykZdhf4cXKWR9ZfrusH2LS2NvrxhjGTvihby
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -14959,6 +14959,115 @@ $$;
 
 
 --
+-- Name: mk_run_active(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_active"() RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+ SELECT to_jsonb(r)-'lease' FROM marketing_runs r WHERE status IN ('running','paused','cancel_requested') LIMIT 1
+$$;
+
+
+--
+-- Name: mk_run_claim("uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_claim"("p_lease" "uuid", "p_ttl_s" integer DEFAULT 120) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE r marketing_runs;
+BEGIN
+ IF p_ttl_s < 30 OR p_ttl_s > 900 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ SELECT * INTO r FROM marketing_runs WHERE status IN ('running','paused','cancel_requested')
+  AND (lease_until IS NULL OR lease_until < now()) FOR UPDATE SKIP LOCKED LIMIT 1;
+ IF NOT FOUND THEN RETURN NULL; END IF;
+ UPDATE marketing_runs SET lease=p_lease, lease_until=now()+make_interval(secs=>p_ttl_s),
+  resumed=resumed+CASE WHEN r.lease IS NULL THEN 0 ELSE 1 END, updated_at=now()
+  WHERE run_id=r.run_id RETURNING * INTO r;
+ RETURN to_jsonb(r)-'lease';
+END $$;
+
+
+--
+-- Name: mk_run_command("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_command"("p_run" "uuid", "p_command" "text") RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE st text;
+BEGIN
+ UPDATE marketing_runs SET status=CASE p_command
+   WHEN 'pause' THEN 'paused' WHEN 'resume' THEN 'running' WHEN 'cancel' THEN 'cancel_requested' END,
+  updated_at=now()
+  WHERE run_id=p_run AND (
+   (p_command='pause' AND status='running') OR
+   (p_command='resume' AND status='paused') OR
+   (p_command='cancel' AND status IN ('running','paused')))
+  RETURNING status INTO st;
+ RETURN st;
+END $$;
+
+
+--
+-- Name: mk_run_create("uuid", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_create"("p_run" "uuid", "p_target" integer) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE r marketing_runs;
+BEGIN
+ IF p_target < 1 OR p_target > 1000 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ BEGIN
+  INSERT INTO marketing_runs(run_id,target) VALUES(p_run,p_target) RETURNING * INTO r;
+ EXCEPTION WHEN unique_violation THEN RETURN NULL;
+ END;
+ RETURN to_jsonb(r)-'lease';
+END $$;
+
+
+--
+-- Name: mk_run_finish("uuid", "uuid", "text", integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_finish"("p_run" "uuid", "p_lease" "uuid", "p_status" "text", "p_verified" integer) RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+ IF p_status NOT IN ('completed','cancelled','error') OR p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET status=p_status, verified=greatest(verified,p_verified), lease=NULL, lease_until=NULL,
+  finished_at=now(), updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested');
+ RETURN FOUND;
+END $$;
+
+
+--
+-- Name: mk_run_heartbeat("uuid", "uuid", integer, integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mk_run_heartbeat"("p_run" "uuid", "p_lease" "uuid", "p_verified" integer, "p_ttl_s" integer DEFAULT 120) RETURNS "text"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE st text;
+BEGIN
+ IF p_ttl_s < 30 OR p_ttl_s > 900 OR p_verified < 0 THEN RAISE EXCEPTION 'mk_run_bad_args'; END IF;
+ UPDATE marketing_runs SET verified=greatest(verified,p_verified), lease_until=now()+make_interval(secs=>p_ttl_s), updated_at=now()
+  WHERE run_id=p_run AND lease=p_lease AND status IN ('running','paused','cancel_requested')
+  RETURNING status INTO st;
+ RETURN st;
+END $$;
+
+
+--
 -- Name: my_display_themes(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -20735,6 +20844,27 @@ CREATE TABLE "public"."marketing_run_stats" (
 
 
 --
+-- Name: marketing_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."marketing_runs" (
+    "run_id" "uuid" NOT NULL,
+    "target" integer NOT NULL,
+    "verified" integer DEFAULT 0 NOT NULL,
+    "status" "text" DEFAULT 'running'::"text" NOT NULL,
+    "lease" "uuid",
+    "lease_until" timestamp with time zone,
+    "resumed" integer DEFAULT 0 NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "finished_at" timestamp with time zone,
+    CONSTRAINT "marketing_runs_status_check" CHECK (("status" = ANY (ARRAY['running'::"text", 'paused'::"text", 'cancel_requested'::"text", 'completed'::"text", 'cancelled'::"text", 'error'::"text"]))),
+    CONSTRAINT "marketing_runs_target_check" CHECK ((("target" >= 1) AND ("target" <= 1000))),
+    CONSTRAINT "marketing_runs_verified_check" CHECK (("verified" >= 0))
+);
+
+
+--
 -- Name: marketing_search_logs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -22238,6 +22368,14 @@ ALTER TABLE ONLY "public"."marketing_run_stats"
 
 
 --
+-- Name: marketing_runs marketing_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."marketing_runs"
+    ADD CONSTRAINT "marketing_runs_pkey" PRIMARY KEY ("run_id");
+
+
+--
 -- Name: marketing_search_logs marketing_search_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23403,6 +23541,13 @@ CREATE INDEX "marketing_candidates_status_idx" ON "public"."marketing_candidates
 --
 
 CREATE UNIQUE INDEX "marketing_categories_name_key" ON "public"."marketing_categories" USING "btree" ("lower"("btrim"("name")));
+
+
+--
+-- Name: marketing_runs_one_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX "marketing_runs_one_active" ON "public"."marketing_runs" USING "btree" ((true)) WHERE ("status" = ANY (ARRAY['running'::"text", 'paused'::"text", 'cancel_requested'::"text"]));
 
 
 --
@@ -26379,6 +26524,12 @@ ALTER TABLE "public"."marketing_raw_contacts" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."marketing_run_stats" ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: marketing_runs; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."marketing_runs" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: marketing_search_logs; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -27268,5 +27419,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict eKYzKeXsSyCPVKBGZpD8jAwQgf3RYUqnDd3jEsH415nj6E1z7U2wCet7UY4Ujzs
+\unrestrict GZ7GEiWLEazA6O6sfY1n4gxxUwMykZdhf4cXKWR9ZfrusH2LS2NvrxhjGTvihby
 
