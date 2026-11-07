@@ -111,15 +111,28 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=[ADMIN_ORIGIN], allow_methods=['GET', 'POST'],
                    allow_headers=['Authorization', 'Content-Type'])
 
+# Rola kontenera (podział: familijna-server/docs/wyszukiwarka-podzial-plan.md):
+# leads = kontakty (Marketing), questions = pytania i aktualizacje demo,
+# all = obie (jeden kontener). Limity SearXNG/DeepSeeka wspólne przez bazę.
+SERVICE_ROLE = os.getenv('SERVICE_ROLE', 'all').strip() or 'all'
+if SERVICE_ROLE not in ('leads', 'questions', 'all'):
+    raise SystemExit(f'Nieznana rola SERVICE_ROLE={SERVICE_ROLE!r}')
+RUN_LEADS = SERVICE_ROLE in ('leads', 'all')
+RUN_QUESTIONS = SERVICE_ROLE in ('questions', 'all')
+logger.info('Rola usługi: %s', SERVICE_ROLE)
+
 question_bank = QuestionBank(db, http, SEARXNG_URL, LEAD_FINDER_API_KEY)
-app.include_router(router_for(question_bank, require_api_key))
+if RUN_QUESTIONS:
+    app.include_router(router_for(question_bank, require_api_key))
 
 
 @app.on_event('startup')
 async def start_question_worker():
-    question_bank.task = asyncio.create_task(question_bank.worker())
-    question_bank.demo_task = asyncio.create_task(demo_updates())
-    engine.supervisor = asyncio.create_task(engine.supervise())
+    if RUN_QUESTIONS:
+        question_bank.task = asyncio.create_task(question_bank.worker())
+        question_bank.demo_task = asyncio.create_task(demo_updates())
+    if RUN_LEADS:
+        engine.supervisor = asyncio.create_task(engine.supervise())
 
 
 async def demo_updates():
@@ -136,10 +149,15 @@ async def demo_updates():
 @app.on_event('shutdown')
 async def stop_question_worker():
     if getattr(engine, 'supervisor', None):
+        # Anulowanie oddaje dzierżawę trwającego przebiegu (run_claimed) — czekamy na to.
         engine.supervisor.cancel()
+        try:
+            await asyncio.wait_for(engine.supervisor, 10)
+        except (asyncio.CancelledError, asyncio.TimeoutError):
+            pass
     if getattr(question_bank, 'demo_task', None):
         question_bank.demo_task.cancel()
-    if question_bank.task:
+    if getattr(question_bank, 'task', None):
         question_bank.task.cancel()
         try:
             await question_bank.task
@@ -147,7 +165,7 @@ async def stop_question_worker():
             pass
 
 
-@app.post('/api/search-runs', dependencies=[Depends(require_api_key)])
+@app.post('/api/search-runs', dependencies=[Depends(require_api_key), Depends(lambda: _role('leads'))])
 async def start_search(target_count: int = 50):
     # Przebieg w bazie (migracja 519): przejmuje go pętla engine.supervise —
     # także po restarcie usługi, gdy wygaśnie dzierżawa poprzedniego procesu.
@@ -163,7 +181,7 @@ async def start_search(target_count: int = 50):
     return {'ok': True, 'run_id': run_id}
 
 
-@app.get('/api/search-runs/status', dependencies=[Depends(require_api_key)])
+@app.get('/api/search-runs/status', dependencies=[Depends(require_api_key), Depends(lambda: _role('leads'))])
 async def status():
     s = engine.snapshot()
     if s['status'] in ('idle', 'lost'):
@@ -174,6 +192,11 @@ async def status():
                       'verified': active.get('verified', 0)})
     s['ceidg'] = engine.ceidg.enabled
     return s
+
+
+def _role(needed):
+    if needed == 'leads' and not RUN_LEADS:
+        raise HTTPException(404, 'Kontakty obsługuje inny kontener')
 
 
 async def _command(run_id, command, allowed, new_status):
@@ -190,17 +213,17 @@ async def _command(run_id, command, allowed, new_status):
     return {'ok': True, 'status': new_status}
 
 
-@app.post('/api/search-runs/{run_id}/pause', dependencies=[Depends(require_api_key)])
+@app.post('/api/search-runs/{run_id}/pause', dependencies=[Depends(require_api_key), Depends(lambda: _role('leads'))])
 async def pause(run_id: str):
     return await _command(run_id, 'pause', ('running',), 'paused')
 
 
-@app.post('/api/search-runs/{run_id}/resume', dependencies=[Depends(require_api_key)])
+@app.post('/api/search-runs/{run_id}/resume', dependencies=[Depends(require_api_key), Depends(lambda: _role('leads'))])
 async def resume(run_id: str):
     return await _command(run_id, 'resume', ('paused',), 'running')
 
 
-@app.post('/api/search-runs/{run_id}/cancel', dependencies=[Depends(require_api_key)])
+@app.post('/api/search-runs/{run_id}/cancel', dependencies=[Depends(require_api_key), Depends(lambda: _role('leads'))])
 async def cancel(run_id: str):
     return await _command(run_id, 'cancel', ('running', 'paused', 'starting'), 'cancelled')
 

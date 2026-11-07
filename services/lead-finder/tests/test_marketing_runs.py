@@ -96,6 +96,26 @@ class MarketingRunTest(unittest.IsolatedAsyncioTestCase):
         await asyncio.wait_for(claimed.wait(), 2)
         task.cancel()
 
+    async def test_service_stop_releases_lease_without_finishing(self):
+        engine, db = make_engine()
+        started = asyncio.Event()
+
+        async def run_search(target):
+            engine.verified = 4
+            started.set()
+            await asyncio.sleep(3600)
+        engine.run_search = run_search
+        task = asyncio.create_task(engine.run_claimed({'run_id': 'r1', 'target': 9, 'verified': 0, 'resumed': 0, 'status': 'running'}, 'L'))
+        await asyncio.wait_for(started.wait(), 2)
+        task.cancel()
+        with self.assertRaises(asyncio.CancelledError):
+            await task
+        names = [c.args[0] for c in db.rpc.await_args_list]
+        self.assertNotIn('mk_run_finish', names)
+        release = [c.args[1] for c in db.rpc.await_args_list if c.args[0] == 'mk_run_release'][-1]
+        self.assertEqual(release, {'p_run': 'r1', 'p_lease': 'L', 'p_verified': 4})
+        self.assertEqual(engine.status, 'idle')
+
 
 if __name__ == '__main__':
     unittest.main()

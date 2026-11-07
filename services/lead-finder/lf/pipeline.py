@@ -475,6 +475,13 @@ class Engine:
                 log.error('Utracona dzierżawa przebiegu — przerywam w tym procesie.')
                 self.status = 'lost'
 
+    async def _release(self):
+        try:
+            await self.save_stats()
+            await self.db.rpc('mk_run_release', {'p_run': self.run_id, 'p_lease': self.lease, 'p_verified': self.verified})
+        except Exception as e:
+            log.error('Oddanie przebiegu: %s', describe_error(e))
+
     async def _load_run_stats(self):
         rows = await self.db.select('marketing_run_stats', {'select': ','.join(STAT_KEYS), 'run_id': f'eq.{self.run_id}', 'limit': 1})
         if rows:
@@ -500,6 +507,7 @@ class Engine:
         await self.save_stats()
         beat = asyncio.create_task(self._beat_loop())
         final = 'error'
+        interrupted = False
         try:
             await self.run_search(self.target)
             if self.status in ('lost', 'cancelled'):
@@ -520,6 +528,11 @@ class Engine:
             log.error('DeepSeek niedostępny (wyłączony albo limit). Przerywam.')
             if self.notify:
                 await self.notify('⚠️ <b>Zlecenie przerwane</b>\nDeepSeek niedostępny (wyłączony albo limit).')
+        except asyncio.CancelledError:
+            # Zatrzymanie usługi (wdrożenie, restart): przebieg zostaje aktywny,
+            # dzierżawa oddana — nowy proces przejmie go od razu.
+            interrupted = True
+            raise
         except Exception as e:
             self.status = 'error'
             self.stats['errors'] += 1
@@ -528,10 +541,14 @@ class Engine:
                 await self.notify('❌ <b>Błąd Lead Findera</b> — szczegóły w logach panelu.')
         finally:
             beat.cancel()
-            if self.status != 'lost':
-                await self.save_stats(finished=True)
-                await self.db.rpc('mk_run_finish', {'p_run': self.run_id, 'p_lease': self.lease,
-                                                    'p_status': final, 'p_verified': self.verified})
-            await asyncio.sleep(3)
+            if interrupted:
+                log.info(f'Zatrzymanie usługi — przebieg wznowi nowy proces ({self.verified}/{self.target}).')
+                await asyncio.shield(self._release())
+            else:
+                if self.status != 'lost':
+                    await self.save_stats(finished=True)
+                    await self.db.rpc('mk_run_finish', {'p_run': self.run_id, 'p_lease': self.lease,
+                                                        'p_status': final, 'p_verified': self.verified})
+                await asyncio.sleep(3)
             self.status = 'idle'
             self.lease = None
