@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
+\restrict YZ6PnW7pOD9wgRIgVAsbBtQ14bKf7JZzUsO2ywrsChJ4geDGdetpLZMca3kaw2X
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -5426,6 +5426,24 @@ BEGIN
   WHERE public._demo_current_definition(kind,x.id)=public._demo_template_definition(p_slot,old);
  UPDATE demo_template_data SET payload=p_payload WHERE lang=p_lang AND slot=p_slot;
  RETURN jsonb_build_object('ok',true,'id',upd,'eligible',check_result->'eligible');
+END $$;
+
+
+--
+-- Name: admin_demo_run_queue(integer); Type: PROCEDURE; Schema: public; Owner: -
+--
+
+CREATE PROCEDURE "public"."admin_demo_run_queue"(IN "p_seconds" integer DEFAULT 50)
+    LANGUAGE "plpgsql"
+    AS $$
+DECLARE started timestamptz := pg_catalog.clock_timestamp(); r jsonb;
+BEGIN
+ IF p_seconds < 1 OR p_seconds > 55 THEN RAISE EXCEPTION 'admin_demo_bad_args'; END IF;
+ LOOP
+  r := public.admin_demo_apply_next();
+  COMMIT;
+  EXIT WHEN r IS NULL OR pg_catalog.clock_timestamp() - started > pg_catalog.make_interval(secs => p_seconds);
+ END LOOP;
 END $$;
 
 
@@ -27435,5 +27453,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jur6wtNfdLDiQufrFOuMeLgD18s7BNg8oa05lyB4vZMmdx7upY3a0SAecgbZbsb
+\unrestrict YZ6PnW7pOD9wgRIgVAsbBtQ14bKf7JZzUsO2ywrsChJ4geDGdetpLZMca3kaw2X
 
