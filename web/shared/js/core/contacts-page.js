@@ -1,18 +1,18 @@
 // Znajomi i subskrybenci: wspólne listy, akcje, zaproszenia i odświeżanie.
-import { sb } from "./supabase.js?v=v2026-11-07T22490";
-import { initPage } from "./page-init.js?v=v2026-11-07T22490";
-import { linkTo, PAGES } from "./nav-map.js?v=v2026-11-07T22490";
-import { tabFromUrl, setTab } from "./tabs.js?v=v2026-11-07T22490";
-import { initSplitTabs } from "./split-tabs.js?v=v2026-11-07T22490";
-import { toast } from "./toast.js?v=v2026-11-07T22490";
-import { iconText } from "./icons.js?v=v2026-11-07T22490";
-import { confirmModal, alertModal } from "./modal.js?v=v2026-11-07T22490";
-import { shareSectionEl } from "./share-sections.js?v=v2026-11-07T22490";
-import { createCooldownTicker } from "./cooldown.js?v=v2026-11-07T22490";
-import { sendInviteMail } from "./invite-mail.js?v=v2026-11-07T22490";
-import { goLinkToken } from "./notify-mail.js?v=v2026-11-07T22490";
-import { initI18n, t } from "../../translation/translation.js?v=v2026-11-07T22490";
-import "./contact-modal.js?v=v2026-11-07T22490";
+import { sb } from "./supabase.js?v=v2026-11-07T22580";
+import { initPage } from "./page-init.js?v=v2026-11-07T22580";
+import { linkTo, PAGES } from "./nav-map.js?v=v2026-11-07T22580";
+import { tabFromUrl, setTab } from "./tabs.js?v=v2026-11-07T22580";
+import { initSplitTabs } from "./split-tabs.js?v=v2026-11-07T22580";
+import { toast } from "./toast.js?v=v2026-11-07T22580";
+import { iconText } from "./icons.js?v=v2026-11-07T22580";
+import { confirmModal, alertModal } from "./modal.js?v=v2026-11-07T22580";
+import { shareSectionEl } from "./share-sections.js?v=v2026-11-07T22580";
+import { createCooldownTicker } from "./cooldown.js?v=v2026-11-07T22580";
+import { sendInviteMail } from "./invite-mail.js?v=v2026-11-07T22580";
+import { goLinkToken } from "./notify-mail.js?v=v2026-11-07T22580";
+import { initI18n, t } from "../../translation/translation.js?v=v2026-11-07T22580";
+import "./contact-modal.js?v=v2026-11-07T22580";
 
 
 export async function initContactsPage(pageId) {
