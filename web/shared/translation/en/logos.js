@@ -34,7 +34,8 @@ const en = {
     text: {
       placeholder: "e.g. FAMILIJNA",
       allowedChars: "Allowed characters",
-      allowedCharsHide: "Hide",
+      space: "Space",
+      charsHint: "Click a character to insert it into the text.",
       invalidChars: "Invalid characters: {chars}",
       widthStatus: "Width: {width}/30.",
       fixInvalidChars: "Remove or replace the invalid characters.",

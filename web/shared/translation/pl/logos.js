@@ -34,7 +34,8 @@ const pl = {
     text: {
       placeholder: "Np. FAMILIJNA",
       allowedChars: "Dozwolone znaki",
-      allowedCharsHide: "Ukryj",
+      space: "Spacja",
+      charsHint: "Kliknij znak, żeby wstawić go do napisu.",
       invalidChars: "Niedozwolone znaki: {chars}",
       widthStatus: "Szerokość: {width}/30.",
       fixInvalidChars: "Usuń albo zamień niedozwolone znaki.",

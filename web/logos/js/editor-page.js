@@ -27,7 +27,7 @@ import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-07
 import { guardResourceLock, showBlockingOverlay } from "../../shared/js/core/resource-lock.js?v=v2026-11-07T22371";
 import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-07T22371";
 
-import { renderPreview } from "./render.js?v=v2026-11-07T22371";
+import { renderPreview, fitPreview, previewBits, renderZoomedPreview } from "./render.js?v=v2026-11-07T22371";
 import { listLogos, fetchLogo, updateLogo, isUniqueViolation } from "./db.js?v=v2026-11-07T22371";
 import { initPinchZoom, lockPageZoomForPreview, unlockPageZoomAfterPreview } from "../../shared/js/core/pinch-zoom.js?v=v2026-11-07T22371";
 import { cannotEditReason } from "./text.js?v=v2026-11-07T22371";
@@ -229,16 +229,25 @@ export async function bootEditorPage({ mode, initEditor }) {
   /* ---------- podgląd ---------- */
   let previewZoom = null;
   let latestPreview = null;
+  let previewBitsOpen = null;
+  // podgląd na stronie: rysowany w rozmiarze swojego miejsca (ostre kropki)
+  const drawBigPreview = el.bigPreview ? fitPreview(el.bigPreview) : null;
   function openPreview(preview) {
     if (!preview) return;
     renderPreview(preview, el.previewCanvas, GLYPH_5x7);
     // Tablety z Chrome przedstawiają się jak desktop -- sprawdzamy też dotyk.
     const touch = isMobileDevice() || navigator.maxTouchPoints > 0 || window.matchMedia?.("(pointer: coarse)").matches;
     el.previewOverlay.querySelector(".modal")?.classList.toggle("is-touch", !!touch);
-    previewZoom ??= initPinchZoom(el.previewOverlay.querySelector(".previewModalCanvas"), el.previewCanvas);
+    previewBitsOpen = previewBits(preview, GLYPH_5x7);
+    // po przybliżeniu rysujemy od nowa w większej rozdzielczości -- ostre kropki
+    previewZoom ??= initPinchZoom(el.previewOverlay.querySelector(".previewModalCanvas"), el.previewCanvas, {
+      onScale: (scale) => renderZoomedPreview(previewBitsOpen, el.previewCanvas, scale),
+    });
     previewZoom.reset();
     lockPageZoomForPreview();
     openDialog(el.previewOverlay, { onClose: closePreview });
+    // rozmiar na ekranie znany po otwarciu okna
+    requestAnimationFrame(() => renderZoomedPreview(previewBitsOpen, el.previewCanvas, 1));
   }
   function closePreview() {
     closeDialog(el.previewOverlay);
@@ -249,7 +258,7 @@ export async function bootEditorPage({ mode, initEditor }) {
   function onEditorPreview(preview) {
     if (!preview) return;
     latestPreview = preview;
-    if (el.bigPreview) renderPreview(preview, el.bigPreview, GLYPH_5x7);
+    drawBigPreview?.(previewBits(preview, GLYPH_5x7));
   }
 
   // Tryb tekstowy nie miał żadnej akcji otwierającej istniejący modal

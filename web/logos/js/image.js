@@ -10,9 +10,10 @@
 import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-07T22371";
 import { t } from "../../shared/translation/translation.js?v=v2026-11-07T22371";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-07T22371";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, renderBitsToCanvas } from "./render.js?v=v2026-11-07T22371";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, fitPreview } from "./render.js?v=v2026-11-07T22371";
 import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T22371";
 import { setBox } from "../../shared/js/core/geometry.js?v=v2026-11-07T22371";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
 
 
 const ASPECT = 26 / 11;
@@ -67,6 +68,8 @@ export function initImageEditor(ctx) {
   const imgPreview = $("imgPreview");
   const cropFrame = $("cropFrame");
   const imgBigPreview = $("imgBigPreview");
+  // podgląd rysowany w rozmiarze swojego miejsca (zmienia się z układem edytora)
+  const drawImgPreview = imgBigPreview ? fitPreview(imgBigPreview) : () => {};
   const chkInvert = $("chkImgInvert");
   const btnImgResetDefault = $("btnImgResetDefault");
 
@@ -251,10 +254,10 @@ export function initImageEditor(ctx) {
     cv.width = Math.max(1, Math.round(W.w * k));
     cv.height = Math.max(1, Math.round(W.h * k));
     const g = cv.getContext("2d");
-    g.fillStyle = "#0b0b0b"; // rogi po obrocie jak tło pola
-    g.fillRect(0, 0, cv.width, cv.height);
+    // rogi po obrocie przezroczyste (WebP z kanałem alfa; bez obsługi WebP
+    // przeglądarka daje PNG) -- pole kadru ma tło karty, bez drugiego koloru
     g.drawImage(W.el, 0, 0, cv.width, cv.height);
-    return new Promise((resolve) => cv.toBlob((b) => resolve(b ? URL.createObjectURL(b) : cv.toDataURL()), "image/jpeg", 0.9));
+    return new Promise((resolve) => cv.toBlob((b) => resolve(b ? URL.createObjectURL(b) : cv.toDataURL()), "image/webp", 0.9));
   }
 
   /**
@@ -433,7 +436,7 @@ export function initImageEditor(ctx) {
 
   function pushPreviewNow() {
     bits = compileBits();
-    renderBitsToCanvas(bits, imgBigPreview);
+    drawImgPreview(bits);
     ctx.onPreview?.({ kind: "PIX", bits });
   }
 
@@ -528,21 +531,79 @@ export function initImageEditor(ctx) {
     objectUrl = URL.createObjectURL(file);
     pendingFile = file;
     ctx.markDirty?.();
-    // nowy obraz zaczyna bez obrotu
+    // nowy obraz zaczyna bez obrotu; układ dobierany od nowa (bez progu zmiany)
     rot90 = 0;
+    layoutNow = null;
     if (SLIDERS.straighten.input) SLIDERS.straighten.input.value = "0";
     syncLabels();
     await showImage(objectUrl, null);
   }
 
+  // Układ pola obrazu i podglądu zależy od dwóch rzeczy: kształtu miejsca
+  // w karcie (okno przeglądarki) i proporcji obrazu (po obrocie). Liczymy oba
+  // układy — obok siebie i jeden pod drugim — z płynnym podziałem miejsca
+  // i wybieramy ten, w którym obraz do kadrowania i podgląd są razem
+  // największe (średnia geometryczna pól). Podgląd nie może być za mały:
+  // ma co najmniej 45% szerokości karty (decyzja użytkownika 2026-11-07).
+  const PREV_ASPECT = 1280 / 580; // płótno podglądu: tablica + równy margines
+  const LAYOUT_GAP = 24;
+  const PREV_MIN_SHARE = 0.45;
+  const fitArea = (aspect, w, h) => (w <= 0 || h <= 0 ? 0 : (w / h > aspect ? h * h * aspect : (w * w) / aspect));
+  const fitWidth = (aspect, w, h) => Math.min(w, h * aspect);
+
+  // Najlepszy podział osobno dla każdego układu ({ row, col }).
+  function bestImageLayouts(W, H, imgAspect, chrome) {
+    const best = { row: null, col: null }, fallback = { row: null, col: null };
+    const score = (img, prev) => (img > 0 && prev > 0 ? Math.log(img) + Math.log(prev) : -Infinity);
+    const consider = (c, prevW) => {
+      const fb = fallback[c.mode];
+      if (!fb || prevW > fb.prevW) fallback[c.mode] = { ...c, prevW };
+      if (prevW >= PREV_MIN_SHARE * W && (!best[c.mode] || c.s > best[c.mode].s)) best[c.mode] = c;
+    };
+    for (let f = 0.25; f <= 0.751; f += 0.02) {
+      // obok siebie: f = część szerokości dla pola obrazu
+      const colH = H - chrome.title;
+      const wi = (W - LAYOUT_GAP) * f, wp = (W - LAYOUT_GAP) - wi;
+      consider({ s: score(fitArea(imgAspect, wi, colH), fitArea(PREV_ASPECT, wp, colH - chrome.hint)), mode: "row", f, a: wi, b: wp },
+        fitWidth(PREV_ASPECT, wp, colH - chrome.hint));
+      // jeden pod drugim: f = część wysokości dla pola obrazu
+      const avail = H - 2 * chrome.title - chrome.hint - LAYOUT_GAP;
+      const hi = avail * f, hp = avail - hi;
+      consider({ s: score(fitArea(imgAspect, W, hi), fitArea(PREV_ASPECT, W, hp)), mode: "col", f, a: chrome.title + hi, b: chrome.title + hp + chrome.hint },
+        fitWidth(PREV_ASPECT, W, hp));
+    }
+    return { row: best.row || fallback.row, col: best.col || fallback.col };
+  }
+
+  // Bez skakania: proporcje obrazu liczone z obrysu obróconego obrazu (obrót
+  // o 90° i prostowanie o dowolny kąt), ale w trakcie przesuwania suwaka
+  // prostowania układ stoi -- dobiera się raz, po puszczeniu suwaka. Układ
+  // zmienia się na drugi tylko, gdy jest wyraźnie lepszy (o 15%), a podział
+  // w obrębie układu tylko przy zmianie o ponad 3%. Zmiana podziału jest
+  // animowana (przejście w CSS), ramka kadru nadąża co klatkę.
+  const MODE_SWITCH_GAIN = Math.log(1.15);
+  let layoutNow = null; // { mode, f }
+  let straightenActive = false;
   function applyBestImageLayout() {
+    if (straightenActive) return;
     const grid = paneImage?.querySelector?.(".imgTopGrid");
-    if (!grid) return;
-    // Obok siebie, chyba że ekran jest wąski albo obraz skrajnie pionowy.
-    const veryTall = work && work.h / Math.max(1, work.w) > 2.0;
-    const mode = window.innerWidth <= 980 || veryTall ? "col" : "row";
-    grid.classList.toggle("is-row", mode === "row");
-    grid.classList.toggle("is-col", mode === "col");
+    if (!grid || !grid.clientWidth || !grid.clientHeight) return;
+    const title = grid.querySelector(".imgCardTitle");
+    const hint = grid.querySelector(".imgPrevWrap > .hint");
+    const chrome = { title: (title?.offsetHeight || 22) + 12, hint: (hint?.offsetHeight || 18) + 12 };
+    const imgAspect = work ? work.w / Math.max(1, work.h) : 26 / 11;
+    const both = bestImageLayouts(grid.clientWidth, grid.clientHeight, imgAspect, chrome);
+    let L = both.row && (!both.col || both.row.s >= both.col.s) ? both.row : both.col;
+    if (!L) return;
+    const cur = layoutNow && both[layoutNow.mode];
+    if (cur && L.mode !== layoutNow.mode && L.s - cur.s < MODE_SWITCH_GAIN) L = cur;
+    if (layoutNow && L.mode === layoutNow.mode && Math.abs(L.f - layoutNow.f) <= 0.03) return;
+    layoutNow = { mode: L.mode, f: L.f };
+    grid.classList.toggle("is-row", L.mode === "row");
+    grid.classList.toggle("is-col", L.mode === "col");
+    // podział miejsca w pikselach jako fr (wiersze z tytułami i podpowiedzią)
+    const fr = (x) => `${Math.max(1, x).toFixed(1)}fr`;
+    setVars(grid, { "--img-a": fr(L.a), "--img-b": fr(L.b) });
   }
 
   // =========================================================
@@ -702,8 +763,14 @@ export function initImageEditor(ctx) {
     if (!imgObj) return;
     ctx.markDirty?.();
     rotating = true; // zapis poczeka na przebudowę
+    straightenActive = true; // układ pól nie zmienia się w trakcie przesuwania suwaka
     clearTimeout(straightenDeb);
     straightenDeb = setTimeout(() => applyRotation(rot90, num(SLIDERS.straighten.input.value, 0)), 60);
+  });
+  // puszczenie suwaka (albo zmiana klawiaturą): układ dobrany raz, z nowego kąta
+  SLIDERS.straighten.input?.addEventListener("change", () => {
+    straightenActive = false;
+    setTimeout(() => applyBestImageLayout(), 150);
   });
   for (const [id, delta] of [["btnImgRotL", -90], ["btnImgRotR", 90]]) {
     $(id)?.addEventListener("click", () => {
@@ -732,17 +799,22 @@ export function initImageEditor(ctx) {
   window.addEventListener("i18n:lang", syncLabels);
 
   // Zmiana rozmiaru okna albo samego pola: przelicz piksele ramki z kadru.
-  let layoutDeb = null;
+  // co klatkę (nie po przerwie): przy animowanej zmianie podziału ramka
+  // kadru i obraz płynnie nadążają za polem
+  let layoutRaf = 0;
   const relayout = () => {
-    clearTimeout(layoutDeb);
-    layoutDeb = setTimeout(() => {
+    cancelAnimationFrame(layoutRaf);
+    layoutRaf = requestAnimationFrame(() => {
       if (ctx.getMode?.() !== "IMAGE" || imageStatus !== "ready" || drag || pinch) return;
       applyCropImg();
       schedulePreview(10);
-    }, 60);
+    });
   };
   window.addEventListener("resize", () => { applyBestImageLayout(); relayout(); });
   if (imgStage && "ResizeObserver" in window) new ResizeObserver(relayout).observe(imgStage);
+  // zmiana miejsca w karcie (np. pasek narzędzi zawinął się w dwa rzędy) — nowy układ
+  const layoutGrid = paneImage?.querySelector?.(".imgTopGrid");
+  if (layoutGrid && "ResizeObserver" in window) new ResizeObserver(() => applyBestImageLayout()).observe(layoutGrid.parentElement || layoutGrid);
 
   closePanels();
   syncLabels();
@@ -800,7 +872,7 @@ export function initImageEditor(ctx) {
 
       // Do czasu przeliczenia z obrazu pokazujemy to, co jest zapisane.
       bits = payload?.bits_b64 ? unpackBits(payload.bits_b64) : new Uint8Array(DOT_W * DOT_H);
-      renderBitsToCanvas(bits, imgBigPreview);
+      drawImgPreview(bits);
       ctx.onPreview?.({ kind: "PIX", bits });
 
       const src = imageUrl || imageData;

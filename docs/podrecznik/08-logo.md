@@ -28,13 +28,14 @@ kontrast — cienkie linie i drobne szczegóły zwykle znikają. Efekt sprawdzaj
 2. Wpisz napis (na przykład „FAMILIJNA”).
 
 Napis jest wyświetlany czcionką z planszy. Licznik „Szerokość: …/30”
-pokazuje, czy napis mieści się na Wyświetlaczu. Przycisk [Dozwolone znaki] pokazuje znaki,
-których można użyć. Napis za szeroki albo z niedozwolonymi znakami nie zostanie zapisany —
+pokazuje, czy napis mieści się na Wyświetlaczu. Pod polem napisu są wszystkie dozwolone znaki —
+kliknięcie znaku wstawia go w miejscu kursora (na tablecie bez wysuwania klawiatury), [Spacja]
+wstawia odstęp. Napis za szeroki albo z niedozwolonymi znakami nie zostanie zapisany —
 serwis wskaże problem.
 
 ![Logo tekstowe](zrzut:logo-text)
 ![Napis za szeroki](zrzut:logos-market-text-too-wide)
-![Dozwolone znaki](zrzut:logos-market-text-chars)
+![Wstawianie dozwolonych znaków](zrzut:logos-market-text-chars)
 
 Jeśli chcesz napis innym krojem pisma albo z dodatkami, użyj logo rysunkowego (→ 8.3).
 
@@ -87,7 +88,8 @@ Skróty klawiszowe nie działają podczas wpisywania tekstu.
 1. Kliknij kafelek „Nowe logo z obrazu” i wybierz [Wybierz obraz] — plik JPG, PNG, GIF
    lub WEBP, do 5 MB.
 2. Ustaw kadr: ramka na karcie „Obszar wyświetlacza” pokazuje część obrazu, która trafi na ekran.
-   Możesz obrócić obraz o 90° i wyprostować go.
+   Możesz obrócić obraz o 90° i wyprostować go. Układ pól dopasowuje się do kształtu obrazu
+   i okna — po puszczeniu suwaka prostowania.
 3. Dopasuj wygląd suwakami: jasność, kontrast, gamma, czerń, biel i dither (ziarnistość
    przejść tonalnych). [Odwróć] zamienia jasne miejsca z ciemnymi, [Przywróć] cofa ustawienia.
 

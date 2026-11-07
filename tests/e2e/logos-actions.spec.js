@@ -1,7 +1,7 @@
 // tests/e2e/logos-actions.spec.js
 //
 // Czynności z podręcznika, rozdział 8 (Logo), których nie sprawdzał
-// logo-editor.spec.js: [Dozwolone znaki] i licznik szerokości, skróty
+// logo-editor.spec.js: klawisze dozwolonych znaków i licznik szerokości, skróty
 // narzędzi rysunku (V H B E S T, spacja, Ctrl), [ i ], powiększenie z klawiatury,
 // Shift przy kształtach, [Wyczyść] z Anuluj, Ctrl+Shift+Z, [Podgląd] rysunku
 // i usuwanie logo z Anuluj — wraz z wariantem „źle”: skróty w czasie pisania,
@@ -34,18 +34,23 @@ const zoom = (page) => page.evaluate(() => window.__drawFabric.getZoom());
 
 /* ======================= TEKST ======================= */
 
-test("Tekst: [Dozwolone znaki] pokazuje i chowa listę, licznik „Szerokość: …/30” rośnie, za szeroki napis — ostrzeżenie", async ({ page }) => {
+test("Tekst: klawisze dozwolonych znaków zawsze widoczne i wstawiają znak w miejscu kursora, licznik „Szerokość: …/30” rośnie, za szeroki napis — ostrzeżenie", async ({ page }) => {
   await L.createNew(page, "Text", L.uniq("chars"));
-  const toggle = page.locator("#btnCharsToggle");
-  await expect(page.locator("#charsList")).toBeHidden();
-  await expect(toggle).toHaveText("Dozwolone znaki");
-  await toggle.click();
-  await expect(page.locator("#charsList")).toBeVisible();
-  await expect(page.locator("#charsList")).toContainText("␠");
-  await expect(page.locator("#charsList")).toContainText("A");
-  await expect(toggle).toHaveText("Ukryj");
-  await toggle.click();
-  await expect(page.locator("#charsList")).toBeHidden();
+  const list = page.locator("#charsList");
+  await expect(list).toBeVisible();
+  await expect(list.locator(".charKey.is-space")).toHaveText("Spacja");
+  await expect(list.locator('.charKey[data-char="A"]')).toBeVisible();
+  await expect(page.locator("#btnCharsToggle")).toHaveCount(0);
+  // klawisze w kolumnie obok podglądu mieszczą się bez przewijania
+  expect(await list.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true);
+  // wstawianie w miejscu kursora: „AC” + kursor po A + klawisz B → „ABC”, kursor zostaje w polu
+  await page.fill("#textValue", "AC");
+  await page.locator("#textValue").evaluate((el) => el.setSelectionRange(1, 1));
+  await list.locator('.charKey[data-char="B"]').click();
+  await expect(page.locator("#textValue")).toHaveValue("ABC");
+  await expect(page.locator("#textValue")).toBeFocused();
+  await list.locator(".charKey.is-space").click();
+  await expect(page.locator("#textValue")).toHaveValue("AB C");
 
   const width = async () => Number((await page.locator("#textMeasure").textContent()).match(/(\d+)\/30/)[1]);
   await expect(page.locator("#textMeasure")).toHaveText("Szerokość: 0/30.");

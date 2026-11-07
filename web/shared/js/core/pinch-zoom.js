@@ -6,7 +6,7 @@
 // całej strony przeglądarki (patrz touch-action:none w logo.css —
 // bez tego dwa palce na canvasie zoomowałyby cały layout, nie samą treść).
 import { setShift } from "./geometry.js?v=v2026-11-07T22371";
-export function initPinchZoom(container, canvas, { maxScale = 6 } = {}) {
+export function initPinchZoom(container, canvas, { maxScale = 6, onScale = null } = {}) {
   // Model: canvas ma transform-origin 0 0, a jego NIEPRZEKSZTAŁCONY
   // lewy-górny róg leży w kontenerze w punkcie (offX, offY) — kontener
   // centruje canvas (flex), więc zwykle to NIE jest (0,0). Punkt treści p
@@ -44,7 +44,15 @@ export function initPinchZoom(container, canvas, { maxScale = 6 } = {}) {
     rafId = requestAnimationFrame(() => {
       rafId = null;
       setShift(canvas, { x: tx, y: ty, scale });
+      notifyScale();
     });
+  };
+  // onScale(scale): po ustaniu zmiany przybliżenia (np. płótno rysowane od nowa ostrzej)
+  let notified = 1, scaleTimer = null;
+  const notifyScale = () => {
+    if (!onScale || scale === notified) return;
+    clearTimeout(scaleTimer);
+    scaleTimer = setTimeout(() => { notified = scale; onScale(scale); }, 150);
   };
 
   const reset = () => {

@@ -3,6 +3,7 @@
 // fontu 5x7). Glify przycięte do szerokości, stała 1 kolumna przerwy,
 // napis wyśrodkowany.
 
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
 import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-07T22371";
 import { TILES_X, TILES_Y, TYPE_GLYPH, normalizeRows } from "./render.js?v=v2026-11-07T22371";
 
@@ -138,26 +139,94 @@ export function initTextEditor(ctx) {
   const textValue = $("textValue");
   const textWarn = $("textWarn");
   const textMeasure = $("textMeasure");
-  const btnCharsToggle = $("btnCharsToggle");
-  const charsInline = $("charsInline");
   const charsList = $("charsList");
 
   const show = (el, on) => { if (el) el.hidden = !on; };
-  const isShown = (el) => !!el && getComputedStyle(el).display !== "none";
   const font = () => ctx.getFont3x10?.() || {};
 
   let lastCompiled = null;
 
+  // Klawisze dozwolonych znaków w grupach bez podpisów, oddzielonych kreską
+  // (decyzja użytkownika 2026-11-07): cyfry i znaki (ze spacją jako napisem),
+  // litery, polskie, ukraińskie (te tylko w interfejsie UK).
+  // Klik wstawia znak w miejscu kursora w polu napisu.
+  const PL_LETTERS = new Set("ĄĆĘŁŃÓŚŹŻ");
+  const groupOf = (k) => (CYRILLIC_UK.has(k) ? "uk" : PL_LETTERS.has(k) ? "pl" : /^[A-Z]$/.test(k) ? "latin" : "signs");
   function renderAllowedChars() {
     if (!charsList) return;
-    const keys = Object.keys(font()).filter((k) => getUiLang() === "uk" || !CYRILLIC_UK.has(k));
-    charsList.textContent = "␠" + keys.join(" ");
+    const key = (ch, label, cls = "") => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `charKey${cls}`;
+      b.dataset.char = ch;
+      b.textContent = label;
+      return b;
+    };
+    const groups = { signs: [key(" ", t("logoEditor.text.space"), " is-space")], latin: [], pl: [], uk: [] };
+    for (const k of Object.keys(font())) {
+      if (k === " " || (CYRILLIC_UK.has(k) && getUiLang() !== "uk")) continue;
+      groups[groupOf(k)].push(key(k, k));
+    }
+    charsList.replaceChildren(...Object.entries(groups).filter(([, keys]) => keys.length).map(([name, keys]) => {
+      const grid = document.createElement("div");
+      grid.className = "charsGrid";
+      grid.dataset.group = name;
+      grid.append(...keys);
+      return grid;
+    }));
+    fitKeys();
   }
 
-  function updateCharsToggleLabel() {
-    if (btnCharsToggle) {
-      btnCharsToggle.textContent = isShown(charsList) ? t("logoEditor.text.allowedCharsHide") : t("logoEditor.text.allowedChars");
-    }
+  // Bez przewijania: gdy panel znaków ma ograniczoną wysokość (układ obok
+  // podglądu, CSS --fit: 1), klawisze zmniejszają się (--key), aż wszystkie
+  // grupy się zmieszczą. Mierzymy prawdziwy układ (wyszukiwanie połówkowe
+  // rozmiaru), więc działa przy każdym ułożeniu grup i podpisów.
+  const KEY_MIN = 20;
+  function fitKeys() {
+    if (!charsList) return;
+    setVars(charsList, { "--key": null });
+    const cs = getComputedStyle(charsList);
+    if (cs.getPropertyValue("--fit").trim() !== "1") return;
+    // wysokość = obecna lista + wolne miejsce pod panelem w kolumnie
+    const col = charsList.closest(".editorToolbar");
+    const panel = charsList.closest(".charsPanel");
+    const free = col && panel
+      ? col.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(col).paddingBottom) || 0) - panel.getBoundingClientRect().bottom
+      : 0;
+    const h = charsList.clientHeight + Math.max(0, free);
+    const fits = (k) => { setVars(charsList, { "--key": `${k}px` }); return charsList.scrollHeight <= h + 0.5; };
+    const max = parseFloat(cs.getPropertyValue("--key-def")) || 34;
+    if (fits(max)) return setVars(charsList, { "--key": null });
+    let lo = KEY_MIN, hi = max;
+    while (hi - lo > 1) { const mid = Math.floor((lo + hi) / 2); if (fits(mid)) lo = mid; else hi = mid; }
+    setVars(charsList, { "--key": `${lo}px` });
+  }
+  if (charsList && "ResizeObserver" in window) {
+    let raf = 0;
+    const ro = new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fitKeys); });
+    const col = charsList.closest(".editorToolbar");
+    if (col) ro.observe(col);
+    window.addEventListener("resize", () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(fitKeys); });
+  }
+
+  // Wstawianie bez kolizji z klawiaturą ekranową: gdy pole napisu ma fokus
+  // (klawiatura fizyczna albo już otwarta ekranowa), klawisz go nie zabiera
+  // i kursor zostaje w polu. Gdy pole fokusu nie ma (np. tablet, klawiatura
+  // schowana), znak trafia w ostatnie miejsce kursora BEZ fokusowania pola —
+  // klawiatura ekranowa się nie wysuwa i nie zasłania podglądu.
+  let caret = null;
+  const rememberCaret = () => { caret = { start: textValue.selectionStart, end: textValue.selectionEnd }; };
+  textValue?.addEventListener("blur", rememberCaret);
+
+  function insertChar(ch, keepFocus) {
+    if (!textValue || textValue.disabled) return;
+    const len = textValue.value.length;
+    const sel = keepFocus ? { start: textValue.selectionStart, end: textValue.selectionEnd } : (caret || { start: len, end: len });
+    const start = Math.min(sel.start ?? len, len), end = Math.min(sel.end ?? start, len);
+    if (len - (end - start) >= textValue.maxLength) return;
+    textValue.setRangeText(ch, start, end, "end");
+    caret = { start: start + ch.length, end: start + ch.length };
+    textValue.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   function updateWarnings(c) {
@@ -185,16 +254,24 @@ export function initTextEditor(ctx) {
     recompile();
   });
 
-  btnCharsToggle?.addEventListener("click", () => {
-    const open = !isShown(charsList);
-    show(charsInline, true);
-    show(charsList, open);
-    updateCharsToggleLabel();
+  // pointerdown/mousedown bez domyślnej akcji: klawisz nie zabiera fokusu polu
+  // napisu (otwarta klawiatura ekranowa się nie chowa, zamknięta nie otwiera)
+  let keepFocus = false;
+  const holdFocus = (e) => {
+    if (!e.target.closest(".charKey")) return;
+    keepFocus = document.activeElement === textValue;
+    e.preventDefault();
+  };
+  charsList?.addEventListener("pointerdown", holdFocus);
+  charsList?.addEventListener("mousedown", holdFocus);
+  charsList?.addEventListener("click", (e) => {
+    const k = e.target.closest(".charKey");
+    if (k) insertChar(k.dataset.char, keepFocus || document.activeElement === textValue);
+    keepFocus = false;
   });
 
   window.addEventListener("i18n:lang", () => {
     renderAllowedChars();
-    updateCharsToggleLabel();
     if (lastCompiled) updateWarnings(lastCompiled);
   });
 
@@ -205,10 +282,6 @@ export function initTextEditor(ctx) {
       const text = typeof saved === "string" ? saved : decompileRows(payload?.layers?.[0]?.rows, font());
       if (textValue) textValue.value = text ?? "";
       renderAllowedChars();
-      // Pasek z pomiarem szerokości zawsze widoczny; lista znaków na żądanie.
-      show(charsInline, true);
-      show(charsList, false);
-      updateCharsToggleLabel();
       recompile();
       ctx.clearDirty?.();
     },

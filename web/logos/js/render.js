@@ -4,6 +4,7 @@
 // kropki: js/core/logo-preview.js (ta sama co na wyświetlaczu).
 
 import { rows30x10ToBits150, renderBitsToCanvas } from "../../shared/js/core/logo-preview.js?v=v2026-11-07T22371";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
 
 
 export const TILES_X = 30;
@@ -64,6 +65,60 @@ export function renderPreview(preview, canvas, glyphs) {
   if (!preview) return;
   const bits = preview.kind === "GLYPH" ? rows30x10ToBits150(normalizeRows(preview.rows), glyphs) : preview.bits;
   renderBitsToCanvas(bits || new Uint8Array(DOT_W * DOT_H), canvas);
+}
+
+/**
+ * Podgląd dopasowany do swojego miejsca: płótno rysowane w pikselach ekranu
+ * (pole rodzica minus podpowiedź pod spodem, × gęstość ekranu), więc kropki
+ * są ostre bez skalowania przez przeglądarkę. Rozmiar na stronie ustawia
+ * zmienna --pw; przy zmianie pola (okno, układ edytora) rysujemy od nowa.
+ * Zwraca draw(bits) -- zapamiętuje bity i rysuje.
+ */
+export function fitPreview(canvas) {
+  const wrap = canvas?.parentElement;
+  let last = null;
+  const avail = () => {
+    const cs = getComputedStyle(wrap);
+    const gap = parseFloat(cs.rowGap) || 0;
+    let h = wrap.clientHeight - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+    for (const el of wrap.children) if (el !== canvas && !el.hidden) h -= el.offsetHeight + gap;
+    return { w: wrap.clientWidth, h };
+  };
+  const draw = (bits) => {
+    if (bits) last = bits;
+    if (!last || !wrap) return;
+    const { w, h } = avail();
+    if (w < 40 || h < 20) return;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    renderBitsToCanvas(last, canvas, { w: Math.floor(w * dpr), h: Math.floor(h * dpr) });
+    // bardzo mało miejsca (najmniejsza tablica się nie mieści) -- zmniejsza CSS
+    const cssW = Math.min(canvas.width / dpr, w, (h * canvas.width) / canvas.height);
+    setVars(canvas, { "--pw": `${cssW.toFixed(1)}px` });
+  };
+  if (wrap && "ResizeObserver" in window) {
+    let raf = 0;
+    new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => draw()); }).observe(wrap);
+  }
+  return draw;
+}
+
+/**
+ * Okno podglądu: po przybliżeniu (pinch-zoom.js, onScale) płótno rysowane
+ * od nowa w większej rozdzielczości -- kropki zostają ostre przy każdym
+ * powiększeniu (rozmiar na stronie bez zmian, rośnie tylko liczba pikseli).
+ */
+export function renderZoomedPreview(bits, canvas, scale = 1) {
+  if (!bits || !canvas) return;
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const cssW = canvas.clientWidth || canvas.width, cssH = canvas.clientHeight || canvas.height;
+  const k = Math.min(dpr * Math.max(1, scale), 8192 / Math.max(1, cssW)); // limit płótna przeglądarki
+  renderBitsToCanvas(bits, canvas, { w: Math.floor(cssW * k), h: Math.floor(cssH * k) });
+}
+
+/** Bity podglądu w formacie edytora. */
+export function previewBits(preview, glyphs) {
+  if (!preview) return null;
+  return preview.kind === "GLYPH" ? rows30x10ToBits150(normalizeRows(preview.rows), glyphs) : preview.bits;
 }
 
 /** Rekord z bazy -> podgląd. */

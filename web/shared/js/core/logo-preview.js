@@ -157,16 +157,23 @@ export function buildLogoPreviewCanvas(logo, glyphs, width = 300, height = 140, 
 
 const COLORS = { bg: "#1f1f23", cell: "#000000", dotOff: "#1f1f23", dotOn: "#d7ff3d" };
 
-function layoutFor(canvas) {
-  for (let d = 16; d >= 2; d--) {
+// Szary margines wokół tablicy: równy z każdej strony (6 średnic kropki).
+// Płótno przycinane do tablicy + marginesu, więc podgląd ma symetryczne tło
+// niezależnie od rozmiaru z HTML (ten rozmiar = największe dopuszczalne pole).
+// Dla 1060x480 (panel admina) wynik jak dawniej: d = 4, margines 24 px.
+const PAD_DOTS = 6;
+
+function layoutFor(box) {
+  for (let d = 64; d >= 2; d--) {
     const gap = Math.max(1, Math.round(d / 4));
     const tileGap = 2 * d;
     const tileW = 5 * d + 6 * gap;
     const tileH = 7 * d + 8 * gap;
     const panelW = TILES_X * tileW + (TILES_X - 1) * tileGap;
     const panelH = TILES_Y * tileH + (TILES_Y - 1) * tileGap;
-    if (panelW <= canvas.width - 20 && panelH <= canvas.height - 20) {
-      return { d, gap, tileGap, tileW, tileH, panelW, panelH };
+    const pad = PAD_DOTS * d;
+    if (panelW + 2 * pad <= box.w && panelH + 2 * pad <= box.h) {
+      return { d, gap, tileGap, tileW, tileH, panelW, panelH, pad };
     }
   }
   const d = 2, gap = 1, tileGap = 4, tileW = 5 * d + 6 * gap, tileH = 7 * d + 8 * gap;
@@ -174,19 +181,26 @@ function layoutFor(canvas) {
     d, gap, tileGap, tileW, tileH,
     panelW: TILES_X * tileW + (TILES_X - 1) * tileGap,
     panelH: TILES_Y * tileH + (TILES_Y - 1) * tileGap,
+    pad: PAD_DOTS * d,
   };
 }
 
 /** Rysuje 150x70 bitów jako tablicę kropek na canvasie. */
-export function renderBitsToCanvas(bits, canvas) {
+export function renderBitsToCanvas(bits, canvas, box = null) {
   if (!canvas) return;
+  // największe pole: podane (piksele ekranu, np. pole na stronie × gęstość
+  // ekranu × przybliżenie) albo rozmiar z HTML (zapamiętany przy pierwszym rysowaniu)
+  canvas.__logoBox ||= { w: canvas.width, h: canvas.height };
+  const L = layoutFor(box || canvas.__logoBox);
+  const w = L.panelW + 2 * L.pad, h = L.panelH + 2 * L.pad;
+  if (canvas.width !== w) canvas.width = w;
+  if (canvas.height !== h) canvas.height = h;
   const g = canvas.getContext("2d");
-  const L = layoutFor(canvas);
   g.fillStyle = COLORS.bg;
   g.fillRect(0, 0, canvas.width, canvas.height);
 
-  const x0 = Math.floor((canvas.width - L.panelW) / 2);
-  const y0 = Math.floor((canvas.height - L.panelH) / 2);
+  const x0 = L.pad;
+  const y0 = L.pad;
   const r = L.d / 2;
   const step = L.d + L.gap;
 

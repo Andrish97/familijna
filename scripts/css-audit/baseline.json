@@ -1,10 +1,6 @@
 {
- "web/admin/css/admin.css": {
-  "unusedClass": 15
- },
  "web/bases/explorer/css/base-explorer.css": {
-  "sharedDuplicate": 5,
-  "unusedClass": 2
+  "sharedDuplicate": 5
  },
  "web/control/buzzer/css/buzzer.css": {
   "sharedDuplicate": 1
@@ -21,14 +17,8 @@
  "web/games/editor/css/editor.css": {
   "sharedDuplicate": 1
  },
- "web/home/css/index.css": {
-  "unusedClass": 2
- },
  "web/logos/css/logo.css": {
   "sharedDuplicate": 2
- },
- "web/mail/css/mail.css": {
-  "unusedClass": 2
  },
  "web/marketplace/css/marketplace.css": {
   "sharedDuplicate": 1
@@ -38,7 +28,7 @@
  },
  "web/shared/style/components.css": {
   "sharedDuplicate": 10,
-  "unusedClass": 3
+  "unusedClass": 2
  },
  "web/shared/style/layout.css": {
   "sharedDuplicate": 2

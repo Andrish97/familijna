@@ -133,10 +133,17 @@ module.exports = [
 { id: "logos-market-text-empty", category: CAT, title: "Edytor logo — tekst, nowe puste logo", path: `/logos/editor/text/?id=${EMPTY_TEXT}`, sources: TEXT_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES, db: addEmptyLogos },
 { id: "logos-market-text-too-wide", category: CAT, title: "Edytor logo — tekst za szeroki (błąd szerokości)", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: TEXT_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES,
     steps: [async (view) => { await view.locator("#textValue").fill("WIELKI FINAŁ FAMILIJNEJ 2026"); await view.locator("#textWarn").waitFor({ state: "visible" }); await view.waitForTimeout(300); }] },
-{ id: "logos-market-text-chars", category: CAT, title: "Edytor logo — tekst, lista dozwolonych znaków", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: TEXT_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES,
-    steps: [click("#btnCharsToggle", 500)] },
+{ id: "logos-market-text-chars", category: CAT, title: "Edytor logo — tekst, wstawianie znaków z listy (LATO + spacja, 2, 6)", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: TEXT_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES,
+    steps: [async (view) => { await view.locator("#textValue").fill("LATO"); }, click(".charKey.is-space", 150), click('.charKey[data-char="2"]', 150), click('.charKey[data-char="6"]', 400)] },
 { id: "logos-market-text-preview", category: CAT, title: "Edytor logo — tekst, podgląd na pełnym ekranie", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: TEXT_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES,
     steps: [openModal("#bigPreview", "#previewOverlay"), wait(400)] },
+{ id: "logos-market-text-preview-zoom", category: CAT, title: "Edytor logo — podgląd na pełnym ekranie, przybliżony (ostre kropki po przybliżeniu)", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: [...TEXT_ED, "web/shared/js/core/pinch-zoom.js"], ready: "#logoName:not([disabled])", devices: ["desktop"],
+    steps: [openModal("#bigPreview", "#previewOverlay"), wait(400), async (view) => {
+      const box = await view.locator("#bigPreviewFull").boundingBox();
+      await view.mouse.move(box.x + box.width * 0.3, box.y + box.height * 0.45);
+      for (let i = 0; i < 8; i++) { await view.mouse.wheel(0, -120); await view.waitForTimeout(40); }
+      await view.waitForTimeout(600);
+    }] },
 { id: "logos-market-editor-phone", category: CAT, title: "Edytor logo na telefonie — blokada urządzenia", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: [...TEXT_ED, "web/shared/js/core/device-guard.js"], ready: () => true, devices: ["phone"], settle: 1500 },
 { id: "logos-market-editor-busy", category: CAT, title: "Edytor logo — logo edytowane w innej karcie (blokada)", path: `/logos/editor/text/?id=${IDS.logoText}`, sources: [...TEXT_ED, "web/shared/js/core/resource-lock.js"], ready: () => true, devices: EDITOR_DEVICES, settle: 1500,
     db: (db) => { db.rpc.acquire_edit_locks = { ok: false, error: "locked", blocker_type: "logo", blocker_context: "logo-editor", resource: { type: "logo", id: IDS.logoText } }; } },
@@ -156,6 +163,38 @@ module.exports = [
 { id: "logos-market-image-empty", category: CAT, title: "Edytor obrazu — nowe logo bez obrazu", path: `/logos/editor/image/?id=${EMPTY_IMAGE}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES, settle: 800, db: addEmptyLogos },
 { id: "logos-market-image-preview", category: CAT, title: "Edytor obrazu — podgląd na pełnym ekranie", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: EDITOR_DEVICES, settle: 1500,
     steps: [wait(1000), openModal("#imgBigPreview", "#previewOverlay"), wait(400)] },
+// Obrót o 90°: obraz staje się wysoki, układ dobiera się do nowych proporcji
+{ id: "logos-market-image-rotated", category: CAT, title: "Edytor obrazu — obraz obrócony o 90° (układ z nowych proporcji)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
+    steps: [wait(800), click("#btnImgRotR", 1200)] },
+// Prostowanie o dowolny kąt (suwak): układ dobrany po puszczeniu suwaka
+{ id: "logos-market-image-straightened", category: CAT, title: "Edytor obrazu — prostowanie o 25° (układ z obrysu obróconego obrazu)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
+    steps: [wait(800), async (view) => {
+      await view.evaluate(() => {
+        const r = document.getElementById("rngImgStraighten");
+        r.value = "25";
+        r.dispatchEvent(new Event("input", { bubbles: true }));
+        r.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      await view.waitForTimeout(1500);
+    }] },
+// Wysoki obraz (np. zdjęcie z telefonu) — układ pola obrazu i podglądu dobiera
+// image.js z kształtu okna i proporcji obrazu. Plik rysowany w przeglądarce
+// i podany przez #imgFile jak wybrany z dysku.
+{ id: "logos-market-image-tall", category: CAT, title: "Edytor obrazu — wysoki obraz (układ z proporcji obrazu i okna)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
+    steps: [wait(800), async (view) => {
+      await view.evaluate(async () => {
+        const c = document.createElement("canvas"); c.width = 600; c.height = 1200;
+        const g = c.getContext("2d");
+        g.fillStyle = "#fff"; g.fillRect(0, 0, 600, 1200);
+        g.fillStyle = "#000"; g.font = "bold 220px sans-serif"; g.textAlign = "center";
+        g.fillText("TOP", 300, 300); g.beginPath(); g.arc(300, 640, 170, 0, Math.PI * 2); g.fill();
+        g.fillText("10", 300, 1080);
+        const blob = await new Promise((r) => c.toBlob(r, "image/png"));
+        const dt = new DataTransfer(); dt.items.add(new File([blob], "wysoki.png", { type: "image/png" }));
+        const inp = document.getElementById("imgFile"); inp.files = dt.files; inp.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      await view.waitForTimeout(1500);
+    }] },
 { id: "logos-market-market-search-empty", category: CAT, title: "Społeczność — wyszukiwanie bez wyników", path: "/marketplace/", sources: MARKET, ready: ".mkt-card",
     steps: [async (view, { device }) => {
       const input = view.locator("#searchInput");

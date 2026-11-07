@@ -34,7 +34,8 @@ const uk = {
     text: {
       placeholder: "Напр. FAMILIJNA",
       allowedChars: "Дозволені символи",
-      allowedCharsHide: "Приховати",
+      space: "Пробіл",
+      charsHint: "Натисни символ, щоб вставити його в напис.",
       invalidChars: "Недозволені символи: {chars}",
       widthStatus: "Ширина: {width}/30.",
       fixInvalidChars: "Прибери або заміни недозволені символи.",

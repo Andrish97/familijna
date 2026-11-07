@@ -72,31 +72,34 @@
 
       <div class="card games-card editorCard">
         <div class="editorToolbar" id="editorToolbar">
-          <!-- TEXT: input + dozwolone znaki -->
-          <div class="toolRow" id="toolsText">
-            <input class="inp toolGrow" id="textValue" placeholder="Np. FAMILIJNA" maxlength="80" data-i18n-placeholder="logoEditor.text.placeholder"/>
-            <button class="btn sm" id="btnCharsToggle" type="button" data-i18n="logoEditor.text.allowedChars" data-i18n-icon="text">Dozwolone znaki</button>
+          <!-- TEXT: pole napisu (nie szersze, niż trzeba na 30 znaków) + pomiar szerokości -->
+          <div class="toolRow textRow" id="toolsText">
+            <!-- pomiar szerokości w polu, po prawej (jak licznik znaków) -->
+            <label class="textField">
+              <input class="inp textInput" id="textValue" placeholder="Np. FAMILIJNA" maxlength="80" data-i18n-placeholder="logoEditor.text.placeholder"/>
+              <span class="textMeasure" id="textMeasure">—</span>
+            </label>
           </div>
+          <div class="warn" id="textWarn" hidden></div>
 
-          <!-- TEXT: pod tym niskie pole z dozwolonymi znakami -->
-          <div class="charsInline" id="charsInline">
-            <div class="charsInlineTop">
-              <div class="warn" id="textWarn"></div>
-              <div class="hint" id="textMeasure">—</div>
+          <!-- TEXT: wszystkie dozwolone znaki zawsze widoczne; klik wstawia znak w miejscu kursora -->
+          <div class="charsPanel" id="charsInline">
+            <div class="charsPanelHead">
+              <span class="charsPanelTitle" data-i18n="logoEditor.text.allowedChars">Dozwolone znaki</span>
+              <span class="hint" data-i18n="logoEditor.text.charsHint">Kliknij znak, żeby wstawić go do napisu.</span>
             </div>
-            <div class="charsListInline" id="charsList"></div>
+            <div class="charsGroups" id="charsList"></div>
           </div>
         </div><!-- /editorToolbar -->
 
         <div class="editorContent">
-          <!-- podgląd jak w edytorze obrazu: ta sama karta, tytuł i podpowiedź -->
+          <!-- podgląd jak w edytorze obrazu: ta sama kolumna i podpowiedź (bez tytułu) -->
           <div class="pane" id="paneText">
             <div class="imgCard">
-              <div class="imgCardTitle" data-i18n="logoEditor.image.previewTitle">Podgląd jak na wyświetlaczu</div>
               <div class="imgPrevWrap">
-                <canvas id="bigPreview" width="900" height="380"></canvas>
+                <canvas id="bigPreview" width="1600" height="700"></canvas>
+                <div class="hint" data-i18n="logoEditor.image.previewHint">Kliknij podgląd, żeby otworzyć go na pełnym ekranie.</div>
               </div>
-              <div class="hint" data-i18n="logoEditor.image.previewHint">Kliknij podgląd, żeby otworzyć go na pełnym ekranie.</div>
             </div>
           </div>
         </div><!-- /editorContent -->
@@ -114,7 +117,7 @@
           <button class="btn sm" id="btnPreviewClose" type="button" aria-label="Zamknij" data-i18n-aria-label="common.modal.closeLabel"><i class="ico" data-icon="close"></i></button>
         </div>
         <div class="previewModalCanvas">
-          <canvas id="bigPreviewFull" width="1600" height="700"></canvas>
+          <canvas id="bigPreviewFull" width="2400" height="1100"></canvas>
         </div>
       </div>
     </div>

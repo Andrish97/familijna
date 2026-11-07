@@ -28,13 +28,14 @@ thin lines and small details usually disappear. Check the result with the [Previ
 2. Type the caption (for example "FAMILIJNA").
 
 The caption is shown in the board font. The "Width: …/30" counter
-shows whether the caption fits on the Display. The [Allowed characters] button shows the characters
-you can use. A caption that is too wide or contains characters that are not allowed will not be saved —
+shows whether the caption fits on the Display. All allowed characters are shown below the caption field —
+clicking a character inserts it at the cursor (on a tablet without opening the keyboard), [Space]
+inserts a gap. A caption that is too wide or contains characters that are not allowed will not be saved —
 the app will point out the problem.
 
 ![Text logo](zrzut:logo-text)
 ![Text too wide](zrzut:logos-market-text-too-wide)
-![Allowed characters](zrzut:logos-market-text-chars)
+![Inserting allowed characters](zrzut:logos-market-text-chars)
 
 If you want the caption in a different typeface or with extras, use a drawn logo (→ 8.3).
 
@@ -87,7 +88,8 @@ Keyboard shortcuts do not work while you are typing text.
 1. Click the "New logo from image" tile and choose [Choose image] — a JPG, PNG, GIF
    or WEBP file, up to 5 MB.
 2. Set the crop: the frame on the "Display area" card shows the part of the image that will appear on the screen.
-   You can rotate the image by 90° and straighten it.
+   You can rotate the image by 90° and straighten it. The layout of the panels adapts to the shape
+   of the image and the window — after you release the straightening slider.
 3. Adjust the look with the sliders: brightness, contrast, gamma, black, white and dither (the graininess
    of tonal transitions). [Invert] swaps light and dark areas, [Reset] undoes the settings.
 
