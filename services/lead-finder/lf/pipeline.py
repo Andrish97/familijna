@@ -6,6 +6,7 @@ według kategorii -> marketing_verified_contacts z kategorią."""
 import asyncio
 import logging
 import time
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import httpx
@@ -82,6 +83,9 @@ class Engine:
         self.attempts = {}
         self.search_down = 0          # kolejne zapytania bez wyników z odmową silników
         self.search_reasons = {}      # silnik -> powód odmowy (do logu)
+        # Przebieg w bazie (migracja 519): dzierżawa, puls, przejęcie po restarcie.
+        self.lease = None
+        self.kick = asyncio.Event()
 
     # --- stan ---
 
@@ -427,27 +431,92 @@ class Engine:
         finally:
             ceidg_task.cancel()
 
-    async def start(self, run_id, target):
-        self.run_id, self.target, self.verified = run_id, target, 0
+    # --- przebieg w bazie (marketing_runs, migracja 519) ---
+
+    LEASE_TTL = 120
+    BEAT_EVERY = 10
+
+    async def supervise(self):
+        """Pętla usługi: przejmuje aktywny przebieg z bazy — nowy (po starcie
+        z panelu) albo przerwany restartem (po wygaśnięciu dzierżawy)."""
+        while True:
+            try:
+                if self.status in ('idle', 'starting'):
+                    lease = str(uuid.uuid4())
+                    run = await self.db.rpc('mk_run_claim', {'p_lease': lease, 'p_ttl_s': self.LEASE_TTL})
+                    if isinstance(run, dict) and run.get('run_id'):
+                        await self.run_claimed(run, lease)
+                        continue
+                try:
+                    await asyncio.wait_for(self.kick.wait(), timeout=5)
+                except asyncio.TimeoutError:
+                    pass
+                self.kick.clear()
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                log.error('Pętla przebiegów: %s', describe_error(e))
+                await asyncio.sleep(10)
+
+    async def _beat_loop(self):
+        """Puls dzierżawy: zapis licznika, pauza/anulowanie z panelu, utrata dzierżawy."""
+        while True:
+            await asyncio.sleep(self.BEAT_EVERY)
+            st = await self.db.rpc('mk_run_heartbeat', {'p_run': self.run_id, 'p_lease': self.lease,
+                                                        'p_verified': self.verified, 'p_ttl_s': self.LEASE_TTL})
+            if st == 'paused' and self.status == 'running':
+                self.status = 'paused'
+            elif st == 'running' and self.status == 'paused':
+                self.status = 'running'
+            elif st == 'cancel_requested' and self.status in ('running', 'paused'):
+                self.status = 'cancelled'
+            elif st is None and self.status in ('running', 'paused'):
+                # Dzierżawa utracona (przejął inny proces albo błąd bazy) — kończymy bez zapisu.
+                log.error('Utracona dzierżawa przebiegu — przerywam w tym procesie.')
+                self.status = 'lost'
+
+    async def _load_run_stats(self):
+        rows = await self.db.select('marketing_run_stats', {'select': ','.join(STAT_KEYS), 'run_id': f'eq.{self.run_id}', 'limit': 1})
+        if rows:
+            for k in STAT_KEYS:
+                if isinstance(rows[0].get(k), int):
+                    self.stats[k] = rows[0][k]
+
+    async def run_claimed(self, run, lease):
+        self.run_id, self.target, self.verified = run['run_id'], int(run['target']), int(run.get('verified') or 0)
+        self.lease = lease
         self.stats = dict.fromkeys(STAT_KEYS, 0)
         self.attempts = {}
         self.categories = []
-        self.status = 'running'
-        cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-        await self.db.delete('marketing_search_logs', {'created_at': f'lt.{cutoff}'})
-        log.info(f'Zlecono {target} kontaktów.')
+        resumed = int(run.get('resumed') or 0) > 0
+        self.status = {'paused': 'paused', 'cancel_requested': 'cancelled'}.get(run.get('status'), 'running')
+        if resumed:
+            await self._load_run_stats()
+            log.info(f'Wznawiam przerwany przebieg: {self.verified}/{self.target} kontaktów.')
+        else:
+            cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+            await self.db.delete('marketing_search_logs', {'created_at': f'lt.{cutoff}'})
+            log.info(f'Zlecono {self.target} kontaktów.')
         await self.save_stats()
+        beat = asyncio.create_task(self._beat_loop())
+        final = 'error'
         try:
-            await self.run_search(target)
+            await self.run_search(self.target)
+            if self.status in ('lost', 'cancelled'):
+                raise Stopped()
             self.status = 'completed'
-            msg = f'Zlecenie zakończone. Nowe kontakty: {self.verified}/{target}.'
+            final = 'completed'
+            msg = f'Zlecenie zakończone. Nowe kontakty: {self.verified}/{self.target}.'
             log.info(msg)
             if self.notify:
                 await self.notify(f'✅ <b>Lead Finder</b>\n{msg}')
         except Stopped:
-            log.info('Zlecenie przerwane.')
+            final = 'cancelled'
+            if self.status != 'lost':
+                log.info('Zlecenie przerwane.')
         except NoQuota:
             self.status = 'cancelled'
+            final = 'cancelled'
             log.error('DeepSeek niedostępny (wyłączony albo limit). Przerywam.')
             if self.notify:
                 await self.notify('⚠️ <b>Zlecenie przerwane</b>\nDeepSeek niedostępny (wyłączony albo limit).')
@@ -458,6 +527,11 @@ class Engine:
             if self.notify:
                 await self.notify('❌ <b>Błąd Lead Findera</b> — szczegóły w logach panelu.')
         finally:
-            await self.save_stats(finished=True)
+            beat.cancel()
+            if self.status != 'lost':
+                await self.save_stats(finished=True)
+                await self.db.rpc('mk_run_finish', {'p_run': self.run_id, 'p_lease': self.lease,
+                                                    'p_status': final, 'p_verified': self.verified})
             await asyncio.sleep(3)
             self.status = 'idle'
+            self.lease = None

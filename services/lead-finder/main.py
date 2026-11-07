@@ -119,6 +119,7 @@ app.include_router(router_for(question_bank, require_api_key))
 async def start_question_worker():
     question_bank.task = asyncio.create_task(question_bank.worker())
     question_bank.demo_task = asyncio.create_task(demo_updates())
+    engine.supervisor = asyncio.create_task(engine.supervise())
 
 
 async def demo_updates():
@@ -134,6 +135,8 @@ async def demo_updates():
 
 @app.on_event('shutdown')
 async def stop_question_worker():
+    if getattr(engine, 'supervisor', None):
+        engine.supervisor.cancel()
     if getattr(question_bank, 'demo_task', None):
         question_bank.demo_task.cancel()
     if question_bank.task:
@@ -146,51 +149,60 @@ async def stop_question_worker():
 
 @app.post('/api/search-runs', dependencies=[Depends(require_api_key)])
 async def start_search(target_count: int = 50):
+    # Przebieg w bazie (migracja 519): przejmuje go pętla engine.supervise —
+    # także po restarcie usługi, gdy wygaśnie dzierżawa poprzedniego procesu.
     if engine.status != 'idle':
         raise HTTPException(400, f'System zajęty ({engine.status})')
     run_id = str(uuid.uuid4())
+    created = await db.rpc('mk_run_create', {'p_run': run_id, 'p_target': max(1, min(1000, target_count))})
+    if not isinstance(created, dict):
+        raise HTTPException(400, 'System zajęty (trwa inny przebieg)')
     engine.status = 'starting'
-    asyncio.create_task(engine.start(run_id, max(1, min(1000, target_count))))
+    engine.run_id = run_id
+    engine.kick.set()
     return {'ok': True, 'run_id': run_id}
 
 
 @app.get('/api/search-runs/status', dependencies=[Depends(require_api_key)])
 async def status():
     s = engine.snapshot()
+    if s['status'] in ('idle', 'lost'):
+        # Przebieg czeka na przejęcie (np. tuż po restarcie usługi).
+        active = await db.rpc('mk_run_active')
+        if isinstance(active, dict) and active.get('run_id'):
+            s.update({'status': 'starting', 'run_id': active['run_id'], 'target': active.get('target', 0),
+                      'verified': active.get('verified', 0)})
     s['ceidg'] = engine.ceidg.enabled
     return s
 
 
-def _own_run(run_id):
-    if engine.run_id != run_id:
+async def _command(run_id, command, allowed, new_status):
+    active = await db.rpc('mk_run_active')
+    if not isinstance(active, dict) or active.get('run_id') != run_id:
         raise HTTPException(404, 'Nieznane zlecenie')
+    if engine.run_id == run_id and engine.status not in allowed:
+        raise HTTPException(400, f'Nie można: stan {engine.status}')
+    result = await db.rpc('mk_run_command', {'p_run': run_id, 'p_command': command})
+    if not isinstance(result, str):
+        raise HTTPException(400, 'Nie można zmienić stanu zlecenia')
+    if engine.run_id == run_id and engine.status in allowed:
+        engine.status = new_status
+    return {'ok': True, 'status': new_status}
 
 
 @app.post('/api/search-runs/{run_id}/pause', dependencies=[Depends(require_api_key)])
 async def pause(run_id: str):
-    _own_run(run_id)
-    if engine.status != 'running':
-        raise HTTPException(400, f'Nie można wstrzymać w stanie {engine.status}')
-    engine.status = 'paused'
-    return {'ok': True, 'status': engine.status}
+    return await _command(run_id, 'pause', ('running',), 'paused')
 
 
 @app.post('/api/search-runs/{run_id}/resume', dependencies=[Depends(require_api_key)])
 async def resume(run_id: str):
-    _own_run(run_id)
-    if engine.status != 'paused':
-        raise HTTPException(400, f'Nie można wznowić w stanie {engine.status}')
-    engine.status = 'running'
-    return {'ok': True, 'status': engine.status}
+    return await _command(run_id, 'resume', ('paused',), 'running')
 
 
 @app.post('/api/search-runs/{run_id}/cancel', dependencies=[Depends(require_api_key)])
 async def cancel(run_id: str):
-    _own_run(run_id)
-    if engine.status not in ('running', 'paused'):
-        raise HTTPException(400, 'Brak aktywnego zlecenia do anulowania')
-    engine.status = 'cancelled'
-    return {'ok': True, 'status': engine.status}
+    return await _command(run_id, 'cancel', ('running', 'paused', 'starting'), 'cancelled')
 
 
 @app.get('/health')

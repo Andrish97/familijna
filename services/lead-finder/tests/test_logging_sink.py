@@ -48,12 +48,12 @@ class LoggingTest(unittest.IsolatedAsyncioTestCase):
         self.assertGreater(len(message), 2000)
 
     async def test_new_run_keeps_recent_logs_and_removes_only_older_than_seven_days(self):
-        db = SimpleNamespace(delete=AsyncMock())
+        db = SimpleNamespace(delete=AsyncMock(), rpc=AsyncMock(return_value=True))
         engine = Engine(db, None, 'http://search.test')
         engine.run_search = AsyncMock()
         engine.save_stats = AsyncMock()
         with patch('lf.pipeline.asyncio.sleep', new=AsyncMock()):
-            await engine.start('run-id', 1)
+            await engine.run_claimed({'run_id': 'run-id', 'target': 1, 'verified': 0, 'resumed': 0, 'status': 'running'}, 'lease')
         table, filters = db.delete.await_args.args
         self.assertEqual(table, 'marketing_search_logs')
         self.assertEqual(set(filters), {'created_at'})
