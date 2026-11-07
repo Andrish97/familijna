@@ -1,4 +1,4 @@
-import { escapeHtmlText as escapeHtml } from "./html-escape.js?v=v2026-11-07T22580";
+import { escapeHtmlText as escapeHtml } from "./html-escape.js?v=v2026-11-07T23331";
 // js/core/empty-state.js
 // Pusty stan (.empty-state w silniku, E23 §6.2): jeden sposób budowania
 // komunikatu „nic tu nie ma” w listach, oknach i panelach.
