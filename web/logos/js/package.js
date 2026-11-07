@@ -1,5 +1,5 @@
 // The file importer and copy sender use the same canonical logo package.
-import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-07T22354";
+import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-07T22371";
 
 
 // Nazwa logo: jak w polu nazwy i w bazie (migracja 514).
