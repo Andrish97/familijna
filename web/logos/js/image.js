@@ -7,13 +7,13 @@
 //   imageData – data: URI (demo / import pliku .famlogo z osadzonym obrazem)
 // Nowy plik z dysku trafia do Storage dopiero przy zapisie.
 
-import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15311";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-08T15311";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15311";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, fitPreview } from "./render.js?v=v2026-11-08T15311";
-import { setBox } from "../../shared/js/core/geometry.js?v=v2026-11-08T15311";
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T15311";
-import { wrapStepper, bindSteppers } from "./stepper.js?v=v2026-11-08T15311";
+import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15373";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-08T15373";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15373";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, fitPreview } from "./render.js?v=v2026-11-08T15373";
+import { setBox } from "../../shared/js/core/geometry.js?v=v2026-11-08T15373";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T15373";
+import { wrapStepper, bindSteppers } from "./stepper.js?v=v2026-11-08T15373";
 
 
 const ASPECT = 26 / 11;
