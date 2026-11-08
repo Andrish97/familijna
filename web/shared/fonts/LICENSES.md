@@ -10,7 +10,7 @@ dołączenia tekstu licencji — teksty leżą obok plików.
 | Ekran prowadzącego — logo tekstowe „Źródło” | Unbounded | `../../control/host/fonts/Unbounded-Variable.ttf` | `../../control/host/fonts/Unbounded-OFL.txt` (OFL 1.1) |
 | Ekran prowadzącego — „papier”, motyw Klasyczny | Caveat (osadzona w `../themes/classic.json`) | — | `draw/licenses/caveat.txt` (OFL 1.1) |
 | Ekran prowadzącego — „papier”, motywy Bridge, Modern, Radar, Ribbon, Wings | JetBrains Mono (osadzona w `../themes/<motyw>.json`) | — | `draw/licenses/jetbrainsmono.txt` (OFL 1.1) |
+| Ekran prowadzącego — „papier”, motyw Kaseton (Cabinet) | Merriweather, grubości 400–800 (osadzona w `../themes/cabinet.json`) | — | `draw/licenses/merriweather.txt` (OFL 1.1) |
 | Wyświetlacz | kroje kropkowe 5×7, 3×10, okna | `display/*.json` | własne serwisu |
 
-Motyw Cabinet używa czcionki systemowej (Georgia) — nie jest dołączana.
 Interfejs używa czcionki systemowej urządzenia.

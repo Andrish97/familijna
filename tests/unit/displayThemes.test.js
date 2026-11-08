@@ -64,13 +64,20 @@ test("Nowoczesny: bez trzeciego koloru, gradient drużyn zależy od stanu", () =
 });
 
 test("Prowadzący z pliku: krój i miary w CSS motywu, CSS zawężony do motywu, tło niezależne od T", () => {
-  for (const theme of themes) assert.match(theme.host.css[":root"]["--host-font"], /"Caveat-Variable"|"JetBrainsMono-Variable"|Georgia/, theme.key);
+  // Prowadzący bez czcionek systemowych: każdy motyw ma krój wszyty w plik
+  // (Kaseton: Merriweather zamiast Georgii, decyzja użytkownika 2026-11-08).
+  for (const theme of themes) assert.match(theme.host.css[":root"]["--host-font"], /^"(Caveat|JetBrainsMono|Merriweather)-Variable"/, theme.key);
   // Krój spoza systemu jest wszyty w motyw (host.fonts) — strona nie ma własnych plików krojów.
   for (const theme of themes) {
     const first = /^"([^"]+)"/.exec(theme.host.css[":root"]["--host-font"])?.[1];
     if (first) assert.ok(theme.host.fonts.some((font) => font.family === first), `${theme.key}: brak ${first} w host.fonts`);
   }
-  assert.equal(byKey.modern.host.fonts.length, 2, "JetBrains Mono: latin + latin-ext");
+  assert.equal(byKey.modern.host.fonts.length, 3, "JetBrains Mono: latin + latin-ext + cyrillic");
+  // pytania po ukraińsku: cyrylica wszyta w każdy motyw z zakresami (bez czcionki systemowej)
+  for (const theme of themes) {
+    const ranges = theme.host.fonts.map((font) => font.unicodeRange || "");
+    if (ranges.some(Boolean)) assert.ok(ranges.some((r) => r.includes("U+0400-045F")), `${theme.key}: brak cyrylicy`);
+  }
   assert.ok(byKey.modern.host.fonts.every((font) => font.unicodeRange));
   assert.match(hostRulesCss(byKey.classic.host.css), /--host-font: "Caveat-Variable", cursive; --host-font-ratio: 1;/);
   const css = hostRulesCss(byKey.wings.host.css);

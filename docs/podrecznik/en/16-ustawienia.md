@@ -61,8 +61,8 @@ be accepted.
 
 "Display preview" and "Host preview" show the effect of your changes as you make them.
 
-**Theme fonts.** The text on the Host screen (handwritten in the Classic theme, typewriter-style in the others except
-Cabinet, which uses the device font) and the text logo shown as "Source" use fonts under a free licence
+**Theme fonts.** The text on the Host screen (handwritten in the Classic theme, serif in Cabinet,
+typewriter-style in the others) and the text logo shown as "Source" use fonts under a free licence
 (SIL Open Font License), included with the app — also at commercial events.
 
 ## 16.4 Sound
