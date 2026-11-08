@@ -3,6 +3,7 @@ import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15082";
 import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-08T15082";
 import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-08T15082";
 import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-08T15082";
+import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } from "../../shared/js/core/push.js?v=v2026-11-08T15082";
 import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15082";
 import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15082";
 import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15082";
@@ -115,6 +116,91 @@ async function initEmailNotificationsUi(user) {
       emailNotificationsChk.disabled = false;
     }
   });
+}
+
+// --- powiadomienia push na tym urządzeniu (E29) ---
+const pushSection = document.getElementById("pushNotifSection");
+const pushChk = document.getElementById("pushNotifications");
+const pushKinds = document.getElementById("pushKinds");
+const pushStatus = document.getElementById("pushStatus");
+const pushSaved = document.getElementById("pushSaved");
+let pushSavedTimer = null;
+
+function showPushSaved(msg = "", kind = "check") {
+  if (!pushSaved) return;
+  if (pushSavedTimer) clearTimeout(pushSavedTimer);
+  pushSaved.innerHTML = iconText(kind, msg);
+  pushSaved.hidden = !msg;
+  pushSavedTimer = setTimeout(() => { if (pushSaved) pushSaved.hidden = true; }, 2500);
+}
+
+function pushKindInputs() {
+  return [...(pushKinds?.querySelectorAll('input[type="checkbox"]') || [])];
+}
+
+// Wszystkie zaznaczone = [] (także przyszłe rodzaje); inaczej wybrane.
+function selectedPushKinds() {
+  const inputs = pushKindInputs();
+  const on = inputs.filter((i) => i.checked).map((i) => i.value);
+  return on.length === inputs.length ? [] : on;
+}
+
+function renderPushSupport() {
+  const support = pushSupport();
+  const key = { blocked: "account.pushBlocked", "ios-install": "account.pushIosInstall", unsupported: "account.pushUnsupported" }[support];
+  if (pushStatus) {
+    pushStatus.textContent = key ? t(key) : "";
+    pushStatus.hidden = !key;
+  }
+  if (pushChk) pushChk.disabled = support !== "ok";
+  return support;
+}
+
+function renderPushState({ subscribed, kinds }) {
+  if (pushChk) pushChk.checked = subscribed;
+  if (pushKinds) pushKinds.hidden = !subscribed;
+  for (const input of pushKindInputs()) input.checked = !kinds.length || kinds.includes(input.value);
+}
+
+async function initPushUi() {
+  if (!pushSection || !pushChk) return;
+  const support = renderPushSupport();
+  if (support === "ok") {
+    try { renderPushState(await getPushState()); } catch (e) { console.warn("push state", e); }
+  }
+
+  pushChk.addEventListener("change", async () => {
+    const next = pushChk.checked;
+    pushChk.disabled = true;
+    try {
+      if (next) await enablePush(selectedPushKinds());
+      else await disablePush();
+      renderPushState(next ? { subscribed: true, kinds: selectedPushKinds() } : { subscribed: false, kinds: [] });
+      showPushSaved(next ? t("account.pushSavedOn") : t("account.pushSavedOff"));
+    } catch (e) {
+      console.warn("push toggle", e);
+      pushChk.checked = !next;
+      if (pushKinds) pushKinds.hidden = !pushChk.checked;
+      const msg = e?.message === "blocked" ? "account.pushBlocked" : e?.message === "dismissed" ? "account.pushDismissed" : "account.pushSaveFailed";
+      showPushSaved(t(msg), "error");
+    } finally {
+      renderPushSupport();
+    }
+  });
+
+  for (const input of pushKindInputs()) {
+    input.addEventListener("change", async () => {
+      if (!pushKindInputs().some((i) => i.checked)) { input.checked = true; return; }
+      try {
+        await savePushKinds(selectedPushKinds());
+        showPushSaved(t("account.pushSaved"));
+      } catch (e) {
+        console.warn("push kinds", e);
+        input.checked = !input.checked;
+        showPushSaved(t("account.pushSaveFailed"), "error");
+      }
+    });
+  }
 }
 
 // --- cooldowns (anti-spam) ---
@@ -602,6 +688,7 @@ async function loadProfile(user) {
   currentEmail = user.email || "";
 
   await initEmailNotificationsUi(user);
+  void initPushUi();
   await loadUserRating(user.id);
   await wireDemoActions(user);
 

@@ -18,6 +18,7 @@ import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T15
 import { maybeShowGuestMigrateReminder } from "../../shared/js/core/guest-migrate-reminder.js?v=v2026-11-08T15082";
 
 import { initPwa, isStandalone, isIOSSafari, isMobileDevice, canOfferPwaInstall } from "../../shared/js/core/pwa.js?v=v2026-11-08T15082";
+import { syncPushSubscription } from "../../shared/js/core/push.js?v=v2026-11-08T15082";
 import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-08T15082";
 import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T15082";
 import { openDialog, closeDialog, isOverlayOpen, handleSheetBack } from "../../shared/js/core/modal-sheet.js?v=v2026-11-08T15082";
@@ -1234,6 +1235,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindResourceSend({button:btnSendCopy,kind:"game",getSource:()=>gamesAll.find(g=>g.id===selectedId),onDone:async()=>refresh(),onState:()=>void updateActionState()});
 
   maybeShowGuestMigrateReminder(currentUser);
+  void syncPushSubscription(); // E29: odnowienie zapisu urządzenia (raz na dobę)
 
   // Wspólna reguła z panelem admina: pokazuj tylko przy dostępnej instalacji
   // albo gdy system wymaga ręcznej instrukcji dodania aplikacji.

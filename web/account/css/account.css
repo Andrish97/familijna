@@ -151,4 +151,12 @@
     #ratingEditBtn{ align-self: stretch; }
   }
   .account-panel .pass-wrap .inp{ padding-right: 44px; }
+
+  /* Karta Powiadomienia (E29): część e-mail i część „Na tym urządzeniu”. */
+  .account-notif-part + .account-notif-part {
+    border-top: 1px solid var(--line);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .account-push-kinds { padding-left: 4px; }
 }
