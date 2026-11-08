@@ -374,6 +374,23 @@ function inspectLayout(opts) {
     add("warstwy-kart", el, `${chain.length} poziomy: ${chain.map((e) => label(e)).join(" › ")}`);
   }
 
+  // Okno od dołu na dotyku (E28, decyzja użytkownika 2026-11-08): na środku
+  // zostaje tylko okienko „przeczytaj i potwierdź” (tekst + przyciski: OK,
+  // Anuluj…). Każde inne otwarte okno (.overlay) przy data-sheet jest
+  // arkuszem (.sheet-active): otwarte przez openDialog(), z .modal--sheet.
+  if (document.documentElement.hasAttribute("data-sheet")) {
+    const RICH = "input:not([type=hidden]), select, textarea, canvas, img, video, audio, ul, ol, table, [role=listbox], [contenteditable=true], .tabs-strip, .ui-select";
+    for (const el of document.querySelectorAll(".overlay")) {
+      if (el.hidden || getComputedStyle(el).display === "none") continue;
+      if (el.classList.contains("sheet-active")) continue;
+      const rich = [...el.querySelectorAll(RICH)].filter((n) => visible(n));
+      const buttons = [...el.querySelectorAll("button, a.btn")].filter((n) => visible(n));
+      if (!rich.length && buttons.length <= 3) continue;
+      const why = el.classList.contains("modal--sheet") ? "otwarte bez openDialog()" : "bez .modal--sheet";
+      add("okno-nie-arkusz", el, `${why}; treść: ${rich.slice(0, 3).map((n) => label(n)).join(", ") || `${buttons.length} przycisków`}`);
+    }
+  }
+
   // Atrybut hidden / klasa .hidden musi chować element -- żadna reguła strony
   // ani silnika nie może przywrócić mu display.
   for (const el of document.querySelectorAll("[hidden], .hidden")) {

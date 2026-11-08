@@ -1,10 +1,12 @@
-import { icon, iconText } from "./icons.js?v=v2026-11-08T14473";
-import { setMessage } from "./toast.js?v=v2026-11-08T14473";
-import { t } from "../../translation/translation.js?v=v2026-11-08T14473";
-import { openDialog, closeDialog, isSheetViewport, animateClose } from "./modal-sheet.js?v=v2026-11-08T14473";
-import { setProgress, ratioPct } from "./ui-metrics.js?v=v2026-11-08T14473";
+import { icon, iconText } from "./icons.js?v=v2026-11-08T15040";
+import { setMessage } from "./toast.js?v=v2026-11-08T15040";
+import { t } from "../../translation/translation.js?v=v2026-11-08T15040";
+import { openDialog, closeDialog, isSheetViewport, animateClose } from "./modal-sheet.js?v=v2026-11-08T15040";
+import { setProgress, ratioPct } from "./ui-metrics.js?v=v2026-11-08T15040";
 
 let modalSeq = 0;
+
+const SHEET_FIELDS = "input:not([type=hidden]), select, textarea, [contenteditable=true]";
 
 function modalText(key, fallback) {
   return typeof t === "function" ? t(key) : fallback;
@@ -157,6 +159,10 @@ function openModal({
   buttons = null,
   onChoice = null,
 } = {}) {
+  // Na środku zostaje tylko okienko „przeczytaj i potwierdź” (decyzja
+  // użytkownika 2026-11-08, E28): okno z polem do wpisania na dotyku
+  // (telefon, tablet) wysuwa się od dołu, dopasowane do treści.
+  if (!sheet && body?.querySelector?.(SHEET_FIELDS) && isSheetViewport()) sheet = { fit: true };
   return new Promise((resolve) => {
     const fallbackTitle = showCancel
       ? modalText("common.modal.confirmTitle", "Potwierdź")
@@ -328,10 +334,10 @@ export function alertModal({ title, text, okText, body = null, onReady, sheet = 
  * przycisku albo false (X, Esc, klik w tło).
  * @param {{ title?:string, text?:string, body?:HTMLElement|null,
  *   buttons: {value:any, text:string, icon?:string, kind?:string, disabled?:boolean}[],
- *   onChoice?: (value:any) => any, onReady?: Function, modalClass?: string, overlayId?: string }} opts
+ *   onChoice?: (value:any) => any, onReady?: Function, sheet?: object|null, modalClass?: string, overlayId?: string }} opts
  */
-export function choiceModal({ title, text = "", body = null, buttons, onChoice = null, onReady = null, modalClass = "", overlayId = "" } = {}) {
-  return openModal({ title, text, body, buttons, onChoice, onReady, modalClass, overlayId, showCancel: false });
+export function choiceModal({ title, text = "", body = null, buttons, onChoice = null, onReady = null, sheet = null, modalClass = "", overlayId = "" } = {}) {
+  return openModal({ title, text, body, buttons, onChoice, onReady, sheet, modalClass, overlayId, showCancel: false });
 }
 
 /**
