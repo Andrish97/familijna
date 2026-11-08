@@ -15,7 +15,9 @@ logo to each game (→ 8.5).
 
 The Display has **150 × 70 dots**. Something that looks good in high resolution can become
 unreadable once turned into dots. Thick shapes, large letters and high contrast work best —
-thin lines and small details usually disappear. Check the result with the [Preview] button.
+thin lines and small details usually disappear. Check the result with the [Preview] button
+or by clicking the preview in the editor. Zoom the preview window with the mouse wheel or two fingers —
+the dots stay sharp.
 
 > Note: logos are created on a computer or tablet. On a phone you can
 > browse the list of logos, but the editor is not available.
@@ -35,6 +37,7 @@ the app will point out the problem.
 
 ![Text logo](zrzut:logo-text)
 ![Text too wide](zrzut:logos-market-text-too-wide)
+![Characters not allowed and text too wide](zrzut:logos-market-text-invalid-wide)
 ![Inserting allowed characters](zrzut:logos-market-text-chars)
 
 If you want the caption in a different typeface or with extras, use a drawn logo (→ 8.3).
@@ -68,6 +71,8 @@ line thickness and style, fill, [Undo|undo], [Redo|redo], [Duplicate|duplicate],
 
 Useful shortcuts and rules:
 
+- Number fields (thickness, size, line spacing, letter spacing) have − and +; held down, they change
+  the value faster and faster.
 - Delete (on a Mac Fn+Backspace) or × in the options bar removes the selected elements; [Clear|trash] removes
   the whole drawing after you confirm.
 - Ctrl+Z (⌘Z) undoes, Ctrl+Shift+Z or Ctrl+Y redoes, Ctrl+D duplicates; Ctrl+0 resets

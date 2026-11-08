@@ -4,7 +4,7 @@
   { "label": "Arial", "value": "Arial, Helvetica, sans-serif" },
   { "label": "Helvetica", "value": "Helvetica Neue, Helvetica, Arial, sans-serif" },
   { "label": "Segoe UI", "value": "Segoe UI, SegoeUI, Arial, sans-serif" },
-  { "label": "Roboto (fallback)", "value": "Roboto, Segoe UI, Arial, sans-serif" },
+  { "label": "Roboto", "value": "Roboto, Segoe UI, Arial, sans-serif" },
   { "label": "Calibri", "value": "Calibri, Candara, Segoe UI, sans-serif" },
   { "label": "Candara", "value": "Candara, Calibri, Segoe UI, sans-serif" },
   { "label": "Trebuchet MS", "value": "'Trebuchet MS', Trebuchet, Arial, sans-serif" },
@@ -48,7 +48,7 @@
   { "label": "Gill Sans", "value": "'Gill Sans', 'Trebuchet MS', sans-serif" },
   { "label": "Optima", "value": "Optima, Candara, Segoe UI, sans-serif" },
 
-  { "label": "Futura (fallback)", "value": "Futura, 'Century Gothic', Arial, sans-serif" },
+  { "label": "Futura", "value": "Futura, 'Century Gothic', Arial, sans-serif" },
   { "label": "Century Gothic", "value": "'Century Gothic', Futura, Arial, sans-serif" },
 
   { "label": "Symbol", "value": "Symbol" },

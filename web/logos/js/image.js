@@ -13,6 +13,7 @@ import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-07T22371";
 import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, fitPreview } from "./render.js?v=v2026-11-07T22371";
 import { setBox } from "../../shared/js/core/geometry.js?v=v2026-11-07T22371";
 import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
+import { wrapStepper, bindSteppers } from "./stepper.js?v=v2026-11-07T22371";
 
 
 const ASPECT = 26 / 11;
@@ -718,61 +719,9 @@ export function initImageEditor(ctx) {
   // dawne „zamknij panel” = powrót do domyślnego suwaka
   const closePanels = () => showPanel(DEFAULT_PANEL);
 
-  function stepSlider(input, dir) {
-    if (!input || input.disabled) return;
-    const before = input.value;
-    if (dir > 0) input.stepUp(); else input.stepDown();
-    if (input.value === before) return;
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-  }
-  function addStepButtons(panel) {
-    const input = panel.querySelector('input[type="range"]');
-    if (!input || panel.querySelector(".imgStepRow")) return;
-    const row = document.createElement("div");
-    row.className = "imgStepRow";
-    const btn = (dir) => {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "btn sm icon imgStepBtn";
-      b.dataset.dir = String(dir);
-      b.dataset.i18nAriaLabel = dir > 0 ? "logoEditor.image.stepUp" : "logoEditor.image.stepDown";
-      b.setAttribute("aria-label", t(b.dataset.i18nAriaLabel));
-      b.textContent = dir > 0 ? "+" : "−";
-      let timer = null, n = 0;
-      const stop = () => {
-        clearTimeout(timer); timer = null;
-        if (n) input.dispatchEvent(new Event("change", { bubbles: true }));
-        n = 0;
-      };
-      const tick = () => {
-        stepSlider(input, dir);
-        n++;
-        timer = setTimeout(tick, n < 6 ? 140 : n < 20 ? 60 : 25); // przyspiesza
-      };
-      b.addEventListener("pointerdown", (e) => {
-        if (e.button !== 0) return;
-        e.preventDefault();
-        b.setPointerCapture?.(e.pointerId);
-        stepSlider(input, dir);
-        n = 1;
-        timer = setTimeout(tick, 400);
-      });
-      for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, stop);
-      // klawiatura (Enter/Spacja) -- jeden krok
-      b.addEventListener("click", (e) => {
-        if (e.detail !== 0) return;
-        stepSlider(input, dir);
-        input.dispatchEvent(new Event("change", { bubbles: true }));
-      });
-      return b;
-    };
-    input.before(row);
-    row.append(btn(-1), input, btn(1));
-  }
-  for (const p of panels) addStepButtons(p);
-  window.addEventListener("i18n:lang", () => {
-    for (const b of document.querySelectorAll(".imgStepBtn")) b.setAttribute("aria-label", t(b.dataset.i18nAriaLabel));
-  });
+  // − i + przy każdym suwaku (wspólne z paskiem ustawień rysunku: stepper.js)
+  for (const p of panels) wrapStepper(p.querySelector('input[type="range"]'), "imgStepRow");
+  bindSteppers($("imgPanels"));
 
   // =========================================================
   // Zdarzenia (raz, przy starcie strony)

@@ -15,7 +15,9 @@ logo (→ 8.5).
 
 Wyświetlacz ma **150 × 70 kropek**. To, co wygląda dobrze w dużej rozdzielczości, po zamianie na
 kropki może stać się nieczytelne. Najlepiej sprawdzają się grube kształty, duże litery i wysoki
-kontrast — cienkie linie i drobne szczegóły zwykle znikają. Efekt sprawdzaj przyciskiem [Podgląd].
+kontrast — cienkie linie i drobne szczegóły zwykle znikają. Efekt sprawdzaj przyciskiem [Podgląd]
+albo kliknięciem podglądu w edytorze. Okno podglądu przybliżysz kółkiem myszy albo dwoma palcami —
+kropki zostają ostre.
 
 > Uwaga: logo tworzy się na komputerze lub tablecie. Na telefonie listę logo można
 > przeglądać, ale edytor jest niedostępny.
@@ -35,6 +37,7 @@ serwis wskaże problem.
 
 ![Logo tekstowe](zrzut:logo-text)
 ![Napis za szeroki](zrzut:logos-market-text-too-wide)
+![Niedozwolone znaki i za szeroki napis](zrzut:logos-market-text-invalid-wide)
 ![Wstawianie dozwolonych znaków](zrzut:logos-market-text-chars)
 
 Jeśli chcesz napis innym krojem pisma albo z dodatkami, użyj logo rysunkowego (→ 8.3).
@@ -68,6 +71,8 @@ grubość i styl linii, wypełnienie, [Cofnij|undo], [Ponów|redo], [Duplikuj|du
 
 Przydatne skróty i zasady:
 
+- Pola liczbowe (grubość, rozmiar, interlinia, odstęp liter) mają − i +; przytrzymane zmieniają
+  wartość coraz szybciej.
 - Delete (na Macu Fn+Backspace) albo × w pasku opcji usuwa zaznaczone elementy; [Wyczyść|trash] usuwa
   cały rysunek po potwierdzeniu.
 - Ctrl+Z (⌘Z) cofa, Ctrl+Shift+Z albo Ctrl+Y ponawia, Ctrl+D duplikuje; Ctrl+0 przywraca

@@ -250,21 +250,11 @@
 
   .toolSep{
     width:1px;
-    height: 28px;
+    height: calc(var(--ctl-h, 37px) - 9px);
     background: var(--w-14);
     margin: 0 2px;
   }
 
-
-  /* =========================================================
-     DRAW SETTINGS (drugi rząd, POZIOMY z scroll)
-  ========================================================= */
-  .toolRowSep{
-    width: 100%;
-    height: 1px;
-    background: var(--w-8);
-    margin: 2px 0;
-  }
 
   /* Stały wiersz ustawień narzędzia: płótno nie skacze przy zmianie narzędzia
      (testy i użytkownik klikają w to samo miejsce). Gdy narzędzie nie ma
@@ -276,13 +266,14 @@
   }
 
   #toolCtxSettings{
+    flex: 1 0 100%; /* zawsze osobny wiersz pod narzędziami */
     display: flex;
     align-items: center;
     gap: 6px;
     /* zawija się na węższym ekranie (np. tablet w pionie) zamiast ucinać ostatnie pola */
     flex-wrap: wrap;
     row-gap: 6px;
-    min-height: 36px; /* = wysokość wiersza z polami: bez skoku płótna */
+    min-height: var(--ctl-h); /* = wysokość kontrolek: bez skoku płótna */
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: var(--w-14) transparent;
@@ -320,20 +311,37 @@
     flex-shrink: 0;
   }
 
-  /* Suwaki/inputs */
-  .ctxGroup .inp.sm{ width: 56px; text-align: center; }
-
-  /* Przyciski (jak .btn) */
-  /* Przyciski paska ustawień: wspólne .btn.xs; wysokość jak pola paska (28 px). */
-  .ctxGroup .btn{ height: 28px; min-width: 32px; }
+  /* Jedna wysokość i jedno zaokrąglenie wszystkich kontrolek pasków
+     edytorów logo (jak przyciski narzędzi w górnym rzędzie): przyciski,
+     pola, listy wyboru, kolory, − i +. Szerokość według treści. */
+  .editorToolbar{ --ctl-h: 37px; }
+  .editorToolbar .btn,
+  .editorToolbar .ui-select-btn,
+  .editorToolbar .ctxColorBtn,
+  .editorToolbar .ctxInput{
+    box-sizing: border-box;
+    min-height: var(--ctl-h);
+    height: var(--ctl-h);
+    border-radius: var(--r-md);
+  }
+  .editorToolbar .btn.icon{ width: var(--ctl-h); min-width: var(--ctl-h); }
+  .editorToolbar .btn:not(.icon){ padding-block: 0; }
+  .ctxInput{ width: 64px; padding: 0 6px; text-align: center; font-size: 14px; }
+  /* pole liczbowe bez strzałek przeglądarki: kroki robią − i + */
+  .ctxInput::-webkit-inner-spin-button, .ctxInput::-webkit-outer-spin-button{ -webkit-appearance: none; margin: 0; }
+  .ctxInput{ -moz-appearance: textfield; appearance: textfield; }
+  .stepper{ display: inline-flex; align-items: center; gap: 4px; }
+  .stepBtn{ font-size: 17px; font-weight: 800; }
+  .ctxFmt.is-b{ font-weight: 900; }
+  .ctxFmt.is-i{ font-style: italic; }
+  .ctxFmt.is-u{ text-decoration: underline; }
+  @media (pointer: coarse){ .editorToolbar{ --ctl-h: 40px; } }
 
   /* Przycisk koloru - CAŁY wypełniony, prostokątny */
   .ctxColorBtn{
-    height: 28px;
-    width: 32px;
-    min-width: 32px;
+    width: var(--ctl-h);
+    min-width: var(--ctl-h);
     padding: 0;
-    border-radius: var(--r-sm);
     border: 1px solid var(--w-25);
     cursor: pointer;
     transition: border-color .15s, box-shadow .15s;
@@ -388,7 +396,6 @@
   }
   /* Pozycja: wspólne .menu-item; tu tylko układ nazwy i próbki. */
   .fontPickPop .fontPickItem{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .fontPickPop .fontPickSwatch{ font-size:14px;opacity:.7;flex-shrink:0;font-family:var(--font, inherit); }
   .fontPickPop .fontPickEmpty{ padding: 16px; text-align: center; opacity: .6; font-size: 13px; }
 
   /* =========================================================
@@ -470,13 +477,10 @@
   ========================================================= */
   /* Przyciski paska: wspólne .btn.icon (stan wybrany: aria-pressed z draw.js);
      tu tylko rozmiar i rysunek ikony. */
-  #toolsDraw .btn.icon{
-    height: 36px;
-    width: 36px;
-    font-size: 0; /* nie pokazuj “tekstu” */
-  }
+  /* przyciski narzędzi (górny rząd): sama ikona; rozmiar z .editorToolbar */
+  #toolsDraw .toolGrid .btn.icon{ font-size: 0; /* nie pokazuj “tekstu” */ }
 
-  #toolsDraw .btn.icon svg{
+  #toolsDraw .toolGrid .btn.icon svg{
     width: 18px;
     height: 18px;
     display: block;
@@ -488,7 +492,7 @@
     stroke-linejoin: round;
   }
 
-  #toolsDraw .btn.icon svg .fill{
+  #toolsDraw .toolGrid .btn.icon svg .fill{
     fill: currentColor;
     stroke: none;
   }
@@ -681,15 +685,15 @@
     font-weight: 800;
   }
   #imgPanels .imgPanelVal{ font-family: var(--font-mono); color: var(--accent); }
-  #imgPanels .imgStepRow{ flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
-  #imgPanels .imgStepBtn{ flex: 0 0 auto; min-width: 32px; font-size: 16px; }
+  #imgPanels .imgStepRow{ flex: 1 1 auto; min-width: 0; display: flex; gap: 10px; }
   #imgPanels .rng.v{ flex: 1 1 auto; min-width: 0; height: 20px; }
   @media (pointer: coarse){
     #imgPanels .rng.v{ height: 32px; }
-    #imgPanels .imgStepBtn{ min-width: 44px; min-height: 44px; }
   }
 
-  #toolsImage .imgRotBtn{ min-width: 32px; padding: 0 8px; }
+  #toolsImage .imgRotBtn{ width: var(--ctl-h); min-width: var(--ctl-h); padding: 0; }
+  /* „Odwróć”: wysokość i krój jak przyciski paska */
+  .imgInvert{ min-height: var(--ctl-h); align-items: center; font-size: 13px; font-weight: 800; }
   #toolsImage .imgRotBtn .ico{ width: 18px; height: 18px; }
 
 
@@ -798,32 +802,14 @@
     color: var(--text);
   }
 
-  /* Przycisk otwierający listę (kształt, font): stała szerokość, nazwa
-     ucinana wielokropkiem — dłuższe nazwy nie wychodzą poza przycisk. */
-  .ctxSelectBtn{
-    width: 150px;
-    justify-content: flex-start;
-    gap: 6px;
-    color: var(--text);
-  }
-  .ctxSelectLabel{
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: left;
-  }
-  .ctxSelectCaret{ display: inline-flex; flex-shrink: 0; opacity: .7; }
 
-  /* ui-select w pasku ustawień — wysokość jak pozostałe kontrolki (28 px) */
-  .ctxGroup .ui-select.ctxSelect{ min-width: 96px; }
-  .ctxGroup .ui-select.ctxSelect .ui-select-btn{
-    height: 28px;
-    padding: 0 8px;
-    font-size: 12px;
-    border-radius: var(--r-sm);
-  }
+
+  /* listy wyboru w pasku ustawień (kształt, styl linii, czcionka) */
+  .ctxGroup .ui-select.ctxSelect{ min-width: 110px; }
+  .ctxGroup .ui-select.ctxSelect .ui-select-btn{ width: 100%; padding: 0 10px; font-size: 13px; gap: 8px; }
+  /* czcionka: stała szerokość, nazwa wybranej czcionki jej krojem */
+  .ctxFont{ width: 170px; }
+  .ctxFont .ui-select-label{ font-family: var(--font, inherit); font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* Podgląd logo. W oknie od dołu (telefon, tablet) wygląd okna daje silnik
@@ -961,5 +947,5 @@
     box-shadow: 0 0 0 1px var(--k-40);
   }
   .draw-cursor-dot.is-round { border-radius: var(--r-pill); }
-  .fontPickName { flex: 1; text-align: left; font-family: var(--font-ui); }
+  .fontPickName { flex: 1; text-align: left; font-family: var(--font, var(--font-ui)); font-size: 16px; }
 }

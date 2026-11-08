@@ -26,6 +26,7 @@ import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-07T22
 import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-07T22371";
 import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-07T22371";
 import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
+import { stepperHtml, bindSteppers } from "./stepper.js?v=v2026-11-07T22371";
 
 
 const TOOL = { SELECT: "SELECT", PAN: "PAN", TEXT: "TEXT", BRUSH: "BRUSH", ERASER: "ERASER", SHAPES: "SHAPES" };
@@ -96,6 +97,7 @@ export function initDrawEditor(ctx) {
   const canvasEl = $("drawStage");
   const stageHost = $("drawStageHost");
   const toolCtx = $("toolCtxSettings");
+  bindSteppers(toolCtx); // − i + przy polach liczbowych paska ustawień
   const btn = {
     select: $("tSelect"), pan: $("tPan"), zoomIn: $("tZoomIn"), zoomOut: $("tZoomOut"), bg: $("tBg"),
     brush: $("tBrush"), eraser: $("tEraser"), shapes: $("tShapes"), text: $("tText"),
@@ -748,12 +750,13 @@ export function initDrawEditor(ctx) {
   }
   const group = (inner) => `<div class="ctxGroup">${inner}</div>`;
   const label = (text) => `<span class="ctxLabel">${text}</span>`;
-  const numInput = (id, min, max, step, value) =>
-    `<input id="${id}" class="inp sm ctxInput" type="number" min="${min}" max="${max}" step="${step}" value="${value}"/>`;
-  const toggleBtn = (id, on, content, title = "") =>
-    `<button class="btn xs" id="${id}" type="button" aria-pressed="${on ? "true" : "false"}" ${title ? `title="${title}" aria-label="${title}"` : ""}>${content}</button>`;
+  // pole liczbowe z − i + (stepper.js; przytrzymanie przyspiesza)
+  const numInput = (id, min, max, step, value, placeholder = "") =>
+    stepperHtml(`<input id="${id}" class="inp ctxInput" type="number" inputmode="decimal" min="${min}" max="${max}" step="${step}" value="${value}"${placeholder ? ` placeholder="${placeholder}"` : ""}/>`);
+  const toggleBtn = (id, on, content, title = "", cls = "") =>
+    `<button class="btn icon ${cls}" id="${id}" type="button" aria-pressed="${on ? "true" : "false"}" ${title ? `title="${title}" aria-label="${title}"` : ""}>${content}</button>`;
   const selectHtml = (id) =>
-    `<div class="ui-select ctxSelect" id="${id}"><button class="btn sm ui-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="ui-select-label">—</span><span class="ui-select-caret" aria-hidden="true">${icon("caret-down")}</span></button><div class="ui-select-menu" role="listbox"></div></div>`;
+    `<div class="ui-select ctxSelect" id="${id}"><button class="btn ui-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="ui-select-label">—</span><span class="ui-select-caret" aria-hidden="true">${icon("caret-down")}</span></button><div class="ui-select-menu" role="listbox"></div></div>`;
   const alignButtons = (align) => group(
     toggleBtn("cAlignL", align === "left", icon("align-left"), T("alignLeft")) +
     toggleBtn("cAlignC", align === "center", icon("align-center"), T("alignCenter")) +
@@ -785,8 +788,10 @@ export function initDrawEditor(ctx) {
 
   function renderSettings() {
     renderSettingsContent();
+    const fontBtn = $("cFont");
+    if (fontBtn) setVars(fontBtn.querySelector(".ui-select-label"), { "--font": fontBtn.dataset.font || null });
     if (!toolCtx || !selectedObjects().length || (tool !== TOOL.SELECT && tool !== TOOL.TEXT)) return;
-    toolCtx.insertAdjacentHTML("beforeend", group(toggleBtn("cDelete", false, icon("close"), T("deleteSelection"))));
+    toolCtx.insertAdjacentHTML("beforeend", group(toggleBtn("cDelete", false, icon("close"), T("deleteSelection"), "danger")));
     $("cDelete").setAttribute("aria-keyshortcuts", "Delete Backspace");
     on("cDelete", "click", () => removeObjects(selectedObjects()));
   }
@@ -838,7 +843,7 @@ export function initDrawEditor(ctx) {
       html += group(`<label class="ctxChk"><input type="checkbox" id="cFill" ${s.fill ? "checked" : ""}/> ${T("fillCheckbox")}</label>` + colorBtn(s.fillColor, 'id="cFillColor"'));
     }
     if (shape.isPoly && polyPoints.length) {
-      html += group(`<button class="btn xs gold" id="cPolyDone" type="button">${iconText("check", T("polygonDone"))}</button>`);
+      html += group(`<button class="btn gold" id="cPolyDone" type="button">${iconText("check", T("polygonDone"))}</button>`);
     }
     toolCtx.innerHTML = html;
 
@@ -876,13 +881,15 @@ export function initDrawEditor(ctx) {
   }
 
   function textSettingsHtml(v) {
-    const fontLabel = DRAW_FONTS.find((f) => f.value === v.font)?.label || T("fontFallback");
+    const font = DRAW_FONTS.find((f) => f.value === v.font) || DRAW_FONTS[0];
+    const fontLabel = font?.label || T("fontFallback");
+    // wygląd listy wyboru (jak „Styl”); nazwa wybranej czcionki jej krojem (--font)
     return (
-      group(`<button class="btn xs ctxSelectBtn" id="cFont" type="button" title="${fontLabel}"><span class="ctxSelectLabel">${fontLabel}</span><span class="ctxSelectCaret">${icon("caret-down")}</span></button>`) +
+      group(`<div class="ui-select ctxSelect ctxFont"><button class="btn ui-select-btn" id="cFont" type="button" aria-haspopup="listbox" title="${fontLabel}" data-font="${(font?.value || "").replace(/"/g, "&quot;")}"><span class="ui-select-label">${fontLabel}</span><span class="ui-select-caret" aria-hidden="true">${icon("caret-down")}</span></button></div>`) +
       group(label(T("sizeLabel")) + numInput("cSz", ...RANGE.fontSize, 1, v.size)) +
       group(label(T("lineHeightLabel")) + numInput("cLH", 0.6, 3, 0.05, v.lineHeight)) +
       group(label(T("letterSpacingLabel")) + numInput("cSp", 0, 20, 0.5, v.spacing)) +
-      group(toggleBtn("cB", v.bold, T("bold")) + toggleBtn("cI", v.italic, T("italic")) + toggleBtn("cU", v.underline, T("underline"))) +
+      group(toggleBtn("cB", v.bold, T("bold"), "", "ctxFmt is-b") + toggleBtn("cI", v.italic, T("italic"), "", "ctxFmt is-i") + toggleBtn("cU", v.underline, T("underline"), "", "ctxFmt is-u")) +
       alignButtons(v.align) +
       group(label(T("colorLabel")) + colorBtn(v.color, 'id="cFg"'))
     );
@@ -931,7 +938,7 @@ export function initDrawEditor(ctx) {
     const firstFill = shapes.find((o) => o.fill && o.fill !== "transparent")?.fill;
 
     let html =
-      group(label(T("outlineLabel")) + `<input id="cObjStroke" class="inp sm ctxInput" type="number" min="${RANGE.outline[0]}" max="${RANGE.outline[1]}" step="1" value="${widths.size === 1 ? [...widths][0] : ""}" placeholder="—"/>`) +
+      group(label(T("strokeLabel")) + numInput("cObjStroke", ...RANGE.outline, 1, widths.size === 1 ? [...widths][0] : "", "—")) +
       group(label(T("styleLabel")) + selectHtml("cObjLineStyle")) +
       group(colorBtn(strokeColors.size === 1 ? [...strokeColors][0] : "WHITE", 'id="cObjStrokeColor"'));
     if (canFill) {
@@ -1008,14 +1015,12 @@ export function initDrawEditor(ctx) {
       item.type = "button";
       item.className = "menu-item fontPickItem";
       item.setAttribute("aria-selected", String(f.value === fontCurrent));
+      // nazwa czcionki pisana tą czcionką (bez osobnej kolumny z próbką)
       const name = document.createElement("span");
       name.className = "fontPickName";
       name.textContent = f.label;
-      const sample = document.createElement("span");
-      sample.className = "fontPickSwatch";
-      setVars(sample, { "--font": f.value });
-      sample.textContent = T("sampleText");
-      item.append(name, sample);
+      setVars(name, { "--font": f.value });
+      item.append(name);
       item.addEventListener("click", () => {
         fontOnSelect?.(f.value);
         closeFontPicker();
@@ -1028,7 +1033,7 @@ export function initDrawEditor(ctx) {
     if (!fontPop || !DRAW_FONTS.length) return;
     fontCurrent = current || "";
     fontOnSelect = onSelect;
-    placeDropdown($("toolsDraw"), fontPop, { align: "start" });
+    placeDropdown($("cFont") || $("toolsDraw"), fontPop, { align: "start" });
     fontPop.hidden = false;
     fontSearch.value = "";
     if ($("drawFontSearchClear")) $("drawFontSearchClear").hidden = true;
