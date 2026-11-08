@@ -395,13 +395,24 @@
   .ctxColorBtn.white{ background: var(--white); border-color: var(--w-25); }
 
   /* Checkbox */
-  .ctxChk{
+  /* Pole wyboru w paskach edytorów logo („Odwróć” w obrazie, „Wypełnienie”
+     w rysunku): jeden wygląd — otoczka i wysokość jak przyciski paska,
+     napis tą samą czcionką co przyciski (.btn.sm). */
+  #toolsImage .choice,
+  .ctxGroup .ctxChk{
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--text-muted);
+    gap: 8px;
+    height: var(--ctl-h);
+    min-height: var(--ctl-h);
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    color: var(--text);
     cursor: pointer;
     flex-shrink: 0;
     white-space: nowrap;
