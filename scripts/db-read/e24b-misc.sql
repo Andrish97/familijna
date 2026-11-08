@@ -16,6 +16,6 @@ select
   (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects') as st_pol,
   (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and roles && array['public', 'anon']::name[]) as st_pol_anon,
   (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and roles && array['public', 'anon', 'authenticated']::name[] and coalesce(qual, '') || coalesce(with_check, '') !~ 'bucket_id') as st_pol_nobucket,
-  (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and cmd = 'SELECT' and roles && array['public', 'anon']::name[] and coalesce(qual, '') !~ '(auth\.uid|owner|foldername)') as st_sel_anon_open,
+  (select count(*) from pg_policies where schemaname = 'storage' and tablename = 'objects' and cmd = 'SELECT' and roles && array['public', 'anon']::name[] and coalesce(qual, '') !~ '(auth[.]uid|owner|foldername)') as st_sel_anon_open,
   (select count(*) from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'p') and not c.relrowsecurity) as tables_no_rls,
   (select count(*) from pg_roles where rolname in ('anon', 'authenticated') and rolbypassrls) as bypassrls

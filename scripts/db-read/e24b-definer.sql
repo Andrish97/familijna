@@ -4,7 +4,7 @@
 select ('x' || left(md5(p.proname::text), 8))::bit(32)::int as h, p.pronargs::int as nargs,
   has_function_privilege('anon', p.oid, 'execute') as anon,
   has_function_privilege('authenticated', p.oid, 'execute') as auth,
-  (p.prosrc ~* 'auth\.(uid|jwt|role)\s*\(') as uid,
+  (p.prosrc ~* 'auth[.](uid|jwt|role)[ ]*[(]') as uid,
   (p.prosrc ~* '(is_admin|service_role)') as adm,
   coalesce(array_to_string(p.proconfig, ',') ~ 'search_path', false) as sp,
   (p.prorettype = 'trigger'::regtype) as trig
