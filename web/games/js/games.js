@@ -19,6 +19,7 @@ import { maybeShowGuestMigrateReminder } from "../../shared/js/core/guest-migrat
 
 import { initPwa, isStandalone, isIOSSafari, isMobileDevice, canOfferPwaInstall } from "../../shared/js/core/pwa.js?v=v2026-11-08T15311";
 import { syncPushSubscription } from "../../shared/js/core/push.js?v=v2026-11-08T15311";
+import { maybeShowPushPrompt } from "../../shared/js/core/push-prompt.js?v=v2026-11-08T15311";
 import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-08T15311";
 import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T15311";
 import { openDialog, closeDialog, isOverlayOpen, handleSheetBack } from "../../shared/js/core/modal-sheet.js?v=v2026-11-08T15311";
@@ -1236,6 +1237,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   maybeShowGuestMigrateReminder(currentUser);
   void syncPushSubscription(); // E29: odnowienie zapisu urządzenia (raz na dobę)
+  maybeShowPushPrompt(currentUser); // E29: jednorazowa zachęta do powiadomień
 
   // Wspólna reguła z panelem admina: pokazuj tylko przy dostępnej instalacji
   // albo gdy system wymaga ręcznej instrukcji dodania aplikacji.
