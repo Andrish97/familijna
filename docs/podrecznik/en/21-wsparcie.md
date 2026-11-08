@@ -26,7 +26,7 @@ pages, next to the [Contact] button (an icon only — the name shows in a toolti
 You can also use Familijna to earn money — for example, run the game at weddings, company
 parties, fairs or in a venue and get paid for it. You don't need permission, there are no fees
 or commissions, and you don't have to mention the app's name. This covers everything the app
-provides for the game: boards, themes, music and fonts.
+provides for the game: boards, themes, music, sound effects and fonts.
 
 **"Classic" music.** The intro, outro, round transition and final theme are tracks generated
 for this app with Suno (suno.com) on a paid plan that allows commercial use. They are not

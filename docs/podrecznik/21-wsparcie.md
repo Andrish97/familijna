@@ -26,7 +26,7 @@ przycisku [Kontakt] (sama ikona — nazwa pojawia się w dymku).
 Familijną możesz wykorzystywać także zarobkowo — na przykład prowadzić grę na weselach, imprezach
 firmowych, festynach czy w lokalu i pobierać za to wynagrodzenie. Nie potrzebujesz na to zgody,
 nie płacisz żadnych opłat ani prowizji i nie musisz podawać nazwy serwisu. Dotyczy to wszystkiego,
-co serwis daje do gry: plansz, motywów, muzyki i czcionek.
+co serwis daje do gry: plansz, motywów, muzyki, efektów i czcionek.
 
 **Muzyka „Klasyczna”.** Intro, zakończenie, przejście między rundami i motyw finału to
 utwory wygenerowane dla serwisu w Suno (suno.com) w ramach płatnego planu, który pozwala
