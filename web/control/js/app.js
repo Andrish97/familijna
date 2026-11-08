@@ -949,11 +949,14 @@ async function main() {
     if (externalRefreshInFlight) return;
     externalRefreshInFlight = true;
     try {
-      const expiredNow = await store.hydrate();
+      const expiredNow = await store.refreshExternal();
       await applyExpiredTimersOnResume(expiredNow);
     } finally {
       externalRefreshInFlight = false;
     }
+    // Odczyt pominięty (w trakcie ruszył własny zapis), a w międzyczasie
+    // przyszła nowsza cudza zmiana — jeszcze raz po zapisach.
+    if (latestExternalRev > store.state.rev) void store.whenIdle().then(() => { if (latestExternalRev > store.state.rev) void refreshExternalState(); });
   }
   const urls = await urlsP;
   testModePanel = createControlTestMode({ urls, onActivity: () => runtimeSession.noteActivity(), onResize: () => renderCurrent() });

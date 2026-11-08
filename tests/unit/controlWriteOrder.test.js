@@ -38,3 +38,13 @@ test("pending() widzi każdy zapis w toku lub w kolejce", () => {
   order.settle();
   assert.equal(order.pending(), false);
 });
+
+test("wiersz z RPC metadanej (język, wyciszenie) nie zastępuje stanu w trakcie własnego zapisu", async () => {
+  const { metadataRowApplies } = await import("../../web/control/js/writeOrder.js");
+  const order = createWriteOrder();
+  assert.equal(metadataRowApplies(order), true);
+  order.enqueue();
+  assert.equal(metadataRowApplies(order), false, "zapis „Przycisk fizyczny” w toku — flaga nie może wrócić z wiersza języka");
+  order.settle();
+  assert.equal(metadataRowApplies(order), true);
+});

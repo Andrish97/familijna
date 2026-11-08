@@ -25,3 +25,10 @@ export function confirmedRevisionOnly(localRow, serverRow) {
   const { __target_rev: _target, ...local } = localRow || {};
   return { ...local, rev: serverRow.rev, locked_until: serverRow.locked_until ?? null };
 }
+
+// Wiersz z RPC metadanej (język, wyciszenie — poza kolejką zapisów) zastępuje
+// stan tylko, gdy żaden własny zapis nie jest w toku ani w kolejce; inaczej
+// cofnąłby lokalne, jeszcze niepotwierdzone zmiany.
+export function metadataRowApplies(order) {
+  return !order.pending();
+}

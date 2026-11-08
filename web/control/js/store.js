@@ -18,7 +18,7 @@ import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T17374";
 import { createPersist, StaleWriteError } from "./persist.js?v=v2026-11-08T17374";
 import { makeDefaultState, DEFAULT_SETTINGS, PERSISTED_KEYS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-08T17374";
 import { expiredTimerOnHydrate } from "./timerResume.js?v=v2026-11-08T17374";
-import { createWriteOrder, confirmedRevisionOnly } from "./writeOrder.js?v=v2026-11-08T17374";
+import { createWriteOrder, confirmedRevisionOnly, metadataRowApplies } from "./writeOrder.js?v=v2026-11-08T17374";
 import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T17374";
 
 
@@ -80,7 +80,7 @@ export function createStore(gameId) {
   }
 
   // ---- prawdziwe wznowienie ----
-  async function hydrate() {
+  async function readRow() {
     const { data, error } = await sb()
       .from("game_state")
       .select("*")
@@ -90,10 +90,25 @@ export function createStore(gameId) {
       console.warn("[store] hydrate: nie udało się odczytać game_state", error);
       return null;
     }
-    if (!data) return null; // nowa gra, Control jeszcze nigdy nic nie zapisał
+    return data || null; // null: nowa gra, Control jeszcze nigdy nic nie zapisał
+  }
+  async function hydrate() {
+    const data = await readRow();
+    if (!data) return null;
     applyRow(data);
     emit();
     return expiredTimerOnHydrate(state);
+  }
+  // Odczyt cudzej zmiany (dołączenie kanału Control, wiadomość w trakcie
+  // zapisu): po własnych zapisach i tylko nowszy wiersz, gdy żaden zapis nie
+  // ruszył w czasie odczytu. Pełne hydrate() w trakcie zapisu cofało lokalne,
+  // niepotwierdzone zmiany (e2e control2 „physicalBuzzer + noHostTablet”:
+  // odczyt po SUBSCRIBED przywracał „Przycisk fizyczny” = false, a następny
+  // zapis wysyłał to do bazy). Zapis, który ruszył, sam niesie najnowszy stan
+  // albo po stale_write doczyta go przez hydrate().
+  async function refreshExternal() {
+    await whenIdle();
+    return applyExternalRow(await readRow());
   }
 
   // Zserializowane — engine.js's dispatch() serializuje WŁASNE wywołania, ale
@@ -302,7 +317,7 @@ export function createStore(gameId) {
     state.settings.uiLang = lang;
     emit();
     const row = await persist.setUiLang(lang);
-    applyRow(row);
+    applyMetadataRow(row);
     emit();
   }
 
@@ -312,8 +327,20 @@ export function createStore(gameId) {
     state.settings.soundMuted = muted;
     emit();
     const row = await persist.setSoundMuted(muted);
-    applyRow(row);
+    applyMetadataRow(row);
     emit();
+  }
+
+  // Odpowiedź setUiLang()/setSoundMuted() to CAŁY wiersz z serwera, a te RPC
+  // omijają kolejkę zapisów. Gdy własny zapis jest w toku lub w kolejce,
+  // wiersz nie zna jeszcze lokalnych zmian (e2e control2 „physicalBuzzer +
+  // noHostTablet”: język z startu wracał w trakcie zapisu „Przycisk fizyczny”,
+  // cofał flagę, a zapis „Nie używaj tabletu” wysyłał ją jako false). Wtedy
+  // stan zostaje lokalny (metadana jest już w nim ustawiona); rewizję
+  // wyrówna odpowiedź zapisu albo jego ponowienie po stale_write.
+  function applyMetadataRow(row) {
+    if (!metadataRowApplies(writeOrder)) return;
+    applyRow(row);
   }
 
   // Cudzy wiersz z kanału Control (naciśnięcie Przycisku, zdarzenie state):
@@ -328,5 +355,5 @@ export function createStore(gameId) {
   }
   const whenIdle = () => _writeQueue.then(() => {});
 
-  return { state, subscribe, emit, hydrate, commit, setLock, setUiLang, setSoundMuted, applyRow, applyExternalRow, whenIdle, writing: () => writeOrder.pending() };
+  return { state, subscribe, emit, hydrate, refreshExternal, commit, setLock, setUiLang, setSoundMuted, applyRow, applyExternalRow, whenIdle, writing: () => writeOrder.pending() };
 }
