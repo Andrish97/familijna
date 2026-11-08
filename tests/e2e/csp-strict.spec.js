@@ -60,3 +60,11 @@ test("E24 R12: ścisła CSP — strony po zalogowaniu bez naruszeń", async ({ p
   for (const p of ["/games/", "/bases/", "/logos/", "/account/", "/polls/", "/control/", "/friends/"]) all.push(...await visit(page, WWW + p));
   expect(all).toEqual([]);
 });
+
+test("E24 R12: nagłówek CSP produkcji (diagnostyka: czy reguła strefy nadpisuje Workera)", async ({ request }) => {
+  const res = await request.get(`${WWW}/games/`, { headers: { Accept: "text/html" } });
+  const csp = res.headers()["content-security-policy"] || "";
+  const script = csp.split(";").map((p) => p.trim()).find((p) => p.startsWith("script-src")) || "";
+  console.log(`[e2e-diag] csp prod: frame-ancestors=${csp.includes("frame-ancestors")} unsafe-inline=${script.includes("unsafe-inline")} hashes=${(script.match(/sha256-/g) || []).length} jsdelivr=${script.includes("jsdelivr")}`);
+  expect(res.status()).toBe(200);
+});
