@@ -704,7 +704,6 @@ async function submitGame() {
 
   showToast(t("marketplace.submit.success"), "success");
   closeSubmitModal();
-  fetch("/_api/notify-submission", { method: "POST" }).catch(() => {});
 }
 
 /* =========================================================
