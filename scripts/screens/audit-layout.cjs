@@ -321,6 +321,59 @@ function inspectLayout(opts) {
     }
   }
 
+  // 3. Karty w kartach (zgłoszenie 2026-11-08, wzór: edytor logo przed 6043c134).
+  // Silnik zna dwa poziomy (.card i .card--inset, wiersz listy w karcie);
+  // trzecia i dalsza obramowana powierzchnia w łańcuchu = „ramka w ramce”.
+  // Powierzchnia: widoczny blok ≥ 48×28 z tłem albo pełną ramką, zaokrąglony
+  // lub obramowany ze wszystkich stron. Kontrolki (przyciski, pola, tagi)
+  // nie liczą się — to elementy, nie warstwy; czarna tablica podglądu
+  // i białe pole kodu QR (--black/--white) to treść, nie warstwa.
+  // Dozwolone: karta › karta w karcie › wiersz/kafel listy (trzeci poziom
+  // powtarza się w rodzicu). Zgłaszane: trzeci poziom niebędący wierszem
+  // (ramka wokół treści) i każdy czwarty poziom.
+  const CONTROL = "button, input, select, textarea, a.btn, .btn, .btn-plain, .inp, .tag, .badge, .ui-select, .toggle-group, .toggle-group *, .searchBox, label, summary, img, canvas, video, svg, iframe, [role=button], [role=option], [role=tab]"
+    // pusty stan zastępuje wiersze listy; komunikat, próbka koloru, menu i ramka kadru to nie warstwy
+    + ", .empty-state, .pollLinkPlaceholder, .callout, .colorPreview, .geo-float, .geo-box";
+  const alpha = (c) => {
+    const m = c.match(/rgba?\(([^)]+)\)/);
+    if (!m) return c === "transparent" ? 0 : 1;
+    const p = m[1].split(/[ ,/]+/).filter(Boolean);
+    return p.length > 3 ? Number(p[3]) : 1;
+  };
+  const surfaceCache = new Map();
+  const surface = (el) => {
+    if (surfaceCache.has(el)) return surfaceCache.get(el);
+    let res = null;
+    if (!el.matches(CONTROL)) {
+      const st = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (r.width >= 48 && r.height >= 28 && st.display !== "contents") {
+        const content = /^rgb\((0, 0, 0|255, 255, 255)\)$/.test(st.backgroundColor) && st.backgroundImage === "none";
+        const bg = !content && (alpha(st.backgroundColor) > 0.02 || st.backgroundImage !== "none");
+        const sides = ["Top", "Right", "Bottom", "Left"].filter((s) => parseFloat(st[`border${s}Width`]) > 0 && st[`border${s}Style`] !== "none" && alpha(st[`border${s}Color`]) > 0.02).length;
+        const radius = parseFloat(st.borderTopLeftRadius) > 0 || parseFloat(st.borderBottomRightRadius) > 0;
+        if (!content && ((bg && (radius || sides === 4)) || (sides === 4 && radius))) res = { bg: bg ? st.backgroundColor : "", border: sides === 4 };
+      }
+    }
+    surfaceCache.set(el, res);
+    return res;
+  };
+  for (const el of root.querySelectorAll("*")) {
+    if (el.closest("svg, [data-audit-skip]") || !surface(el)) continue;
+    const chain = [el];
+    for (let e = el.parentElement; e && e !== document.body; e = e.parentElement) {
+      if (getComputedStyle(e).position === "fixed" && !surface(e)) break; // nakładka okna: liczymy od okna
+      if (surface(e)) chain.unshift(e);
+    }
+    if (chain.length < 3 || !visible(el)) continue;
+    // Zgłaszamy tylko najgłębszy element łańcucha (bez dzieci-powierzchni).
+    if ([...el.querySelectorAll("*")].some((c) => surface(c) && visible(c))) continue;
+    const cls = el.classList[0];
+    const row = cls && [...el.parentElement.children].some((c) => c !== el && c.classList.contains(cls));
+    if (chain.length === 3 && row) continue;
+    add("warstwy-kart", el, `${chain.length} poziomy: ${chain.map((e) => label(e)).join(" › ")}`);
+  }
+
   // Atrybut hidden / klasa .hidden musi chować element -- żadna reguła strony
   // ani silnika nie może przywrócić mu display.
   for (const el of document.querySelectorAll("[hidden], .hidden")) {
