@@ -177,7 +177,7 @@ test("hasło (tylko CI): to samo co obecne — komunikat, bez blokady na godzin�
   await expect(page.locator("#savePass")).toBeEnabled();
 });
 
-test("konto gościa (tylko CI): tylko „Zapisz swoje dane” i usuwanie; błędne dane migracji nic nie wysyłają; [Nie] zostawia konto", async ({ page, context }) => {
+test("konto gościa (tylko CI): „Zapisz swoje dane”, ocena systemu i usuwanie; błędne dane migracji nic nie wysyłają; [Nie] zostawia konto", async ({ page, context }) => {
   test.skip(LOCAL, "konto gościa zakłada Worker");
   test.setTimeout(150_000);
   await loginAsGuest(page, context);
@@ -189,9 +189,12 @@ test("konto gościa (tylko CI): tylko „Zapisz swoje dane” i usuwanie; błęd
   try {
     await openAccount(page);
     await expect(page.locator("#migrateSection")).toBeVisible();
-    for (const id of ["usernameSection", "emailSection", "passwordSection", "emailNotifSection", "ratingSection", "demoSection"]) {
+    for (const id of ["usernameSection", "emailSection", "passwordSection", "emailNotifSection", "demoSection"]) {
       await expect(page.locator(`#${id}`), id).toBeHidden();
     }
+    // Ocena systemu jak u każdego konta (527): sekcja i przycisk „Oceń”.
+    await expect(page.locator("#ratingSection")).toBeVisible();
+    await expect(page.locator("#ratingEditBtn")).toBeVisible();
     await expect(page.locator("#deletePassword")).toBeHidden();
     await expect(page.locator("#deleteHint")).not.toContainText("Wpisz hasło");
 
