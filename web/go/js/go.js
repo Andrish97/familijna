@@ -397,10 +397,9 @@ async function subscribeByEmail() {
     return;
   }
   try {
-    const ownerId = resolvedInviteData?.owner_id;
-    if (ownerId) {
-      // Cudze profile nie są czytelne (migracja 445): porównanie w bazie.
-      const { data: ownerName } = await sb().rpc("poll_go_owner_email_match", { p_owner_id: ownerId, p_email: email });
+    if (resolvedInviteData?.owner_id) {
+      // Porównanie z adresem właściciela w bazie, tylko po tokenie zaproszenia (E24 R10).
+      const { data: ownerName } = await sb().rpc("poll_go_owner_email_blocked", { p_token: goToken, p_email: email });
       if (ownerName) {
         await alertModal({ text: MSG.ownerEmailBlocked(ownerName) });
         return;
