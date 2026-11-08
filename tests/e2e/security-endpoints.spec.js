@@ -229,3 +229,14 @@ test("prywatny origin i zamknięte przekazanie kluczy odmawiają bez sekretów",
   // lub router nieznanej ścieżki (404); żaden nie wykonuje przekazania.
   expect([404, 405]).toContain(handoff.status());
 });
+
+test("E24 R8: strona przenosin starej domeny wysyła Referrer-Policy: origin", async ({ request }) => {
+  const res = await request.get("https://www.familiada.online/games/", {
+    maxRedirects: 0,
+    headers: { Accept: "text/html", "Sec-Fetch-Mode": "navigate" },
+  });
+  log("legacy handoff", res.status());
+  expect(res.status()).toBe(200);
+  expect(res.headers()["referrer-policy"]).toBe("origin");
+  expect(await res.text()).toContain("#fam-handoff=");
+});
