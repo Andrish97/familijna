@@ -271,6 +271,10 @@
     grid-area: s2; display: flex; min-width: 0; flex-wrap: nowrap;
   }
 
+  /* Za mało miejsca na tytuł strony: marka ustępuje tytułowi
+     (topbar-controller.js, klasa topbar-brand-yields). */
+  .topbar-layout-4:is(.topbar-brand-yields, .topbar-brand-yields-nav) .topbar-section-1 .brand { display: none; }
+
   /* Tytuł strony pracy w sekcji 2 topbara (edytory, ankieta). */
   .topbar-title {
     display: flex;

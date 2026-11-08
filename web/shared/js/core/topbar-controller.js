@@ -136,6 +136,17 @@ export function setTopbarNavPriority({ moreEl, moreDropdownEl } = {}) {
     moreEl.hidden = true;
     moreDropdownEl.innerHTML = '';
 
+    // Tytuł strony w sekcji (np. Ankieta) liczony w pełnej szerokości — ściśnięty
+    // tytuł nie może „zrobić miejsca” przyciskom. Przy braku miejsca najpierw
+    // ustępuje marka „FAMILIJNA”, dopiero potem przyciski idą do „Więcej”
+    // (decyzja użytkownika 2026-11-08).
+    const bar = section2.closest('.topbar');
+    const brandEl = bar?.querySelector('.topbar-section-1 .brand');
+    bar?.classList.remove('topbar-brand-yields-nav');
+    const itemWidth = (el) => (el.classList.contains('topbar-title')
+      ? Math.max(el.getBoundingClientRect().width, ...[...el.children].map((c) => c.scrollWidth))
+      : el.getBoundingClientRect().width);
+
     const gap = Number.parseFloat(getComputedStyle(section2).columnGap) || 0;
     const btnWidths = btns.map(btn => btn.getBoundingClientRect().width);
     const totalWidth = btnWidths.reduce((sum, width, i) => sum + width + (i > 0 ? gap : 0), 0);
@@ -144,10 +155,15 @@ export function setTopbarNavPriority({ moreEl, moreDropdownEl } = {}) {
       if (buttonSet.has(el) || el === moreEl || el.hidden) return false;
       return getComputedStyle(el).display !== 'none';
     });
-    const fixedWidth = fixedItems.reduce((sum, el) => sum + el.getBoundingClientRect().width, 0);
+    const fixedWidth = fixedItems.reduce((sum, el) => sum + itemWidth(el), 0);
+    const hasTitle = fixedItems.some((el) => el.classList.contains('topbar-title'));
     // Stałe elementy sekcji (np. selektor Narzędzi w panelu admina) nie
     // trafiają do menu Więcej, ale muszą zmniejszać miejsce dla przycisków.
-    const availableWidth = Math.max(0, section2Width - fixedWidth - fixedItems.length * gap);
+    let availableWidth = Math.max(0, section2Width - fixedWidth - fixedItems.length * gap);
+    if (hasTitle && brandEl?.getClientRects().length && totalWidth > availableWidth) {
+      bar.classList.add('topbar-brand-yields-nav');
+      availableWidth = Math.max(0, section2.getBoundingClientRect().width - fixedWidth - fixedItems.length * gap);
+    }
 
     moreEl.hidden = false;
     const moreWidth = moreEl.getBoundingClientRect().width;
@@ -176,7 +192,7 @@ export function setTopbarNavPriority({ moreEl, moreDropdownEl } = {}) {
     const reallyFits = () => [...btns, ...fixedItems].every((el) => {
       const r = el.getBoundingClientRect();
       return r.right <= s2Rect.right + 0.5 && Math.abs(r.top - firstTop) <= 1;
-    });
+    }) && fixedItems.every((el) => !el.classList.contains('topbar-title') || itemWidth(el) <= el.getBoundingClientRect().width + 1);
     if (totalWidth <= availableWidth && reallyFits()) {
       _hiddenBtns = [];
       updateMoreBadge([]);
@@ -741,6 +757,30 @@ function initTopbarController() {
   window.addEventListener('i18n:lang', () => {
     toggleBtn?.setAttribute('aria-label', t(toggleBtn.getAttribute('aria-expanded') === 'true' ? 'common.menuClose' : 'common.menuOpen'));
   });
+
+  // Tytuł strony (edytory, ankieta, ustawienia) ma pierwszeństwo przed marką:
+  // gdy tytuł albo podtytuł się nie mieści, chowamy „FAMILIJNA” zamiast skracać
+  // tytuł (decyzja użytkownika 2026-11-08). Skracanie zostaje tylko wtedy, gdy
+  // nie mieści się nawet bez marki. Pomiar przed malowaniem (bez mignięcia).
+  const titleBox = section2.querySelector('.topbar-title');
+  const brand = section1.querySelector('.brand');
+  if (titleBox && brand) {
+    const titleCut = () => [...titleBox.querySelectorAll('.title, .subtitle')]
+      .some((el) => el.getClientRects().length && el.scrollWidth > el.clientWidth + 1);
+    let fitFrame = 0;
+    const fitTitle = () => {
+      cancelAnimationFrame(fitFrame);
+      fitFrame = requestAnimationFrame(() => {
+        topbar.classList.remove('topbar-brand-yields');
+        if (brand.getClientRects().length && titleCut()) topbar.classList.add('topbar-brand-yields');
+      });
+    };
+    new ResizeObserver(fitTitle).observe(topbar);
+    new MutationObserver(fitTitle).observe(titleBox, { subtree: true, childList: true, characterData: true });
+    window.addEventListener('i18n:lang', fitTitle);
+    document.fonts?.ready?.then(fitTitle);
+    fitTitle();
+  }
 
   syncMode();
 

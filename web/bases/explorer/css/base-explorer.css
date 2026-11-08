@@ -879,7 +879,8 @@
   .xTypeTitle {
       letter-spacing: .08em;
       opacity: .92;
-      font-size: 12px
+      font-size: 12px;
+      white-space: nowrap
   }
 
   .xRange {
@@ -1165,9 +1166,19 @@
       max-width: 100%;
     }
 
+    /* Wąsko: dopisek (liczba odpowiedzi, suma, braki) pod treścią pytania,
+       pole wyboru z lewej na wysokość obu linii (zgłoszenie 2026-11-08:
+       niezawijany dopisek ściskał treść do wąskiej kolumny). */
     .export-modal .xPickItem {
-      grid-template-columns: 24px minmax(0, 1fr) auto;
+      grid-template-columns: 24px minmax(0, 1fr);
+      row-gap: 4px;
       min-width: 0;
+    }
+    .export-modal .xPickItem > input { grid-row: span 2; }
+    .export-modal .xMeta {
+      grid-column: 2;
+      min-width: 0;
+      white-space: normal;
     }
 
     .export-modal .xNm {
