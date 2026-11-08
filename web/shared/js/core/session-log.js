@@ -5,8 +5,8 @@
 // z rosnącą przerwą, deduplikacja w bazie po event_id. Zapis jest
 // pomocniczy: nigdy nie blokuje gry i nie zgłasza błędów użytkownikowi.
 
-import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-08T21595";
-import { getDeviceProfile } from "./device-guard.js?v=v2026-11-08T21595";
+import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-08T23062";
+import { getDeviceProfile } from "./device-guard.js?v=v2026-11-08T23062";
 
 const BATCH = 20;
 const MAX_QUEUE = 200;
