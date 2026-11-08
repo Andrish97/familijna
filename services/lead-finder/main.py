@@ -83,7 +83,7 @@ async def mx_check(domain):
 
 engine = Engine(db, http, SEARXNG_URL,
                 ceidg=Ceidg(http, os.getenv('CEIDG_API_KEY', '').strip(), cfg('CEIDG_DETAIL_DELAY', 4)),
-                mx_check=mx_check, notify=notify)
+                mx_check=mx_check)
 
 
 def require_api_key(authorization: Optional[str] = Header(default=None)):
