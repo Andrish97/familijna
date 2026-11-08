@@ -61,6 +61,10 @@ zostaną przyjęte.
 
 „Podgląd wyświetlacza” i „Podgląd prowadzącego” pokazują efekt zmian na bieżąco.
 
+**Czcionki motywów.** Napisy na ekranie Prowadzącego (odręczne w motywie Klasycznym, maszynowe w pozostałych poza
+Kasetonem, który używa czcionki urządzenia) i logo tekstowe w postaci „Źródło” używają czcionek na wolnej licencji
+(SIL Open Font License), dołączonych do serwisu — także podczas imprez komercyjnych.
+
 ## 16.4 Dźwięk
 
 Gra ma 10 dźwięków: intro, zakończenie, przejście między rundami, motyw finału, naciśnięcie przycisku, poprawna odpowiedź, błędna odpowiedź, powtórzenie w finale, koniec czasu i odsłonięcie odpowiedzi. Dla każdego możesz:

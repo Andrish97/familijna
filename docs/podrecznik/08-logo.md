@@ -88,6 +88,10 @@ Przydatne skróty i zasady:
 
 Skróty klawiszowe nie działają podczas wpisywania tekstu.
 
+**Czcionki.** Kroje pisma narzędzia Tekst to czcionki na wolnych licencjach (SIL Open Font License
+albo Apache), dołączone do serwisu — możesz ich używać w logo bez opłat i bez pytania o zgodę,
+także na imprezach komercyjnych. Na każdym urządzeniu wyglądają tak samo.
+
 ## 8.4 Tworzenie logo z obrazu
 
 1. Kliknij kafelek „Nowe logo z obrazu” i wybierz [Wybierz obraz] — plik JPG, PNG, GIF

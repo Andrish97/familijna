@@ -88,6 +88,10 @@ Useful shortcuts and rules:
 
 Keyboard shortcuts do not work while you are typing text.
 
+**Fonts.** The typefaces of the Text tool are fonts under free licences (SIL Open Font License
+or Apache), included with the app — you can use them in logos without fees or asking for permission,
+also at commercial events. They look the same on every device.
+
 ## 8.4 Creating a logo from an image
 
 1. Click the "New logo from image" tile and choose [Choose image] — a JPG, PNG, GIF
