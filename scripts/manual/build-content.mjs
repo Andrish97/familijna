@@ -160,9 +160,15 @@ function inline(text, icons, titles = new Map()) {
   // odnośniki: „→ 7.3”, „→ 10, 14, 15.4”, „→ 3 i 4”, „zob. 19.5”
   // „(→ 7.3)” → sam odnośnik-chip (bez nawiasu i strzałki); „zob. 19.5” → „zob.” + chip.
   // Numer jest tylko adresem — czytelnik widzi tytuł rozdziału/podrozdziału.
+  // Strzałka sklejona z pierwszym słowem tytułu: wiersz nie łamie się między
+  // nimi (zgłoszenie 2026-11-08: „→” zostawała sama na końcu linii).
+  const refLabel = (title) => {
+    const [, first, rest] = String(title).match(/^(\S+)([\s\S]*)$/) || [, String(title), ""];
+    return `<span class="m-nobr"><i data-icon="arrow-right"></i>${esc(first)}</span>${esc(rest)}`;
+  };
   const REF_LIST = "(\\d+(?:\\.\\d+)*(?:(?:,\\s*|\\s+(?:i|and|і|та)\\s+)\\d+(?:\\.\\d+)*)*)";
   const refs = (list) => list.split(/(,\s*|\s+(?:i|and|і|та)\s+)/)
-    .map((p) => (/^\d/.test(p) ? `<a class="m-ref" href="${refHref(p)}"><i data-icon="arrow-right"></i>${esc(titles.get(p) || p)}</a>` : esc(p))).join("");
+    .map((p) => (/^\d/.test(p) ? `<a class="m-ref" href="${refHref(p)}">${refLabel(titles.get(p) || p)}</a>` : esc(p))).join("");
   s = s.replace(new RegExp(`\\(\\s*→\\s+${REF_LIST}\\s*\\)`, "g"), (_, list) => keep(refs(list)));
   s = s.replace(new RegExp(`(→|zob\\.|see|див\\.)\\s+${REF_LIST}`, "g"), (_, lead, list) => keep(lead === "→" ? refs(list) : `${esc(lead)} ${refs(list)}`));
   s = esc(s);

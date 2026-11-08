@@ -67,6 +67,17 @@ test("odnośniki w treści prowadzą do istniejących rozdziałów i podrozdzia�
   }
 });
 
+test("strzałka odnośnika nie zostaje sama na końcu wiersza (sklejona z pierwszym słowem)", async () => {
+  for (const lang of LANGS) {
+    const m = await load(lang);
+    for (const c of m.chapters) {
+      for (const [inner] of c.html.matchAll(/class="m-ref"[^>]*>[\s\S]*?<\/a>/g)) {
+        assert.match(inner, /^class="m-ref"[^>]*><span class="m-nobr"><i data-icon="arrow-right"><\/i>\S+<\/span>/, `${lang} rozdz. ${c.id}: ${inner.slice(0, 120)}`);
+      }
+    }
+  }
+});
+
 test("przycisk „?” każdej strony prowadzi do istniejącego miejsca podręcznika", async () => {
   const known = anchors(await load("pl"));
   for (const [id, page] of Object.entries(PAGES)) {
