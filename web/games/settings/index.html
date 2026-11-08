@@ -29,13 +29,7 @@
   <script>document.documentElement.classList.add('page-loading')</script>
   <script src="/shared/vendor/supabase-js.js?v=v2026-11-08T15560" defer></script>
   <script src="/shared/js/core/security-warning.js?v=v2026-11-08T15560" defer></script>
-  <script type="module">
-    import { initI18n } from "/shared/translation/translation.js?v=v2026-11-08T15560";
-    await initI18n({ withSwitcher: true });
-    document.documentElement.classList.remove('page-loading');
-    import("/games/settings/js/game-settings.js?v=v2026-11-08T15560");
-
-  </script>
+  <script type="module" src="/games/settings/js/boot.js?v=v2026-11-08T15560"></script>
 </head>
 <body class="gs-body skel-body topbar-title-mobile">
   <header class="topbar topbar-layout-4">

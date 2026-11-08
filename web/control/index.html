@@ -29,16 +29,10 @@
   <script src="/shared/js/core/module-boot-guard.js?v=v2026-11-08T15560"></script>
   <script src="/shared/vendor/supabase-js.js?v=v2026-11-08T15560" defer></script>
   <script src="/shared/js/core/security-warning.js?v=v2026-11-08T15560" defer></script>
-  <script type="module">
-    import { initI18n } from "/shared/translation/translation.js?v=v2026-11-08T15560";
-    await initI18n({ withSwitcher: true });
-    document.documentElement.classList.remove('page-loading');
-    import("/control/js/app.js?v=v2026-11-08T15560");
-
-  </script>
 
 <link rel="stylesheet" href="/control/css/test-mode.css?v=v2026-11-08T15560"/>
   <script type="module" src="/shared/js/core/device-attrs.js?v=v2026-11-08T15560"></script>
+  <script type="module" src="/control/js/boot.js?v=v2026-11-08T15560"></script>
 
 </head>
 <body class="control-body skel-body">

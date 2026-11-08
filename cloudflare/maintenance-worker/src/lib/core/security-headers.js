@@ -9,6 +9,7 @@
 // samego hosta).
 
 import { LEGACY_SERVICE_HOSTS } from "../origin/origin.js";
+import { INLINE_SCRIPT_HASHES } from "./csp-hashes.js";
 
 const PASSTHROUGH_HOSTS = new Set([
   "panel.familijna.app",
@@ -20,9 +21,18 @@ const PASSTHROUGH_HOSTS = new Set([
 
 const APP_HOSTS = new Set(["familijna.app", "www.familijna.app", "admin.familijna.app"]);
 const CSP_BASELINE = ["frame-ancestors 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'"];
-// Zachowujemy obecne ograniczenia źródeł reguły strefy także po jej wyłączeniu.
-// Usunięcie unsafe-inline/eval wymaga osobnej migracji i kontroli bibliotek.
+const CAPTCHA_HOSTS = "https://challenges.cloudflare.com https://js.hcaptcha.com https://hcaptcha.com https://*.hcaptcha.com";
+// E24 R12: strony aplikacji bez 'unsafe-inline'/'unsafe-eval' i bez CDN —
+// skrypty z własnej domeny, captcha, Web Analytics oraz stałe skrypty wbudowane
+// po hashu (scripts/csp-hashes.mjs, zapadka unit/cspHashes.test.js).
 const CSP_SOURCE_POLICY = [
+  `script-src 'self' ${INLINE_SCRIPT_HASHES.join(" ")} ${CAPTCHA_HOSTS} https://static.cloudflareinsights.com`,
+  `connect-src 'self' https://api.familijna.app wss://api.familijna.app https://cloudflareinsights.com ${CAPTCHA_HOSTS}`,
+  `frame-src 'self' ${CAPTCHA_HOSTS}`,
+];
+// Panel admina (osobny Worker; tu tylko na wypadek trasy przez ten Worker):
+// TinyMCE z CDN i obsługa zdarzeń wbudowana — dawna, luźniejsza polityka.
+const CSP_SOURCE_POLICY_ADMIN = [
   "script-src 'unsafe-inline' 'unsafe-eval' 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com",
   "connect-src 'self' https://api.familijna.app wss://api.familijna.app https://cdn.jsdelivr.net",
   "frame-src 'self' https://challenges.cloudflare.com",
@@ -90,8 +100,9 @@ export function withSecurityHeaders(request, response) {
     const missing = CSP_BASELINE.filter((part) => !directives.has(part.split(" ")[0]));
     // Nie zastępujemy bardziej restrykcyjnego default-src jego luźniejszym
     // wyjątkiem dla skryptów/połączeń/ramek.
+    const policy = host === "admin.familijna.app" ? CSP_SOURCE_POLICY_ADMIN : CSP_SOURCE_POLICY;
     const sources = directives.has("default-src") ? []
-      : CSP_SOURCE_POLICY.filter((part) => !directives.has(part.split(" ")[0]));
+      : policy.filter((part) => !directives.has(part.split(" ")[0]));
     headers.set("Content-Security-Policy", [csp, ...missing, ...sources].filter(Boolean).join("; "));
     if (!headers.has("Content-Security-Policy-Report-Only")) {
       headers.set("Content-Security-Policy-Report-Only", CSP_REPORT_ONLY);
