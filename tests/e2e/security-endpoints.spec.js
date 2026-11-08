@@ -240,3 +240,21 @@ test("E24 R8: strona przenosin starej domeny wysyła Referrer-Policy: origin", a
   expect(res.headers()["referrer-policy"]).toBe("origin");
   expect(await res.text()).toContain("#fam-handoff=");
 });
+
+test("E24 R4: GoTrue wprost (z pominięciem Workera) odrzuca hasło, rejestrację i konto gościa", async ({ request }) => {
+  const src = fs.readFileSync(path.join(__dirname, "..", "..", "web", "shared", "js", "core", "supabase.js"), "utf8");
+  const anon = src.match(/SUPABASE_ANON_KEY\s*=\s*"([^"]+)"/)?.[1];
+  expect(anon).toBeTruthy();
+  const headers = { apikey: anon, Authorization: `Bearer ${anon}`, "Content-Type": "application/json" };
+  for (const [name, url, body] of [
+    ["token", `${API}/auth/v1/token?grant_type=password`, { email: "nikt@example.invalid", password: "x" }],
+    ["signup", `${API}/auth/v1/signup`, { email: "nikt@example.invalid", password: "Xx1!xxxxxx" }],
+    ["guest", `${API}/auth/v1/signup`, { data: { is_guest: true } }],
+  ]) {
+    const res = await request.post(url, { headers, data: body });
+    const text = await res.text();
+    log(`gotrue direct ${name}`, res.status());
+    expect(res.status()).toBe(400);
+    expect(text).toMatch(/captcha/i);
+  }
+});
