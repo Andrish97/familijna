@@ -6,24 +6,24 @@
 // Rejestr akcji (actions/registry.js) woła te funkcje; dostępność sprawdza
 // rejestr, tu zostają tylko warunki ochronne.
 
-import * as ops from "./ops.js?v=v2026-11-08T18554";
-import { reload } from "./data/store.js?v=v2026-11-08T18554";
-import { getQuestion } from "./repo.js?v=v2026-11-08T18554";
+import * as ops from "./ops.js?v=v2026-11-08T19051";
+import { reload } from "./data/store.js?v=v2026-11-08T19051";
+import { getQuestion } from "./repo.js?v=v2026-11-08T19051";
 import {
   goTo, currentFolderId, isTrash, selectionClear, setQuery, clearQuery,
-} from "./state.js?v=v2026-11-08T18554";
-import { renderAll } from "./render.js?v=v2026-11-08T18554";
-import { openMoveModal } from "./ui/move-modal.js?v=v2026-11-08T18554";
-import { openRenameModal } from "./ui/rename-modal.js?v=v2026-11-08T18554";
-import { openTagsModal } from "./tags-modal.js?v=v2026-11-08T18554";
-import { initQuestionModal } from "./question-modal.js?v=v2026-11-08T18554";
-import { initExportModal } from "./export-modal.js?v=v2026-11-08T18554";
-import { importGame } from "../../../games/js/games-import-export.js?v=v2026-11-08T18554";
-import { normQuestionText, LIMITS } from "../../../shared/js/core/question-form.js?v=v2026-11-08T18554";
-import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-08T18554";
-import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-08T18554";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T18554";
-import { linkTo } from "../../../shared/js/core/nav-map.js?v=v2026-11-08T18554";
+} from "./state.js?v=v2026-11-08T19051";
+import { renderAll } from "./render.js?v=v2026-11-08T19051";
+import { openMoveModal } from "./ui/move-modal.js?v=v2026-11-08T19051";
+import { openRenameModal } from "./ui/rename-modal.js?v=v2026-11-08T19051";
+import { openTagsModal } from "./tags-modal.js?v=v2026-11-08T19051";
+import { initQuestionModal } from "./question-modal.js?v=v2026-11-08T19051";
+import { initExportModal } from "./export-modal.js?v=v2026-11-08T19051";
+import { importGame } from "../../../games/js/games-import-export.js?v=v2026-11-08T19051";
+import { normQuestionText, LIMITS } from "../../../shared/js/core/question-form.js?v=v2026-11-08T19051";
+import { acquireResourceLock, acquireResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-08T19051";
+import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-08T19051";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T19051";
+import { linkTo } from "../../../shared/js/core/nav-map.js?v=v2026-11-08T19051";
 
 /* ================= Wspólne ================= */
 
