@@ -1,19 +1,19 @@
 // js/pages/marketplace.js
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T20163";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T20163";
-import { initI18n, t, getUiLang, applyTranslations } from "../../shared/translation/translation.js?v=v2026-11-08T20163";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T20163";
-import { rulesFromState } from "../../shared/js/core/game-validate.js?v=v2026-11-08T20163";
-import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T20163";
-import { toast } from "../../shared/js/core/toast.js?v=v2026-11-08T20163";
-import { confirmModal, promptModal } from "../../shared/js/core/modal.js?v=v2026-11-08T20163";
-import { openDialog, closeDialog, setOverlayOpen, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-08T20163";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-08T20163";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T20163";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-08T20163";
-import { cardInner, gamePath, publicRow, questionsHtml, starsHtml, selectRows, syncMarketSeo } from "./public.js?v=v2026-11-08T20163";
-import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-08T20163";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T20224";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T20224";
+import { initI18n, t, getUiLang, applyTranslations } from "../../shared/translation/translation.js?v=v2026-11-08T20224";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T20224";
+import { rulesFromState } from "../../shared/js/core/game-validate.js?v=v2026-11-08T20224";
+import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T20224";
+import { toast } from "../../shared/js/core/toast.js?v=v2026-11-08T20224";
+import { confirmModal, promptModal } from "../../shared/js/core/modal.js?v=v2026-11-08T20224";
+import { openDialog, closeDialog, setOverlayOpen, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-08T20224";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-08T20224";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T20224";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-08T20224";
+import { cardInner, gamePath, publicRow, questionsHtml, starsHtml, selectRows, syncMarketSeo } from "./public.js?v=v2026-11-08T20224";
+import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-08T20224";
 
 let initialPublic = null;
 try { initialPublic = JSON.parse(document.getElementById("marketBootstrap")?.textContent || "null"); }
@@ -668,7 +668,7 @@ async function submitGame() {
 
   let payload;
   try {
-    const { exportGame } = await import("../../games/js/games-import-export.js?v=v2026-11-08T20163");
+    const { exportGame } = await import("../../games/js/games-import-export.js?v=v2026-11-08T20224");
     payload = await exportGame(gameId);
   } catch (e) {
     console.error("[marketplace] submitGame export error:", e);
