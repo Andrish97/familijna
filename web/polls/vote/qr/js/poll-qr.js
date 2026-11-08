@@ -23,9 +23,10 @@ const qs = new URLSearchParams(location.search);
 // ?url= tylko do strony głosowania lub Go tej samej domeny (E24 R28: bez kodów
 // QR do obcych adresów pod naszą domeną).
 function ownPollUrl(raw) {
+  if (!raw) return null;
   try {
     const x = new URL(String(raw || ""), location.href);
-    return x.origin === location.origin && /^\/(polls\/vote|go)\//.test(x.pathname) ? x.href : null;
+    return x.origin === location.origin && /^\/(polls\/vote\/(?!qr\/)|go\/)/.test(x.pathname) ? x.href : null;
   } catch { return null; }
 }
 let url = ownPollUrl(qs.get("url"));
