@@ -4,7 +4,7 @@
 //
 // Zero importów przeglądarkowych — testowalne w gołym Node.
 
-import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-08T15040";
+import { RULES } from "../../../shared/js/core/game-rules.js?v=v2026-11-08T15082";
 
 // Twardy limit celu finału: gracz 2 nie może powtórzyć odpowiedzi gracza 1,
 // więc w pytaniu razem najwyżej dwie najlepsze odpowiedzi; trzecia ma co

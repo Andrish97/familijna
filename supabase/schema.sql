@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict wXmPmoVc6dnpPn2vUok0yf7xd9CiXgbLlMo5ceFGmJOqyDvHahMyVcTv2nlowUq
+\restrict cj6gQ7CwZxCqcBb9TozZjTxZwuNcwfwhYm0e2RU7biUOTt3nQgo0bMlkuaHFoMu
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -4278,6 +4278,109 @@ CREATE FUNCTION "public"."_public_username"("p_id" "uuid") RETURNS "text"
     AS $$
   SELECT username FROM public.profiles WHERE id = p_id
 $$;
+
+
+--
+-- Name: _push_market_pending(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_market_pending"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF TG_OP = 'UPDATE' AND OLD.status = 'pending' THEN RETURN NULL; END IF;
+  PERFORM public.push_admin_event('market', jsonb_build_object('id', NEW.id, 'title', left(NEW.title, 60), 'lang', NEW.lang));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_market_pending: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_marketing_run(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_marketing_run"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status = 'completed' THEN
+    PERFORM public.push_admin_event('collect_done', jsonb_build_object('what', 'contacts', 'id', NEW.run_id,
+      'added', NEW.verified, 'target', NEW.target,
+      'minutes', greatest(0, round(extract(epoch FROM coalesce(NEW.finished_at, now()) - NEW.created_at) / 60))::int));
+  ELSIF NEW.status = 'error' THEN
+    PERFORM public.push_admin_event('job_error', jsonb_build_object('what', 'contacts', 'id', NEW.run_id));
+  END IF;
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_marketing_run: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_messages_inbound(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_messages_inbound"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_n integer; v_ticket text;
+BEGIN
+  IF NEW.source = 'email' THEN
+    SELECT count(*) INTO v_n FROM public.messages
+     WHERE direction = 'inbound' AND source = 'email' AND NOT is_read AND deleted_at IS NULL
+       AND created_at > now() - interval '12 hours';
+    PERFORM public.push_admin_event('mail', jsonb_build_object('id', NEW.id,
+      'from', left(coalesce(NEW.from_email, ''), 60), 'subject', left(coalesce(NEW.subject, ''), 80),
+      'n', greatest(v_n, 1)));
+  ELSIF NEW.source = 'form' THEN
+    SELECT ticket_number INTO v_ticket FROM public.reports WHERE id = NEW.report_id;
+    PERFORM public.push_admin_event('ticket', jsonb_build_object('id', NEW.id, 'report_id', NEW.report_id,
+      'ticket', coalesce(v_ticket, ''), 'from', left(coalesce(NEW.from_email, ''), 60),
+      'subject', left(coalesce(NEW.subject, ''), 80)));
+  END IF;
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_messages_inbound: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_outbox_after_insert(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_outbox_after_insert"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN PERFORM public.push_send_kick(); RETURN NULL; END $$;
+
+
+--
+-- Name: _push_question_job(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_question_job"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status = 'completed' THEN
+    PERFORM public.push_admin_event('collect_done', jsonb_build_object('what', 'questions', 'id', NEW.id,
+      'added', NEW.accepted, 'target', NEW.target, 'lang', NEW.lang));
+  ELSIF NEW.status = 'waiting_budget' THEN
+    PERFORM public.push_admin_event('collect_paused', jsonb_build_object('what', 'questions', 'id', NEW.id, 'lang', NEW.lang));
+  ELSIF NEW.status = 'needs_attention' THEN
+    PERFORM public.push_admin_event('job_error', jsonb_build_object('what', 'questions', 'id', NEW.id,
+      'lang', NEW.lang, 'reason', left(coalesce(NEW.message, ''), 80)));
+  END IF;
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_question_job: %', sqlerrm; RETURN NULL;
+END $$;
 
 
 --
@@ -17209,6 +17312,357 @@ END $$;
 
 
 --
+-- Name: push_admin_event("text", "jsonb", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_admin_event"("p_event" "text", "p_vars" "jsonb" DEFAULT '{}'::"jsonb", "p_urgency" "text" DEFAULT 'normal'::"text") RETURNS bigint
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_id bigint; v_event text := p_event; v_vars jsonb := coalesce(p_vars, '{}'); v_n integer;
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM public.push_subscriptions WHERE app = 'admin') THEN RETURN NULL; END IF;
+  IF p_event = 'job_error' THEN
+    SELECT count(*) + 1 INTO v_n FROM public.push_outbox
+     WHERE app = 'admin' AND event IN ('job_error','job_error_repeat')
+       AND vars->>'what' IS NOT DISTINCT FROM v_vars->>'what'
+       AND created_at > now() - interval '1 hour';
+    IF v_n >= 3 THEN
+      v_event := 'job_error_repeat';
+      v_vars := v_vars || jsonb_build_object('n', v_n,
+        'since', (SELECT min(created_at) FROM public.push_outbox WHERE app = 'admin'
+                   AND event IN ('job_error','job_error_repeat') AND vars->>'what' IS NOT DISTINCT FROM v_vars->>'what'
+                   AND created_at > now() - interval '1 hour'));
+    END IF;
+  END IF;
+  INSERT INTO public.push_outbox (app, event, category, vars, ttl, urgency)
+  VALUES ('admin', v_event, public.push_event_category('admin', v_event), v_vars,
+          CASE WHEN v_event LIKE 'job_error%' THEN 3600 ELSE 86400 END,
+          CASE WHEN v_event LIKE 'job_error%' THEN 'high' ELSE coalesce(p_urgency, 'normal') END)
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END $$;
+
+
+--
+-- Name: push_admin_get("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_admin_get"("p_endpoint" "text") RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT jsonb_build_object(
+    'subscribed', EXISTS (SELECT 1 FROM public.push_subscriptions WHERE endpoint = p_endpoint AND app = 'admin'),
+    'kinds', coalesce((SELECT to_jsonb(kinds) FROM public.push_subscriptions WHERE endpoint = p_endpoint AND app = 'admin'), '[]'::jsonb),
+    'devices', (SELECT count(*) FROM public.push_subscriptions WHERE app = 'admin'),
+    'recent', coalesce((SELECT jsonb_agg(r ORDER BY r->>'created_at' DESC) FROM (
+       SELECT jsonb_build_object('event', event, 'created_at', created_at, 'sent_at', sent_at,
+         'delivered', delivered, 'failed', failed, 'error', last_error) AS r
+       FROM public.push_outbox WHERE app = 'admin' ORDER BY id DESC LIMIT 20) x), '[]'::jsonb))
+$$;
+
+
+--
+-- Name: push_admin_subscribe("text", "text", "text", "text"[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_admin_subscribe"("p_endpoint" "text", "p_p256dh" "text", "p_auth" "text", "p_kinds" "text"[] DEFAULT '{}'::"text"[]) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NOT public.push_endpoint_allowed(p_endpoint) THEN RETURN jsonb_build_object('ok', false, 'error', 'endpoint_not_allowed'); END IF;
+  IF p_kinds IS NOT NULL AND EXISTS (SELECT 1 FROM unnest(p_kinds) k WHERE k NOT IN ('mail','ticket','market','collect','errors')) THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'invalid_kinds');
+  END IF;
+  INSERT INTO public.push_subscriptions (app, user_id, endpoint, p256dh, auth, lang, kinds, updated_at)
+  VALUES ('admin', NULL, p_endpoint, p_p256dh, p_auth, 'pl', coalesce(p_kinds, '{}'), clock_timestamp())
+  ON CONFLICT (endpoint) DO UPDATE SET app = 'admin', user_id = NULL, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth,
+    lang = 'pl', kinds = EXCLUDED.kinds, updated_at = clock_timestamp(), fail_count = 0;
+  DELETE FROM public.push_subscriptions WHERE id IN (
+    SELECT id FROM public.push_subscriptions WHERE app = 'admin' ORDER BY updated_at DESC OFFSET 10);
+  RETURN jsonb_build_object('ok', true);
+END $$;
+
+
+--
+-- Name: push_admin_test(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_admin_test"() RETURNS "jsonb"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT jsonb_build_object('ok', true, 'id', public.push_admin_event('test', '{}'::jsonb, 'high'))
+$$;
+
+
+--
+-- Name: push_admin_unsubscribe("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_admin_unsubscribe"("p_endpoint" "text") RETURNS "jsonb"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  WITH d AS (DELETE FROM public.push_subscriptions WHERE endpoint = p_endpoint AND app = 'admin' RETURNING 1)
+  SELECT jsonb_build_object('ok', true, 'removed', (SELECT count(*) FROM d))
+$$;
+
+
+--
+-- Name: push_endpoint_allowed("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_endpoint_allowed"("p_endpoint" "text") RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'pg_catalog'
+    AS $_$
+  SELECT coalesce(p_endpoint ~ '^https://(fcm\.googleapis\.com|[a-z0-9.-]+\.push\.services\.mozilla\.com|[a-z0-9.-]*push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)/[^\s]+$', false)
+$_$;
+
+
+--
+-- Name: push_event_category("text", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_event_category"("p_app" "text", "p_event" "text") RETURNS "text"
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'pg_catalog'
+    AS $$
+  SELECT CASE
+    WHEN p_app = 'admin' THEN CASE
+      WHEN p_event IN ('mail') THEN 'mail'
+      WHEN p_event IN ('ticket') THEN 'ticket'
+      WHEN p_event IN ('market') THEN 'market'
+      WHEN p_event IN ('collect_done','collect_paused') THEN 'collect'
+      WHEN p_event IN ('job_error','job_error_repeat') THEN 'errors'
+      ELSE 'other' END
+    ELSE CASE
+      WHEN p_event LIKE 'friend:%' THEN 'friend'
+      WHEN p_event LIKE 'poll:%' THEN 'poll'
+      WHEN p_event LIKE 'subscription:%' THEN 'subscription'
+      WHEN p_event LIKE 'base:%' THEN 'base'
+      WHEN p_event LIKE 'device:%' THEN 'device'
+      WHEN p_event LIKE 'copy:%' THEN 'copy'
+      ELSE 'other' END
+  END
+$$;
+
+
+--
+-- Name: push_outbox; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."push_outbox" (
+    "id" bigint NOT NULL,
+    "app" "text" NOT NULL,
+    "user_id" "uuid",
+    "event" "text" NOT NULL,
+    "category" "text" NOT NULL,
+    "vars" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
+    "ttl" integer DEFAULT 86400 NOT NULL,
+    "urgency" "text" DEFAULT 'normal'::"text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "claimed_at" timestamp with time zone,
+    "attempts" integer DEFAULT 0 NOT NULL,
+    "sent_at" timestamp with time zone,
+    "delivered" integer DEFAULT 0 NOT NULL,
+    "failed" integer DEFAULT 0 NOT NULL,
+    "last_error" "text",
+    CONSTRAINT "push_outbox_app_check" CHECK (("app" = ANY (ARRAY['main'::"text", 'admin'::"text"]))),
+    CONSTRAINT "push_outbox_category_check" CHECK (("category" ~ '^[a-z_]{2,30}$'::"text")),
+    CONSTRAINT "push_outbox_event_check" CHECK (("event" ~ '^[a-z_:]{2,40}$'::"text")),
+    CONSTRAINT "push_outbox_last_error_check" CHECK (("char_length"("last_error") <= 200)),
+    CONSTRAINT "push_outbox_owner" CHECK ((("app" = 'main'::"text") = ("user_id" IS NOT NULL))),
+    CONSTRAINT "push_outbox_ttl_check" CHECK ((("ttl" >= 60) AND ("ttl" <= 604800))),
+    CONSTRAINT "push_outbox_urgency_check" CHECK (("urgency" = ANY (ARRAY['low'::"text", 'normal'::"text", 'high'::"text"]))),
+    CONSTRAINT "push_outbox_vars_check" CHECK (("pg_column_size"("vars") <= 2000))
+);
+
+
+--
+-- Name: push_outbox_claim(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_outbox_claim"("p_limit" integer DEFAULT 50) RETURNS SETOF "public"."push_outbox"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  UPDATE public.push_outbox o SET claimed_at = now(), attempts = o.attempts + 1
+   WHERE o.id IN (
+     SELECT id FROM public.push_outbox
+      WHERE sent_at IS NULL AND attempts < 5 AND created_at > now() - interval '1 day'
+        AND (claimed_at IS NULL OR claimed_at < now() - interval '2 minutes')
+      ORDER BY id LIMIT greatest(1, least(coalesce(p_limit, 50), 200))
+      FOR UPDATE SKIP LOCKED)
+  RETURNING o.*
+$$;
+
+
+--
+-- Name: push_outbox_finish(bigint, integer, integer, "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_outbox_finish"("p_id" bigint, "p_delivered" integer, "p_failed" integer, "p_error" "text" DEFAULT NULL::"text") RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  UPDATE public.push_outbox SET sent_at = now(), delivered = greatest(0, coalesce(p_delivered, 0)),
+    failed = greatest(0, coalesce(p_failed, 0)), last_error = left(p_error, 200)
+   WHERE id = p_id
+$$;
+
+
+--
+-- Name: push_outbox_maintain(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_outbox_maintain"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  DELETE FROM public.push_outbox WHERE created_at < now() - interval '14 days';
+  IF EXISTS (SELECT 1 FROM public.push_outbox WHERE sent_at IS NULL AND attempts < 5
+               AND created_at > now() - interval '1 day' AND created_at < now() - interval '1 minute') THEN
+    PERFORM public.push_send_kick();
+  END IF;
+END $$;
+
+
+--
+-- Name: push_send_kick(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_send_kick"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_base text; v_anon text; v_secret text;
+BEGIN
+  SELECT decrypted_secret INTO v_base FROM vault.decrypted_secrets WHERE name = 'project_url';
+  SELECT decrypted_secret INTO v_anon FROM vault.decrypted_secrets WHERE name = 'anon_key';
+  SELECT btrim(decrypted_secret) INTO v_secret FROM vault.decrypted_secrets WHERE name = 'push_send_secret';
+  IF coalesce(v_base,'') = '' OR coalesce(v_anon,'') = '' OR coalesce(v_secret,'') = '' THEN
+    RAISE WARNING 'push_send_kick: brak project_url/anon_key/push_send_secret w vault';
+    RETURN;
+  END IF;
+  PERFORM net.http_post(
+    url := v_base || '/functions/v1/push-send',
+    headers := jsonb_build_object(
+      'Content-Type','application/json',
+      'Authorization','Bearer ' || v_anon,
+      'apikey', v_anon,
+      'X-Internal-Secret', encode(extensions.hmac('push-send', v_secret, 'sha256'), 'hex')),
+    body := '{}'::jsonb);
+EXCEPTION WHEN others THEN
+  -- brak pg_net/vault nie może zablokować zdarzenia źródłowego; cron ponowi
+  RAISE WARNING 'push_send_kick: %', sqlerrm;
+END $$;
+
+
+--
+-- Name: push_subscribe("text", "text", "text", "text", "text"[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_subscribe"("p_endpoint" "text", "p_p256dh" "text", "p_auth" "text", "p_lang" "text" DEFAULT 'pl'::"text", "p_kinds" "text"[] DEFAULT '{}'::"text"[]) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_uid uuid := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'not_authenticated'); END IF;
+  IF coalesce((SELECT is_guest FROM public.profiles WHERE id = v_uid), false) THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'guest_forbidden');
+  END IF;
+  IF NOT public.push_endpoint_allowed(p_endpoint) THEN RETURN jsonb_build_object('ok', false, 'error', 'endpoint_not_allowed'); END IF;
+  IF p_kinds IS NOT NULL AND EXISTS (SELECT 1 FROM unnest(p_kinds) k WHERE k NOT IN ('friend','poll','subscription','base','device','copy')) THEN
+    RETURN jsonb_build_object('ok', false, 'error', 'invalid_kinds');
+  END IF;
+  INSERT INTO public.push_subscriptions (app, user_id, endpoint, p256dh, auth, lang, kinds, updated_at)
+  VALUES ('main', v_uid, p_endpoint, p_p256dh, p_auth, coalesce(nullif(p_lang, ''), 'pl'), coalesce(p_kinds, '{}'), clock_timestamp())
+  ON CONFLICT (endpoint) DO UPDATE SET app = 'main', user_id = v_uid, p256dh = EXCLUDED.p256dh, auth = EXCLUDED.auth,
+    lang = EXCLUDED.lang, kinds = EXCLUDED.kinds, updated_at = clock_timestamp(), fail_count = 0;
+  -- najwyżej 20 urządzeń na konto: najstarsze odpadają
+  DELETE FROM public.push_subscriptions WHERE id IN (
+    SELECT id FROM public.push_subscriptions WHERE app = 'main' AND user_id = v_uid
+    ORDER BY updated_at DESC OFFSET 20);
+  RETURN jsonb_build_object('ok', true);
+END $$;
+
+
+--
+-- Name: push_subscription_get("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_subscription_get"("p_endpoint" "text") RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT coalesce(
+    (SELECT jsonb_build_object('subscribed', true, 'kinds', to_jsonb(kinds))
+       FROM public.push_subscriptions WHERE endpoint = p_endpoint AND app = 'main' AND user_id = auth.uid()),
+    jsonb_build_object('subscribed', false, 'kinds', '[]'::jsonb))
+$$;
+
+
+--
+-- Name: push_subscription_result("uuid", boolean, boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_subscription_result"("p_id" "uuid", "p_ok" boolean, "p_gone" boolean DEFAULT false) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF p_gone THEN DELETE FROM public.push_subscriptions WHERE id = p_id; RETURN; END IF;
+  IF p_ok THEN
+    UPDATE public.push_subscriptions SET last_ok_at = now(), fail_count = 0 WHERE id = p_id;
+  ELSE
+    UPDATE public.push_subscriptions SET fail_count = fail_count + 1 WHERE id = p_id;
+    DELETE FROM public.push_subscriptions WHERE id = p_id AND fail_count >= 5;
+  END IF;
+END $$;
+
+
+--
+-- Name: push_unsubscribe("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_unsubscribe"("p_endpoint" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN RETURN jsonb_build_object('ok', false, 'error', 'not_authenticated'); END IF;
+  DELETE FROM public.push_subscriptions WHERE endpoint = p_endpoint AND app = 'main' AND user_id = auth.uid();
+  RETURN jsonb_build_object('ok', true);
+END $$;
+
+
+--
+-- Name: push_user_event("uuid", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."push_user_event"("p_user" "uuid", "p_event" "text", "p_vars" "jsonb" DEFAULT '{}'::"jsonb") RETURNS bigint
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_id bigint;
+BEGIN
+  IF p_user IS NULL OR NOT EXISTS (SELECT 1 FROM public.push_subscriptions WHERE app = 'main' AND user_id = p_user) THEN
+    RETURN NULL;
+  END IF;
+  INSERT INTO public.push_outbox (app, user_id, event, category, vars)
+  VALUES ('main', p_user, p_event, public.push_event_category('main', p_event), coalesce(p_vars, '{}'))
+  RETURNING id INTO v_id;
+  RETURN v_id;
+END $$;
+
+
+--
 -- Name: qb_apply_tag_states("uuid", "uuid"[], "uuid"[], "uuid"[], "uuid"[]); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -21305,6 +21759,47 @@ CREATE TABLE "public"."public_kv" (
 
 
 --
+-- Name: push_outbox_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."push_outbox" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."push_outbox_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: push_subscriptions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."push_subscriptions" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "app" "text" NOT NULL,
+    "user_id" "uuid",
+    "endpoint" "text" NOT NULL,
+    "p256dh" "text" NOT NULL,
+    "auth" "text" NOT NULL,
+    "lang" "text" DEFAULT 'pl'::"text" NOT NULL,
+    "kinds" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "last_ok_at" timestamp with time zone,
+    "fail_count" integer DEFAULT 0 NOT NULL,
+    CONSTRAINT "push_subscriptions_app_check" CHECK (("app" = ANY (ARRAY['main'::"text", 'admin'::"text"]))),
+    CONSTRAINT "push_subscriptions_auth_check" CHECK (("auth" ~ '^[A-Za-z0-9_-]{16,32}$'::"text")),
+    CONSTRAINT "push_subscriptions_endpoint_check" CHECK ((("char_length"("endpoint") >= 20) AND ("char_length"("endpoint") <= 1000))),
+    CONSTRAINT "push_subscriptions_kinds_check" CHECK (("cardinality"("kinds") <= 20)),
+    CONSTRAINT "push_subscriptions_lang_check" CHECK (("lang" = ANY (ARRAY['pl'::"text", 'en'::"text", 'uk'::"text"]))),
+    CONSTRAINT "push_subscriptions_owner" CHECK ((("app" = 'main'::"text") = ("user_id" IS NOT NULL))),
+    CONSTRAINT "push_subscriptions_p256dh_check" CHECK (("p256dh" ~ '^[A-Za-z0-9_-]{80,100}$'::"text"))
+);
+
+
+--
 -- Name: qb_categories; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -22715,6 +23210,30 @@ ALTER TABLE ONLY "public"."public_kv"
 
 
 --
+-- Name: push_outbox push_outbox_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."push_outbox"
+    ADD CONSTRAINT "push_outbox_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: push_subscriptions push_subscriptions_endpoint_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."push_subscriptions"
+    ADD CONSTRAINT "push_subscriptions_endpoint_key" UNIQUE ("endpoint");
+
+
+--
+-- Name: push_subscriptions push_subscriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."push_subscriptions"
+    ADD CONSTRAINT "push_subscriptions_pkey" PRIMARY KEY ("id");
+
+
+--
 -- Name: qb_categories qb_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23909,6 +24428,34 @@ CREATE UNIQUE INDEX "pte_unique_per_q" ON "public"."poll_text_entries" USING "bt
 
 
 --
+-- Name: push_outbox_event_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "push_outbox_event_idx" ON "public"."push_outbox" USING "btree" ("app", "event", "created_at");
+
+
+--
+-- Name: push_outbox_pending_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "push_outbox_pending_idx" ON "public"."push_outbox" USING "btree" ("id") WHERE ("sent_at" IS NULL);
+
+
+--
+-- Name: push_subscriptions_admin_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "push_subscriptions_admin_idx" ON "public"."push_subscriptions" USING "btree" ("app") WHERE ("app" = 'admin'::"text");
+
+
+--
+-- Name: push_subscriptions_user_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "push_subscriptions_user_idx" ON "public"."push_subscriptions" USING "btree" ("user_id") WHERE ("user_id" IS NOT NULL);
+
+
+--
 -- Name: qb_categories_base_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -24417,6 +24964,41 @@ CREATE TRIGGER "profiles_block_noaccount_identity" BEFORE INSERT ON "public"."pr
 --
 
 CREATE TRIGGER "profiles_reserve_test_username" BEFORE INSERT OR UPDATE OF "username" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."profiles_reserve_test_username"();
+
+
+--
+-- Name: market_games push_market_pending; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_market_pending" AFTER INSERT OR UPDATE OF "status" ON "public"."market_games" FOR EACH ROW WHEN ((("new"."status" = 'pending'::"public"."market_game_status") AND ("new"."origin" = 'community'::"public"."market_game_origin"))) EXECUTE FUNCTION "public"."_push_market_pending"();
+
+
+--
+-- Name: marketing_runs push_marketing_run; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_marketing_run" AFTER UPDATE OF "status" ON "public"."marketing_runs" FOR EACH ROW WHEN ((("new"."status" IS DISTINCT FROM "old"."status") AND ("new"."status" = ANY (ARRAY['completed'::"text", 'error'::"text"])))) EXECUTE FUNCTION "public"."_push_marketing_run"();
+
+
+--
+-- Name: messages push_messages_inbound; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_messages_inbound" AFTER INSERT ON "public"."messages" FOR EACH ROW WHEN ((("new"."direction" = 'inbound'::"text") AND ("new"."deleted_at" IS NULL))) EXECUTE FUNCTION "public"."_push_messages_inbound"();
+
+
+--
+-- Name: push_outbox push_outbox_kick; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_outbox_kick" AFTER INSERT ON "public"."push_outbox" FOR EACH STATEMENT EXECUTE FUNCTION "public"."_push_outbox_after_insert"();
+
+
+--
+-- Name: producer_question_jobs push_question_job; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_question_job" AFTER UPDATE OF "status" ON "public"."producer_question_jobs" FOR EACH ROW WHEN ((("new"."status" IS DISTINCT FROM "old"."status") AND ("new"."status" = ANY (ARRAY['completed'::"text", 'waiting_budget'::"text", 'needs_attention'::"text"])))) EXECUTE FUNCTION "public"."_push_question_job"();
 
 
 --
@@ -25679,6 +26261,22 @@ ALTER TABLE ONLY "public"."producer_question_pool"
 
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_id_fkey" FOREIGN KEY ("id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: push_outbox push_outbox_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."push_outbox"
+    ADD CONSTRAINT "push_outbox_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: push_subscriptions push_subscriptions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."push_subscriptions"
+    ADD CONSTRAINT "push_subscriptions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 --
@@ -27059,6 +27657,18 @@ CREATE POLICY "pte_owner_read" ON "public"."poll_text_entries" FOR SELECT USING 
 ALTER TABLE "public"."public_kv" ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: push_outbox; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."push_outbox" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: push_subscriptions; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."push_subscriptions" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: question_bases qb_bases_delete; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -27539,5 +28149,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict wXmPmoVc6dnpPn2vUok0yf7xd9CiXgbLlMo5ceFGmJOqyDvHahMyVcTv2nlowUq
+\unrestrict cj6gQ7CwZxCqcBb9TozZjTxZwuNcwfwhYm0e2RU7biUOTt3nQgo0bMlkuaHFoMu
 
