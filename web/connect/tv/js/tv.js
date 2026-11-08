@@ -1,7 +1,7 @@
-import { resolveDeviceCode } from "../../../shared/js/core/device-code.js?v=v2026-11-08T21561";
-import { initI18n, t, getUiLang } from "../../../shared/translation/translation.js?v=v2026-11-08T21561";
-import { getDeviceProfile, TV_HD_RESOLUTION } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T21561";
-import { showPageGuard } from "../../../shared/js/core/page-overlay.js?v=v2026-11-08T21561";
+import { resolveDeviceCode } from "../../../shared/js/core/device-code.js?v=v2026-11-08T21595";
+import { initI18n, t, getUiLang } from "../../../shared/translation/translation.js?v=v2026-11-08T21595";
+import { getDeviceProfile, TV_HD_RESOLUTION } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T21595";
+import { showPageGuard } from "../../../shared/js/core/page-overlay.js?v=v2026-11-08T21595";
 
 await initI18n();
 const profile = getDeviceProfile();
