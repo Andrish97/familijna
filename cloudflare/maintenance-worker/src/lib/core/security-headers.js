@@ -27,7 +27,9 @@ const CAPTCHA_HOSTS = "https://challenges.cloudflare.com https://js.hcaptcha.com
 // po hashu (scripts/csp-hashes.mjs, zapadka unit/cspHashes.test.js).
 const CSP_SOURCE_POLICY = [
   `script-src 'self' ${INLINE_SCRIPT_HASHES.join(" ")} ${CAPTCHA_HOSTS} https://static.cloudflareinsights.com`,
-  `connect-src 'self' https://api.familijna.app wss://api.familijna.app https://cloudflareinsights.com ${CAPTCHA_HOSTS}`,
+  // blob: — własne dźwięki gry (IndexedDB → URL.createObjectURL) wczytuje
+  // fetch() w shared/js/core/sfx.js; adresy blob: tworzy wyłącznie sama strona.
+  `connect-src 'self' blob: https://api.familijna.app wss://api.familijna.app https://cloudflareinsights.com ${CAPTCHA_HOSTS}`,
   `frame-src 'self' ${CAPTCHA_HOSTS}`,
 ];
 // Panel admina (osobny Worker; tu tylko na wypadek trasy przez ten Worker):

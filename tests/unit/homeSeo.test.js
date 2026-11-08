@@ -105,6 +105,8 @@ test('baseline CSP preserves stricter origin directives', () => {
   assert.ok(!strict.headers.get('Content-Security-Policy').includes('frame-src'));
   const baseline = withSecurityHeaders(new Request('https://www.familijna.app/'), new Response('body', { headers: { 'Content-Type': 'text/html' } }));
   for (const directive of ['script-src', 'connect-src', 'frame-src']) assert.ok(baseline.headers.get('Content-Security-Policy').includes(directive));
+  // Własne dźwięki gry wczytuje fetch() adresu blob: (shared/js/core/sfx.js).
+  assert.match(baseline.headers.get('Content-Security-Policy'), /connect-src [^;]*\bblob:/);
 });
 
 test('sitemap includes each localized homepage and retains published game URLs', async () => {
