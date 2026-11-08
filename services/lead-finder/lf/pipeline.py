@@ -64,13 +64,12 @@ def ceidg_run_queue(categories, done):
 
 
 class Engine:
-    def __init__(self, db, client, searx_url, ceidg=None, mx_check=None, notify=None):
+    def __init__(self, db, client, searx_url, ceidg=None, mx_check=None):
         self.db = db
         self.client = client
         self.searx_url = searx_url
         self.ceidg = ceidg
         self.mx_check = mx_check
-        self.notify = notify
         self.status = 'idle'
         self.run_id = None
         self.target = 0
@@ -516,8 +515,7 @@ class Engine:
             final = 'completed'
             msg = f'Zlecenie zakończone. Nowe kontakty: {self.verified}/{self.target}.'
             log.info(msg)
-            if self.notify:
-                await self.notify(f'✅ <b>Lead Finder</b>\n{msg}')
+            # Powiadomienie admina o końcu i błędzie: trigger na marketing_runs (E29).
         except Stopped:
             final = 'cancelled'
             if self.status != 'lost':
@@ -526,8 +524,13 @@ class Engine:
             self.status = 'cancelled'
             final = 'cancelled'
             log.error('DeepSeek niedostępny (wyłączony albo limit). Przerywam.')
-            if self.notify:
-                await self.notify('⚠️ <b>Zlecenie przerwane</b>\nDeepSeek niedostępny (wyłączony albo limit).')
+            # Status „cancelled” nie odróżnia tego od przerwania przez admina —
+            # powiadomienie push wprost (E29, skrzynka push_outbox).
+            try:
+                await self.db.rpc('push_admin_event', {'p_event': 'job_error', 'p_vars': {
+                    'what': 'contacts', 'reason': 'DeepSeek niedostępny (wyłączony albo limit). Zlecenie przerwane.'}})
+            except Exception as e:  # powiadomienie nie może zatrzymać pracy
+                log.warning('push_admin_event: %s', describe_error(e))
         except asyncio.CancelledError:
             # Zatrzymanie usługi (wdrożenie, restart): przebieg zostaje aktywny,
             # dzierżawa oddana — nowy proces przejmie go od razu.
@@ -537,8 +540,6 @@ class Engine:
             self.status = 'error'
             self.stats['errors'] += 1
             log.error('Błąd przebiegu: %s', describe_error(e), exc_info=True)
-            if self.notify:
-                await self.notify('❌ <b>Błąd Lead Findera</b> — szczegóły w logach panelu.')
         finally:
             beat.cancel()
             if interrupted:
