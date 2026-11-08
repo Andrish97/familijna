@@ -2,6 +2,7 @@ const { test, expect } = require('./helpers/e2e-test');
 const { serveBranchCode } = require('./helpers/branch-code');
 const { resetMailProviderLimits, waitForEmail, extractHttpLinks } = require('./helpers/mailbox');
 const { expectMailDocument } = require('./helpers/mail-document');
+const { generateE2EToken } = require('./helpers/e2e-token');
 const URL = 'https://www.familijna.app/mails/';
 test.use({ serviceWorkers: 'block' });
 // E25: właściciel i skrzynka bez konta wypożyczane na worker (tests/README.md
@@ -14,6 +15,10 @@ let EMAIL = null;
 async function branch(context) {
   if (process.env.GITHUB_REF_NAME !== 'main' && process.env.TEST_BRANCH_CODE !== '0') await serveBranchCode(context, { pages: ['mails', 'go', 'subscribers'] });
   await context.addInitScript(() => { localStorage.setItem('uiLang', 'pl'); localStorage.setItem('fam:app_rating_suppressed', 'true'); });
+  // Prośba o link wymaga Turnstile (E24 R7): atrapa widżetu, a Worker przy
+  // podpisanym X-E2E-Token weryfikuje token testowym kluczem Cloudflare.
+  await context.addInitScript(() => { window.turnstile = { render(_el, opts) { setTimeout(() => opts.callback('e2e-fake-token'), 0); return 1; }, remove() {} }; });
+  await context.route('**/_api/mail/request', route => route.continue({ headers: { ...route.request().headers(), 'X-E2E-Token': generateE2EToken(process.env.E2E_BYPASS_SECRET) } }));
 }
 async function cleanup(page) {
   return page.evaluate(async email => {
