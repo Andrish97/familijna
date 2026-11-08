@@ -1456,7 +1456,7 @@
   /* Wygląd każdego menu (jeden): język, konto, „Więcej”, lista wyboru,
      menu kontekstowe, wysuwane panele paska rysowania, panel hamburgera.
      Kryjące tło: półprzezroczyste nakładały się przy przerysowaniach. */
-  :is(.lang-menu, .theme-menu, .account-menu, .nav-more-dropdown, .ui-select-menu, .context-menu, .ctxPop, .topbar-mobile-panel) {
+  :is(.lang-menu, .theme-menu, .account-menu, .nav-more-dropdown, .ui-select-menu, .context-menu, .topbar-mobile-panel) {
     --under: var(--surface-1);
     padding: 6px;
     border: 1px solid var(--line);

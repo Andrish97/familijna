@@ -17,7 +17,6 @@
 
 import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-07T22371";
 import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-07T22371";
-import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T22371";
 import { t } from "../../shared/translation/translation.js?v=v2026-11-07T22371";
 import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-07T22371";
 import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-07T22371";
@@ -103,10 +102,6 @@ export function initDrawEditor(ctx) {
     brush: $("tBrush"), eraser: $("tEraser"), shapes: $("tShapes"), text: $("tText"),
     undo: $("tUndo"), redo: $("tRedo"), duplicate: $("tDuplicate"), clear: $("tClear"), eye: $("tEye"),
   };
-  const fontPop = $("drawFontPickPop");
-  const fontSearch = $("drawFontSearchInp");
-  const fontList = $("drawFontList");
-  const fontEmpty = $("drawFontEmpty");
 
   // =========================================================
   // Stan
@@ -763,6 +758,17 @@ export function initDrawEditor(ctx) {
     toggleBtn("cAlignR", align === "right", icon("align-right"), T("alignRight")),
   );
 
+  // Czcionka: wspólna lista wyboru (ui-select), nazwy pisane swoim krojem.
+  let fontSel = null;
+  function mountFontSelect(value, onChange) {
+    fontSel?.destroy();
+    fontSel = initUiSelect($("cFont"), {
+      options: DRAW_FONTS.map((f) => ({ value: f.value, label: f.label, font: f.value })),
+      value: DRAW_FONTS.some((f) => f.value === value) ? value : DRAW_FONTS[0]?.value,
+      onChange,
+    });
+  }
+
   function mountLineStyle(id, value, onChange) {
     lineStyleSel?.destroy();
     lineStyleSel = initUiSelect($(id), {
@@ -788,8 +794,6 @@ export function initDrawEditor(ctx) {
 
   function renderSettings() {
     renderSettingsContent();
-    const fontBtn = $("cFont");
-    if (fontBtn) setVars(fontBtn.querySelector(".ui-select-label"), { "--font": fontBtn.dataset.font || null });
     if (!toolCtx || !selectedObjects().length || (tool !== TOOL.SELECT && tool !== TOOL.TEXT)) return;
     toolCtx.insertAdjacentHTML("beforeend", group(toggleBtn("cDelete", false, icon("close"), T("deleteSelection"), "danger")));
     $("cDelete").setAttribute("aria-keyshortcuts", "Delete Backspace");
@@ -801,6 +805,8 @@ export function initDrawEditor(ctx) {
     lineStyleSel = null;
     shapeSel?.destroy();
     shapeSel = null;
+    fontSel?.destroy();
+    fontSel = null;
     if (!toolCtx) return;
     toolCtx.dataset.empty = T("ctxEmpty"); // podpowiedź w pustym wierszu ustawień (CSS :empty)
     const active = canvas?.getActiveObject();
@@ -867,7 +873,7 @@ export function initDrawEditor(ctx) {
       font: s.font, size: s.size, lineHeight: s.lineHeight, spacing: s.spacing,
       bold: s.bold, italic: s.italic, underline: s.underline, align: s.align, color: s.fg,
     });
-    on("cFont", "click", () => openFontPicker(s.font, (v) => { s.font = v; renderSettings(); }));
+    mountFontSelect(s.font, (v) => { s.font = v; });
     bindNumber("cSz", ...RANGE.fontSize, 80, (v) => { s.size = v; });
     bindNumber("cLH", 0.6, 3, 1, (v) => { s.lineHeight = v; });
     bindNumber("cSp", 0, 20, 0, (v) => { s.spacing = v; });
@@ -881,11 +887,8 @@ export function initDrawEditor(ctx) {
   }
 
   function textSettingsHtml(v) {
-    const font = DRAW_FONTS.find((f) => f.value === v.font) || DRAW_FONTS[0];
-    const fontLabel = font?.label || T("fontFallback");
-    // wygląd listy wyboru (jak „Styl”); nazwa wybranej czcionki jej krojem (--font)
     return (
-      group(`<div class="ui-select ctxSelect ctxFont"><button class="btn ui-select-btn" id="cFont" type="button" aria-haspopup="listbox" title="${fontLabel}" data-font="${(font?.value || "").replace(/"/g, "&quot;")}"><span class="ui-select-label">${fontLabel}</span><span class="ui-select-caret" aria-hidden="true">${icon("caret-down")}</span></button></div>`) +
+      group(selectHtml("cFont").replace('class="ui-select ctxSelect"', 'class="ui-select ctxSelect ctxFont"')) +
       group(label(T("sizeLabel")) + numInput("cSz", ...RANGE.fontSize, 1, v.size)) +
       group(label(T("lineHeightLabel")) + numInput("cLH", 0.6, 3, 0.05, v.lineHeight)) +
       group(label(T("letterSpacingLabel")) + numInput("cSp", 0, 20, 0.5, v.spacing)) +
@@ -914,7 +917,7 @@ export function initDrawEditor(ctx) {
       obj.setCoords();
       if (final) { keepInWorld(obj); commit(); canvas.requestRenderAll(); } else touch();
     };
-    on("cFont", "click", () => openFontPicker(obj.fontFamily, (v) => { setObj({ fontFamily: v }); renderSettings(); }));
+    mountFontSelect(obj.fontFamily, (v) => setObj({ fontFamily: v }));
     bindNumber("cSz", ...RANGE.fontSize, 80, (v, final) => setObj({ fontSize: v }, final));
     bindNumber("cLH", 0.6, 3, 1, (v, final) => setObj({ lineHeight: v }, final));
     bindNumber("cSp", 0, 20, 0, (v, final) => setObj({ charSpacing: v * 50 }, final));
@@ -977,11 +980,9 @@ export function initDrawEditor(ctx) {
   }
 
   // =========================================================
-  // Wybór fontu (popover z wyszukiwarką)
+  // Lista czcionek (pole wyboru w pasku ustawień tekstu)
   // =========================================================
   let DRAW_FONTS = [];
-  let fontOnSelect = null;
-  let fontCurrent = "";
 
   async function loadFonts() {
     if (DRAW_FONTS.length) return;
@@ -1003,56 +1004,6 @@ export function initDrawEditor(ctx) {
     await Promise.all([...families].map(font => document.fonts?.load(font, "Familijna").catch(() => [])));
     await document.fonts?.ready;
   }
-
-  function renderFontList() {
-    const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-    const q = norm(fontSearch?.value || "");
-    const list = q ? DRAW_FONTS.filter((f) => norm(f.label).includes(q) || norm(f.value).includes(q)) : DRAW_FONTS;
-    fontEmpty.hidden = list.length > 0;
-    fontList.innerHTML = "";
-    for (const f of list) {
-      const item = document.createElement("button");
-      item.type = "button";
-      item.className = "menu-item fontPickItem";
-      item.setAttribute("aria-selected", String(f.value === fontCurrent));
-      // nazwa czcionki pisana tą czcionką (bez osobnej kolumny z próbką)
-      const name = document.createElement("span");
-      name.className = "fontPickName";
-      name.textContent = f.label;
-      setVars(name, { "--font": f.value });
-      item.append(name);
-      item.addEventListener("click", () => {
-        fontOnSelect?.(f.value);
-        closeFontPicker();
-      });
-      fontList.appendChild(item);
-    }
-  }
-
-  function openFontPicker(current, onSelect) {
-    if (!fontPop || !DRAW_FONTS.length) return;
-    fontCurrent = current || "";
-    fontOnSelect = onSelect;
-    placeDropdown($("cFont") || $("toolsDraw"), fontPop, { align: "start" });
-    fontPop.hidden = false;
-    fontSearch.value = "";
-    if ($("drawFontSearchClear")) $("drawFontSearchClear").hidden = true;
-    renderFontList();
-    fontSearch.focus();
-  }
-
-  function closeFontPicker() {
-    if (fontPop) fontPop.hidden = true;
-    fontOnSelect = null;
-  }
-
-  // X w polu tylko z wpisanym tekstem — jak w polach szukania list.
-  const syncFontClear = () => { const c = $("drawFontSearchClear"); if (c) c.hidden = !fontSearch?.value; };
-  fontSearch?.addEventListener("input", () => { syncFontClear(); renderFontList(); });
-  $("drawFontSearchClear")?.addEventListener("click", () => { fontSearch.value = ""; syncFontClear(); renderFontList(); fontSearch.focus(); });
-  document.addEventListener("pointerdown", (e) => {
-    if (fontPop && !fontPop.hidden && !fontPop.contains(e.target)) closeFontPicker();
-  }, true);
 
   // =========================================================
   // Podpowiedzi przycisków (nad przyciskiem, z JS -- CSS-owe ucinał pasek)
@@ -1561,8 +1512,6 @@ export function initDrawEditor(ctx) {
       baseTool = tool = TOOL.SELECT;
       drawing = null;
       clearPolyDraft();
-      closeFontPicker();
-
       resizeStage();
       await loadSource(payload);
       await loadSceneFonts();
@@ -1581,7 +1530,8 @@ export function initDrawEditor(ctx) {
     close() {
       paneDraw.hidden = true;
       if (canvas && isTextObj(canvas.getActiveObject())) canvas.getActiveObject().exitEditing?.();
-      closeFontPicker();
+      fontSel?.destroy();
+      fontSel = null;
       hideCursorDot();
       if (toolCtx) toolCtx.innerHTML = "";
     },

@@ -18,7 +18,7 @@
   "sharedDuplicate": 1
  },
  "web/logos/css/logo.css": {
-  "sharedDuplicate": 2
+  "sharedDuplicate": 1
  },
  "web/marketplace/css/marketplace.css": {
   "sharedDuplicate": 1
@@ -27,7 +27,7 @@
   "sharedDuplicate": 1
  },
  "web/shared/style/components.css": {
-  "sharedDuplicate": 10,
+  "sharedDuplicate": 9,
   "unusedClass": 2
  },
  "web/shared/style/layout.css": {

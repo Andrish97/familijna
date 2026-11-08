@@ -256,6 +256,16 @@
   }
 
 
+  /* =========================================================
+     DRAW: kreska podziału między narzędziami a ustawieniami
+  ========================================================= */
+  .toolRowSep{
+    width: 100%;
+    height: 1px;
+    background: var(--w-8);
+    margin: 2px 0;
+  }
+
   /* Stały wiersz ustawień narzędzia: płótno nie skacze przy zmianie narzędzia
      (testy i użytkownik klikają w to samo miejsce). Gdy narzędzie nie ma
      ustawień -- podpowiedź zamiast pustego pasa (uwaga użytkownika 2026-10-20). */
@@ -330,8 +340,42 @@
   /* pole liczbowe bez strzałek przeglądarki: kroki robią − i + */
   .ctxInput::-webkit-inner-spin-button, .ctxInput::-webkit-outer-spin-button{ -webkit-appearance: none; margin: 0; }
   .ctxInput{ -moz-appearance: textfield; appearance: textfield; }
-  .stepper{ display: inline-flex; align-items: center; gap: 4px; }
-  .stepBtn{ font-size: 17px; font-weight: 800; }
+  /* − pole + w jednym okienku: wspólna ramka, przyciski bez własnych ramek,
+     cienkie kreski między częściami */
+  .stepper{
+    display: inline-flex;
+    align-items: stretch;
+    box-sizing: border-box;
+    height: var(--ctl-h);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--surface-inset);
+    overflow: hidden;
+  }
+  .editorToolbar .stepper .stepBtn{
+    height: 100%;
+    min-height: 0;
+    width: calc(var(--ctl-h) - 6px);
+    min-width: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text-muted);
+  }
+  .editorToolbar .stepper .stepBtn:hover{ color: var(--accent); background: var(--w-8); }
+  .editorToolbar .stepper .ctxInput{
+    height: 100%;
+    min-height: 0;
+    border: 0;
+    border-left: 1px solid var(--line-faint);
+    border-right: 1px solid var(--line-faint);
+    border-radius: 0;
+    background: transparent;
+  }
+  /* pasek suwaka obrazu: suwak w tym samym okienku */
+  #imgPanels .stepper .rng.v{ padding: 0 12px; border-left: 1px solid var(--line-faint); border-right: 1px solid var(--line-faint); box-sizing: border-box; height: 100%; }
   .ctxFmt.is-b{ font-weight: 900; }
   .ctxFmt.is-i{ font-style: italic; }
   .ctxFmt.is-u{ text-decoration: underline; }
@@ -362,41 +406,6 @@
     flex-shrink: 0;
     white-space: nowrap;
   }
-
-  /* =========================================================
-     FONT PICKER (FIXED popover)
-  ========================================================= */
-  #fontPick{ position: relative; display:inline-flex; align-items:center; gap:8px; }
-
-  /* Wybór fontu (narzędzie tekstu w rysowaniu): popover FIXED, pozycję
-     ustawia JS. */
-  .fontPickPop:not([hidden]){
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: calc(var(--z-top) + 1);
-    display: block;
-    max-width: calc(100vw - 16px);
-    box-sizing: border-box;
-  }
-  .fontPickPop .fontPickPanel{
-    width: min(520px, calc(100vw - 16px));
-    max-height: min(360px, calc(100vh - 24px));
-    overflow: hidden;
-    padding: 0;
-  }
-  .fontPickPop .fontPickSearch{
-    padding: 10px;
-    border-bottom: 1px solid var(--w-8);
-  }
-  .fontPickPop .fontPickList{
-    padding: 6px;
-    overflow-y: auto;
-    max-height: 280px;
-  }
-  /* Pozycja: wspólne .menu-item; tu tylko układ nazwy i próbki. */
-  .fontPickPop .fontPickItem{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
-  .fontPickPop .fontPickEmpty{ padding: 16px; text-align: center; opacity: .6; font-size: 13px; }
 
   /* =========================================================
      CONTENT (bez scrolla strony)
@@ -686,14 +695,18 @@
   }
   #imgPanels .imgPanelVal{ font-family: var(--font-mono); color: var(--accent); }
   #imgPanels .imgStepRow{ flex: 1 1 auto; min-width: 0; display: flex; gap: 10px; }
-  #imgPanels .rng.v{ flex: 1 1 auto; min-width: 0; height: 20px; }
-  @media (pointer: coarse){
-    #imgPanels .rng.v{ height: 32px; }
-  }
+  #imgPanels .rng.v{ flex: 1 1 auto; min-width: 0; }
 
   #toolsImage .imgRotBtn{ width: var(--ctl-h); min-width: var(--ctl-h); padding: 0; }
-  /* „Odwróć”: wysokość i krój jak przyciski paska */
-  .imgInvert{ min-height: var(--ctl-h); align-items: center; font-size: 13px; font-weight: 800; }
+  /* „Odwróć”: zwykły wybór z etykietą w otoczce jak przyciski paska */
+  #toolsImage .choice{
+    box-sizing: border-box;
+    min-height: var(--ctl-h);
+    align-items: center;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+  }
   #toolsImage .imgRotBtn .ico{ width: 18px; height: 18px; }
 
 
@@ -792,24 +805,12 @@
     letter-spacing: .02em;
   }
 
-  /* =========================================================
-     Wysuwane listy paska ustawień (kształty, fonty) — wygląd jak
-     .ui-select-menu / .menu-item z css/base.css. Tło kryjące i bez
-     backdrop-filter: półprzezroczyste tło z rozmyciem w Chrome na Androidzie
-     dawało przyciskom różne odcienie (jak jeden gradient na całej liście).
-  ========================================================= */
-  .ctxPop{
-    color: var(--text);
-  }
-
-
-
   /* listy wyboru w pasku ustawień (kształt, styl linii, czcionka) */
   .ctxGroup .ui-select.ctxSelect{ min-width: 110px; }
   .ctxGroup .ui-select.ctxSelect .ui-select-btn{ width: 100%; padding: 0 10px; font-size: 13px; gap: 8px; }
-  /* czcionka: stała szerokość, nazwa wybranej czcionki jej krojem */
-  .ctxFont{ width: 170px; }
-  .ctxFont .ui-select-label{ font-family: var(--font, inherit); font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  /* czcionka: zwykła lista wyboru; nazwy pisane swoim krojem (--font z ui-select) */
+  .ctxGroup .ui-select.ctxFont{ width: 170px; }
+  .ctxFont :is(.ui-select-label, .menu-item-label){ font-family: var(--font, inherit); font-size: 15px; }
 }
 
 /* Podgląd logo. W oknie od dołu (telefon, tablet) wygląd okna daje silnik
@@ -947,5 +948,5 @@
     box-shadow: 0 0 0 1px var(--k-40);
   }
   .draw-cursor-dot.is-round { border-radius: var(--r-pill); }
-  .fontPickName { flex: 1; text-align: left; font-family: var(--font, var(--font-ui)); font-size: 16px; }
+
 }
