@@ -1,5 +1,5 @@
-import { t } from "../../translation/translation.js?v=v2026-11-08T21595";
-import { icon } from "./icons.js?v=v2026-11-08T21595";
+import { t } from "../../translation/translation.js?v=v2026-11-08T22484";
+import { icon } from "./icons.js?v=v2026-11-08T22484";
 
 // „Postaw kawę”: dobrowolne wsparcie twórcy, bez żadnych korzyści w aplikacji.
 // Filiżanka w stopce (obok Kontaktu, bez napisu) otwiera okno z wyjaśnieniem
@@ -50,7 +50,7 @@ export async function openSupportModal() {
   if (!SUPPORT_URL) return false;
   await translationsReady();
   const [{ confirmModal }, { isSheetViewport }] = await Promise.all([
-    import("./modal.js?v=v2026-11-08T21595"), import("./modal-sheet.js?v=v2026-11-08T21595"),
+    import("./modal.js?v=v2026-11-08T22484"), import("./modal-sheet.js?v=v2026-11-08T22484"),
   ]);
   const box = document.createElement("div");
   box.className = "support-sizes";
