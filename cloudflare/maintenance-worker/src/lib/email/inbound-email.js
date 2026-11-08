@@ -2,7 +2,7 @@
 import { normalizeE2ERecipient } from "../e2e/e2e-api.js";
 import { isE2EPlusAddress, e2eIdentityName } from "../e2e/e2e-lease.js";
 import { supabaseRequest, supabaseRpc, summarizeSupabaseError } from "../core/supabase.js";
-import { uploadToStorage } from "../core/storage.js";
+import { uploadToStorage, safeStorageName } from "../core/storage.js";
 import { findTicketOwner } from "./contact.js";
 import { recordMarketingReactions } from "./marketing-reactions.js";
 import { htmlToPlainTextPreview } from "./html-to-text.js";
@@ -185,7 +185,7 @@ export async function handleInboundEmail(message, env) {
     if (msgId && inboundAttachments.length) {
       for (const att of inboundAttachments) {
         try {
-          const objectKey = `inbound_${msgId}_${att.filename}`;
+          const objectKey = `inbound_${msgId}_${safeStorageName(att.filename)}`;
           const storagePath = `message-attachments/${objectKey}`;
           await uploadToStorage(env, storagePath, att.data_b64, att.mimeType);
           const saveRes = await supabaseRpc(env, "save_attachment", {

@@ -7,12 +7,12 @@
 //   „Folder główny” = do folderu głównego,
 // - → tag w lewym panelu: nadaj tag (całe poddrzewa folderów).
 
-import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-08T15444";
-import { renderSelection } from "../render.js?v=v2026-11-08T15444";
-import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-08T15444";
-import { isCopyDragModifier } from "../platform.js?v=v2026-11-08T15444";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-08T15444";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-08T15444";
+import { selectionSetSingle, currentFolderId, hasQuery, isTrash } from "../state.js?v=v2026-11-08T15451";
+import { renderSelection } from "../render.js?v=v2026-11-08T15451";
+import { moveItems, copyItems, reorderFolders, assignTag } from "../commands.js?v=v2026-11-08T15451";
+import { isCopyDragModifier } from "../platform.js?v=v2026-11-08T15451";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-08T15451";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-08T15451";
 
 const MARKS = ["is-drop-target", "is-drop-before", "is-drop-after", "is-drop-into"];
 
