@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict AsRtdJqMM3NHYOeydrgvLHnDLuWyOKO9nekbIceFDCOi2Iec33eJrXPVSDp6EcS
+\restrict mC38eG3003boDjLJqeBS3sIiFdfUWRDoFJqKiLFdx9zT7zPYR243juUoYRrNdRQ
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -3218,6 +3218,28 @@ $$;
 
 
 --
+-- Name: _market_game_recount("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_market_game_recount"("p_game_id" "uuid") RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  UPDATE public.market_games mg SET
+    rating_count = (SELECT COUNT(*) FROM public.market_game_ratings r
+                    WHERE r.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)),
+    avg_rating   = COALESCE((SELECT ROUND(AVG(r.stars::numeric), 2) FROM public.market_game_ratings r
+                    WHERE r.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)), 0),
+    library_count = (SELECT COUNT(*) FROM public.user_market_library l
+                    WHERE l.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = l.user_id))
+  WHERE mg.id = p_game_id;
+$$;
+
+
+--
 -- Name: _market_submit_game_before_content_guard("uuid", "text", "text", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5850,7 +5872,8 @@ DECLARE
   v_guest boolean;
 BEGIN
   SELECT p.is_guest INTO v_guest FROM public.profiles p WHERE p.id = OLD.user_id;
-  IF NOT coalesce(v_guest, NEW.from_guest) OR public.is_test_user(OLD.user_id) THEN
+  IF NOT coalesce(v_guest, NEW.from_guest)
+     OR EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = OLD.user_id) THEN
     DELETE FROM public.app_ratings WHERE id = NEW.id;
   END IF;
   RETURN NULL;
@@ -10862,9 +10885,12 @@ BEGIN
     WHERE s.status = 'legacy' AND NOT (g.owner_id = ANY(excluded_ids));
 
   -- Polls
-  SELECT COUNT(*) INTO poll_sessions_7d FROM public.poll_sessions WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO poll_votes_7d    FROM public.poll_votes    WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO poll_votes_total FROM public.poll_votes;
+  SELECT COUNT(*) INTO poll_sessions_7d FROM public.poll_sessions ps JOIN public.games g ON g.id = ps.game_id
+    WHERE ps.created_at >= now() - interval '7 days' AND NOT (g.owner_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO poll_votes_7d    FROM public.poll_votes v JOIN public.games g ON g.id = v.game_id
+    WHERE v.created_at >= now() - interval '7 days' AND NOT (g.owner_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO poll_votes_total FROM public.poll_votes v JOIN public.games g ON g.id = v.game_id
+    WHERE NOT (g.owner_id = ANY(excluded_ids));
 
   -- Question bases
   SELECT COUNT(*) INTO bases_total     FROM public.question_bases WHERE is_demo = false AND NOT (owner_id = ANY(excluded_ids));
@@ -10887,11 +10913,18 @@ BEGIN
   END;
 
   -- Ratings
-  SELECT COUNT(*) INTO total_ratings FROM public.app_ratings;
-  SELECT COALESCE(ROUND(AVG(stars), 1), 0) INTO avg_rating FROM public.app_ratings;
-  SELECT COUNT(*) INTO ratings_new_today FROM public.app_ratings WHERE created_at >= CURRENT_DATE;
-  SELECT COUNT(*) INTO ratings_new_7d    FROM public.app_ratings WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO ratings_new_30d   FROM public.app_ratings WHERE created_at >= now() - interval '30 days';
+  -- 529: bez kont wykluczonych (testowe i ręcznie); ocena wygasłego gościa
+  -- (user_id null) zostaje.
+  SELECT COUNT(*) INTO total_ratings FROM public.app_ratings r
+    WHERE r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids));
+  SELECT COALESCE(ROUND(AVG(r.stars), 1), 0) INTO avg_rating FROM public.app_ratings r
+    WHERE r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO ratings_new_today FROM public.app_ratings r WHERE r.created_at >= CURRENT_DATE
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
+  SELECT COUNT(*) INTO ratings_new_7d    FROM public.app_ratings r WHERE r.created_at >= now() - interval '7 days'
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
+  SELECT COUNT(*) INTO ratings_new_30d   FROM public.app_ratings r WHERE r.created_at >= now() - interval '30 days'
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
 
   result := jsonb_build_object(
     'timestamp', now(),
@@ -11681,6 +11714,7 @@ BEGIN
         rt.created_at
       FROM public.app_ratings rt
       LEFT JOIN public.profiles pr ON pr.id = rt.user_id
+      WHERE rt.user_id IS NULL OR NOT (rt.user_id = ANY(excluded_ids))
       ORDER BY rt.created_at DESC
       LIMIT p_limit
     ) r;
@@ -19667,6 +19701,29 @@ $$;
 
 
 --
+-- Name: stats_excluded_users_recount(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."stats_excluded_users_recount"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  v_user uuid := CASE WHEN tg_op = 'DELETE' THEN OLD.user_id ELSE NEW.user_id END;
+  v_game uuid;
+BEGIN
+  FOR v_game IN
+    SELECT market_game_id FROM public.market_game_ratings WHERE user_id = v_user
+    UNION SELECT market_game_id FROM public.user_market_library WHERE user_id = v_user
+  LOOP
+    PERFORM public._market_game_recount(v_game);
+  END LOOP;
+  RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: stats_unexclude_user("uuid"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -19955,19 +20012,11 @@ END $$;
 --
 
 CREATE FUNCTION "public"."sync_market_game_rating_stats"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'extensions', 'pg_temp'
     AS $$
-DECLARE v_id uuid;
 BEGIN
-  v_id := COALESCE(NEW.market_game_id, OLD.market_game_id);
-  UPDATE public.market_games
-  SET
-    rating_count = (SELECT COUNT(*) FROM public.market_game_ratings r
-                    WHERE r.market_game_id = v_id AND NOT public.is_test_user(r.user_id)),
-    avg_rating   = COALESCE((SELECT ROUND(AVG(r.stars::numeric), 2) FROM public.market_game_ratings r
-                    WHERE r.market_game_id = v_id AND NOT public.is_test_user(r.user_id)), 0)
-  WHERE id = v_id;
+  PERFORM public._market_game_recount(COALESCE(NEW.market_game_id, OLD.market_game_id));
   RETURN NULL;
 END;
 $$;
@@ -20237,25 +20286,12 @@ CREATE FUNCTION "public"."trg_market_library_count"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-begin
-    if tg_op = 'INSERT' then
-        update public.market_games
-           set library_count = library_count + 1,
-               updated_at    = now()
-         where id = new.market_game_id;
-        return new;
-    end if;
-
-    if tg_op = 'DELETE' then
-        update public.market_games
-           set library_count = greatest(0, library_count - 1),
-               updated_at    = now()
-         where id = old.market_game_id;
-        return old;
-    end if;
-
-    return null;
-end;
+BEGIN
+  PERFORM public._market_game_recount(CASE WHEN tg_op = 'DELETE' THEN OLD.market_game_id ELSE NEW.market_game_id END);
+  UPDATE public.market_games SET updated_at = now()
+   WHERE id = CASE WHEN tg_op = 'DELETE' THEN OLD.market_game_id ELSE NEW.market_game_id END;
+  RETURN CASE WHEN tg_op = 'DELETE' THEN OLD ELSE NEW END;
+END;
 $$;
 
 
@@ -25160,6 +25196,13 @@ CREATE TRIGGER "resource_copy_mail_epoch" AFTER UPDATE ON "public"."resource_cop
 
 
 --
+-- Name: stats_excluded_users stats_excluded_users_recount; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "stats_excluded_users_recount" AFTER INSERT OR DELETE ON "public"."stats_excluded_users" FOR EACH ROW EXECUTE FUNCTION "public"."stats_excluded_users_recount"();
+
+
+--
 -- Name: games storage_cleanup_kick; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -28247,5 +28290,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AsRtdJqMM3NHYOeydrgvLHnDLuWyOKO9nekbIceFDCOi2Iec33eJrXPVSDp6EcS
+\unrestrict mC38eG3003boDjLJqeBS3sIiFdfUWRDoFJqKiLFdx9zT7zPYR243juUoYRrNdRQ
 
