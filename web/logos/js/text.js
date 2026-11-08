@@ -3,9 +3,9 @@
 // fontu 5x7). Glify przycięte do szerokości, stała 1 kolumna przerwy,
 // napis wyśrodkowany.
 
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T15293";
-import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15293";
-import { TILES_X, TILES_Y, TYPE_GLYPH, normalizeRows } from "./render.js?v=v2026-11-08T15293";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T15311";
+import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15311";
+import { TILES_X, TILES_Y, TYPE_GLYPH, normalizeRows } from "./render.js?v=v2026-11-08T15311";
 
 
 const GLYPH_W = 3;
