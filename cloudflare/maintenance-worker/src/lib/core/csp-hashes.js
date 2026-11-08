@@ -5,4 +5,5 @@ export const INLINE_SCRIPT_HASHES = [
   "'sha256-eh2sumC7yZUf+ohKN/0kUt7fo4lfu4WqBSgTohbEBgc='", // web/control/index.html
   "'sha256-C73sXtJ9OQKF8BPKAJVV9Vuc1oZeZ7qiTJjgJIYDafE='", // web/index.html
   "'sha256-Dyjnhyn5lsPfE5yXL4W3e2MG017EOYSJE5cpVsJTfyE='", // web/logos/editor/draw/index.html
+  "'sha256-1Sl3dR/lx2K/Cg2CH4pbKwB2yVxmeJf1dsnFZ558zOY='", // scripts/module-preload.cjs (build)
 ];

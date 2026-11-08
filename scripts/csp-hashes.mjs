@@ -6,6 +6,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "cloudflare/maintenance-worker/src/lib/core/csp-hashes.js");
@@ -32,6 +33,9 @@ export function inlineScripts() {
 
 export function render() {
   const found = inlineScripts();
+  // Skrypt doklejany przy budowaniu strony (scripts/module-preload.cjs) — treść stała.
+  const { TRANSLATION_PRELOAD_JS } = createRequire(import.meta.url)("./module-preload.cjs");
+  found.set(`'sha256-${crypto.createHash("sha256").update(TRANSLATION_PRELOAD_JS, "utf8").digest("base64")}'`, { file: "scripts/module-preload.cjs (build)", versioned: false });
   const bad = [...found.values()].filter((x) => x.versioned).map((x) => x.file);
   if (bad.length) throw new Error(`skrypt wbudowany z ?v= (hash zmieniałby się przy wersjonowaniu): ${bad.join(", ")}`);
   const lines = [...found.entries()].map(([h, x]) => `  "${h}", // ${x.file}`);

@@ -49,16 +49,18 @@ test('artifact preloads the whole static module graph and the page dictionary pa
   assert.ok(html.indexOf('<link rel="modulepreload"') > html.indexOf('rel="stylesheet"'));
   assert.ok(html.indexOf('<link rel="modulepreload"') < html.indexOf('</head>'));
   assert.equal((html.match(/<link rel="modulepreload"[^>]*fetchpriority="low"/g) || []).length, preloads.length);
-  assert.ok(html.indexOf('<script data-preload>') < html.indexOf('rel="stylesheet"'));
+  assert.ok(html.indexOf('<script data-preload') < html.indexOf('rel="stylesheet"'));
   const translationVersion = preloads.find(url => url.startsWith('/shared/translation/translation.js')).split('?')[1];
-  assert.match(html, new RegExp(`new URL\\("/shared/translation/translation\\.js\\?${translationVersion}"`));
-  assert.match(html, /\["common","page"\]\.forEach/);
+  assert.match(html, new RegExp(`data-tr="/shared/translation/translation\\.js\\?${translationVersion}"`));
+  assert.match(html, /data-parts='\["common","page"\]'/);
 
   // Skrypt części słownika: język jak w getUiLang(), linki z wersją translation.js.
-  const script = html.match(/<script data-preload>([\s\S]*?)<\/script>/)[1];
+  const tag = html.match(/<script data-preload([^>]*)>([\s\S]*?)<\/script>/);
+  const script = tag[2];
+  const attrs = Object.fromEntries([...tag[1].matchAll(/(data-[a-z]+)=(?:"([^"]*)"|'([^']*)')/g)].map(m => [m[1], m[2] ?? m[3]]));
   const run = (search, stored, language) => {
     const added = [];
-    const document = { head: { appendChild: el => added.push(el.href) }, createElement: () => ({}) };
+    const document = { head: { appendChild: el => added.push(el.href) }, createElement: () => ({}), currentScript: { getAttribute: name => attrs[name] } };
     const localStorage = { getItem: () => stored };
     new Function('document', 'location', 'localStorage', 'navigator', 'URL', 'URLSearchParams', script)(
       document, { search, href: 'https://example.test/page/' + search }, localStorage, { language }, URL, URLSearchParams);

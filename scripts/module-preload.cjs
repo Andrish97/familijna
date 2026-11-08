@@ -67,13 +67,17 @@ async function staticGraph(root, entries, inline) {
   return found;
 }
 
+// Treść skryptu stała (E24 R12: CSP po hashu — scripts/csp-hashes.mjs); wersja
+// translation.js i lista części w atrybutach data-, które przepisuje wersjonowanie.
+const TRANSLATION_PRELOAD_JS = '(function(){var s=document.currentScript,q="";try{q=new URLSearchParams(location.search).get("lang")||"";if(!q)q=localStorage.getItem("uiLang")||""}catch(e){}'
+  + 'if(!q)q=navigator.language||"";q=String(q).toLowerCase();var l=/^pl/.test(q)?"pl":/^en/.test(q)?"en":/^(uk|ua)/.test(q)?"uk":"pl";'
+  + 'var v=new URL(s.getAttribute("data-tr"),location.href).search;'
+  + 'JSON.parse(s.getAttribute("data-parts")).forEach(function(p){var e=document.createElement("link");e.rel="modulepreload";e.href="/shared/translation/"+l+"/"+p+".js"+v;document.head.appendChild(e)})})()';
+
 function translationScript(parts) {
   const list = JSON.stringify(['common', ...parts.filter(part => part !== 'common')]);
   // Ten sam wybór języka co getUiLang() w translation.js. Wersja części = wersja translation.js.
-  return '<script ' + MARK + '>(function(){var q="";try{q=new URLSearchParams(location.search).get("lang")||"";if(!q)q=localStorage.getItem("uiLang")||""}catch(e){}'
-    + 'if(!q)q=navigator.language||"";q=String(q).toLowerCase();var l=/^pl/.test(q)?"pl":/^en/.test(q)?"en":/^(uk|ua)/.test(q)?"uk":"pl";'
-    + `var v=new URL("${TRANSLATION}?v=vASSET",location.href).search;`
-    + `${list}.forEach(function(p){var e=document.createElement("link");e.rel="modulepreload";e.href="/shared/translation/"+l+"/"+p+".js"+v;document.head.appendChild(e)})})()</script>`;
+  return `<script ${MARK} data-tr="${TRANSLATION}?v=vASSET" data-parts='${list}'>${TRANSLATION_PRELOAD_JS}</script>`;
 }
 
 async function addModulePreloads(root) {
@@ -129,7 +133,7 @@ async function addModulePreloads(root) {
   return { pages, links };
 }
 
-module.exports = { addModulePreloads };
+module.exports = { addModulePreloads, TRANSLATION_PRELOAD_JS };
 if (require.main === module) {
   const root = process.argv[2];
   if (!root) { console.error('Użycie: module-preload.cjs KATALOG_ARTEFAKTU'); process.exitCode = 2; }
