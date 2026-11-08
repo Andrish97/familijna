@@ -374,6 +374,18 @@ function inspectLayout(opts) {
     add("warstwy-kart", el, `${chain.length} poziomy: ${chain.map((e) => label(e)).join(" › ")}`);
   }
 
+  // Okno od dołu na dotyku (E28): przy data-sheet każde otwarte rozbudowane
+  // okno (.overlay poza małymi confirm/alert/prompt z modal.js) jest arkuszem
+  // (.sheet-active) -- otwarte przez openDialog(), z klasą .modal--sheet.
+  if (document.documentElement.hasAttribute("data-sheet")) {
+    for (const el of document.querySelectorAll(".overlay")) {
+      if (el.hidden || getComputedStyle(el).display === "none") continue;
+      if (el.classList.contains("uni-overlay") && !el.classList.contains("modal--sheet")) continue;
+      if (el.classList.contains("sheet-active")) continue;
+      add("okno-nie-arkusz", el, el.classList.contains("modal--sheet") ? "otwarte bez openDialog()" : "bez .modal--sheet");
+    }
+  }
+
   // Atrybut hidden / klasa .hidden musi chować element -- żadna reguła strony
   // ani silnika nie może przywrócić mu display.
   for (const el of document.querySelectorAll("[hidden], .hidden")) {
