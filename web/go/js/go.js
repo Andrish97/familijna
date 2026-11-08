@@ -1,16 +1,16 @@
-import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T18554";
+import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T19051";
 // web/go/js/go.js
-import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-08T18554";
-import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-08T18554";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T18554";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T18554";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T18554";
-import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-08T18554";
-import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T18554";
+import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-08T19051";
+import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-08T19051";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T19051";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T19051";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T19051";
+import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-08T19051";
+import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T19051";
 
-import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-08T18554";
-import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-08T18554";
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T18554";
+import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-08T19051";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-08T19051";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T19051";
 
 const i18nReady = initEntryPage("go", { ready: initI18n({ withSwitcher: true }) }).then(() => {
   document.querySelector("main[data-skel-step]")?.classList.add("skel-step-ready");
