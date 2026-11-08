@@ -10,9 +10,9 @@
 // ale odmawia albo ją zwalnia np. w trybie oszczędzania energii — ekran
 // wtedy też się pokazuje, a tekst podpowiada wyłączenie tego trybu.
 
-import { t } from "../../translation/translation.js?v=v2026-11-08T09461";
-import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T09461";
-import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-08T09461";
+import { t } from "../../translation/translation.js?v=v2026-11-08T09471";
+import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T09471";
+import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-08T09471";
 
 function mobileDevice() {
   const ua = navigator.userAgent || "";
