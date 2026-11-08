@@ -24,14 +24,14 @@
 // matematyki animacji/fontów od zera nie dałoby żadnej korzyści, tylko
 // ryzyko niezgodności z tym, jak wygląda dziś (ustalone wprost).
 
-import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-08T14583";
-import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-08T14583";
-import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-08T14583";
-import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-08T14583";
-import { createThemeManager } from "../../../shared/js/display/theme_manager.js?v=v2026-11-08T14583";
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T14583";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T14583";
-import { clipDisplayText } from "../../../shared/js/gameplay/displayText.js?v=v2026-11-08T14583";
+import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-08T15035";
+import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-08T15035";
+import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-08T15035";
+import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-08T15035";
+import { createThemeManager } from "../../../shared/js/display/theme_manager.js?v=v2026-11-08T15035";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T15035";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T15035";
+import { clipDisplayText } from "../../../shared/js/gameplay/displayText.js?v=v2026-11-08T15035";
 
 export async function createScene() {
   let animationGeneration = 0;

@@ -7,13 +7,11 @@
 //   data-sheet       okna od dołu: dotyk (bez TV) albo okno do 600 px
 //   data-keyboard    klawiatura ekranowa otwarta (dotyk, aktywne pole);
 //                    --keyboard-h: jej wysokość
-//   data-edge-to-edge  Android: strona sięga pod pasek nawigacji (strefa
-//                    paska > 0) — bez ciemnego pasa aplikacji (components.css)
 //   data-keyboard-room  zapas pod treścią (html::after), gdy pole z samego
 //                    dołu strony trzeba podnieść ponad koniec strony
 // Początkowe atrybuty ustawia klasyczny page-boot.js; ten moduł je aktualizuje.
-import "./page-layout.js?v=v2026-11-08T14583";
-import { editableFocused } from "./device-guard.js?v=v2026-11-08T14583";
+import "./page-layout.js?v=v2026-11-08T15035";
+import { editableFocused } from "./device-guard.js?v=v2026-11-08T15035";
 
 export const { NARROW_MAX, deviceLayout } = globalThis.FamilijnaDevice;
 
@@ -203,25 +201,10 @@ export function onDeviceChange(fn) {
   document.addEventListener("device:change", (event) => fn(event.detail));
 }
 
-// Zainstalowana aplikacja na Androidzie dostaje ciemny pas na dole, bo Chrome
-// kończy ją nad paskiem nawigacji. Gdy Chrome zacznie rysować ją pod paskiem
-// (strefa paska > 0), pas jest zbędny — wyłącza go data-edge-to-edge.
-function applyEdgeToEdge() {
-  const root = document.documentElement;
-  if (root.dataset.os !== "android" || !document.body) return;
-  const probe = document.createElement("div");
-  probe.className = "safe-bottom-probe";
-  document.body.append(probe);
-  const inset = probe.getBoundingClientRect().height;
-  probe.remove();
-  root.toggleAttribute("data-edge-to-edge", inset > 0);
-}
-
 if (typeof document !== "undefined" && typeof window !== "undefined") {
   apply();
-  applyEdgeToEdge();
   applyKeyboard();
-  window.addEventListener("resize", () => { apply(); applyKeyboard(); applyEdgeToEdge(); }, { passive: true });
+  window.addEventListener("resize", () => { apply(); applyKeyboard(); }, { passive: true });
   window.addEventListener("orientationchange", apply);
   if (vk) {
     try { vk.overlaysContent = true; } catch {}

@@ -2922,25 +2922,6 @@
   /* Klawiatura ekranowa zasłania stronę (device-attrs.js): układ się nie
      zmienia. Pole z samego dołu strony: zapas wysokości klawiatury za
      <body> (html::after), żeby dało się je postawić nad klawiaturą. */
-  /* Pomiar strefy paska nawigacji (device-attrs.js, data-edge-to-edge). */
-  .safe-bottom-probe { position: fixed; visibility: hidden; pointer-events: none; height: env(safe-area-inset-bottom, 0px); }
-  /* Zainstalowana aplikacja na Androidzie, jasny motyw: Chrome kończy stronę
-     nad cienkim paskiem nawigacji, a zaokrąglone rogi ekranu ścinały jej dół.
-     Ciemny pas 32 px w kolorze paska (decyzja właściciela 2026-11-06);
-     --safe-bottom go omija. data-os ustawia page-boot.js. */
-  @media (display-mode: standalone) {
-    :root[data-os="android"][data-theme="light"]:not([data-edge-to-edge])::before {
-      content: "";
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: var(--app-bottom-band);
-      background: var(--app-bar-color);
-      z-index: var(--z-app-band);
-      pointer-events: none;
-    }
-  }
   :root[data-keyboard-room]::after {
     content: "";
     display: block;
