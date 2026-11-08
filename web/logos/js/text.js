@@ -6,6 +6,7 @@
 import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T23092";
 import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T23092";
 import { TILES_X, TILES_Y, TYPE_GLYPH, normalizeRows } from "./render.js?v=v2026-11-08T23092";
+import { fixLegacyGlyphRows } from "../../shared/js/core/logo-glyph-fix.js?v=v2026-11-08T23092";
 
 
 const GLYPH_W = 3;
@@ -76,7 +77,9 @@ export function compileText(text, font) {
  * Odstęp między glifami: 1 kolumna = brak spacji, każda kolejna = 1 spacja.
  */
 export function decompileRows(rows, font) {
-  const grid = Array.from({ length: TILES_Y }, (_, i) => String(rows?.[i] ?? "").padEnd(TILES_X, " ").slice(0, TILES_X));
+  // stare „W” (przed poprawką fontu) czytane jak obecne -- edycja zapisze poprawione
+  const fixed = fixLegacyGlyphRows(rows);
+  const grid = Array.from({ length: TILES_Y }, (_, i) => String(fixed?.[i] ?? "").padEnd(TILES_X, " ").slice(0, TILES_X));
   const colEmpty = (x) => grid.every((r) => r[x] === " ");
   let first = 0;
   while (first < TILES_X && colEmpty(first)) first++;

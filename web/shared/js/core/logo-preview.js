@@ -31,6 +31,7 @@ function resolveGlyph(glyphs, ch) {
 }
 
 import { v } from './cache-bust.js?v=v2026-11-08T23092';
+import { fixLegacyGlyphRows } from './logo-glyph-fix.js?v=v2026-11-08T23092';
 
 export async function loadFont5x7(url = "/shared/fonts/display/font_5x7.json?v=v2026-11-08T23092") {
 
@@ -43,6 +44,7 @@ export async function loadFont5x7(url = "/shared/fonts/display/font_5x7.json?v=v
 export function rows30x10ToBits150(rows10, glyphs) {
   const out = new Uint8Array(DOT_W * DOT_H);
   if (!glyphs) return out;
+  rows10 = fixLegacyGlyphRows(rows10);
   for (let ty = 0; ty < TILES_Y; ty++) {
     const rowStr = String(rows10?.[ty] ?? "").padEnd(30, " ").slice(0, 30);
     for (let tx = 0; tx < TILES_X; tx++) {
