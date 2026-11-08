@@ -17,11 +17,11 @@ do $$ begin
   if has_function_privilege('anon','public.polls_hub_anon_voters(uuid,text)','execute') or has_function_privilege('authenticated','public.polls_hub_anon_voters(uuid,text)','execute')
     then raise exception 'polls_hub_anon_voters dla klientów'; end if;
 end $$;
--- R11: nowa funkcja bez GRANT nie jest wykonywalna przez klientów
-create function public.e24_528_probe() returns int language sql as $$ select 1 $$;
+-- R11: Supabase nie nadaje już anon/authenticated (prawo PUBLIC odbiera migracja funkcji)
 do $$ begin
-  if has_function_privilege('anon','public.e24_528_probe()','execute') or has_function_privilege('authenticated','public.e24_528_probe()','execute')
-    then raise exception 'domyślne prawa: nowa funkcja publiczna'; end if;
+  if exists (select 1 from pg_default_acl d, aclexplode(d.defaclacl) a where d.defaclnamespace='public'::regnamespace and d.defaclobjtype='f'
+    and a.grantee in (select oid from pg_roles where rolname in ('anon','authenticated')))
+    then raise exception 'domyślne prawa: anon/authenticated'; end if;
 end $$;
 -- R20: A nie pyta o dostęp B; B o siebie — tak
 select set_config('request.jwt.claim.sub', :'a', true);

@@ -80,18 +80,14 @@ DROP FUNCTION IF EXISTS public.cooldown_email_get(text, text[]);
 DROP FUNCTION IF EXISTS public.cooldown_email_release(text, text, integer);
 DROP FUNCTION IF EXISTS public.cooldown_email_reserve(text, text, integer);
 
--- R11: nowe funkcje w public nie są już automatycznie wykonywalne przez klientów.
--- Funkcja wołana ze strony potrzebuje jawnego GRANT EXECUTE … TO anon/authenticated
--- (pilnuje zapadka tests/unit/migrationGrants.test.js).
+-- R11: Supabase nadaje anon/authenticated EXECUTE na nowe funkcje w public —
+-- odebrane. Prawo PUBLIC (domyślne w Postgresie) zostaje: odebrać je można tylko
+-- globalnie (dotknęłoby też pg_temp i rozszerzeń), więc każda nowa funkcja ma
+-- w migracji jawne REVOKE … FROM PUBLIC (zapadka tests/unit/migrationGrants.test.js).
 DO $$
 DECLARE r text;
 BEGIN
   FOR r IN SELECT rolname FROM pg_roles WHERE rolname IN ('postgres', 'supabase_admin') LOOP
-    -- Supabase nadaje per schemat anon/authenticated; PUBLIC to domyślne prawo
-    -- Postgresa, odbierane tylko globalnie (dotyczy nowych funkcji tej roli
-    -- we wszystkich schematach — nowe rozszerzenie: jawne GRANT, gdy potrzebne).
     EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public REVOKE EXECUTE ON FUNCTIONS FROM anon, authenticated', r);
-    EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC', r);
-    EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO service_role', r);
   END LOOP;
 END $$;
