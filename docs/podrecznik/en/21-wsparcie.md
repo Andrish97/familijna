@@ -21,7 +21,12 @@ pages, next to the [Contact] button (an icon only — the name shows in a toolti
 > service — it is simply a thank-you. You can send feedback and ideas
 > through the contact form (→ 19.6).
 
-## 21.3 Music and fonts
+## 21.3 Commercial use
+
+You can also use Familijna to earn money — for example, run the game at weddings, company
+parties, fairs or in a venue and get paid for it. You don't need permission, there are no fees
+or commissions, and you don't have to mention the app's name. This covers everything the app
+provides for the game: boards, themes, music, sound effects and fonts.
 
 **"Classic" music.** The intro, outro, round transition and final theme are tracks generated
 for this app with Suno (suno.com) on a paid plan that allows commercial use. They are not
@@ -29,5 +34,8 @@ excerpts from TV shows or anyone else's recordings.
 
 **Fonts.** The typefaces in the logo drawing editor (→ 8.3), on the Host screen (→ 16.3)
 and in the "Source" logo are fonts under free licences (SIL Open Font License or Apache),
-included with the app. You can use them without fees or asking for permission — also at
-commercial events. They look the same on every device.
+included with the app — commercial use included. They look the same on every device.
+
+**Your materials.** You are responsible for the questions, your own sounds and the images you
+add to games and logos — use only those you have the rights to (for example your own
+recordings or files under a free licence).

@@ -79,7 +79,7 @@ the settings cannot be saved.
 Custom files are saved in the app together with the game when you choose [Save] — they will work on any
 device where you start this game.
 
-**"Classic" music.** Where it comes from and on what terms we use it — → 21.3.
+**"Classic" music.** Where it comes from and whether you can use it commercially — → 21.3.
 
 > Note: deleting a custom file (the icon next to its name) and [Restore defaults] in the
 > "Sound" section delete the files right away, even if you don't save your changes afterwards. [Restore defaults]

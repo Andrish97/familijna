@@ -21,7 +21,12 @@ przycisku [Kontakt] (sama ikona — nazwa pojawia się w dymku).
 > w serwisie — jest po prostu podziękowaniem. Uwagi i pomysły na rozwój możesz przesłać
 > przez formularz kontaktu (→ 19.6).
 
-## 21.3 Muzyka i czcionki
+## 21.3 Wykorzystanie komercyjne
+
+Familijną możesz wykorzystywać także zarobkowo — na przykład prowadzić grę na weselach, imprezach
+firmowych, festynach czy w lokalu i pobierać za to wynagrodzenie. Nie potrzebujesz na to zgody,
+nie płacisz żadnych opłat ani prowizji i nie musisz podawać nazwy serwisu. Dotyczy to wszystkiego,
+co serwis daje do gry: plansz, motywów, muzyki, efektów i czcionek.
 
 **Muzyka „Klasyczna”.** Intro, zakończenie, przejście między rundami i motyw finału to
 utwory wygenerowane dla serwisu w Suno (suno.com) w ramach płatnego planu, który pozwala
@@ -29,5 +34,8 @@ na użycie komercyjne. Nie są fragmentami programów telewizyjnych ani cudzych 
 
 **Czcionki.** Kroje pisma w edytorze rysunku logo (→ 8.3), na ekranie Prowadzącego (→ 16.3)
 i w logo „Źródło” to czcionki na wolnych licencjach (SIL Open Font License albo Apache),
-dołączone do serwisu. Możesz ich używać bez opłat i bez pytania o zgodę — także na imprezach
-komercyjnych. Na każdym urządzeniu wyglądają tak samo.
+dołączone do serwisu — także do użytku komercyjnego. Na każdym urządzeniu wyglądają tak samo.
+
+**Twoje materiały.** Za pytania, własne dźwięki i obrazy, które dodajesz do gier i logo,
+odpowiadasz Ty — używaj tylko takich, do których masz prawa (na przykład własnych nagrań
+albo plików na wolnej licencji).

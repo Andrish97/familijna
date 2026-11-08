@@ -79,7 +79,7 @@ ustawień nie da się zapisać.
 Własne pliki zapisują się w serwisie razem z grą po wybraniu [Zapisz] — zadziałają na każdym
 urządzeniu, na którym uruchomisz tę grę.
 
-**Muzyka „Klasyczna”.** Skąd pochodzi i na jakich zasadach jej używamy — → 21.3.
+**Muzyka „Klasyczna”.** Skąd pochodzi i czy można jej używać komercyjnie — → 21.3.
 
 > Uwaga: usunięcie własnego pliku (ikona przy jego nazwie) oraz [Przywróć domyślne] w sekcji
 > „Dźwięk” usuwają pliki od razu, nawet jeśli potem nie zapiszesz zmian. [Przywróć domyślne]
