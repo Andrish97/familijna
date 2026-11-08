@@ -42,16 +42,18 @@ export function adminNotification(row) {
   const n = Number(v.n) || 1;
   let c;
   switch (row.event) {
+    // Poczta i zgłoszenia: bez nadawcy i tematu — to tekst od obcej osoby
+    // widoczny na ekranie blokady (E24 R18); treść tylko w panelu.
     case "mail":
-      c = n > 1
-        ? { title: `${n} ${plPlural(n, "nowy e-mail", "nowe e-maile", "nowych e-maili")}`, body: `Ostatni od: ${clip(v.from, 40)}` }
-        : { title: "Nowy e-mail", body: `Od: ${clip(v.from, 40)} — ${v.subject || "(bez tematu)"}` };
-      Object.assign(c, { icon: "envelope-in", url: "/?tab=reports", tag: "mail",
-        actions: [{ action: "open", title: "Otwórz", icon: "envelope-in" }, { action: "reply", title: "Odpowiedz", icon: "reply" }] });
+      c = { title: n > 1 ? `${n} ${plPlural(n, "nowy e-mail", "nowe e-maile", "nowych e-maili")}` : "Nowy e-mail",
+        body: n > 1 ? "Wiadomości czekają w Poczcie Familijnej." : "Wiadomość czeka w Poczcie Familijnej.",
+        icon: "envelope-in", url: "/?tab=reports", tag: "mail",
+        actions: [{ action: "open", title: "Otwórz", icon: "envelope-in" }, { action: "reply", title: "Odpowiedz", icon: "reply" }] };
       break;
     case "ticket":
-      c = { title: `Zgłoszenie #${clip(v.ticket, 20)}`, body: `${v.subject || "(bez tematu)"} — ${clip(v.from, 40)}`,
-        icon: "megaphone", url: "/?tab=reports", tag: `ticket-${v.ticket || ""}`,
+      c = { title: n > 1 ? `${n} ${plPlural(n, "nowe zgłoszenie", "nowe zgłoszenia", "nowych zgłoszeń")}` : `Zgłoszenie #${clip(v.ticket, 20)}`,
+        body: n > 1 ? "Zgłoszenia z formularza Kontakt czekają na odpowiedź." : "Zgłoszenie z formularza Kontakt czeka na odpowiedź.",
+        icon: "megaphone", url: "/?tab=reports", tag: "ticket",
         actions: [{ action: "reply", title: "Odpowiedz", icon: "reply" }] };
       break;
     case "market":
@@ -132,7 +134,9 @@ export function appNotification(row, lang, texts) {
   };
   const title = fill(spec.title), body = fill(spec.body);
   if (!title || !body) return null;
-  return finish({ title, body, icon: spec.icon, url: v.url || spec.url, tag: spec.tag(v), image: v.image,
+  // Adres tylko w obrębie aplikacji: link /go/ sprawy albo stała strona (E24 pkt 4).
+  const url = typeof v.url === "string" && /^\/go\/\?[A-Za-z0-9=&%._-]+$/.test(v.url) ? v.url : spec.url;
+  return finish({ title, body, icon: spec.icon, url, tag: spec.tag(v),
     actions: spec.action ? [{ action: "open", title: fill(spec.action) || "", icon: spec.actionIcon || "arrow-right" }] : [] },
     row, APP_ICON, APP_BADGE);
 }

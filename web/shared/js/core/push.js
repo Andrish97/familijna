@@ -79,9 +79,18 @@ export async function enablePush(kinds = []) {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") throw new Error(permission === "denied" ? "blocked" : "dismissed");
   const reg = await registration();
-  const sub = (await reg.pushManager.getSubscription())
-    || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC_KEY) });
-  await save(sub, kinds);
+  const subscribe = () => reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(VAPID_PUBLIC_KEY) });
+  let sub = (await reg.pushManager.getSubscription()) || await subscribe();
+  try {
+    await save(sub, kinds);
+  } catch (e) {
+    // Adres tej przeglądarki należy do innego konta (inny użytkownik na tym
+    // urządzeniu) — baza nie pozwala go przejąć (E24 R24): nowy adres.
+    if (e?.message !== "endpoint_taken") throw e;
+    await sub.unsubscribe().catch(() => {});
+    sub = await subscribe();
+    await save(sub, kinds);
+  }
   remember(await currentUserId());
 }
 

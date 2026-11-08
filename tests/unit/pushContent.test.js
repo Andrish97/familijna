@@ -37,7 +37,8 @@ test('panel admina: wszystkie zdarzenia mieszczą się, bez emotek, właściwe k
     ['mail', { from: 'ktos@example.com', subject: LONG, n: 1 }, '/?tab=reports', 'Nowy e-mail'],
     ['mail', { from: 'ktos@example.com', subject: 'x', n: 5 }, '/?tab=reports', '5 nowych e-maili'],
     ['mail', { from: 'ktos@example.com', subject: 'x', n: 3 }, '/?tab=reports', '3 nowe e-maile'],
-    ['ticket', { ticket: 'T-1234', subject: LONG, from: 'a@b.pl' }, '/?tab=reports', 'Zgłoszenie #T-1234'],
+    ['ticket', { ticket: 'T-1234', n: 1 }, '/?tab=reports', 'Zgłoszenie #T-1234'],
+    ['ticket', { ticket: 'T-1234', n: 2 }, '/?tab=reports', '2 nowe zgłoszenia'],
     ['market', { title: LONG }, '/?tab=marketplace', 'Gra do zatwierdzenia'],
     ['collect_done', { what: 'contacts', added: 37, target: 50, minutes: 42 }, '/?tab=marketing', 'Zbieranie kontaktów zakończone'],
     ['collect_done', { what: 'questions', added: 85, target: 100, lang: 'pl' }, '/?tab=generator', 'Zbieranie pytań zakończone'],
@@ -59,6 +60,9 @@ test('panel admina: wszystkie zdarzenia mieszczą się, bez emotek, właściwe k
   assert.deepEqual(rep.vibrate, [120, 80, 120, 80, 120]);
   assert.equal(adminNotification(row('mail', { n: 1, from: 'a' })).requireInteraction, false);
   assert.equal(adminNotification(row('nieznane')), null);
+  // E24 R18: obcy tekst (nadawca, temat) nie trafia na ekran blokady.
+  const m = adminNotification(row('mail', { n: 1, from: 'atak@example.com', subject: 'Kliknij link' }));
+  assert.doesNotMatch(m.title + m.body, /atak|Kliknij/);
 });
 
 test('aplikacja: każde zdarzenie w PL/EN/UK, nazwy przycięte, bez emotek', () => {
@@ -74,6 +78,11 @@ test('aplikacja: każde zdarzenie w PL/EN/UK, nazwy przycięte, bez emotek', () 
   assert.equal(appNotification(row('device:share', { owner: 'Ania', type: 'buzzer' }, 'main'), 'uk', PUSH_APP_TEXTS).body,
     'Ania надає тобі доступ до пристрою: Кнопка для поєдинку.');
   assert.equal(appNotification(row('friend:invite', { owner: 'Ania', url: '/go/?f=abc' }, 'main'), 'en', PUSH_APP_TEXTS).url, '/go/?f=abc');
+  // E24 pkt 4: obcy adres → stała strona sprawy; bez obrazka ze zmiennych.
+  for (const url of ['https://evil.example.com/', '//evil.example.com/x', '/go/?f=a b', 'javascript:alert(1)']) {
+    assert.equal(appNotification(row('friend:invite', { owner: 'A', url }, 'main'), 'pl', PUSH_APP_TEXTS).url, '/friends/', url);
+  }
+  assert.equal(appNotification(row('copy:logo', { owner: 'A', name: 'L', image: 'https://evil.example.com/x.png' }, 'main'), 'pl', PUSH_APP_TEXTS).image, undefined);
 });
 
 test('teksty PL/UK bezosobowe (bez form rodzajowych o nadawcy)', () => {

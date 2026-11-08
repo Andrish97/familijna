@@ -103,14 +103,17 @@ DO $$ BEGIN
     RAISE EXCEPTION 'guest_row'; END IF;
 END $$;
 
--- Przejęcie urządzenia (inne konto na tym samym telefonie) i wypis.
+-- Cudzy endpoint nie daje się przejąć (531, R24): endpoint_taken, właściciel bez zmian; wypis cudzego — nic.
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000b01', true);
-SELECT public.push_subscribe('https://fcm.googleapis.com/fcm/send/a21', (SELECT p256dh FROM k), (SELECT auth FROM k));
+DO $$ BEGIN
+  IF public.push_subscribe('https://fcm.googleapis.com/fcm/send/a21', (SELECT p256dh FROM k), (SELECT auth FROM k))->>'error' <> 'endpoint_taken' THEN
+    RAISE EXCEPTION 'takeover_allowed'; END IF;
+END $$;
 SELECT public.push_unsubscribe('https://fcm.googleapis.com/fcm/send/a20');
 RESET ROLE;
 DO $$ BEGIN
-  IF (SELECT user_id FROM public.push_subscriptions WHERE endpoint = 'https://fcm.googleapis.com/fcm/send/a21') <> '00000000-0000-4000-8000-000000000b01' THEN
+  IF (SELECT user_id FROM public.push_subscriptions WHERE endpoint = 'https://fcm.googleapis.com/fcm/send/a21') <> '00000000-0000-4000-8000-000000000a01' THEN
     RAISE EXCEPTION 'takeover'; END IF;
   IF NOT EXISTS (SELECT 1 FROM public.push_subscriptions WHERE endpoint = 'https://fcm.googleapis.com/fcm/send/a20') THEN
     RAISE EXCEPTION 'foreign_unsubscribe_b'; END IF;
