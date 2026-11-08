@@ -9,6 +9,8 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    # E24 R5: token Cloudflare w środowisku „production”.
+    environment: production
     timeout-minutes: 3
     steps:
       - name: Sprawdź token zapisany w GitHubie (bez wartości sekretu)

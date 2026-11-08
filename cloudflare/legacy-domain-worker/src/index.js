@@ -33,7 +33,8 @@ const HTML_HEADERS = {
   "Content-Type": "text/html; charset=utf-8",
   "Cache-Control": "no-store",
   "X-Robots-Tag": "noindex",
-  "Referrer-Policy": "no-referrer",
+  // Strona przenosin: nowa domena przyjmuje sesję tylko z tego źródła (E24 R8).
+  "Referrer-Policy": "origin",
 };
 
 // Wygląd: ten sam wzorzec `.page--block` co strona 404 i przerwa techniczna

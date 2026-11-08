@@ -6,6 +6,9 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-24.04
+    # E24 R5: sekrety serwera i Cloudflare w środowisku „production” (reguła
+    # gałęzi main ustawiana w GitHubie) — gałąź z podmienionym workflow ich nie dostanie.
+    environment: production
     steps:
       - name: Klucz SSH i przypięty host
         env:

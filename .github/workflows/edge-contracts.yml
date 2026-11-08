@@ -10,12 +10,16 @@ on:
       - '.github/workflows/edge-contracts.yml'
   workflow_dispatch: {}
 
+# E24 R26: token GitHuba tylko do odczytu.
+permissions:
+  contents: read
+
 jobs:
   contracts:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: denoland/setup-deno@v2
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5 (E24 R16: przypięte SHA)
         with:
           deno-version: v2.x
       - run: deno check supabase/functions/send-email/index.ts supabase/functions/mail-worker/index.ts

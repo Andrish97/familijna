@@ -1,18 +1,27 @@
 // js/pages/connect-device.js
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T17075";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T17075";
-import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-08T17075";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T17075";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T17075";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T17075";
-import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-08T17075";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-08T17075";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-08T17075";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-08T17075";
-import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-08T17075";
-import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-08T17075";
-import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-08T17075";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T17374";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T17374";
+import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-08T17374";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T17374";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T17374";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T17374";
+import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-08T17374";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-08T17374";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-08T17374";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-08T17374";
+import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-08T17374";
+import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-08T17374";
+import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-08T17374";
+
+// Kod QR prowadzi tylko na tę samą stronę (E24 R28: bez przekierowań na obce adresy).
+function openScannedUrl(raw) {
+  let url = null;
+  try { url = new URL(String(raw || "")); } catch {}
+  const own = [location.origin, "https://www.familiada.online", "https://familiada.online"];
+  if (url && own.includes(url.origin)) { window.location.href = url.href; return; }
+  toast(t("connectDevice.scan.foreignQr"), { kind: "error" });
+}
 
 
 const btnManual           = document.getElementById("btnManual");
@@ -184,7 +193,7 @@ async function loadJsQR() {
   if (window.jsQR) return;
   await new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-08T17075";
+    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-08T17374";
     s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });
@@ -235,7 +244,7 @@ async function startQrScan() {
             if (codes.length) {
               const url = codes[0].rawValue;
               stop();
-              if (url.startsWith("http")) window.location.href = url;
+              openScannedUrl(url);
               return;
             }
           } catch {}
@@ -256,7 +265,7 @@ async function startQrScan() {
             const code = window.jsQR(imageData.data, imageData.width, imageData.height);
             if (code?.data?.startsWith("http")) {
               stop();
-              window.location.href = code.data;
+              openScannedUrl(code.data);
               return;
             }
           }
@@ -311,7 +320,7 @@ async function startQrScan() {
     const imageData = canvas.getContext("2d").getImageData(0, 0, w, h);
     const code = window.jsQR(imageData.data, imageData.width, imageData.height);
     if (code?.data?.startsWith("http")) {
-      window.location.href = code.data;
+      openScannedUrl(code.data);
     } else {
       toast(t("connectDevice.scan.noQr"), { kind: "error" });
     }

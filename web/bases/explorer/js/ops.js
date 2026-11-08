@@ -3,9 +3,9 @@
 // (migracja 427), czyli jedna transakcja — bez stanów częściowych.
 // Funkcje zwracają to, co zwraca baza (m.in. stan „przed” zmianą).
 
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T17075";
-import { ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-08T17075";
-import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T17075";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T17374";
+import { ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-08T17374";
+import { t } from "../../../shared/translation/translation.js?v=v2026-11-08T17374";
 
 // Błędy funkcji qb_* → kod + komunikat dla użytkownika.
 const ERRORS = {

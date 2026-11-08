@@ -18,7 +18,7 @@ serve(async request => {
       if (!Array.isArray(body.texts) || body.texts.length < 1 || body.texts.length > 32 || body.texts.some(t => typeof t !== "string" || !t.trim() || t.length > 4000))
         return json({ ok: false, error: "invalid_texts" }, 400);
       const origin = (Deno.env.get("MARKET_SEMANTIC_URL") || "").replace(/\/+$/, "");
-      const token = Deno.env.get("MARKET_SEMANTIC_TOKEN") || Deno.env.get("GENERATE_GAME_SECRET") || "";
+      const token = Deno.env.get("MARKET_SEMANTIC_TOKEN") || ""; // E24 R25: osobny sekret, bez zapasowego
       if (!origin || !token) return json({ ok: false, error: "semantic_not_configured" }, 503);
       const response = await fetch(origin + "/embed", { method: "POST", headers: { "Content-Type": "application/json", "X-Internal-Secret": token },
         body: JSON.stringify({ model: MODEL, texts: body.texts }), signal: AbortSignal.timeout(45000) });

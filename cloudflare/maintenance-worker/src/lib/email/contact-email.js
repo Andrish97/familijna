@@ -15,7 +15,9 @@ export async function buildContactEmail(opts) {
     closing: tr.closing,
     confirmation: {
       body: formatText(tr.confirmationBody, vars),
-      quote: message || "",
+      // E24 R15: potwierdzenie idzie na adres podany w formularzu (niepotwierdzony)
+      // — bez cytatu treści i tematu nadawcy (spam/phishing z naszej domeny).
+      quote: "",
       mailSubject: formatText(tr.confirmationSubject, vars),
     },
     reply: {

@@ -1,6 +1,6 @@
 // The file importer and copy sender use the same canonical logo package.
-import { normalizeDrawFont } from "../../shared/js/core/draw-fonts.js?v=v2026-11-08T17075";
-import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-08T17075";
+import { normalizeDrawFont } from "../../shared/js/core/draw-fonts.js?v=v2026-11-08T17374";
+import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-08T17374";
 
 
 // Nazwa logo: jak w polu nazwy i w bazie (migracja 514).
@@ -10,7 +10,8 @@ export const LOGO_NAME_MAX = 80;
 // obraz z dowolnego serwera na ekranie Prowadzącego (loadFromJSON rysunku).
 // Kopie między kontami przenosi serwer (duplicate.js), więc parser wspólny
 // (parseLogoPackage) zostawia adresy bez zmian.
-const OWN_IMAGE_URL = /^https:\/\/[^/?#]+\/storage\/v1\/object\/public\/user-logos\/[^?#]+$/i;
+// Host przypięty do własnego API (E24 R28; dawny adres familiada.online — stare eksporty).
+const OWN_IMAGE_URL = /^https:\/\/api\.(familijna\.app|familiada\.online)\/storage\/v1\/object\/public\/user-logos\/[^?#]+$/i;
 const EMBEDDED_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,/i;
 const allowedImage = (src) => EMBEDDED_IMAGE.test(src) || OWN_IMAGE_URL.test(src);
 

@@ -44,6 +44,9 @@ jobs:
   migrate:
     needs: sql-gate
     runs-on: ubuntu-latest
+    # E24 R5: sekrety serwera i Cloudflare w środowisku „production” (reguła
+    # gałęzi main ustawiana w GitHubie) — gałąź z podmienionym workflow ich nie dostanie.
+    environment: production
     timeout-minutes: 20
 
     steps:
@@ -62,10 +65,12 @@ jobs:
           sudo apt-get install -y rsync openssh-client
 
       - name: Set up SSH key
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "${{ secrets.SERVER_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts  # odcisk przypięty (nowy serwer)
 

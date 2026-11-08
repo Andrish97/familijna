@@ -6,6 +6,7 @@
 import { json } from "../core/http.js";
 import { supabaseRpc } from "../core/supabase.js";
 import { sha256Hex, clientIp, limitReached, countAttempt } from "../core/rate-limit.js";
+import { verifyTurnstile } from "../auth/turnstile.js";
 
 const SITE_ORIGIN = "https://www.familijna.app";
 export const CODE_FAIL_WINDOW_IP_S = 10 * 60;
@@ -27,8 +28,12 @@ export async function handleDeviceCodeResolve(request, env) {
   if (!/^[0-9]{6}$/.test(code)) return json({ ok: false, err: "not_found" });
 
   const ipKey = `device_code_fail_ip:${await sha256Hex(clientIp(request))}`;
-  if (await limitReached(env, ipKey, CODE_FAIL_MAX_PER_IP) || await limitReached(env, GLOBAL_KEY, CODE_FAIL_MAX_ALL)) {
-    return json({ ok: false, err: "rate_limited" }, 429);
+  if (await limitReached(env, ipKey, CODE_FAIL_MAX_PER_IP)) return json({ ok: false, err: "rate_limited" }, 429);
+  // Łączny limit (zgadywanie z wielu adresów) nie blokuje wszystkich: po jego
+  // wyczerpaniu kod przechodzi tylko z tokenem Turnstile (E24 R14).
+  if (await limitReached(env, GLOBAL_KEY, CODE_FAIL_MAX_ALL)) {
+    const check = body?.captcha_token ? await verifyTurnstile(request, env, body.captcha_token) : { ok: false };
+    if (!check.ok) return json({ ok: false, err: "captcha_required" }, 429);
   }
   const rpc = await supabaseRpc(env, "resolve_device_connect_code", { p_code: code });
   if (!rpc.ok) return json({ ok: false, err: "unavailable" }, 502);

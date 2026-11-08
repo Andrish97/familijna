@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { handleAuthLogin, handleAuthReset, handleAuthEmailStatus, handleAuthResendPrepare, classifyGoTrueError,
   LOGIN_MAX_PER_LOGIN, STATUS_MAX_PER_EMAIL } from '../../cloudflare/maintenance-worker/src/lib/auth/auth-api.js';
-import { handleContactSubmit, SUBMIT_MAX_PER_IP } from '../../cloudflare/maintenance-worker/src/lib/email/contact.js';
+import { handleContactSubmit, SUBMIT_MAX_PER_IP, SUBMIT_MAX_GLOBAL } from '../../cloudflare/maintenance-worker/src/lib/email/contact.js';
 
 function kv() { const m = new Map(); return { m, get: async (k) => m.get(k) ?? null, put: async (k, v) => { m.set(k, v); } }; }
 const env = () => ({ SUPABASE_URL: 'https://api.example.invalid', SUPABASE_SERVICE_ROLE_KEY: 'svc', SUPABASE_ANON_KEY: 'anon', TURNSTILE_SECRET_KEY: 'real-secret', E2E_BYPASS_SECRET: 'e2e-secret', MAINT_KV: kv() });
@@ -140,7 +140,7 @@ test('contact: limit na IP i łączny (KV) przed zapisem zgłoszenia', async () 
     }
     assert.equal(statuses.at(-1), 429);
     assert.equal(calls.filter(c => c.path.endsWith('save_form_message')).length, SUBMIT_MAX_PER_IP);
-    e.MAINT_KV.m.set('contact_submit_global', '100');
+    e.MAINT_KV.m.set('contact_submit_global', String(SUBMIT_MAX_GLOBAL));
     assert.equal((await handleContactSubmit(req('/_api/contact', { email: 'b@example.com', subject: 'S', message: 'Treść' }, { ip: '5.5.5.5' }), e)).status, 429);
   } finally { globalThis.fetch = prev; }
 });

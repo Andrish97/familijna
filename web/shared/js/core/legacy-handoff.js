@@ -28,10 +28,19 @@ export function parseLegacyHandoff(hash) {
   }
 }
 
-export function applyLegacyHandoff(loc = globalThis.location, storage = globalThis.localStorage, hist = globalThis.history) {
+// Paczkę przyjmujemy tylko po przejściu ze strony przenosin starej domeny
+// (Referrer-Policy: origin). Link z innej strony mógłby podsunąć cudzą sesję
+// (E24 R8) — wtedy hash jest tylko zdejmowany.
+const LEGACY_ORIGINS = ["https://www.familiada.online", "https://familiada.online"];
+export function fromLegacyDomain(referrer) {
+  try { return LEGACY_ORIGINS.includes(new URL(String(referrer || "")).origin); } catch { return false; }
+}
+
+export function applyLegacyHandoff(loc = globalThis.location, storage = globalThis.localStorage, hist = globalThis.history, referrer = globalThis.document?.referrer) {
   const parsed = parseLegacyHandoff(loc?.hash);
   if (!parsed) return false;
   try { hist?.replaceState(hist.state, "", loc.pathname + loc.search + parsed.hash); } catch {}
+  if (!fromLegacyDomain(referrer)) return false;
   for (const [key, value] of Object.entries(parsed.items)) {
     try { if (storage.getItem(key) === null) storage.setItem(key, value); } catch {}
   }

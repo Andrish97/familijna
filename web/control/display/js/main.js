@@ -1,4 +1,4 @@
-import { renderAndConfirm } from "../../../shared/js/gameplay/renderCompletion.js?v=v2026-11-08T17075";
+import { renderAndConfirm } from "../../../shared/js/gameplay/renderCompletion.js?v=v2026-11-08T17374";
 
 // control/display/js/main.js
 // Punkt wejścia Display v2. Napisane od zera (nie kopia control/display/js/main.js)
@@ -7,18 +7,18 @@ import { renderAndConfirm } from "../../../shared/js/gameplay/renderCompletion.j
 // i "dzwonek" broadcastowy zamiast kanału DISPLAY_CMD. Obecność, widoczność
 // karty i odblokowanie dźwięku zapisuje heartbeat lease (device-lease.js).
 
-import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-08T17075";
-import { initI18n, setUiLang, t } from "../../../shared/translation/translation.js?v=v2026-11-08T17075";
-import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-08T17075";
-import { guardViewportWidth, MIN_WORK_HEIGHT } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T17075";
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T17075";
-import { createScene } from "./scene.js?v=v2026-11-08T17075";
-import { createQRController } from "./qr.js?v=v2026-11-08T17075";
-import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-08T17075";
-import { createRenderer } from "./render.js?v=v2026-11-08T17075";
-import { createDisplaySoundReactor } from "./soundReactor.js?v=v2026-11-08T17075";
-import { loadSfxManifest, initSfx, setCurrentGameId, applySfxGameSettings, unlockAudio, onAudioUnlockLost, getSfxDurationAccurate as getSfxDuration, isAnySfxPlaying, onSfxPlayback, onAnySfxEnded, setSfxMuted } from "../../../shared/js/core/sfx.js?v=v2026-11-08T17075";
-import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-08T17075";
+import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-08T17374";
+import { initI18n, setUiLang, t } from "../../../shared/translation/translation.js?v=v2026-11-08T17374";
+import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-08T17374";
+import { guardViewportWidth, MIN_WORK_HEIGHT } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T17374";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-08T17374";
+import { createScene } from "./scene.js?v=v2026-11-08T17374";
+import { createQRController } from "./qr.js?v=v2026-11-08T17374";
+import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-08T17374";
+import { createRenderer } from "./render.js?v=v2026-11-08T17374";
+import { createDisplaySoundReactor } from "./soundReactor.js?v=v2026-11-08T17374";
+import { loadSfxManifest, initSfx, setCurrentGameId, applySfxGameSettings, unlockAudio, onAudioUnlockLost, getSfxDurationAccurate as getSfxDuration, isAnySfxPlaying, onSfxPlayback, onAnySfxEnded, setSfxMuted } from "../../../shared/js/core/sfx.js?v=v2026-11-08T17374";
+import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-08T17374";
 
 
 const $ = (id) => document.getElementById(id);
@@ -181,6 +181,8 @@ async function bootPreview() {
   let previewTeams = {};
   let previewQueue = Promise.resolve();
   window.addEventListener("message", (e) => {
+    // Tylko od strony ustawień gry, która osadza podgląd (E24 R28).
+    if (e.origin !== location.origin || window.parent === window || e.source !== window.parent) return;
     if (e.data?.type !== "familijna:preview-row") return;
     const row = e.data.row;
     previewQueue = previewQueue.then(async () => {
@@ -260,7 +262,7 @@ async function bootPreview() {
   });
 
   document.documentElement.classList.remove("page-loading");
-  parent.postMessage({ type: "familijna:preview-ready" }, "*");
+  parent.postMessage({ type: "familijna:preview-ready" }, location.origin);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {

@@ -8,9 +8,16 @@ on:
       - ".github/workflows/deploy-lead-finder.yml"
   workflow_dispatch: {}
 
+# E24 R26: token GitHuba tylko do odczytu.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # E24 R5: sekrety serwera i Cloudflare w środowisku „production” (reguła
+    # gałęzi main ustawiana w GitHubie) — gałąź z podmienionym workflow ich nie dostanie.
+    environment: production
     timeout-minutes: 15
 
     steps:
@@ -50,10 +57,12 @@ jobs:
 
       - name: Setup SSH key
         if: steps.role.outputs.role != 'none'
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "${{ secrets.SERVER_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts  # odcisk przypięty (nowy serwer)
 

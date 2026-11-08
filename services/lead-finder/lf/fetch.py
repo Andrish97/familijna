@@ -9,6 +9,7 @@ import httpx
 
 from . import filters
 from .config import cfg, load_lines
+from .question_bank import public_address
 
 CONTACT_PATHS = load_lines('subpage_paths.txt')
 MAX_BYTES = 600_000
@@ -16,18 +17,28 @@ _TAG_RE = re.compile(r'<(script|style)[^>]*>.*?</\1>|<[^>]+>', re.DOTALL | re.IG
 
 
 async def _get(client, url):
+    """Pobranie z adresem przypiętym do publicznego IP; każde przekierowanie
+    sprawdzane od nowa (E24 R13: bez dostępu do sieci Dockera i adresów prywatnych)."""
     try:
-        async with client.stream('GET', url, timeout=cfg('TIMEOUT_SCRAPE', 12), follow_redirects=True,
-                                 headers={'User-Agent': 'Mozilla/5.0 (compatible; FamilijnaLeadFinder/2.0)'}) as r:
-            if r.status_code != 200 or 'html' not in r.headers.get('content-type', 'text/html'):
-                return None
-            body = b''
-            async for chunk in r.aiter_bytes():
-                body += chunk
-                if len(body) > MAX_BYTES:
-                    break
-            return body.decode(r.encoding or 'utf-8', errors='replace')
-    except (httpx.HTTPError, UnicodeDecodeError, ValueError):
+        for _ in range(5):
+            parsed, address = await public_address(url)
+            pinned = httpx.URL(url).copy_with(host=address)
+            async with client.stream('GET', pinned, timeout=cfg('TIMEOUT_SCRAPE', 12), follow_redirects=False,
+                                     extensions={'sni_hostname': parsed.hostname},
+                                     headers={'Host': parsed.netloc, 'User-Agent': 'Mozilla/5.0 (compatible; FamilijnaLeadFinder/2.0)'}) as r:
+                if r.status_code in (301, 302, 303, 307, 308):
+                    url = urljoin(url, r.headers.get('location', ''))
+                    continue
+                if r.status_code != 200 or 'html' not in r.headers.get('content-type', 'text/html'):
+                    return None
+                body = b''
+                async for chunk in r.aiter_bytes():
+                    body += chunk
+                    if len(body) > MAX_BYTES:
+                        break
+                return body.decode(r.encoding or 'utf-8', errors='replace')
+        return None
+    except (httpx.HTTPError, UnicodeDecodeError, ValueError, OSError):
         return None
 
 

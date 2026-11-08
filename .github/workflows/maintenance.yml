@@ -16,12 +16,14 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # E24 R5: sekrety serwera i Cloudflare w środowisku „production” (reguła
+    # gałęzi main ustawiana w GitHubie) — gałąź z podmienionym workflow ich nie dostanie.
+    environment: production
     timeout-minutes: 10
     defaults:
       run:
         working-directory: cloudflare/maintenance-worker
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    # E24 R16: token Cloudflare tylko w krokach wranglera (nie dla npm ci).
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,10 +37,12 @@ jobs:
         run: npm ci
 
       - name: Set up SSH key
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           printf '%s\n' "${{ secrets.SERVER_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts  # odcisk przypięty (nowy serwer)
 
@@ -61,6 +65,8 @@ jobs:
           echo "::notice title=Aktywność::użytkownicy (90 s): $USERS, gry w Control: $CONTROL, blokady edycji: $EDIT, osoby w edytorach: $EDIT_PAGES, głosy (10 min): $VOTES"
 
       - name: Status
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           # błąd odczytu (np. token bez dostępu do KV) przerywa przebieg
           npx wrangler kv key get state --binding MAINT_KV --remote > /tmp/raw.txt

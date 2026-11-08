@@ -48,7 +48,8 @@ const { generateE2EToken } = require("./helpers/e2e-token");
 const { serveBranchCode } = require("./helpers/branch-code");
 const { clearMailbox, waitForEmail, extractHttpLinks, resetMailProviderLimits, releaseMailCooldown } = require("./helpers/mailbox");
 
-const TEST_PASSWORD = "E2eTest123!";
+// Losowe hasło na przebieg (E24 A3): konto, którego sprzątanie by zawiodło, nie ma znanego hasła.
+const TEST_PASSWORD = `Ee2!${require("node:crypto").randomBytes(12).toString("base64url")}9`;
 const LOGIN_URL = "https://www.familijna.app/login";
 
 // service worker obsłużyłby żądania z własnego cache z pominięciem page.route.

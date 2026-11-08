@@ -57,6 +57,21 @@ test('łączny limit nieudanych prób z wielu adresów', async () => {
   for (let i = 0; i < CODE_FAIL_MAX_ALL; i++) await handleDeviceCodeResolve(req({ code: '999999' }, { ip: `10.0.${i >> 8}.${i & 255}` }), e);
   const res = await handleDeviceCodeResolve(req({ code: '123456' }, { ip: '9.9.9.9' }), e);
   assert.equal(res.status, 429);
+  // E24 R14: łączny limit nie blokuje wszystkich — z ważnym Turnstile kod przechodzi.
+  assert.deepEqual(await res.json(), { ok: false, err: 'captcha_required' });
+  const db = globalThis.fetch;
+  globalThis.fetch = async (url, init) => String(url).includes('siteverify') ? ok({ success: true, hostname: 'www.familijna.app' }) : db(url, init);
+  const withCaptcha = await handleDeviceCodeResolve(req({ code: '123456', captcha_token: 't' }, { ip: '9.9.9.9' }), { ...e, TURNSTILE_SECRET_KEY: 'ts' });
+  assert.equal((await withCaptcha.json()).ok, true);
+});
+
+test('IPv6: limit na IP liczony po prefiksie /64', async () => {
+  const { clientIp } = await import('../../cloudflare/maintenance-worker/src/lib/core/rate-limit.js');
+  const ip = (v) => clientIp(new Request('https://x/', { headers: { 'CF-Connecting-IP': v } }));
+  assert.equal(ip('2001:db8:1:2:aaaa::1'), ip('2001:db8:1:2:ffff:1:2:3'));
+  assert.equal(ip('2001:db8::1'), '2001:db8:0:0::/64');
+  assert.notEqual(ip('2001:db8:1:2::1'), ip('2001:db8:1:3::1'));
+  assert.equal(ip('203.0.113.7'), '203.0.113.7');
 });
 
 test('zły format nie pyta bazy ani nie zużywa limitu; obca domena i GET odrzucone', async () => {

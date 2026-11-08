@@ -1,6 +1,8 @@
 import { supabaseRpc } from '../core/supabase.js';
 import { buildMailCenterConfirmation } from './confirmation-email.js';
 import { normalizeLang } from '../core/utils.js';
+import { clientIp } from '../core/rate-limit.js';
+import { verifyTurnstile } from '../auth/turnstile.js';
 
 const SESSION = '__Host-familijna-mail';
 const CSRF = '__Host-familijna-mail-csrf';
@@ -13,7 +15,7 @@ function cookie(request, name) {
 function randomSecret() { return [...crypto.getRandomValues(new Uint8Array(32))].map(n => n.toString(16).padStart(2,'0')).join(''); }
 function setCookie(name, value, seconds) { return `${name}=${value}; Path=/; Max-Age=${seconds}; HttpOnly; Secure; SameSite=Strict`; }
 async function ipHash(request, env) {
-  const value = `${env.SUPABASE_SERVICE_ROLE_KEY}:${request.headers.get('CF-Connecting-IP') || 'unknown'}`;
+  const value = `${env.SUPABASE_SERVICE_ROLE_KEY}:${clientIp(request)}`;
   return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value)))].map(n=>n.toString(16).padStart(2,'0')).join('');
 }
 function response(data, status=200, cookies=[]) {
@@ -57,6 +59,9 @@ export async function handleMailCenterApi(request,env) {
   } catch { return response({ok:false,error:'invalid_request'},400); }
   try {
     if (endpoint==='request') {
+      // Turnstile jak przy stanie adresu w rejestracji (B8, E24 R7).
+      const check=await verifyTurnstile(request,env,body.captcha_token);
+      if (!check.ok) return response({ok:false,error:check.error},check.error==='captcha_unavailable'?503:400);
       const lang=normalizeLang(body.lang), template=buildMailCenterConfirmation(lang);
       const result=await rpc(env,'mail_center_request_link',{p_email:String(body.email||'').trim(),p_ip_hash:await ipHash(request,env),p_subject:template.subject,p_html:template.html,p_lang:lang});
       return response(publicResult(result),result.error==='cooldown'?429:200);

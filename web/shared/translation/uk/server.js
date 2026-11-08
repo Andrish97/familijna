@@ -126,7 +126,7 @@ const uk = {
     greeting: "Вітаємо,",
     closing: "З повагою,\nКоманда Familijna",
     confirmationSubject: "Підтвердження звернення [{ticket}]",
-    confirmationBody: "Дякуємо за звернення. Твоє звернення прийнято.\n\nНомер звернення: {ticket}\nТема: {subject}",
+    confirmationBody: "Дякуємо за звернення. Твоє звернення прийнято.\n\nНомер звернення: {ticket}",
     replySubject: "Re: [{ticket}] {subject}",
     replyQuoteLabel: "Твоє звернення [{ticket}]:",
     composeSubject: "Повідомлення від Familijna",

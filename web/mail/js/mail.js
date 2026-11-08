@@ -1,11 +1,12 @@
-import { initI18n, t } from '../../shared/translation/translation.js?v=v2026-11-08T17075';
-import { icon, iconText, sharingActionIcon } from '../../shared/js/core/icons.js?v=v2026-11-08T17075';
-import { toast } from '../../shared/js/core/toast.js?v=v2026-11-08T17075';
-import { confirmModal } from '../../shared/js/core/modal.js?v=v2026-11-08T17075';
-import { tabFromUrl, setTab as setUrlTab } from '../../shared/js/core/tabs.js?v=v2026-11-08T17075';
-import { initSplitTabs } from '../../shared/js/core/split-tabs.js?v=v2026-11-08T17075';
-import { attachListTools } from '../../shared/js/core/share-sections.js?v=v2026-11-08T17075';
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T17075";
+import { initI18n, t } from '../../shared/translation/translation.js?v=v2026-11-08T17374';
+import { icon, iconText, sharingActionIcon } from '../../shared/js/core/icons.js?v=v2026-11-08T17374';
+import { toast } from '../../shared/js/core/toast.js?v=v2026-11-08T17374';
+import { confirmModal } from '../../shared/js/core/modal.js?v=v2026-11-08T17374';
+import { tabFromUrl, setTab as setUrlTab } from '../../shared/js/core/tabs.js?v=v2026-11-08T17374';
+import { initSplitTabs } from '../../shared/js/core/split-tabs.js?v=v2026-11-08T17374';
+import { attachListTools } from '../../shared/js/core/share-sections.js?v=v2026-11-08T17374';
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T17374";
+import { getTurnstileToken } from "../../shared/js/core/turnstile.js?v=v2026-11-08T17374";
 
 
 const $ = id => document.getElementById(id);
@@ -151,7 +152,11 @@ function updateCooldown() {
 $('mailForm').addEventListener('submit', event => {
   event.preventDefault(); if (!$('mailForm').reportValidity() || Date.now() < requestUntil) return;
   perform(async () => {
-    const email = $('mailInput').value.trim(); const result = await api('request', { email, lang: document.documentElement.lang });
+    const email = $('mailInput').value.trim(), lang = document.documentElement.lang;
+    let captcha_token;
+    try { captcha_token = await getTurnstileToken($('mailCaptcha'), { lang, size: 'flexible' }); }
+    catch { toast(t('auth.captchaRequired'), { kind: 'error' }); return; }
+    const result = await api('request', { email, lang, captcha_token });
     if (result.error === 'requires_login') model = { state: 'registered', email };
     else if (result.ok) { requestUntil = Date.now() + (result.cooldown_seconds || 60) * 1000; model = { state: 'sent', email }; }
     else if (result.error === 'cooldown') { requestUntil = Date.now() + result.cooldown_seconds * 1000; toast(text('cooldownMessage'), { kind: 'info' }); }
