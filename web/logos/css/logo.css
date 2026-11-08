@@ -283,7 +283,7 @@
     /* zawija się na węższym ekranie (np. tablet w pionie) zamiast ucinać ostatnie pola */
     flex-wrap: wrap;
     row-gap: 6px;
-    min-height: var(--ctl-h); /* = wysokość kontrolek: bez skoku płótna */
+    min-height: calc(var(--ctl-h) + 8px); /* = kontrolki + odstęp 4+4: bez skoku płótna */
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: var(--w-14) transparent;
