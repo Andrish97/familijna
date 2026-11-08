@@ -335,8 +335,21 @@
     border-radius: var(--r-md);
   }
   .editorToolbar .btn.icon{ width: var(--ctl-h); min-width: var(--ctl-h); }
+  /* Jeden krój napisów we wszystkich polach pasków (przyciski, listy, pola,
+     pola wyboru): przyciski nie biorą już domyślnej czcionki przeglądarki,
+     tylko tę samą co reszta strony, ten sam rozmiar, grubość i odstęp liter. */
+  .editorToolbar .btn,
+  .editorToolbar .ui-select-btn,
+  .editorToolbar .ctxInput,
+  #toolsImage .choice,
+  .ctxGroup .ctxChk{
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: .04em;
+  }
   .editorToolbar .btn:not(.icon){ padding-block: 0; }
-  .ctxInput{ width: 64px; padding: 0 6px; text-align: center; font-size: 14px; }
+  .ctxInput{ width: 64px; padding: 0 6px; text-align: center; }
   /* pole liczbowe bez strzałek przeglądarki: kroki robią − i + */
   .ctxInput::-webkit-inner-spin-button, .ctxInput::-webkit-outer-spin-button{ -webkit-appearance: none; margin: 0; }
   .ctxInput{ -moz-appearance: textfield; appearance: textfield; }
@@ -855,11 +868,11 @@
 
   /* listy wyboru w pasku ustawień (kształt, styl linii, czcionka) */
   .ctxGroup .ui-select.ctxSelect{ min-width: 110px; }
-  .ctxGroup .ui-select.ctxSelect .ui-select-btn{ width: 100%; padding: 0 10px; font-size: 13px; gap: 8px; }
+  .ctxGroup .ui-select.ctxSelect .ui-select-btn{ width: 100%; padding: 0 10px; gap: 8px; }
   /* czcionka: przycisk w wyglądzie listy wyboru (te same klasy co ui-select),
      nazwa wybranej czcionki jej krojem (--font) */
   .ctxGroup .ui-select.ctxFont{ width: 170px; }
-  .ctxFont .ui-select-label{ font-family: var(--font, inherit); font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ctxFont .ui-select-label{ font-family: var(--font, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 /* Podgląd logo. W oknie od dołu (telefon, tablet) wygląd okna daje silnik
