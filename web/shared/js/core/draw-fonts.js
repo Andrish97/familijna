@@ -9,7 +9,7 @@
 // W scenie rysunku (fabricData) obiekt tekstu ma fontFamily = `family`.
 // Edytor, podgląd na Wyświetlaczu i ekran prowadzącego ładują czcionkę
 // przez ensureDrawFonts() przed rysowaniem.
-import { v as cacheBust } from "./cache-bust.js?v=v2026-11-08T15560";
+import { v as cacheBust } from "./cache-bust.js?v=v2026-11-08T16070";
 
 /** { family, file, weight } — weight: zakres osi grubości albo jedyna grubość. */
 export const DRAW_FONTS = [
