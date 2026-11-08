@@ -12,11 +12,12 @@ Z serwisu można korzystać na dwa sposoby:
   i logo oraz prowadzić rozgrywkę, ale dane są dostępne tylko w tej przeglądarce (→ 5.4).
 
 Na stronie *Logowanie* są przyciski [Zaloguj], [Załóż konto], [Wejdź jako gość]
-i [Przypomnij hasło]. Gdy w tej przeglądarce działa konto gościa, pod formularzem widać
-„Aktywna sesja gościa: …”, a zamiast [Wejdź jako gość] jest [Wróć do konta gościa] — wraca
+i [Przypomnij hasło]. Gdy w tej przeglądarce działa konto gościa, nad polami logowania widać
+„Aktywna sesja gościa: …”, a zamiast [Wejdź jako gość] jest [Wróć do konta gościa|person] — wraca
 do tego samego konta gościa, nie zakłada nowego.
 
 ![Strona logowania](zrzut:people-login)
+![Strona logowania, gdy działa konto gościa](zrzut:people-login-guest-session)
 
 Konto jest potrzebne do współpracy z innymi osobami. Tylko z kontem możesz:
 

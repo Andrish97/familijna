@@ -12,11 +12,12 @@ You can use the app in two ways:
   and logos and run games, but your data is only available in this browser (→ 5.4).
 
 The *Login* page has the buttons [Log in], [Create account], [Continue as guest]
-and [Forgot password]. When this browser has an active guest account, the form shows
-"Guest session active: …", and instead of [Continue as guest] there is [Back to guest account] —
+and [Forgot password]. When this browser has an active guest account, the page shows
+"Guest session active: …" above the login fields, and instead of [Continue as guest] there is [Back to guest account|person] —
 it returns to the same guest account and does not create a new one.
 
 ![The login page](zrzut:people-login)
+![The login page with an active guest account](zrzut:people-login-guest-session)
 
 You need an account to work with other people. Only with an account can you:
 
