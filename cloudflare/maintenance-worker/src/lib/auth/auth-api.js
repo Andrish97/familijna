@@ -30,11 +30,14 @@ export const STATUS_MAX_PER_IP = 30;
 const RESEND_MAX_PER_EMAIL = 5;
 const RESEND_MAX_PER_IP = 10;
 
+// E24 R4: trasy GoTrue z captchą (/token hasło, /signup, /recover, /resend) Worker
+// woła kluczem serwisowym — GoTrue pomija wtedy własną captchę (Turnstile sprawdził
+// już Worker, token jest jednorazowy). Przeglądarka nie woła tych tras wprost.
 function authConfig(env) {
   const baseUrl = String(env.SUPABASE_URL || "").trim().replace(/\/+$/, "");
-  const anonKey = String(env.SUPABASE_ANON_KEY || "").trim();
-  if (!baseUrl || !anonKey) return null;
-  return { baseUrl, anonKey };
+  const serviceKey = String(env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  if (!baseUrl || !serviceKey) return null;
+  return { baseUrl, serviceKey };
 }
 
 // Tylko JSON z własnej strony (żądanie z innej domeny wymaga preflightu,
@@ -65,11 +68,6 @@ async function captchaRefusal(request, env, body) {
   return check.ok ? null : json({ ok: false, error: check.error }, CAPTCHA_STATUS[check.error] || 400);
 }
 
-function captchaMeta(body) {
-  const token = typeof body.captcha_token === "string" ? body.captcha_token.trim() : "";
-  return token && token.length <= 4096 ? { captcha_token: token } : undefined;
-}
-
 async function resolveLogin(env, login) {
   if (login.includes("@")) {
     const email = login.toLowerCase();
@@ -85,7 +83,7 @@ async function resolveLogin(env, login) {
 async function goTrue(cfg, path, body) {
   const res = await fetch(`${cfg.baseUrl}/auth/v1${path}`, {
     method: "POST",
-    headers: { apikey: cfg.anonKey, Authorization: `Bearer ${cfg.anonKey}`, "Content-Type": "application/json" },
+    headers: { apikey: cfg.serviceKey, Authorization: `Bearer ${cfg.serviceKey}`, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
   let data = null;
@@ -136,10 +134,9 @@ export async function handleAuthLogin(request, env) {
   // Nieznana nazwa i złe hasło dają tę samą odpowiedź.
   if (!email) return failed();
 
-  const meta = captchaMeta(body);
   let res;
   try {
-    res = await goTrue(cfg, "/token?grant_type=password", { email, password, ...(meta ? { gotrue_meta_security: meta } : {}) });
+    res = await goTrue(cfg, "/token?grant_type=password", { email, password });
   } catch {
     return json({ ok: false, error: "auth_unavailable" }, 502);
   }
@@ -189,10 +186,9 @@ export async function handleAuthReset(request, env) {
 
   const redirect = new URL("/login/reset/", SITE_ORIGIN);
   redirect.searchParams.set("lang", lang);
-  const meta = captchaMeta(body);
   let res;
   try {
-    res = await goTrue(cfg, `/recover?redirect_to=${encodeURIComponent(redirect.toString())}`, { email, ...(meta ? { gotrue_meta_security: meta } : {}) });
+    res = await goTrue(cfg, `/recover?redirect_to=${encodeURIComponent(redirect.toString())}`, { email });
   } catch {
     return json({ ok: false, error: "auth_unavailable" }, 502);
   }
@@ -249,9 +245,161 @@ export async function handleAuthResendPrepare(request, env) {
   return json({ ok: true, allowed: !!row?.ok, next_allowed_at: row?.nextallowedat || null });
 }
 
+// Adres powrotu z maila tylko na własną stronę (strona potwierdzenia).
+function ownRedirect(value, lang) {
+  try {
+    const u = new URL(String(value || ""), SITE_ORIGIN);
+    if (u.origin === SITE_ORIGIN && u.pathname.startsWith("/login/")) return u.toString();
+  } catch {}
+  const u = new URL("/login/confirm/", SITE_ORIGIN);
+  u.searchParams.set("lang", lang);
+  return u.toString();
+}
+
+const SIGNUP_WINDOW_S = 3600;
+export const SIGNUP_MAX_PER_IP = 10;
+const SIGNUP_MAX_PER_EMAIL = 5;
+export const GUEST_MAX_PER_IP = 20;
+const USERNAME_DATA_RE = /^[a-zA-Z0-9_.-]{1,64}$/;
+
+// Rejestracja e-mailem (E24 R4): Turnstile + limity, GoTrue /signup kluczem serwisowym.
+export async function handleAuthSignup(request, env) {
+  const body = await readAuthBody(request);
+  if (body instanceof Response) return body;
+  const cfg = authConfig(env);
+  if (!cfg) return json({ ok: false, error: "auth_unavailable" }, 503);
+  const email = emailFrom(body);
+  const password = typeof body.password === "string" ? body.password : "";
+  if (!email || password.length < 8 || password.length > 1024) return json({ ok: false, error: "invalid_body" }, 400);
+  const lang = LANGS.includes(body.lang) ? body.lang : "pl";
+  const refused = await captchaRefusal(request, env, body);
+  if (refused) return refused;
+  const allowed = await authorizeE2EApi(request, env) || await claimSlots(env, [
+    { key: `auth_signup_ip:${await sha256Hex(clientIp(request))}`, max: SIGNUP_MAX_PER_IP, windowS: SIGNUP_WINDOW_S },
+    { key: `auth_signup_em:${await sha256Hex(email)}`, max: SIGNUP_MAX_PER_EMAIL, windowS: SIGNUP_WINDOW_S },
+  ]);
+  if (!allowed) return json({ ok: false, error: "rate_limited" }, 429);
+  const data = { language: lang };
+  const username = typeof body.username === "string" ? body.username.trim() : "";
+  if (username && USERNAME_DATA_RE.test(username)) data.username = username;
+  let res;
+  try {
+    res = await goTrue(cfg, `/signup?redirect_to=${encodeURIComponent(ownRedirect(body.redirect_to, lang))}`, { email, password, data });
+  } catch {
+    return json({ ok: false, error: "auth_unavailable" }, 502);
+  }
+  if (!res.ok) {
+    const code = String(res.data?.error_code || res.data?.code || "").toLowerCase();
+    if (code === "weak_password") return json({ ok: false, error: "weak_password" }, 400);
+    if (code.includes("user_already_exists") || code === "email_exists") return json({ ok: false, error: "user_already_exists" }, 400);
+    const error = classifyGoTrueError(res.status, res.data);
+    return json({ ok: false, error: error === "invalid_credentials" ? "signup_failed" : error }, STATUS_BY_ERROR[error] || 400);
+  }
+  return json({ ok: true });
+}
+
+// Konto gościa (anonimowe) — E24 R4: Turnstile + limit na IP, sesja dla przeglądarki.
+export async function handleAuthGuest(request, env) {
+  const body = await readAuthBody(request);
+  if (body instanceof Response) return body;
+  const cfg = authConfig(env);
+  if (!cfg) return json({ ok: false, error: "auth_unavailable" }, 503);
+  const refused = await captchaRefusal(request, env, body);
+  if (refused) return refused;
+  const allowed = await authorizeE2EApi(request, env) || await claimSlots(env, [
+    { key: `auth_guest_ip:${await sha256Hex(clientIp(request))}`, max: GUEST_MAX_PER_IP, windowS: SIGNUP_WINDOW_S },
+  ]);
+  if (!allowed) return json({ ok: false, error: "rate_limited" }, 429);
+  let res;
+  try {
+    res = await goTrue(cfg, "/signup", { data: { is_guest: true } });
+  } catch {
+    return json({ ok: false, error: "auth_unavailable" }, 502);
+  }
+  const s = res.data;
+  if (!res.ok || !s?.access_token || !s?.refresh_token) {
+    const error = res.ok ? "auth_unavailable" : classifyGoTrueError(res.status, res.data);
+    return json({ ok: false, error: error === "invalid_credentials" ? "auth_unavailable" : error }, STATUS_BY_ERROR[error] || 502);
+  }
+  return json({ ok: true, session: {
+    access_token: s.access_token, refresh_token: s.refresh_token,
+    expires_in: s.expires_in, expires_at: s.expires_at, token_type: s.token_type,
+  } });
+}
+
+// Ponowne wysłanie potwierdzenia rejestracji (GoTrue /resend) — E24 R4.
+export async function handleAuthResend(request, env) {
+  const body = await readAuthBody(request);
+  if (body instanceof Response) return body;
+  const cfg = authConfig(env);
+  if (!cfg) return json({ ok: false, error: "auth_unavailable" }, 503);
+  const email = emailFrom(body);
+  if (!email) return json({ ok: false, error: "invalid_email" }, 400);
+  const lang = LANGS.includes(body.lang) ? body.lang : "pl";
+  const refused = await captchaRefusal(request, env, body);
+  if (refused) return refused;
+  const allowed = await authorizeE2EApi(request, env) || await claimSlots(env, [
+    { key: `auth_resend2_ip:${await sha256Hex(clientIp(request))}`, max: RESEND_MAX_PER_IP, windowS: STATUS_WINDOW_S },
+    { key: `auth_resend2_em:${await sha256Hex(email)}`, max: RESEND_MAX_PER_EMAIL, windowS: STATUS_WINDOW_S },
+  ]);
+  if (!allowed) return json({ ok: false, error: "rate_limited" }, 429);
+  let res;
+  try {
+    res = await goTrue(cfg, `/resend?redirect_to=${encodeURIComponent(ownRedirect(body.redirect_to, lang))}`, { type: "signup", email });
+  } catch {
+    return json({ ok: false, error: "auth_unavailable" }, 502);
+  }
+  if (!res.ok) {
+    const error = classifyGoTrueError(res.status, res.data);
+    return json({ ok: false, error: error === "invalid_credentials" ? "auth_unavailable" : error }, STATUS_BY_ERROR[error] || 502);
+  }
+  return json({ ok: true });
+}
+
+// Ponowne potwierdzenie hasłem zalogowanego (np. przed usunięciem konta) — E24 R4.
+// Bez Turnstile: tożsamość z bieżącej sesji (Bearer), adres konta tylko z GoTrue.
+export const REAUTH_MAX_PER_USER = 5;
+export async function handleAuthReauth(request, env) {
+  const body = await readAuthBody(request);
+  if (body instanceof Response) return body;
+  const cfg = authConfig(env);
+  if (!cfg) return json({ ok: false, error: "auth_unavailable" }, 503);
+  const auth = String(request.headers.get("Authorization") || "");
+  const password = typeof body.password === "string" ? body.password : "";
+  if (!auth.startsWith("Bearer ") || auth.length > 4096 || !password || password.length > 1024) {
+    return json({ ok: false, error: "invalid_credentials" }, 400);
+  }
+  let user;
+  try {
+    const res = await fetch(`${cfg.baseUrl}/auth/v1/user`, { headers: { apikey: cfg.serviceKey, Authorization: auth } });
+    user = res.ok ? await res.json() : null;
+  } catch { return json({ ok: false, error: "auth_unavailable" }, 502); }
+  const email = String(user?.email || "").toLowerCase();
+  if (!user?.id || !EMAIL_RE.test(email)) return json({ ok: false, error: "invalid_session" }, 401);
+  const key = `auth_reauth_user:${await sha256Hex(user.id)}`;
+  if (await limitReached(env, key, REAUTH_MAX_PER_USER)) return json({ ok: false, error: "rate_limited" }, 429);
+  let res;
+  try { res = await goTrue(cfg, "/token?grant_type=password", { email, password }); }
+  catch { return json({ ok: false, error: "auth_unavailable" }, 502); }
+  if (res.ok && res.data?.access_token && res.data?.refresh_token) {
+    const s = res.data;
+    return json({ ok: true, session: {
+      access_token: s.access_token, refresh_token: s.refresh_token,
+      expires_in: s.expires_in, expires_at: s.expires_at, token_type: s.token_type,
+    } });
+  }
+  const error = res.ok ? "auth_unavailable" : classifyGoTrueError(res.status, res.data);
+  if (error === "invalid_credentials") await countAttempt(env, key, LOGIN_WINDOW_S);
+  return json({ ok: false, error }, STATUS_BY_ERROR[error] || 400);
+}
+
 export const AUTH_ROUTES = {
   "/_api/auth/login": handleAuthLogin,
   "/_api/auth/reset": handleAuthReset,
   "/_api/auth/email-status": handleAuthEmailStatus,
   "/_api/auth/resend-prepare": handleAuthResendPrepare,
+  "/_api/auth/signup": handleAuthSignup,
+  "/_api/auth/guest": handleAuthGuest,
+  "/_api/auth/resend": handleAuthResend,
+  "/_api/auth/reauth": handleAuthReauth,
 };

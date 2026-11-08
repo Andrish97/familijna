@@ -36,12 +36,21 @@ function mockBackend() {
       return ok({ success: pass, hostname: secret === 'real-secret' ? 'www.familijna.app' : 'example.com' });
     }
     if (u.pathname === '/auth/v1/recover') return ok({});
+    if (u.pathname === '/auth/v1/resend') return ok({});
+    if (u.pathname === '/auth/v1/signup') {
+      if (!body.email) return ok({ access_token: 'gat', refresh_token: 'grt', expires_in: 3600, expires_at: 1, token_type: 'bearer', user: { id: 'g1' } });
+      if (body.email === 'jest@example.com') return ok({ code: 422, error_code: 'user_already_exists' }, 422);
+      return ok({ id: 'u1', email: body.email });
+    }
+    if (u.pathname === '/auth/v1/user') {
+      return (init.headers && new Headers(init.headers).get('Authorization') === 'Bearer user-at') ? ok({ id: 'a1', email: 'alicja@example.com' }) : ok({ msg: 'bad jwt' }, 401);
+    }
     throw new Error('unexpected ' + u.pathname);
   };
   return calls;
 }
 
-test('auth/login: nazwa -> sesja, bez adresu e-mail w odpowiedzi; GoTrue kluczem anon z captcha', async () => {
+test('auth/login: nazwa -> sesja, bez adresu e-mail w odpowiedzi; GoTrue kluczem serwisowym (E24 R4)', async () => {
   const prev = globalThis.fetch;
   try {
     const calls = mockBackend();
@@ -52,8 +61,8 @@ test('auth/login: nazwa -> sesja, bez adresu e-mail w odpowiedzi; GoTrue kluczem
     assert.deepEqual(JSON.parse(text).session.refresh_token, 'rt');
     const token = calls.find(c => c.path === '/auth/v1/token');
     assert.equal(token.search, '?grant_type=password');
-    assert.equal(token.headers.authorization, 'Bearer anon');
-    assert.deepEqual(token.body.gotrue_meta_security, { captcha_token: 'ok-token' });
+    assert.equal(token.headers.authorization, 'Bearer svc');
+    assert.equal(token.body.gotrue_meta_security, undefined);
   } finally { globalThis.fetch = prev; }
 });
 
@@ -218,5 +227,48 @@ test('auth/reset: limit KV na login i IP; podpisany przebieg e2e go nie zużywa'
       const res = await handleAuthReset(req('/_api/auth/reset', { login: 'alicja' }, { headers: { 'X-E2E-Token': e2eToken('e2e-secret') } }), e);
       assert.equal(res.status, 200, 'e2e bez limitu');
     }
+  } finally { globalThis.fetch = prev; }
+});
+
+// E24 R4: rejestracja, gość, ponowne wysłanie i ponowne logowanie przez Worker.
+test('auth/signup|guest|resend|reauth: GoTrue kluczem serwisowym, Turnstile wymagany, adres powrotu tylko własny', async () => {
+  const prev = globalThis.fetch;
+  try {
+    const { handleAuthSignup, handleAuthGuest, handleAuthResend, handleAuthReauth } = await import('../../cloudflare/maintenance-worker/src/lib/auth/auth-api.js');
+    let calls = mockBackend();
+    let res = await handleAuthSignup(req('/_api/auth/signup', { email: 'Nowy@Example.com', password: 'Dobre123!', username: 'nowy', lang: 'en', redirect_to: 'https://evil.example/x' }), env());
+    assert.equal(res.status, 200);
+    let c = calls.find(x => x.path === '/auth/v1/signup');
+    assert.equal(c.headers.authorization, 'Bearer svc');
+    assert.equal(c.body.email, 'nowy@example.com');
+    assert.deepEqual(c.body.data, { language: 'en', username: 'nowy' });
+    assert.ok(decodeURIComponent(c.search).includes('https://www.familijna.app/login/confirm/'));
+    res = await handleAuthSignup(req('/_api/auth/signup', { email: 'jest@example.com', password: 'Dobre123!' }), env());
+    assert.deepEqual(await res.json(), { ok: false, error: 'user_already_exists' });
+    calls = mockBackend();
+    res = await handleAuthSignup(req('/_api/auth/signup', { email: 'a@example.com', password: 'Dobre123!', captcha_token: 'zly' }), env());
+    assert.equal(res.status, 400);
+    assert.ok(!calls.some(x => x.path === '/auth/v1/signup'));
+
+    calls = mockBackend();
+    res = await handleAuthGuest(req('/_api/auth/guest', {}), env());
+    assert.equal((await res.json()).session.refresh_token, 'grt');
+    c = calls.find(x => x.path === '/auth/v1/signup');
+    assert.deepEqual(c.body, { data: { is_guest: true } });
+    assert.equal(c.headers.authorization, 'Bearer svc');
+
+    calls = mockBackend();
+    res = await handleAuthResend(req('/_api/auth/resend', { email: 'a@example.com', lang: 'pl' }), env());
+    assert.equal(res.status, 200);
+    assert.deepEqual(calls.find(x => x.path === '/auth/v1/resend').body, { type: 'signup', email: 'a@example.com' });
+
+    calls = mockBackend();
+    res = await handleAuthReauth(req('/_api/auth/reauth', { password: 'dobre' }, { headers: { Authorization: 'Bearer user-at' } }), env());
+    assert.equal((await res.json()).session.access_token, 'at');
+    assert.equal(calls.find(x => x.path === '/auth/v1/token').body.email, 'alicja@example.com');
+    res = await handleAuthReauth(req('/_api/auth/reauth', { password: 'dobre' }, { headers: { Authorization: 'Bearer obcy' } }), env());
+    assert.equal(res.status, 401);
+    res = await handleAuthReauth(req('/_api/auth/reauth', { password: 'zle' }, { headers: { Authorization: 'Bearer user-at' } }), env());
+    assert.equal(res.status, 400);
   } finally { globalThis.fetch = prev; }
 });
