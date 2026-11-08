@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict cj6gQ7CwZxCqcBb9TozZjTxZwuNcwfwhYm0e2RU7biUOTt3nQgo0bMlkuaHFoMu
+\restrict OCyXdhycZYPLbKNtL0WqKvvpXYWEaBPLdHKWngpGx4zTVRzkIfSKTOe7AQXeEsz
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -4281,6 +4281,83 @@ $$;
 
 
 --
+-- Name: _push_base_share(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_base_share"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.recipient_user_id IS NULL OR NEW.status <> 'pending' OR NEW.cancelled_at IS NOT NULL THEN RETURN NULL; END IF;
+  IF TG_OP = 'UPDATE' AND OLD.status = 'pending' THEN RETURN NULL; END IF;
+  PERFORM public.push_user_event(NEW.recipient_user_id, 'base:share', jsonb_build_object(
+    'id', NEW.id, 'owner', public._push_user_label(NEW.owner_id),
+    'base', (SELECT b.name FROM public.question_bases b WHERE b.id = NEW.base_id), 'url', '/go/?b=' || NEW.token));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_base_share: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_copy_offer(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_copy_offer"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status <> 'pending' OR NEW.resource_kind NOT IN ('game','logo') THEN RETURN NULL; END IF;
+  PERFORM public.push_user_event(NEW.recipient_id, 'copy:' || NEW.resource_kind, jsonb_build_object(
+    'id', NEW.id, 'owner', coalesce(nullif(btrim(NEW.sender_label), ''), public._push_user_label(NEW.sender_id)),
+    'name', NEW.name, 'url', '/go/?c=' || NEW.token));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_copy_offer: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_device_share(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_device_share"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.recipient_id IS NULL OR NEW.revoked_at IS NOT NULL THEN RETURN NULL; END IF;
+  PERFORM public.push_user_event(NEW.recipient_id, 'device:share', jsonb_build_object(
+    'id', NEW.id, 'owner', public._push_user_label(NEW.owner_id), 'type', NEW.device_type,
+    'url', '/go/?d=' || NEW.device_type || '&id=' || NEW.game_id || '&key=' || NEW.token));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_device_share: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
+-- Name: _push_friendship(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_friendship"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.status <> 'pending' OR NEW.cancelled_at IS NOT NULL THEN RETURN NULL; END IF;
+  IF TG_OP = 'UPDATE' AND OLD.status = 'pending' AND OLD.cancelled_at IS NULL THEN RETURN NULL; END IF;
+  PERFORM public.push_user_event(NEW.addressee_id, 'friend:invite', jsonb_build_object(
+    'id', NEW.id, 'owner', public._push_user_label(NEW.requester_id), 'url', '/go/?f=' || NEW.token));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_friendship: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
 -- Name: _push_market_pending(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4360,6 +4437,31 @@ BEGIN PERFORM public.push_send_kick(); RETURN NULL; END $$;
 
 
 --
+-- Name: _push_poll_task(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_poll_task"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE v_event text;
+BEGIN
+  IF NEW.recipient_user_id IS NULL OR NEW.status NOT IN ('pending','opened') OR NEW.cancelled_at IS NOT NULL OR NEW.declined_at IS NOT NULL THEN
+    RETURN NULL;
+  END IF;
+  IF TG_OP = 'INSERT' THEN v_event := 'poll:share';
+  ELSIF NEW.reminder_count > OLD.reminder_count THEN v_event := 'poll:remind';
+  ELSE RETURN NULL; END IF;
+  PERFORM public.push_user_event(NEW.recipient_user_id, v_event, jsonb_build_object(
+    'id', NEW.id, 'owner', public._push_user_label(NEW.owner_id),
+    'name', (SELECT g.name FROM public.games g WHERE g.id = NEW.game_id), 'url', '/go/?t=' || NEW.token));
+  RETURN NULL;
+EXCEPTION WHEN others THEN
+  RAISE WARNING '_push_poll_task: %', sqlerrm; RETURN NULL;
+END $$;
+
+
+--
 -- Name: _push_question_job(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4381,6 +4483,18 @@ BEGIN
 EXCEPTION WHEN others THEN
   RAISE WARNING '_push_question_job: %', sqlerrm; RETURN NULL;
 END $$;
+
+
+--
+-- Name: _push_user_label("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_user_label"("p_user" "uuid") RETURNS "text"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT coalesce(nullif(btrim(p.username), ''), 'Familijna') FROM public.profiles p WHERE p.id = p_user
+$$;
 
 
 --
@@ -9253,12 +9367,19 @@ CREATE FUNCTION "public"."friends_resend"("p_id" "uuid") RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'auth', 'pg_temp'
     AS $$
-DECLARE result jsonb;
+DECLARE result jsonb; f public.friendships%rowtype;
 BEGIN
  FOR attempt IN 1..1000 LOOP
   BEGIN
  result:=public._mail_original361_friends_resend(p_id);
  IF result->>'ok'='true' AND result->>'to' IS NOT NULL THEN PERFORM public._mail_allocate_notification('friend',p_id,'friend:resend'); END IF;
+ IF result->>'ok'='true' THEN
+  SELECT * INTO f FROM public.friendships WHERE id=p_id;
+  IF f.id IS NOT NULL AND f.status='pending' THEN
+   PERFORM public.push_user_event(f.addressee_id,'friend:resend',jsonb_build_object(
+    'id',f.id,'owner',public._push_user_label(f.requester_id),'url','/go/?f='||f.token));
+  END IF;
+ END IF;
  RETURN result - 'to';
   EXCEPTION WHEN lock_not_available THEN
    IF attempt=1000 THEN RAISE; END IF;
@@ -17655,6 +17776,10 @@ BEGIN
   IF p_user IS NULL OR NOT EXISTS (SELECT 1 FROM public.push_subscriptions WHERE app = 'main' AND user_id = p_user) THEN
     RETURN NULL;
   END IF;
+  IF EXISTS (SELECT 1 FROM public.push_outbox WHERE app = 'main' AND user_id = p_user AND event = p_event
+               AND vars->>'id' IS NOT DISTINCT FROM p_vars->>'id' AND created_at > now() - interval '10 minutes') THEN
+    RETURN NULL;
+  END IF;
   INSERT INTO public.push_outbox (app, user_id, event, category, vars)
   VALUES ('main', p_user, p_event, public.push_event_category('main', p_event), coalesce(p_vars, '{}'))
   RETURNING id INTO v_id;
@@ -24967,6 +25092,34 @@ CREATE TRIGGER "profiles_reserve_test_username" BEFORE INSERT OR UPDATE OF "user
 
 
 --
+-- Name: base_share_tasks push_base_share; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_base_share" AFTER INSERT OR UPDATE OF "status" ON "public"."base_share_tasks" FOR EACH ROW EXECUTE FUNCTION "public"."_push_base_share"();
+
+
+--
+-- Name: resource_copy_offers push_copy_offer; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_copy_offer" AFTER INSERT ON "public"."resource_copy_offers" FOR EACH ROW EXECUTE FUNCTION "public"."_push_copy_offer"();
+
+
+--
+-- Name: control_device_shares push_device_share; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_device_share" AFTER INSERT ON "public"."control_device_shares" FOR EACH ROW EXECUTE FUNCTION "public"."_push_device_share"();
+
+
+--
+-- Name: friendships push_friendship; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_friendship" AFTER INSERT OR UPDATE OF "status", "cancelled_at" ON "public"."friendships" FOR EACH ROW EXECUTE FUNCTION "public"."_push_friendship"();
+
+
+--
 -- Name: market_games push_market_pending; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -24992,6 +25145,13 @@ CREATE TRIGGER "push_messages_inbound" AFTER INSERT ON "public"."messages" FOR E
 --
 
 CREATE TRIGGER "push_outbox_kick" AFTER INSERT ON "public"."push_outbox" FOR EACH STATEMENT EXECUTE FUNCTION "public"."_push_outbox_after_insert"();
+
+
+--
+-- Name: poll_tasks push_poll_task; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "push_poll_task" AFTER INSERT OR UPDATE OF "reminder_count" ON "public"."poll_tasks" FOR EACH ROW EXECUTE FUNCTION "public"."_push_poll_task"();
 
 
 --
@@ -28149,5 +28309,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict cj6gQ7CwZxCqcBb9TozZjTxZwuNcwfwhYm0e2RU7biUOTt3nQgo0bMlkuaHFoMu
+\unrestrict OCyXdhycZYPLbKNtL0WqKvvpXYWEaBPLdHKWngpGx4zTVRzkIfSKTOe7AQXeEsz
 
