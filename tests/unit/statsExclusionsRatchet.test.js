@@ -18,6 +18,7 @@ function functions() {
 // Funkcje o nazwach statystyk, które nie liczą użytkowników (z powodem).
 const NOT_USER_STATS = new Map([
   ["sync_market_game_rating_stats", "trigger utrzymujący pamięć podręczną ocen gry, nie statystyka panelu"],
+  ["push_outbox_stats", "E29: liczby wysyłek powiadomień push według zdarzenia (diagnostyka agent_reader), bez użytkowników"],
 ]);
 // Funkcje panelu admina liczące użytkowników, bez „stats” w nazwie.
 const ADMIN_USER_STATS = ["get_ratings_admin", "get_app_rating_stats", "get_maintenance_activity", "agent_mail_window_counts"];
