@@ -12,7 +12,7 @@ export function normalizedVector(value: unknown): number[] {
 
 export async function embedQuestions(questions: { question_pos: number; text: string }[], env: (key: string) => string | undefined): Promise<QuestionVector[]> {
   const base = (env('MARKET_SEMANTIC_URL') || '').replace(/\/+$/, '');
-  const token = env('MARKET_SEMANTIC_TOKEN') || env('GENERATE_GAME_SECRET') || '';
+  const token = env('MARKET_SEMANTIC_TOKEN') || ''; // E24 R25: osobny sekret, bez zapasowego
   if (!base || !token) throw new Error('semantic_not_configured');
   const result: QuestionVector[] = [];
   for (let offset = 0; offset < questions.length; offset += 32) {

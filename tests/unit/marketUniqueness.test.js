@@ -12,7 +12,7 @@ function moduleWith(fetchImpl) {
  const context={module:{exports:{}},fetch:fetchImpl,AbortSignal,Response,Error,Date,setTimeout};
  vm.createContext(context);vm.runInContext(code,context);return context.module.exports;
 }
-const settings = key => ({ MARKET_SEMANTIC_URL:'http://model.test', GENERATE_GAME_SECRET:'fixture-token' }[key]);
+const settings = key => ({ MARKET_SEMANTIC_URL:'http://model.test', MARKET_SEMANTIC_TOKEN:'fixture-token' }[key]);
 
 test('wektor: długość, liczby skończone i dodatnia norma są wymagane', () => {
  const m=moduleWith();

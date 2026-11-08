@@ -40,6 +40,19 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
+    // E24 R25: konto z hasłem tylko ze świeżą sesją (strona loguje ponownie
+    // hasłem tuż przed usunięciem) — wykradziony starszy token nie usunie konta.
+    const { data: prof } = await admin.from("profiles").select("is_guest").eq("id", userId).maybeSingle();
+    const isGuest = prof?.is_guest === true || userData.user.is_anonymous === true;
+    if (!isGuest) {
+      let iat = 0;
+      try {
+        const b64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        iat = Number(JSON.parse(atob(b64 + "=".repeat((4 - (b64.length % 4)) % 4))).iat) || 0;
+      } catch { iat = 0; }
+      if (!iat || Date.now() / 1000 - iat > 600) return json({ ok: false, error: "reauth_required" }, 401);
+    }
+
     // Najpierw baza (jedno źródło prawdy kasowania, używane też przez gości).
     // Funkcja usuwa rekordy powiązane z user_id i e-mailem, a finalnie auth.users/profiles.
     // Błąd bazy = nic nie ginie (pliki zostają razem z kontem).
