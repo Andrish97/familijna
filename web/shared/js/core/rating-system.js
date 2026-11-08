@@ -10,6 +10,10 @@ const RATING_DISMISSED_PREFIX = "fam:app_rating_dismissed_at:";
 const RATING_SUPPRESSED_PREFIX = "fam:app_rating_suppressed:";
 const LEGACY_DISMISSED_KEY = "fam:app_rating_dismissed_at";
 const LEGACY_SUPPRESSED_KEY = "fam:app_rating_suppressed";
+// Prośba o ocenę: 2 dni od założenia konta (także konta gościa), po „Później”
+// znowu po 3 dniach (decyzja użytkownika 2026-11-08).
+export const RATING_FIRST_AFTER_DAYS = 2;
+export const RATING_REMIND_AFTER_DAYS = 3;
 let activePrompt = null;
 
 function readStorage(key) {
@@ -21,7 +25,7 @@ function writeStorage(key, value) {
 }
 
 export async function initRatingSystem(user) {
-    if (!user || user.is_guest) return;
+    if (!user?.id) return;
     if (activePrompt) return activePrompt;
     activePrompt = showRatingIfEligible(user).finally(() => { activePrompt = null; });
     return activePrompt;
@@ -41,19 +45,19 @@ async function showRatingIfEligible(user) {
         return;
     }
 
-    // 3. Sprawdź 7 dni od rejestracji
+    // 3. Sprawdź czas od rejestracji (konta albo konta gościa)
     const createdAtMs = Date.parse(user.created_at || "");
     if (!Number.isFinite(createdAtMs)) return;
     const now = new Date();
     const diffFromCreation = (now.getTime() - createdAtMs) / (1000 * 60 * 60 * 24);
-    if (diffFromCreation < 7) return;
+    if (diffFromCreation < RATING_FIRST_AFTER_DAYS) return;
 
-    // 4. Sprawdź czy modal był niedawno zamknięty (ponowne przypomnienie po 7 dniach)
+    // 4. Sprawdź czy modal był niedawno zamknięty (ponowne przypomnienie)
     const dismissedAt = readStorage(dismissedKey) || readStorage(LEGACY_DISMISSED_KEY);
     if (dismissedAt) {
         const lastDismissed = new Date(parseInt(dismissedAt));
         const diffFromDismissal = (now - lastDismissed) / (1000 * 60 * 60 * 24);
-        if (diffFromDismissal < 7) return;
+        if (diffFromDismissal < RATING_REMIND_AFTER_DAYS) return;
         writeStorage(dismissedKey, dismissedAt);
     }
 
@@ -79,7 +83,7 @@ async function showRatingIfEligible(user) {
 }
 
 // Prośba o ocenę: wspólne choiceModal (modal.js) z trzema przyciskami.
-// X / Esc / klik w tło działa jak „Później” (wróci za 7 dni).
+// X / Esc / klik w tło działa jak „Później” (wróci po RATING_REMIND_AFTER_DAYS).
 async function showRatingModal(userId, storageKeys) {
   const { body, stars, commentEl, selected } = ratingBody();
   const result = await choiceModal({

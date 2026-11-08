@@ -65,16 +65,17 @@ async function loadDeps() {
   };
 }
 
-// Jednorazowe komunikaty konta (informacja dla gościa albo prośba o ocenę),
-// wspólne dla stron z kontem. Ładowane leniwie; w testach podmieniane w deps.
+// Jednorazowe komunikaty konta (informacja dla gościa, potem prośba o ocenę
+// -- dla kont i gości), wspólne dla stron z kontem. Ładowane leniwie;
+// w testach podmieniane w deps.
 async function showAccountNotices(user) {
+  if (!user) return;
   if (isGuestUser(user)) {
     const { maybeShowGuestInfoModal } = await import("./guest-info-modal.js?v=v2026-11-08T15121");
     await maybeShowGuestInfoModal(user);
-  } else if (user) {
-    const { initRatingSystem } = await import("./rating-system.js?v=v2026-11-08T15121");
-    await initRatingSystem(user);
   }
+  const { initRatingSystem } = await import("./rating-system.js?v=v2026-11-08T15121");
+  await initRatingSystem(user);
 }
 
 function elementOf(ref, defaultId) {

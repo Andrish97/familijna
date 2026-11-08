@@ -564,16 +564,15 @@ async function loadProfile(user) {
   if (!user) return; // initPage przekierował na logowanie
 
   if (isGuestUser(user)) {
-    // Gość nie ma username/email/hasła ani oceny/demo (demo dotyka
-    // wyłącznie zwykłych kont) — z całej strony zostaje mu sekcja usuwania
-    // konta (uproszczone potwierdzenie, patrz handleDeleteAccount) oraz
-    // sekcja migracji (zamiany konta gościa na pełne, patrz niżej).
+    // Gość nie ma username/email/hasła ani demo (demo dotyka wyłącznie
+    // zwykłych kont) — zostaje mu ocena systemu (jak każdemu, 527), sekcja
+    // usuwania konta (uproszczone potwierdzenie, patrz handleDeleteAccount)
+    // oraz sekcja migracji (zamiany konta gościa na pełne, patrz niżej).
     hideForGuest(user, [
       document.getElementById("usernameSection"),
       document.getElementById("emailSection"),
       document.getElementById("passwordSection"),
       document.getElementById("emailNotifSection"),
-      document.getElementById("ratingSection"),
       document.getElementById("demoSection"),
       // pole hasła siedzi w .pass-wrap razem z przyciskiem „pokaż hasło”
       deletePassword?.closest(".pass-wrap") || deletePassword,
@@ -582,6 +581,8 @@ async function loadProfile(user) {
     if (deleteHintEl) deleteHintEl.textContent = t("account.deleteHintGuest");
 
     if (migrateSection) migrateSection.hidden = false;
+    window.addEventListener("i18n:lang", () => loadUserRating(user.id));
+    await loadUserRating(user.id);
     await refreshMigrateState();
 
     return;
