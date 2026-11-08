@@ -27,10 +27,10 @@ async function registerAgain(page, context, identity, mailbox) {
   const after = new Date(Date.now() - 2000).toISOString();
   const withUsername = route => {
     const body = route.request().postDataJSON() || {};
-    body.data = { ...(body.data || {}), username: identity.username };
+    body.username = identity.username; // rejestracja przez Worker (E24 R4)
     return route.continue({ postData: JSON.stringify(body) });
   };
-  await page.route("**/auth/v1/signup*", withUsername);
+  await page.route("**/_api/auth/signup", withUsername);
   try {
     await withE2EBypass(context);
     await page.goto("https://www.familijna.app/login/", { waitUntil: "domcontentloaded" });
@@ -45,7 +45,7 @@ async function registerAgain(page, context, identity, mailbox) {
     await page.click("#btnPrimary");
     await expect(page.locator("#status")).toContainText("Sprawdź e-mail", { timeout: 30000 });
   } finally {
-    await page.unroute("**/auth/v1/signup*", withUsername);
+    await page.unroute("**/_api/auth/signup", withUsername);
     await context.setExtraHTTPHeaders({});
   }
   const mail = await mailbox.waitFor(identity, { after, subject: /Potwierdzenie konta/i, timeout: 150000 });

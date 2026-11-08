@@ -96,32 +96,14 @@ export function niceAuthError(e) {
   return msg;
 }
 
-function classifyAuthError(error) {
-  const status = Number(error?.status || error?.statusCode || 0) || 0;
-  const code = String(error?.code || error?.error_code || "").trim().toLowerCase();
-  const rawMessage = String(
-    error?.message || error?.error_description || error?.description || ""
-  ).trim();
-
-  let kind = "unknown";
-  if (status === 0 || status >= 500) kind = "network";
-  if (code.includes("captcha")) kind = "security";
-  if (code === "invalid_login_credentials") kind = "invalid_login";
-  if (status === 400 || status === 401) {
-    if (/invalid|credential|password|email/i.test(rawMessage)) kind = "invalid_login";
-  }
-
-  return { status, code, rawMessage, kind };
-}
-
 // Logowanie, reset hasła i stan adresu przy rejestracji po stronie Workera
 // (audyt E24, B7/B8): nazwa użytkownika -> e-mail tylko na serwerze.
-async function authApi(path, body) {
+async function authApi(path, body, extraHeaders = {}) {
   let res;
   try {
     res = await fetch(`/_api/auth/${path}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...extraHeaders },
       body: JSON.stringify(body),
     });
   } catch {
@@ -139,6 +121,8 @@ function authApiError(status, code) {
     email_not_confirmed: "Email not confirmed",
     captcha_failed: "captcha verification process failed",
     rate_limited: "Too many requests",
+    user_already_exists: "User already registered",
+    weak_password: "Password should be stronger",
   }[code] || "";
   const err = new Error(raw ? niceAuthError({ message: raw, status }) : t("auth.loginFailed"));
   err.status = status;
@@ -424,13 +408,16 @@ export async function requireAuth(redirect, { fresh = false } = {}) {
   return { ...u, username };
 }
 
+// Konto gościa przez Worker (Turnstile tam; GoTrue nie przyjmuje rejestracji wprost — E24 R4).
 export async function signInGuest(captchaToken = null) {
-  const options = { data: { is_guest: true } };
-  if (captchaToken) options.captchaToken = captchaToken;
-
-  const { data, error } = await sb().auth.signInAnonymously({ options });
+  const { status, data: res } = await authApi("guest", captchaToken ? { captcha_token: captchaToken } : {});
+  if (status !== 200 || !res.ok || !res.session?.access_token) throw authApiError(status, res.error);
+  const { data, error } = await sb().auth.setSession({
+    access_token: res.session.access_token,
+    refresh_token: res.session.refresh_token,
+  });
   if (error) throw new Error(niceAuthError(error));
-  const user = data?.user || null;
+  const user = data?.user || data?.session?.user || null;
   if (!user) throw new Error(t("auth.loginFailed"));
   try { localStorage.setItem(GUEST_LOCAL_MARKER_KEY, "1"); } catch {}
   return user;
@@ -527,25 +514,8 @@ export async function signIn(login, password, captchaToken = null) {
   const value = String(login || "").trim();
   if (!value) throw Object.assign(new Error(t("auth.unknownUsername")), { status: 400, errorCode: "unknown_username" });
 
-  let user;
-  if (value.includes("@")) {
-    const payload = { email: value.toLowerCase(), password };
-    if (captchaToken) payload.options = { captchaToken };
-
-    const { data, error } = await sb().auth.signInWithPassword(payload);
-    if (error) {
-      const classified = classifyAuthError(error);
-      const wrapped = new Error(niceAuthError(error));
-      wrapped.status = classified.status;
-      wrapped.errorCode = classified.code;
-      wrapped.rawMessage = classified.rawMessage;
-      wrapped.errorKind = classified.kind;
-      throw wrapped;
-    }
-    user = data.user;
-  } else {
-    user = await signInWithUsername(value, password, captchaToken);
-  }
+  // Nazwa i e-mail przez Worker (Turnstile, limity; GoTrue nie przyjmuje hasła wprost — E24 R4).
+  const user = await signInWithUsername(value.includes("@") ? value.toLowerCase() : value, password, captchaToken);
   if (!user) throw new Error(t("auth.loginFailed"));
 
   if (!user.email_confirmed_at) {
@@ -563,15 +533,42 @@ export async function signUp(email, password, redirectTo, usernameInput, languag
   // ✅ absolutny redirect + lang (bez withLangParam)
   const emailRedirectTo = redirectTo || buildAuthRedirect("/login/confirm/", language);
 
-  const options = { emailRedirectTo };
-  if (userData || language) {
-    options.data = { ...(userData || {}) };
-    if (language) options.data.language = language;
-  }
-  if (captchaToken) options.captchaToken = captchaToken;
+  // Rejestracja przez Worker (Turnstile, limity) — E24 R4.
+  const { status, data } = await authApi("signup", {
+    email: String(email || "").trim().toLowerCase(),
+    password,
+    ...(userData ? { username: userData.username } : {}),
+    ...(language ? { lang: language } : {}),
+    redirect_to: emailRedirectTo,
+    ...(captchaToken ? { captcha_token: captchaToken } : {}),
+  });
+  if (status !== 200 || !data.ok) throw authApiError(status, data.error);
+}
 
-  const { error } = await sb().auth.signUp({ email, password, options });
-  if (error) throw new Error(niceAuthError(error));
+// Ponowne potwierdzenie hasłem zalogowanego (np. przed usunięciem konta) przez
+// Worker — GoTrue nie przyjmuje hasła wprost (E24 R4). Zwraca true/false.
+export async function reauthWithPassword(password) {
+  const { data: cur } = await sb().auth.getSession();
+  const token = cur?.session?.access_token;
+  if (!token) return false;
+  const { status, data } = await authApi("reauth", { password }, { Authorization: `Bearer ${token}` });
+  if (status !== 200 || !data.ok || !data.session?.access_token) return false;
+  const { error } = await sb().auth.setSession({
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+  });
+  return !error;
+}
+
+// Ponowne wysłanie maila rejestracji przez Worker (GoTrue /resend wymaga captchy) — E24 R4.
+export async function resendSignupConfirmation(email, redirectTo, language, captchaToken = null) {
+  const { status, data } = await authApi("resend", {
+    email: String(email || "").trim().toLowerCase(),
+    redirect_to: redirectTo,
+    ...(language ? { lang: language } : {}),
+    ...(captchaToken ? { captcha_token: captchaToken } : {}),
+  });
+  if (status !== 200 || !data.ok) throw authApiError(status, data.error);
 }
 
 export async function getEmailStatus(email, captchaToken = null) {

@@ -1,7 +1,7 @@
 import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-08T18113";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T18113";
 import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-08T18113";
-import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-08T18113";
+import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly, reauthWithPassword } from "../../shared/js/core/auth.js?v=v2026-11-08T18113";
 import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-08T18113";
 import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } from "../../shared/js/core/push.js?v=v2026-11-08T18113";
 import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T18113";
@@ -924,11 +924,7 @@ async function handleDeleteAccount() {
       if (!pwd) throw new Error(t("account.errDeletePasswordMissing"));
       if (!userData.user.email) throw new Error(t("auth.errNoSession"));
 
-      const { error: signInError } = await sb().auth.signInWithPassword({
-        email: userData.user.email,
-        password: pwd,
-      });
-      if (signInError) throw new Error(t("account.errInvalidPassword"));
+      if (!await reauthWithPassword(pwd)) throw new Error(t("account.errInvalidPassword"));
     }
 
     const { data, error } = await sb().functions.invoke("delete-account");

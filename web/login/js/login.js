@@ -8,6 +8,7 @@ import {
   getUser,
   signIn,
   signInGuest,
+  resendSignupConfirmation,
   getEmailStatus,
   sendSignupConfirmation,
   convertGuestToRegisteredEmailOnly,
@@ -692,12 +693,7 @@ async function handlePendingEmailResend(emailAddr, pendingIntent) {
     );
     if (resendErr) throw resendErr;
   } else {
-    const { error: resendErr } = await sb().auth.resend({
-      type: "signup",
-      email: emailAddr,
-      options: { emailRedirectTo: redirect.toString() },
-    });
-    if (resendErr) throw resendErr;
+    await resendSignupConfirmation(emailAddr, redirect.toString(), getUiLang(), await getCaptchaTokenOrPrompt());
   }
 
   setStatus(t("index.statusCheckEmail"));

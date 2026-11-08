@@ -7,9 +7,10 @@ test.use({ serviceWorkers: "block" });
 test("edytowalne oznaczenie gościa nie zmienia roli ani ważności konta", async ({ page, context, request }) => {
   test.setTimeout(90_000);
   await serveBranchCode(context, { pages: ["account"] });
-  await page.route("**/auth/v1/signup**", async (route) => {
-    const body = route.request().postDataJSON();
-    body.data = { ...body.data, is_guest: false };
+  // Konto gościa zakłada Worker (E24 R4) — próba podmiany oznaczenia w żądaniu strony.
+  await page.route("**/_api/auth/guest", async (route) => {
+    const body = route.request().postDataJSON() || {};
+    body.data = { ...(body.data || {}), is_guest: false };
     await route.continue({ postData: JSON.stringify(body) });
   });
   let authInfo;
