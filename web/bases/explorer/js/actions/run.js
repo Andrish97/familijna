@@ -2,9 +2,9 @@
 // Jedna ścieżka wykonania akcji z rejestru — dla paska, menu, skrótów,
 // przeciągania i gestów: widoczność → dostępność → wykonanie → komunikat.
 
-import { actionById, actionState } from "./registry.js?v=v2026-11-08T20300";
-import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-08T20300";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-08T20300";
+import { actionById, actionState } from "./registry.js?v=v2026-11-08T21312";
+import { alertModal } from "../../../../shared/js/core/modal.js?v=v2026-11-08T21312";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-08T21312";
 
 // Powody, które ze skrótu klawiszowego warto powiedzieć głośno. Brak
 // zaznaczenia czy pusty schowek przy skrócie po prostu nic nie robi (jak

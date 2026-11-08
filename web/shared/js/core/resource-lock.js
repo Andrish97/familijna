@@ -21,10 +21,10 @@
 //  * Zwolnienie: `release_edit_locks` (przy zamykaniu karty z `keepalive`),
 //    zejście z Presence i sygnał RELEASED — czekająca karta reaguje natychmiast;
 //    polling co 5 s zostaje jako zapas (np. Realtime niedostępny).
-import { applyTranslations, t, withLangParam } from "../../translation/translation.js?v=v2026-11-08T20300";
-import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-08T20300";
-import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T20300";
-import { startTicker } from "./background-ticker.js?v=v2026-11-08T20300";
+import { applyTranslations, t, withLangParam } from "../../translation/translation.js?v=v2026-11-08T21312";
+import { sb, SUPABASE_URL, SUPABASE_ANON_KEY } from "./supabase.js?v=v2026-11-08T21312";
+import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T21312";
+import { startTicker } from "./background-ticker.js?v=v2026-11-08T21312";
 
 
 const TAB_ID_KEY = "familijna:tabId";

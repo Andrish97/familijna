@@ -1,9 +1,9 @@
 // Powiadomienia push na tym urządzeniu (E29): zgoda przeglądarki, subskrypcja
 // u usługi push (klucz VAPID) i zapis w bazie (RPC push_subscribe). Wysyła
 // funkcja Edge push-send; treść i adres składa serwer, pokazuje web/sw.js.
-import { sb } from "./supabase.js?v=v2026-11-08T20300";
-import { getUiLang } from "../../translation/translation.js?v=v2026-11-08T20300";
-import { isStandalone, isIOSSafari } from "./pwa.js?v=v2026-11-08T20300";
+import { sb } from "./supabase.js?v=v2026-11-08T21312";
+import { getUiLang } from "../../translation/translation.js?v=v2026-11-08T21312";
+import { isStandalone, isIOSSafari } from "./pwa.js?v=v2026-11-08T21312";
 
 // Klucz publiczny VAPID (jawny; para na serwerze — familijna-server
 // supabase/push-keys.sh).
@@ -31,7 +31,7 @@ function keyBytes(b64url) {
 }
 
 async function registration() {
-  await navigator.serviceWorker.register("/sw.js?v=v2026-11-08T20300", { scope: "/" }).catch(() => {});
+  await navigator.serviceWorker.register("/sw.js?v=v2026-11-08T21312", { scope: "/" }).catch(() => {});
   // ready nie kończy się, gdy rejestracja jest zablokowana — limit czasu.
   return Promise.race([
     navigator.serviceWorker.ready,
