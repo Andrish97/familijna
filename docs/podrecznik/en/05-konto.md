@@ -192,13 +192,19 @@ After several failed login attempts, the app may ask for an extra confirmation
 
 In *Account settings* you will also find:
 
-- **Email notifications** — the "Enable email notifications" switch. When it is off,
-  you will not get messages about friend invitations, tasks, shared bases
-  and copies. You will still see the invitations and copies themselves in the app.
+- **Notifications → Email notifications** — the "Enable email notifications" switch. When it
+  is off, you will not get messages about friend invitations, tasks, shared bases and copies.
+  You will still see the invitations and copies themselves in the app.
+- **Notifications → On this device** — "Turn on notifications on this device" shows system
+  notifications about the same things, even when the app is closed. The browser asks for
+  permission first. Turn them on for each device separately, independently of emails, and
+  choose the kinds under "Notify me about". Tapping a notification opens that item. On iPhone
+  and iPad, notifications work after adding Familijna to the Home Screen.
 - **Your rating** — a preview of the rating and comment you gave the app.
 - **Demo Materials** — [Restore demo files] adds sample games, question bases and logos.
 
 ![Account settings](zrzut:account)
+![Notifications on this device](zrzut:account-push)
 ![Turning off e-mail notifications](zrzut:people-account-notif-confirm)
 ![Restoring demo materials](zrzut:people-account-demo-confirm)
 

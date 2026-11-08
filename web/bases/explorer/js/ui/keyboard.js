@@ -3,15 +3,15 @@
 // shortcut); tu zostają tylko klawisze nawigacji i zaznaczania.
 // Jedna bramka: przy otwartym oknie albo pisaniu w polu skróty nie działają.
 
-import { ACTIONS } from "../actions/registry.js?v=v2026-11-08T15121";
-import { buildContext } from "../actions/context.js?v=v2026-11-08T15121";
-import { runAction } from "../actions/run.js?v=v2026-11-08T15121";
-import { matchShortcut } from "../platform.js?v=v2026-11-08T15121";
-import { selectionClear } from "../state.js?v=v2026-11-08T15121";
-import { renderSelection } from "../render.js?v=v2026-11-08T15121";
-import { goUp } from "../commands.js?v=v2026-11-08T15121";
-import { isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-08T15121";
-import { hideContextMenu, showContextMenu } from "../context-menu.js?v=v2026-11-08T15121";
+import { ACTIONS } from "../actions/registry.js?v=v2026-11-08T15395";
+import { buildContext } from "../actions/context.js?v=v2026-11-08T15395";
+import { runAction } from "../actions/run.js?v=v2026-11-08T15395";
+import { matchShortcut } from "../platform.js?v=v2026-11-08T15395";
+import { selectionClear } from "../state.js?v=v2026-11-08T15395";
+import { renderSelection } from "../render.js?v=v2026-11-08T15395";
+import { goUp } from "../commands.js?v=v2026-11-08T15395";
+import { isOverlayOpen } from "../../../../shared/js/core/modal-sheet.js?v=v2026-11-08T15395";
+import { hideContextMenu, showContextMenu } from "../context-menu.js?v=v2026-11-08T15395";
 
 const MODAL_IDS = ["questionOverlay", "tagsOverlay", "exportOverlay", "moveOverlay", "searchOverlay"];
 

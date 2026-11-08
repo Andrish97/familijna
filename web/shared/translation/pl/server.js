@@ -2,6 +2,11 @@
 const pl = {
   // Powiadomienia push (E29) — składa funkcja Edge push-send.
   push: {
+    "deviceType": {
+      "host": "Prowadzący",
+      "buzzer": "Przycisk do pojedynku",
+      "display": "Wyświetlacz"
+    },
     "action": {
       "see": "Zobacz",
       "vote": "Głosuj",

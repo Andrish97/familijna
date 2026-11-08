@@ -124,6 +124,8 @@ export function appNotification(row, lang, texts) {
   if (!dict || !spec) return null;
   const v = row.vars || {};
   const vars = Object.fromEntries(Object.entries(v).map(([k, val]) => [k, clip(val, NAME_MAX)]));
+  // Rodzaj urządzenia (host/buzzer/display) → nazwa w języku urządzenia.
+  if (v.type && typeof dict[`push.deviceType.${v.type}`] === "string") vars.type = dict[`push.deviceType.${v.type}`];
   const fill = (key) => {
     const t = dict[key];
     return typeof t === "string" ? t.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? "") : null;

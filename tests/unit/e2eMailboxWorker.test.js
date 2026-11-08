@@ -121,7 +121,7 @@ test("skrzynka e2e+ i diagnostyka tylko z tokenem E2E i wypożyczeniem", async (
 
 const TECHNICAL_FROM = 'bounce+948a5050-c564-11f1-8b41-16423a433ff6_vt1@bounce-zem.familiada.online';
 for (const recipient of ['admin@familiada.online', 'unknown@familiada.online']) {
-  test(`own SMTP copy to ${recipient} never reaches inbox, forwarding or Telegram`, async (t) => {
+  test(`own SMTP copy to ${recipient} never reaches inbox, forwarding or admin notifications`, async (t) => {
     const calls = [];
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (url) => { calls.push(String(url)); return Response.json({}); };
@@ -131,7 +131,7 @@ for (const recipient of ['admin@familiada.online', 'unknown@familiada.online']) 
       headers: new Headers({ subject: 'Zaproszenie do ankiety' }),
       raw: new Blob(['Content-Type: text/plain\r\n\r\nFAMILIJNA']).stream(),
       async forward() { forwarded = true; },
-    }, { ...env(), FORWARD_EMAIL: 'owner@example.com', TELEGRAM_BOT_TOKEN: 'fixture', TELEGRAM_CHAT_ID: 'fixture' });
+    }, { ...env(), FORWARD_EMAIL: 'owner@example.com' });
     assert.deepEqual(calls, []);
     assert.equal(forwarded, false);
   });

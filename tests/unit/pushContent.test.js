@@ -71,6 +71,9 @@ test('aplikacja: każde zdarzenie w PL/EN/UK, nazwy przycięte, bez emotek', () 
   assert.equal(pl.body, 'Ania przesyła Ci kopię gry „Quiz”.');
   assert.equal(appNotification(row('copy:game', {}, 'main'), 'de', PUSH_APP_TEXTS).title, 'Kopia gry', 'nieznany język → PL');
   assert.equal(appNotification(row('nieznane', {}, 'main'), 'pl', PUSH_APP_TEXTS), null);
+  assert.equal(appNotification(row('device:share', { owner: 'Ania', type: 'buzzer' }, 'main'), 'uk', PUSH_APP_TEXTS).body,
+    'Ania надає тобі доступ до пристрою: Кнопка для поєдинку.');
+  assert.equal(appNotification(row('friend:invite', { owner: 'Ania', url: '/go/?f=abc' }, 'main'), 'en', PUSH_APP_TEXTS).url, '/go/?f=abc');
 });
 
 test('teksty PL/UK bezosobowe (bez form rodzajowych o nadawcy)', () => {

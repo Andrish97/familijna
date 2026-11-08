@@ -324,6 +324,7 @@ function buildDb(lang, extras = {}) {
       in_library: mlang === lang && i === 1, created_at: daysAgo(i * 5 + 2),
     }))),
     get_my_email_notifications: true, set_my_email_notifications: null, cooldown_get: [],
+    push_subscription_get: { subscribed: false, kinds: [] }, push_subscribe: { ok: true }, push_unsubscribe: { ok: true },
     get_app_rating_stats: { avg_stars: 4.8, total_count: 126 },
     friend_invites_from_subscriptions: { ok: true },
     control_game_settings_status: { ok: true, in_progress: false },

@@ -3,10 +3,10 @@
 // i kosz, ładowane jednym reload() — po wejściu na stronę, po każdym
 // zapisie i po „Odśwież”. Starsza odpowiedź nigdy nie nadpisuje nowszej.
 
-import { loadBaseContent } from "../repo.js?v=v2026-11-08T15121";
-import * as ops from "../ops.js?v=v2026-11-08T15121";
-import { deriveStore } from "./derived.js?v=v2026-11-08T15121";
-import { pruneTreeOpen, saveTreeOpen, goTo } from "../state.js?v=v2026-11-08T15121";
+import { loadBaseContent } from "../repo.js?v=v2026-11-08T15395";
+import * as ops from "../ops.js?v=v2026-11-08T15395";
+import { deriveStore } from "./derived.js?v=v2026-11-08T15395";
+import { pruneTreeOpen, saveTreeOpen, goTo } from "../state.js?v=v2026-11-08T15395";
 
 export async function reload(state) {
   const seq = (state._loadSeq || 0) + 1;

@@ -36,8 +36,6 @@ logger.addHandler(_handler)
 SUPABASE_URL = os.getenv('LEAD_FINDER_SUPABASE_URL', 'http://kong:8000')
 SUPABASE_KEY = os.getenv('SUPABASE_SERVICE_ROLE_KEY', os.getenv('SERVICE_ROLE_KEY', ''))
 SEARXNG_URL = os.getenv('SEARXNG_URL', 'http://searxng:8080')
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN', '')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID', '')
 LEAD_FINDER_API_KEY = os.getenv('LEAD_FINDER_API_KEY', '').strip()
 ADMIN_ORIGIN = 'https://admin.familijna.app'
 
@@ -51,16 +49,6 @@ _db_handler = DbLogHandler(db)
 _db_handler.setLevel(logging.INFO)
 _db_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 logger.addHandler(_db_handler)
-
-
-async def notify(text):
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        return
-    try:
-        await http.post(f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage',
-                        json={'chat_id': TELEGRAM_CHAT_ID, 'text': text, 'parse_mode': 'HTML'})
-    except httpx.HTTPError as e:
-        print(f'[SERVER] Telegram: {e}')
 
 
 _mx_cache = {}
@@ -95,7 +83,7 @@ async def mx_check(domain):
 
 engine = Engine(db, http, SEARXNG_URL,
                 ceidg=Ceidg(http, os.getenv('CEIDG_API_KEY', '').strip(), cfg('CEIDG_DETAIL_DELAY', 4)),
-                mx_check=mx_check, notify=notify)
+                mx_check=mx_check)
 
 
 def require_api_key(authorization: Optional[str] = Header(default=None)):
