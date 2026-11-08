@@ -29,9 +29,16 @@ on:
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch: {}
 
+# E24 R26: token GitHuba tylko do odczytu.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-22.04
+    # E24 R5: sekrety serwera i Cloudflare w środowisku „production” (reguła
+    # gałęzi main ustawiana w GitHubie) — gałąź z podmienionym workflow ich nie dostanie.
+    environment: production
     timeout-minutes: 10
 
     steps:
@@ -52,7 +59,7 @@ jobs:
         working-directory: cloudflare/maintenance-worker
 
       - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3 (E24 R16: przypięte SHA)
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           workingDirectory: cloudflare/maintenance-worker

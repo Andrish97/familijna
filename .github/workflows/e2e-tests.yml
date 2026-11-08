@@ -94,6 +94,10 @@ env:
   E2E_API_ORIGIN: ${{ inputs.api_origin || '' }}
   TEST_WORKERS: ${{ inputs.workers || '4' }}
 
+# E24 R26: token GitHuba tylko do odczytu.
+permissions:
+  contents: read
+
 jobs:
   e2e-grouped:
     if: ${{ github.event.inputs.spec_filter == '' }}
@@ -257,11 +261,16 @@ jobs:
           IS_E20_GALLERY: ${{ contains(inputs.spec_filter, 'e2e/e20-gallery.spec.js') && '1' || '0' }}
           # Spec może wypożyczać zasoby tylko dla wybranych testów (np. poczta w control2).
           E2E_SPEC_FILTER: ${{ inputs.spec_filter }}
+          E2E_MAX_FAILURES: ${{ inputs.max_failures || '1' }}
         run: |
+          # E24 R26: wejścia przez env, nie wklejane w skrypt; cudzysłowy (--grep "a b")
+          # rozbiera shlex, bez interpretacji powłoki.
+          case "$E2E_MAX_FAILURES" in ''|*[!0-9]*) echo "::error::max_failures: liczba"; exit 2 ;; esac
+          mapfile -t SPEC_ARGS < <(python3 -c 'import os, shlex; print("\n".join(shlex.split(os.environ["E2E_SPEC_FILTER"])))')
           if [ "$IS_E20_GALLERY" = "1" ]; then
             npx playwright test e2e/e20-gallery.spec.js --workers="$TEST_WORKERS" --retries=0 --max-failures=1
           else
-            npx playwright test ${{ github.event.inputs.spec_filter }} --workers="$TEST_WORKERS" --retries=0 --max-failures="${{ inputs.max_failures || '1' }}"
+            npx playwright test "${SPEC_ARGS[@]}" --workers="$TEST_WORKERS" --retries=0 --max-failures="$E2E_MAX_FAILURES"
           fi
         working-directory: tests
 

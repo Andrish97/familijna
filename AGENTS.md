@@ -183,6 +183,11 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   publiczne: żadnych treści gier, nazw ani e-maili w logach. Migracje
   diagnostyczne już niepotrzebne. Z agenta: `scripts/agent-tools/gh-run.sh
   db-read.yml sql_file=…` (uruchamia, czeka, wypisuje wynik z adnotacji).
+- **Środowisko `production` (E24 R5, 2026-11-08):** workflowy z kluczem SSH serwera
+  lub tokenem Cloudflare (`db-read`, `db-migrate`, `deploy-*`, `maintenance`,
+  `cloudflare-token-sync`, `market-model-preflight`) działają w środowisku GitHuba
+  `production` z regułą gałęzi `main` — zapytanie `db-read` najpierw na `main`,
+  potem `gh-run.sh` z `REF=main`.
 - **Przerwa techniczna (decyzja użytkownika 2026-10-20):** włącza i wyłącza
   ją **wyłącznie właściciel w panelu admina**. Agent nie ma do tego narzędzia.
   Agent ocenia, czy praca wymaga przerwy: zmiany jawne i nieszkodliwe dla
