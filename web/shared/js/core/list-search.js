@@ -8,13 +8,13 @@
 // sam wygląd co sortowanie w Subskrypcjach; wartość w adresie (?param=).
 // Kafel niesie wartość w atrybucie data-* (filter.attr).
 
-import { t } from "../../translation/translation.js?v=v2026-11-08T21312";
-import { promptModal } from "./modal.js?v=v2026-11-08T21312";
-import { icon } from "./icons.js?v=v2026-11-08T21312";
-import { initUiSelect } from "./ui-select.js?v=v2026-11-08T21312";
-import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-08T21312";
-import { scrollFade } from "./scroll-fade.js?v=v2026-11-08T21312";
-import { emptyState } from "./empty-state.js?v=v2026-11-08T21312";
+import { t } from "../../translation/translation.js?v=v2026-11-08T21320";
+import { promptModal } from "./modal.js?v=v2026-11-08T21320";
+import { icon } from "./icons.js?v=v2026-11-08T21320";
+import { initUiSelect } from "./ui-select.js?v=v2026-11-08T21320";
+import { filterFromSearch, filterToHref, matchesFilter, showEmptyResult } from "./list-filter.js?v=v2026-11-08T21320";
+import { scrollFade } from "./scroll-fade.js?v=v2026-11-08T21320";
+import { emptyState } from "./empty-state.js?v=v2026-11-08T21320";
 
 
 const norm = (s) => String(s || "").toLocaleLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
