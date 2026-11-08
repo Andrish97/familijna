@@ -126,7 +126,7 @@ może użyć otrzymanego logo we własnych grach (→ 8.5). Logo demo nie można
 
 ## 11.4 Odbieranie kopii
 
-Gdy ktoś wyśle Ci kopię, dostaniesz wiadomość e-mail „… wysłał Ci kopię” (jeśli masz włączone
+Gdy ktoś wyśle Ci kopię, dostaniesz wiadomość e-mail „… przesyła Ci kopię” (jeśli masz włączone
 powiadomienia), a przy zakładce *Moich gier* lub *Moich log* pojawi się licznik.
 
 Kopia czeka na początku listy — gra w zakładce swojego rodzaju, logo w *Moich logach* — jako kafel

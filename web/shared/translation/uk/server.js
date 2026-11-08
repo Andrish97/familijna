@@ -81,7 +81,7 @@ const uk = {
   sharingMail: {
   "friendReminderSubject": "{owner} нагадує про запрошення в друзі",
   "friendReminderBody": "Запрошення від {owner} ще чекає на твоє рішення. Ти можеш прийняти або відхилити його.",
-  "copySubject": "{owner} надіслав(-ла) тобі копію",
+  "copySubject": "{owner} надсилає тобі копію",
   "subscriberReminderSubject": "Нагадування про підписку від {owner}",
   "subscriberReminderBody": "{owner} нагадує про запрошення до підписки. Прийми його, щоб отримувати опитування від цієї людини, або відхили.",
   "pollReminderBody": "{owner} нагадує про опитування {name}. Твоє завдання ще чекає на голос або відмову.",

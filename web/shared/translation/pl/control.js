@@ -159,7 +159,7 @@ const pl = {
       typeDisplay: "Wyświetlacz",
       openDevice: "Otwórz: {type}",
       mailSubject: "Udostępniono urządzenie: {type}",
-      mailBody: "{owner} udostępnił(a) Ci urządzenie: {type} (gra: {game}).",
+      mailBody: "{owner} udostępnia Ci urządzenie: {type} (gra: {game}).",
       subtitle2: "Wybierz subskrybentów i urządzenia do udostępnienia.",
       loading: "Ładowanie…",
       failed: "Błąd udostępniania.",
