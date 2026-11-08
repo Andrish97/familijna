@@ -38,4 +38,7 @@ included with the app — commercial use included. They look the same on every d
 
 **Your materials.** You are responsible for the questions, your own sounds and the images you
 add to games and logos — use only those you have the rights to (for example your own
-recordings or files under a free licence).
+recordings or files under a free licence). This applies especially to your own gameplay sounds
+(the “Custom” variant, → 16.4): if you run games for money, make sure the recording's licence
+allows commercial use — also when the file comes from a sound generator or a sound-effects
+library. The service does not check the rights to uploaded files.

@@ -38,4 +38,7 @@ dołączone do serwisu — także do użytku komercyjnego. Na każdym urządzeni
 
 **Twoje materiały.** Za pytania, własne dźwięki i obrazy, które dodajesz do gier i logo,
 odpowiadasz Ty — używaj tylko takich, do których masz prawa (na przykład własnych nagrań
-albo plików na wolnej licencji).
+albo plików na wolnej licencji). Dotyczy to zwłaszcza własnych dźwięków rozgrywki
+(wariant „Własny”, → 16.4): jeśli prowadzisz grę zarobkowo, upewnij się, że licencja nagrania
+pozwala na użycie komercyjne — także gdy plik pochodzi z generatora dźwięków albo z biblioteki
+efektów. Serwis nie sprawdza praw do wgranych plików.
