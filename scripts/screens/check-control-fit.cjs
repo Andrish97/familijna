@@ -16,7 +16,7 @@ const OUT = path.join(__dirname, "out/control-fit");
 const QLEN = Number(process.env.QLEN || 100);
 const TEXT = {
   pl: "Wymień rzecz, którą najczęściej zabierasz ze sobą na długi rodzinny wyjazd nad morze, kiedy pakujesz się w ostatniej chwili i boisz się, że czegoś zapomnisz, a samochód jest już prawie pełny po dach!! ",
-  uk: "Назвіть річ, яку ви найчастіше берете з собою в довгу сімейну поїздку на море, коли пакуєтеся в останню хвилину й боїтеся щось забути, а машина вже майже повна аж до самого даху!! ",
+  uk: "Назви річ, яку ти найчастіше береш із собою в довгу сімейну поїздку на море, коли пакуєшся в останню хвилину й боїшся щось забути, а машина вже майже повна аж до самого даху!! ",
 };
 const ANSWERS = {
   pl: ["Krem z filtrem 50", "Ręcznik plażowy X", "Okulary słoneczne", "Ładowarka do tel.", "Kapelusz i czapka", "Dmuchany materac."],

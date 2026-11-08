@@ -4,7 +4,7 @@ import { normalizeLang } from '../core/utils.js';
 const COPY = {
   pl: { title: 'Moje powiadomienia w Familijnej', body: 'Otwórz centrum, aby zarządzać swoimi subskrypcjami, zaproszeniami i powiadomieniami. Link jest ważny przez 15 minut.', action: 'Otwórz moje powiadomienia', ignore: 'Jeśli nie proszono o ten link, możesz pominąć tę wiadomość.', footer: 'Powiadomienia i rezygnacja' },
   en: { title: 'My Familijna notifications', body: 'Open the center to manage your subscriptions, invitations and notifications. This link is valid for 15 minutes.', action: 'Open my notifications', ignore: 'If you did not request this link, you can ignore this email.', footer: 'Notifications and unsubscribe' },
-  uk: { title: 'Мої сповіщення у Familijna', body: 'Відкрийте центр, щоб керувати підписками, запрошеннями та сповіщеннями. Посилання дійсне протягом 15 хвилин.', action: 'Відкрити мої сповіщення', ignore: 'Якщо ви не запитували це посилання, можете пропустити цей лист.', footer: 'Сповіщення та відмова' },
+  uk: { title: 'Мої сповіщення у Familijna', body: 'Відкрий центр, щоб керувати підписками, запрошеннями та сповіщеннями. Посилання дійсне протягом 15 хвилин.', action: 'Відкрити мої сповіщення', ignore: 'Якщо запит на це посилання надійшов не від тебе, можеш пропустити цей лист.', footer: 'Сповіщення та відмова' },
 };
 export function buildMailCenterConfirmation(lang) {
   lang = normalizeLang(lang);

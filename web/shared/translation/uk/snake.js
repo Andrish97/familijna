@@ -7,7 +7,7 @@ const uk = {
     progressAccount: ({ best, games }) => `Рекорд в акаунті: ${best} · ігор: ${games}`,
     progressLocal: "Увійди, щоб зберегти рекорд",
     login: "Увійти",
-    signedInAs: ({ name }) => `Ви увійшли як ${name}`,
+    signedInAs: ({ name }) => `Увійдено як ${name}`,
     home: "Familijna",
     rotateMessage: "Поверни телефон горизонтально — змійка повзає по всьому Дисплею.",
     board: {

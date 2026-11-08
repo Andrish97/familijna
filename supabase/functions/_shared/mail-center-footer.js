@@ -3,7 +3,7 @@ import { escapeMailText, MAIL_FOOTER_ATTRS, MAIL_LINK_ATTRS } from './mail-docum
 const copy = {
   pl: { text: 'Zarządzaj powiadomieniami lub zrezygnuj z wiadomości e-mail.', link: 'Moje powiadomienia' },
   en: { text: 'Manage notifications or stop receiving emails.', link: 'My notifications' },
-  uk: { text: 'Керуйте сповіщеннями або відмовтеся від електронних листів.', link: 'Мої сповіщення' },
+  uk: { text: 'Керуй сповіщеннями або відмовся від електронних листів.', link: 'Мої сповіщення' },
 };
 
 export function appendMailCenterFooter(html, token, lang) {

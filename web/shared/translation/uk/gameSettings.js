@@ -182,7 +182,7 @@ const uk = {
     },
     "sfxResetAll": "Відновити типові",
     "sfxTooLong": "Максимальна тривалість — {limit}с",
-    "sfxNotAudio": "Це не звуковий файл. Виберіть файл mp3, wav або ogg."
+    "sfxNotAudio": "Це не звуковий файл. Вибери файл mp3, wav або ogg."
   },
 };
 

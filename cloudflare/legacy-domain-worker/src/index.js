@@ -57,8 +57,8 @@ const TEXTS = {
     go: "Przejdź na familijna.app", hint: "Za chwilę przejdziesz automatycznie.", footer: "© 2026 Familijna — system do gry na żywo", contact: "Masz pytania?" },
   en: { title: "Familijna has a new address", moving: "Taking you to familijna.app.", moved: "The service now runs at familijna.app.",
     go: "Go to familijna.app", hint: "You will be taken there in a moment.", footer: "© 2026 Familijna — live game system", contact: "Questions?" },
-  uk: { title: "Familijna має нову адресу", moving: "Переносимо вас на familijna.app.", moved: "Сервіс працює за адресою familijna.app.",
-    go: "Перейти на familijna.app", hint: "За мить вас буде перенаправлено.", footer: "© 2026 Familijna — система для гри наживо", contact: "Маєте питання?" },
+  uk: { title: "Familijna має нову адресу", moving: "Переносимо тебе на familijna.app.", moved: "Сервіс працює за адресою familijna.app.",
+    go: "Перейти на familijna.app", hint: "За мить тебе буде перенаправлено.", footer: "© 2026 Familijna — система для гри наживо", contact: "Маєш питання?" },
 };
 
 function langScript(key) {
