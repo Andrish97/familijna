@@ -1,4 +1,4 @@
-import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-08T16530";
+import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-08T16594";
 
 // Wspólny cykl ankiety; strony zachowują renderowanie i walidację swoich odpowiedzi.
 export function createPollVoteView({ qbox, closed, subEl, messages, getUser, withLangParam,

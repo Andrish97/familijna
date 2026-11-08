@@ -8,8 +8,8 @@
 // linia narysowana na przerwie między kaflami znika tak jak na prawdziwym
 // wyświetlaczu, a proporcje zgadzają się z tym, co widać na scenie.
 
-import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-08T16530";
-import { DOT_W, DOT_H } from "../render.js?v=v2026-11-08T16530";
+import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-08T16594";
+import { DOT_W, DOT_H } from "../render.js?v=v2026-11-08T16594";
 
 
 // Świat nowych rysunków: 26:11, jak cały wyświetlacz. Stare rysunki mają
