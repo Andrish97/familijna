@@ -8,7 +8,7 @@
 //    litery), ranking: głosy malejąco, potem kolejność wejścia; do gry
 //    najwyżej 6 kwalifikujących; remis głosów na granicy szóstki rozstrzyga
 //    użytkownik (cykliczny wybór), SQL sprawdza wybór.
-import { cleanAnswerText } from "./answer-text.js?v=v2026-11-08T19051";
+import { cleanAnswerText } from "./answer-text.js?v=v2026-11-08T19282";
 
 export const ANSWERS_MIN = 3;
 export const ANSWERS_MAX = 6;
