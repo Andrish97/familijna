@@ -25,7 +25,6 @@
 // ryzyko niezgodności z tym, jak wygląda dziś (ustalone wprost).
 
 import { loadJson, buildGlyphMap, resolveGlyph } from "../../../shared/js/display/fonts.js?v=v2026-11-08T23180";
-import { fixLegacyGlyphRows } from "../../../shared/js/core/logo-glyph-fix.js?v=v2026-11-08T23180";
 import { LONG_GAP, layoutLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-08T23180";
 import { createAnimator } from "../../../shared/js/display/anim.js?v=v2026-11-08T23180";
 import { createDisplays } from "../../../shared/js/display/displays.js?v=v2026-11-08T23180";
@@ -412,9 +411,8 @@ export async function createScene() {
     clearArea(big, 1, 1, 30, 10);
     for (const layer of logoJson.layers) {
       const color = litFromName(layer.color);
-      const rows = fixLegacyGlyphRows(layer.rows);
       for (let ry=0;ry<10;ry++) {
-        const rowStr = rows[ry] ?? " ".repeat(30);
+        const rowStr = layer.rows[ry] ?? " ".repeat(30);
         for (let cx=0;cx<30;cx++) { const ch = rowStr[cx] ?? " "; if (ch !== " ") putCharAt(GLYPHS, big, 1+cx, 1+ry, ch, color); }
       }
     }
