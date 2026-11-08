@@ -58,11 +58,11 @@ const openModal = (selector, modal = ".overlay:visible") => async (view) => {
   await view.waitForTimeout(250);
 };
 // Podręcznik: na telefonie pole jest w wysuwanym spisie treści — otwiera je przycisk z lupą.
-const manualSearch = (query) => async (view) => {
+const manualSearch = (query, result = ".m-search-hit") => async (view) => {
   const toggle = view.locator("#manualSearchToggle");
   if (await toggle.isVisible()) await toggle.click();
   await view.locator("#manualSearch .searchText").fill(query);
-  await view.locator("#manualSearch .m-search-hit").first().waitFor({ timeout: 5000 });
+  await view.locator(`#manualSearch ${result}`).first().waitFor({ timeout: 5000 });
   await view.waitForTimeout(250);
 };
 const scrollPreview = async (view) => {
@@ -378,7 +378,7 @@ module.exports = [
   { id: "manual-support", category: "Dodatkowe", title: "Wskazówki — O projekcie i wsparcie (rozdz. 21)", path: "/manual/?ch=21", sources: [...page("manual"), "web/manual/content/"], ready: ".m-doc .m-h2" },
   { id: "manual-guard-narrow", devices: ["tablet"], category: "Dodatkowe", title: "Wskazówki — nakładka „Za wąskie okno” (wspólny styl blokady)", path: "/manual/?ch=6", sources: [...page("manual"), "web/shared/css/blocking-overlay.css"], ready: ".m-doc .m-h2", steps: [async (view) => { await view.evaluate(async () => { const m = await import("/shared/js/core/device-guard.js"); m.showDeviceGuard("narrow", "/"); }); await view.waitForTimeout(400); }] },
   { id: "manual-search", category: "Dodatkowe", title: "Podręcznik — wyszukiwanie (wyniki na żywo)", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", steps: [manualSearch("kradzież")] },
-  { id: "manual-search-empty", category: "Dodatkowe", title: "Podręcznik — wyszukiwanie bez wyników (wspólny pusty stan)", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", devices: ["desktop", "phone"], steps: [manualSearch("qqzzxx")] },
+  { id: "manual-search-empty", category: "Dodatkowe", title: "Podręcznik — wyszukiwanie bez wyników (wspólny pusty stan)", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", devices: ["desktop", "phone"], steps: [manualSearch("qqzzxx", ".empty-state")] },
   { id: "manual-search-hit", category: "Dodatkowe", title: "Podręcznik — wybrany wynik z zaznaczonymi trafieniami", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", steps: [manualSearch("kradzież"), async (view) => { await view.locator("#manualSearch .searchText").press("Enter"); await view.locator("mark.m-hit").first().waitFor({ timeout: 5000 }); await view.waitForTimeout(300); }] },
   { id: "account", category: "Dodatkowe", title: "Konto", path: "/account/", sources: page("account"), ready: "main" },
   // Karty formularzy: zmiana e-maila w toku (Anuluj zmianę + Wyślij ponownie), hasło, usuwanie konta — cała strona.
@@ -432,10 +432,7 @@ module.exports = [
 { id: "home-faq-support", guest: true, category: "Dodatkowe", title: "Strona główna — FAQ: Wsparcie projektu", path: "/", sources: ["web/index.html", ...page("home"), "web/shared/js/core/support-modal.js"], ready: ".btn-support-footer",
     steps: [async (view) => { const q = view.locator('[data-i18n="home.faq.q31.q"]'); await q.scrollIntoViewIfNeeded(); await q.click(); await view.locator('[data-i18n="home.faq.cat6"]').scrollIntoViewIfNeeded(); await view.waitForTimeout(300); }] },
 { id: "support-modal", category: "Dodatkowe", title: "Okno Postaw kawę", path: "/games/", sources: ["web/shared/js/core/support-modal.js", "web/shared/js/core/contact-dialog.js"], ready: ".btn-support-footer",
-    steps: [async (view) => { await view.locator(".btn-support-footer").click(); await view.locator(".support-modal").waitFor({ state: "visible" }); await view.waitForTimeout(300); }] },
-{ id: "manual", category: "Podręcznik", title: "Podręcznik — Zasady gry", path: "/manual/?tab=rules", sources: page("manual"), ready: "#tab-rules .m-toc" },
-{ id: "manual-games", category: "Podręcznik", title: "Podręcznik — Gry (rozdz. 7.6)", path: "/manual/?tab=games#r7-6", sources: page("manual"), ready: "#tab-games .m-toc", settle: 800 },
-{ id: "manual-control", category: "Podręcznik", title: "Podręcznik — Prowadzenie gry", path: "/manual/?tab=control", sources: page("manual"), ready: "#tab-control .m-toc" }
+    steps: [async (view) => { await view.locator(".btn-support-footer").click(); await view.locator(".support-modal").waitFor({ state: "visible" }); await view.waitForTimeout(300); }] }
 ];
 
 // Seria zrzutów: każda strona, okno i stan — pliki obszarów (scenes/*.cjs).
