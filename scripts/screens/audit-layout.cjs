@@ -471,6 +471,48 @@ function inspectLayout(opts) {
     calm.remove();
   }
 
+  // Wąskie pole z mocno zawiniętym tekstem (zgłoszenie 2026-11-08: treść
+  // pytania ściśnięta przez niezawijany dopisek, „najbard/ziej”): słowo
+  // przełamane w środku albo co najmniej 3 linie po średnio < 9 znaków.
+  {
+    let budget = 30000;
+    const lineTops = (rects) => [...new Set([...rects].filter((r) => r.width > 0.5).map((r) => Math.round(r.top)))];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const flagged = new Set();
+    for (let n = walker.nextNode(); n && budget > 0; n = walker.nextNode()) {
+      const text = n.nodeValue;
+      const trimmed = text.trim();
+      if (trimmed.length < 8 || trimmed.length > 600) continue;
+      const el = n.parentElement;
+      if (!el || flagged.has(el) || el.closest("svg, canvas, script, style, textarea, select, option, .sr-only, [aria-hidden=true]")) continue;
+      if (!visible(el)) continue;
+      const st = getComputedStyle(el);
+      if (st.whiteSpace.startsWith("nowrap") || st.whiteSpace === "pre") continue;
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      const tops = lineTops(range.getClientRects());
+      if (tops.length < 2) continue;
+      budget -= trimmed.length;
+      let broken = "";
+      if (st.hyphens !== "auto") {
+        for (const m of text.matchAll(/\S{4,}/g)) {
+          range.setStart(n, m.index);
+          range.setEnd(n, m.index + m[0].length);
+          if (lineTops(range.getClientRects()).length > 1) { broken = m[0]; break; }
+        }
+      }
+      const perLine = trimmed.length / tops.length;
+      if (broken) { flagged.add(el); add("waski-tekst", el, `słowo przełamane: „${broken.slice(0, 30)}” (${Math.round(el.getBoundingClientRect().width)} px)`); }
+      else if (tops.length >= 3 && perLine < 16) {
+        // < 9 znaków w linii zawsze; < 16, gdy tekst ma mniej niż połowę
+        // szerokości swojego wiersza (sąsiad zabiera miejsce).
+        const w = el.getBoundingClientRect().width;
+        const row = el.parentElement?.getBoundingClientRect().width || w;
+        if (perLine < 9 || w < row * 0.5) { flagged.add(el); add("waski-tekst", el, `${tops.length} linie po ~${perLine.toFixed(1)} znaku (${Math.round(w)} z ${Math.round(row)} px)`); }
+      }
+    }
+  }
+
   // Uniknąć powtórzeń (te same elementy w listach).
   const seen = new Set();
   return out.filter((p) => { const k = `${p.kind}|${p.el.replace(/:\d+/g, "")}`; if (seen.has(k)) return false; seen.add(k); return true; });

@@ -146,8 +146,14 @@ export function logoToBits150(logo, glyphs) {
  */
 export function buildLogoPreviewCanvas(logo, glyphs, width = 300, height = 140, ownerDocument = document) {
   const c = ownerDocument.createElement("canvas");
-  c.width = width;
-  c.height = height;
+  // Całkowita skala i płótno o proporcjach tablicy (150x70): przy skali
+  // ułamkowej (np. 520/150) krawędzie sąsiednich pikseli wygładzały się
+  // i białe pola miały ciemną siatkę szwów (zgłoszenie 2026-11-08). Bez
+  // czarnych marginesów płótno to sama tablica (zaokrąglenie z CSS).
+  // width/height = docelowe pole na ekranie; skala w górę (ostro na ekranach 2x).
+  const k = Math.max(2, Math.ceil(Math.min(width / DOT_W, height / DOT_H)));
+  c.width = DOT_W * k;
+  c.height = DOT_H * k;
   drawThumbFlat150x70(c, logoToBits150(logo, glyphs));
   return c;
 }

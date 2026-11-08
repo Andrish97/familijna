@@ -352,7 +352,11 @@ export function createRenderer({ scene, qr, getSfxDuration, onFinalResult }) {
       if (c.BACKGROUND) api.color.set("BG", c.BACKGROUND);
       if (c.DOT) api.color.set("DOT", c.DOT);
     }
-    if (row.detail?.display?.theme) await api.theme.set(row.detail.display.theme);
+    // Brak motywu w ustawieniach = motyw domyślny. Po „Przywróć domyślne”
+    // (podgląd w Ustawieniach gry) poprzedni motyw nie może zostać — dawniej
+    // zostawały jego skrzydła (zgłoszenie 2026-11-08). Przebudowa tylko przy zmianie.
+    const wantTheme = String(row.detail?.display?.theme || api.theme.getDefault()).toLowerCase();
+    if (wantTheme !== api.theme.getActive()) await api.theme.set(wantTheme);
 
     if (row.detail?.locks?.gameEnded || row.step === "f_end" || row.step === "r_gameEnd") { await showEndScreen(row, { animate: false }); return; }
     await applyDisplayMode(row);

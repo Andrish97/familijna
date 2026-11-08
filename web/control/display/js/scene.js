@@ -640,6 +640,7 @@ export async function createScene() {
     // ============================================================
     theme: {
       getActive: () => themeMgr.getActive(),
+      getDefault: () => themeMgr.getDefault(),
       getAvailable: () => themeMgr.getAvailable(),
       set: async (name) => {
         const requested = (name ?? "").toString().toLowerCase();
