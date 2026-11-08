@@ -10,7 +10,7 @@
   <link rel="canonical" href="https://www.familijna.app/mails/"/>
   <meta name="robots" content="noindex, nofollow"/>
   <meta name="referrer" content="no-referrer"/>
-  <meta name="app-version" content="v2026-11-08T15560"/>
+  <meta name="app-version" content="v2026-11-08T15591"/>
   <title data-i18n="mailCenter.pageTitle">Familijna — centrum maili</title>
   <link rel="icon" href="/favicon.ico?v=v2026-11-08T15560"/>
   <link rel="stylesheet" href="/shared/css/blocking-overlay.css?v=v2026-11-08T15560" />
@@ -44,6 +44,7 @@
       <p class="poll-go-sub" id="mailMessage" role="status"></p>
       <form id="mailForm" class="mail-form" hidden>
         <div class="mail-form-row"><input id="mailInput" class="inp" type="email" autocomplete="email" maxlength="320" required data-i18n-placeholder="mailCenter.emailPlaceholder" data-i18n-aria-label="mailCenter.emailLabel" placeholder="Wpisz swój adres e-mail" aria-label="Twój adres e-mail"/><button class="btn gold" type="submit" data-i18n="mailCenter.sendLink" data-i18n-icon="envelope-out">Wyślij link</button></div>
+        <div id="mailCaptcha" class="contact-captcha" hidden></div>
       </form>
       <div id="mailActions" class="cluster poll-go-actions"></div>
     </section>

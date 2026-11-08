@@ -99,7 +99,7 @@ export async function handleInboundEmail(message, env) {
       console.error("[e2e-email] save failed:", summarizeSupabaseError(saved));
       throw new Error("e2e_email_save_failed");
     }
-    console.log("[e2e-email] saved for", recipient);
+    console.log("[e2e-email] saved");
     return;
   }
 
@@ -129,10 +129,12 @@ export async function handleInboundEmail(message, env) {
   if (cleanSubject && !isReplyToMarketing) {
     try {
       // Check if any existing marketing email has similar subject
-      const checkRes = await supabaseRequest(env, `/rest/v1/messages?select=id&direction=eq.outbound&is_marketing=eq.true&subject=ilike.%${cleanSubject}%&limit=1`, { method: "GET" });
+      // E24 R21: temat od nadawcy — bez znaków składni PostgREST i wzorca ILIKE.
+      const pattern = cleanSubject.slice(0, 200).replace(/[%_*\\,()"]/g, " ").replace(/\s+/g, " ").trim();
+      const checkRes = pattern ? await supabaseRequest(env, `/rest/v1/messages?select=id&direction=eq.outbound&is_marketing=eq.true&subject=ilike.${encodeURIComponent(`*${pattern}*`)}&limit=1`, { method: "GET" }) : { ok: false };
       if (checkRes.ok && Array.isArray(checkRes.data) && checkRes.data.length > 0) {
         isReplyToMarketing = true;
-        console.log("[email] Reply to marketing detected:", subject);
+        console.log("[email] Reply to marketing detected");
       }
     } catch (err) {
       console.error("[email] marketing check failed:", err);
@@ -140,7 +142,7 @@ export async function handleInboundEmail(message, env) {
   }
 
   if (!from || (!body && !inboundAttachments.length)) {
-    console.log("[email] skipping - no from or body, body:", body?.slice(0, 100), "attachments:", inboundAttachments.length);
+    console.log("[email] skipping - no from or body, attachments:", inboundAttachments.length);
     return;
   }
 
@@ -152,7 +154,7 @@ export async function handleInboundEmail(message, env) {
     finalBody = "(brak treści)";
   }
 
-  console.log("[email] saving:", { from, subject: subject.slice(0, 50), bodyLen: finalBody.length, htmlLen: bodyHtml?.length || 0 });
+  console.log("[email] saving:", { bodyLen: finalBody.length, htmlLen: bodyHtml?.length || 0 });
   const rpc = await supabaseRpc(env, "save_inbound_message", {
     p_from_email:    from,
     p_subject:       subject.slice(0, 500),
@@ -198,10 +200,10 @@ export async function handleInboundEmail(message, env) {
             p_inline:     att.inline,
           });
           if (!saveRes.ok) {
-            console.error("[email] save_attachment failed:", att.filename, summarizeSupabaseError(saveRes));
+            console.error("[email] save_attachment failed:", summarizeSupabaseError(saveRes));
           }
         } catch (err) {
-          console.error("[email] attachment_upload_failed:", att.filename, err);
+          console.error("[email] attachment_upload_failed:", String(err?.message || err).slice(0, 120));
         }
       }
     }

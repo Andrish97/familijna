@@ -113,6 +113,7 @@ serve(async (req) => {
     // Tylko szablony serwera: przeglądarka nie przekazuje treści ani odbiorcy.
     return await sendNotificationItems(body, userData.user, batchMax);
   } catch (e) {
-    return json({ ok: false, error: String(e) }, 500);
+    console.error("[send-mail] failed:", String(e).slice(0, 300));
+    return json({ ok: false, error: "send_failed" }, 500);
   }
 });

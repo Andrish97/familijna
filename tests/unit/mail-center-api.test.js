@@ -40,9 +40,20 @@ test('mail center peek returns only purpose and cannot redeem a proof',async(t)=
  assert.deepEqual(await response.json(),{ok:true,purpose:'verification'});assert.equal(response.headers.get('set-cookie'),null);assert.equal(calls,1);
 });
 test('mail confirmation is requested with private source, IP hash and no returned token',async(t)=>{
- let args;stub(t,async(url,options)=>{assert.ok(String(url).endsWith('/mail_center_request_link'));args=JSON.parse(options.body);return Response.json({ok:true,cooldown_seconds:60,token:link,session_secret:secret});});
- const response=await handleMailCenterApi(req('request',{email:'fixture@example.net',lang:'uk'},{'CF-Connecting-IP':'192.0.2.1'}),env);
+ let args;stub(t,async(url,options)=>{
+  if(String(url).includes('siteverify')) return Response.json({success:true,hostname:'www.familijna.app'});
+  assert.ok(String(url).endsWith('/mail_center_request_link'));args=JSON.parse(options.body);return Response.json({ok:true,cooldown_seconds:60,token:link,session_secret:secret});});
+ const response=await handleMailCenterApi(req('request',{email:'fixture@example.net',lang:'uk',captcha_token:'tok'},{'CF-Connecting-IP':'192.0.2.1'}),{...env,TURNSTILE_SECRET_KEY:'ts-fixture'});
  assert.deepEqual(await response.json(),{ok:true,cooldown_seconds:60});assert.match(args.p_ip_hash,/^[a-f0-9]{64}$/);assert.equal(args.p_lang,'uk');assert.match(args.p_html,/MAIL_CENTER_ACCESS_TOKEN/);assert.ok(!args.p_ip_hash.includes('192.0.2.1'));
+});
+// E24 R7: bez Turnstile nie ma pytania o adres (enumeracja kont) ani maila.
+test('mail request without valid Turnstile never reaches the database',async(t)=>{
+ const calls=[];stub(t,async(url)=>{calls.push(String(url));return Response.json({success:false});});
+ const e={...env,TURNSTILE_SECRET_KEY:'ts-fixture'};
+ assert.equal((await handleMailCenterApi(req('request',{email:'fixture@example.net',lang:'pl'}),e)).status,400);
+ assert.equal((await handleMailCenterApi(req('request',{email:'fixture@example.net',lang:'pl',captcha_token:'bad'}),e)).status,400);
+ assert.equal((await handleMailCenterApi(req('request',{email:'fixture@example.net',lang:'pl',captcha_token:'x'}),env)).status,503);
+ assert.ok(calls.every(u=>u.includes('siteverify')));
 });
 test('mail center rejects invalid protocol and fails closed on service failure',async(t)=>{
  stub(t,async()=>Response.json({error:'failure'},{status:500}));

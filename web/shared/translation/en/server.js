@@ -126,7 +126,7 @@ const en = {
     greeting: "Hello,",
     closing: "Best regards,\nFamilijna Team",
     confirmationSubject: "Report confirmation [{ticket}]",
-    confirmationBody: "Thank you for reaching out. Your report has been received.\n\nTicket number: {ticket}\nSubject: {subject}",
+    confirmationBody: "Thank you for reaching out. Your report has been received.\n\nTicket number: {ticket}",
     replySubject: "Re: [{ticket}] {subject}",
     replyQuoteLabel: "Your report [{ticket}]:",
     composeSubject: "Message from Familijna",

@@ -52,7 +52,9 @@ serve(async (req) => {
 
     return json({ ok: true });
   } catch (e) {
-    return json({ ok: false, error: e instanceof Error ? e.message : String(e) }, 500);
+    // E24 R22: szczegóły tylko w logu funkcji, klient dostaje ogólny kod.
+    console.error("[delete-account] failed:", e instanceof Error ? e.message : String(e));
+    return json({ ok: false, error: "delete_failed" }, 500);
   }
 });
 

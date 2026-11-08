@@ -126,7 +126,7 @@ const pl = {
     greeting: "Witaj,",
     closing: "Pozdrawiamy,\nZespół Familijnej",
     confirmationSubject: "Potwierdzenie zgłoszenia [{ticket}]",
-    confirmationBody: "Dziękujemy za kontakt. Twoje zgłoszenie zostało przyjęte.\n\nNumer zgłoszenia: {ticket}\nTemat: {subject}",
+    confirmationBody: "Dziękujemy za kontakt. Twoje zgłoszenie zostało przyjęte.\n\nNumer zgłoszenia: {ticket}",
     replySubject: "Re: [{ticket}] {subject}",
     replyQuoteLabel: "Twoje zgłoszenie [{ticket}]:",
     composeSubject: "Wiadomość od Familijnej",

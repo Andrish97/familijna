@@ -165,7 +165,7 @@ test("buildContactEmail: każdy typ maila w PL/EN/UK używa tekstów z tłumacze
     assert.ok(conf.html.includes("max-width:560px"));
     assert.ok(!conf.html.includes("href="));
     assert.ok(conf.html.includes(tr.greeting), `${lang} greeting`);
-    assert.ok(conf.html.includes("Temat &lt;x&gt;"), `${lang} subject escaped in body`);
+    assert.ok(!conf.html.includes("Temat &lt;x&gt;") && !conf.html.includes("treść"), `${lang} confirmation without sender text`);
     for (const line of tr.closing.split("\n")) assert.ok(conf.html.includes(line), `${lang} closing`);
 
     const reply = await buildContactEmail({ type: "reply", lang, ...vars, replyMessage: "odp", originalMessage: "orig" });

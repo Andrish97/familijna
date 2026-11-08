@@ -254,13 +254,22 @@ function getRedirectUrl(payload: HookPayload): URL | null {
   }
 }
 
+// E24 R23: link z tokenem tylko na własną domenę — redirect_to spoza listy
+// (GoTrue sprawdza listę przekierowań, to druga zapora) idzie na SITE_URL.
+const OWN_ORIGINS = new Set(["https://www.familijna.app", "https://familijna.app"]);
+function siteOrigin(): string | null {
+  try { return new URL(String(Deno.env.get("SITE_URL") || "").trim()).origin; } catch { return null; }
+}
+
 function getBaseOrigin(payload: HookPayload, redirectUrl: URL | null): string {
-  if (redirectUrl) return redirectUrl.origin;
+  if (redirectUrl && (OWN_ORIGINS.has(redirectUrl.origin) || redirectUrl.origin === siteOrigin())) return redirectUrl.origin;
+  if (redirectUrl) console.warn("[send-email] redirect_to outside own origins (ignored)");
 
   const actionLink = String(payload.email_data.action_link || "").trim();
   if (actionLink) {
     try {
-      return new URL(actionLink).origin;
+      const o = new URL(actionLink).origin;
+      if (OWN_ORIGINS.has(o) || o === siteOrigin()) return o;
     } catch {
       console.warn("[send-email] invalid action_link origin (ignored)");
     }

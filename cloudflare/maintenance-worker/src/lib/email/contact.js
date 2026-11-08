@@ -17,7 +17,8 @@ async function captchaRefusal(request, env, body) {
 // Limit na adres e-mail jest w bazie (save_form_message, rate_limited_email).
 const SUBMIT_WINDOW_S = 3600;
 export const SUBMIT_MAX_PER_IP = 5;
-export const SUBMIT_MAX_GLOBAL = 100;
+// Łączny limit tylko jako bezpiecznik (każde zgłoszenie wymaga Turnstile) — E24 R15.
+export const SUBMIT_MAX_GLOBAL = 1000;
 
 export async function handleContactSubmit(request, env) {
   const body = await readJsonOr400(request);
@@ -42,7 +43,8 @@ export async function handleContactSubmit(request, env) {
   });
 
   if (!rpc.ok) {
-    return json({ ok: false, error: "rpc_failed", details: summarizeSupabaseError(rpc) }, rpc.status || 500);
+    console.error("[worker] contact: save_form_message failed:", summarizeSupabaseError(rpc));
+    return json({ ok: false, error: "rpc_failed" }, rpc.status || 500);
   }
 
   const row = normalizeRpcValue(rpc.data);
@@ -164,7 +166,7 @@ export async function handleContactAppend(request, env) {
   if (refused) return refused;
   const emailNorm = email.trim().toLowerCase();
   const ticketStr = ticket.trim().slice(0, 64);
-  const ipHash = await sha256Hex(request.headers.get("CF-Connecting-IP") || "unknown");
+  const ipHash = await sha256Hex(clientIp(request));
   if (!await claimAppendSlot(env, `contact_append_ip:${ipHash}`, APPEND_MAX_PER_IP)
       || !await claimAppendSlot(env, `contact_append_email:${await sha256Hex(emailNorm)}`, APPEND_MAX_PER_EMAIL)) {
     return json({ ok: false, error: "rate_limited" }, 429);
