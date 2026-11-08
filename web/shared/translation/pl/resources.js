@@ -25,7 +25,7 @@ const pl = {
   "openResource": "Otwórz zasób",
   "game": "grę",
   "logo": "logo",
-  "mailBody": "{owner} wysłał Ci {kind}: {name}. Kopia jest już gotowa do przyjęcia.",
+  "mailBody": "{owner} przesyła Ci {kind}: {name}. Kopia jest już gotowa do przyjęcia.",
   "mailAction": "Zobacz kopię",
   "mailFailed": "Kopia została wysłana, ale e-mail nie został wysłany.",
   "noFriends": "Nie masz jeszcze aktywnych znajomych.",
