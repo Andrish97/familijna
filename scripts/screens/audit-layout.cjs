@@ -485,7 +485,8 @@ function inspectLayout(opts) {
       const trimmed = text.trim();
       if (trimmed.length < 8 || trimmed.length > 600) continue;
       const el = n.parentElement;
-      if (!el || flagged.has(el) || el.closest("svg, canvas, script, style, textarea, select, option, .sr-only, [aria-hidden=true]")) continue;
+      // tabele (np. we Wskazówkach) mogą mieć wąskie kolumny — decyzja użytkownika 2026-11-08
+      if (!el || flagged.has(el) || el.closest("svg, canvas, script, style, textarea, select, option, table, .sr-only, [aria-hidden=true]")) continue;
       if (!visible(el)) continue;
       const st = getComputedStyle(el);
       if (st.whiteSpace.startsWith("nowrap") || st.whiteSpace === "pre") continue;

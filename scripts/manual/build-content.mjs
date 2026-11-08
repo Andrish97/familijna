@@ -223,10 +223,7 @@ function renderBlocks(lines, icons) {
       const cells = (r) => r.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
       const head = cells(rows[0]);
       const body = rows.slice(2).map(cells);
-      // data-label: nagłówek kolumny przy komórce — na telefonie wiersz tabeli
-      // staje się kartą z etykietami (wąskie kolumny łamały tekst co 2–3 słowa).
-      const label = (h) => esc(inline(h, icons, TITLES).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").trim());
-      out.push(`<div class="m-table-wrap"><table class="m-table"><thead><tr>${head.map((h) => `<th>${inline(h, icons, TITLES)}</th>`).join("")}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c, ci) => `<td data-label="${label(head[ci] ?? "")}">${inline(c, icons, TITLES)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      out.push(`<div class="m-table-wrap"><table class="m-table"><thead><tr>${head.map((h) => `<th>${inline(h, icons, TITLES)}</th>`).join("")}</tr></thead><tbody>${body.map((r) => `<tr>${r.map((c) => `<td>${inline(c, icons, TITLES)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
       continue;
     }
     if (isList(line)) {
