@@ -1,5 +1,53 @@
 // Tłumaczenia EN — teksty składane przez serwer (send-email, Worker, maile powiadomień) — strony jej nie wczytują.
 const en = {
+  // Powiadomienia push (E29) — składa funkcja Edge push-send.
+  push: {
+    "action": {
+      "see": "View",
+      "vote": "Vote",
+      "open": "Open"
+    },
+    "friendInvite": {
+      "title": "Friend request",
+      "body": "{owner} invites you to be friends on Familijna."
+    },
+    "friendResend": {
+      "title": "Friend request still waiting",
+      "body": "{owner} reminds you about the friend request."
+    },
+    "pollShare": {
+      "title": "Poll: {name}",
+      "body": "{owner} asks for your vote."
+    },
+    "pollRemind": {
+      "title": "Reminder: {name}",
+      "body": "The poll is waiting for your vote."
+    },
+    "subscription": {
+      "title": "Subscription from {owner}",
+      "body": "A poll subscription invite is waiting for your answer."
+    },
+    "baseShare": {
+      "title": "Shared base",
+      "body": "{owner} shares the base “{base}” with you."
+    },
+    "baseRemind": {
+      "title": "Base still waiting",
+      "body": "The invite to the base “{base}” is waiting for your answer."
+    },
+    "deviceShare": {
+      "title": "Shared device",
+      "body": "{owner} shares a device with you: {type}."
+    },
+    "copyGame": {
+      "title": "Game copy",
+      "body": "{owner} is sending you a copy of the game “{name}”."
+    },
+    "copyLogo": {
+      "title": "Logo copy",
+      "body": "{owner} is sending you a copy of the logo “{name}”."
+    }
+  },
   pollsHubPolls: {
     pollFallback: "poll",
     pollNameLabel: "“{name}”",

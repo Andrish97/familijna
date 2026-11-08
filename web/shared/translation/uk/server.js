@@ -1,5 +1,53 @@
 // Tłumaczenia UK — teksty składane przez serwer (send-email, Worker, maile powiadomień) — strony jej nie wczytują.
 const uk = {
+  // Powiadomienia push (E29) — składa funkcja Edge push-send.
+  push: {
+    "action": {
+      "see": "Переглянути",
+      "vote": "Голосувати",
+      "open": "Відкрити"
+    },
+    "friendInvite": {
+      "title": "Запрошення в друзі",
+      "body": "{owner} запрошує тебе в друзі у Familijna."
+    },
+    "friendResend": {
+      "title": "Запрошення досі чекає",
+      "body": "{owner} нагадує про запрошення в друзі."
+    },
+    "pollShare": {
+      "title": "Опитування: {name}",
+      "body": "{owner} просить тебе проголосувати."
+    },
+    "pollRemind": {
+      "title": "Нагадування: {name}",
+      "body": "Опитування чекає на твій голос."
+    },
+    "subscription": {
+      "title": "Підписка від {owner}",
+      "body": "Запрошення до підписки на опитування чекає на відповідь."
+    },
+    "baseShare": {
+      "title": "Спільна база",
+      "body": "{owner} надає тобі доступ до бази «{base}»."
+    },
+    "baseRemind": {
+      "title": "База досі чекає",
+      "body": "Запрошення до бази «{base}» чекає на відповідь."
+    },
+    "deviceShare": {
+      "title": "Спільний пристрій",
+      "body": "{owner} надає тобі доступ до пристрою: {type}."
+    },
+    "copyGame": {
+      "title": "Копія гри",
+      "body": "{owner} надсилає тобі копію гри «{name}»."
+    },
+    "copyLogo": {
+      "title": "Копія логотипу",
+      "body": "{owner} надсилає тобі копію логотипу «{name}»."
+    }
+  },
   pollsHubPolls: {
     pollFallback: "опитування",
     pollNameLabel: "«{name}»",

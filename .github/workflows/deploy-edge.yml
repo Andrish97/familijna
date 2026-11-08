@@ -22,7 +22,7 @@ jobs:
           deno-version: v2.x
       - name: Verify mail transport before deployment
         run: |
-          deno check supabase/functions/send-email/index.ts supabase/functions/mail-worker/index.ts supabase/functions/question-bank/index.ts supabase/functions/display-themes/index.ts
+          deno check supabase/functions/send-email/index.ts supabase/functions/push-send/index.ts supabase/functions/mail-worker/index.ts supabase/functions/question-bank/index.ts supabase/functions/display-themes/index.ts
           deno test tests/deno/mail-providers.test.ts
 
       - name: Install rsync + ssh

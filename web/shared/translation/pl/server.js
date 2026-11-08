@@ -1,5 +1,53 @@
 // Tłumaczenia PL — teksty składane przez serwer (send-email, Worker, maile powiadomień) — strony jej nie wczytują.
 const pl = {
+  // Powiadomienia push (E29) — składa funkcja Edge push-send.
+  push: {
+    "action": {
+      "see": "Zobacz",
+      "vote": "Głosuj",
+      "open": "Otwórz"
+    },
+    "friendInvite": {
+      "title": "Zaproszenie do znajomych",
+      "body": "{owner} zaprasza Cię do znajomych w Familijnej."
+    },
+    "friendResend": {
+      "title": "Zaproszenie nadal czeka",
+      "body": "{owner} przypomina o zaproszeniu do znajomych."
+    },
+    "pollShare": {
+      "title": "Ankieta: {name}",
+      "body": "{owner} prosi Cię o głos."
+    },
+    "pollRemind": {
+      "title": "Przypomnienie: {name}",
+      "body": "Ankieta czeka na Twój głos."
+    },
+    "subscription": {
+      "title": "Subskrypcja u {owner}",
+      "body": "Zaproszenie do subskrypcji ankiet czeka na odpowiedź."
+    },
+    "baseShare": {
+      "title": "Udostępniona baza",
+      "body": "{owner} udostępnia Ci bazę „{base}”."
+    },
+    "baseRemind": {
+      "title": "Baza nadal czeka",
+      "body": "Zaproszenie do bazy „{base}” czeka na odpowiedź."
+    },
+    "deviceShare": {
+      "title": "Udostępnione urządzenie",
+      "body": "{owner} udostępnia Ci urządzenie: {type}."
+    },
+    "copyGame": {
+      "title": "Kopia gry",
+      "body": "{owner} przesyła Ci kopię gry „{name}”."
+    },
+    "copyLogo": {
+      "title": "Kopia logo",
+      "body": "{owner} przesyła Ci kopię logo „{name}”."
+    }
+  },
   pollsHubPolls: {
     pollFallback: "ankiety",
     pollNameLabel: "„{name}”",

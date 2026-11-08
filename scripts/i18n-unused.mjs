@@ -27,6 +27,7 @@ const SKIP = [
   /^scripts\/i18n-unused\.mjs$/,
   /\/node_modules\//,
   /^supabase\/functions\/_shared\/notification-mail-texts\.js$/,
+  /^supabase\/functions\/_shared\/push-app-texts\.js$/,
 ];
 const EXT = /\.(js|mjs|cjs|ts|html|json)$/;
 
