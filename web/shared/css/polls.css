@@ -200,14 +200,13 @@
     .pollLinkActions .btn{ flex-direction: column; padding: 6px; gap: 3px; text-align: center; }
   }
 
-  /* QR: na jasnym kafelku (strefa ciszy) w spokojnej, obramowanej „scenie”
-     z podpisem; kliknięcie powiększa go w oknie. Prawie cała szerokość
-     sceny: komputer do 300 px, telefon do 320 px. */
+  /* QR: na jasnym kafelku (strefa ciszy) z podpisem, wprost na sekcji
+     „Anonimowo” — bez własnego tła i ramki (jedna warstwa w karcie,
+     zgłoszenie 2026-11-08); kliknięcie powiększa go w oknie. Prawie cała
+     szerokość sceny: komputer do 300 px, telefon do 320 px. */
   .pollQrStage{
     margin-top: 10px;
-    padding: 14px 10px 12px;
-    border-radius: var(--r-md);
-    background: linear-gradient(var(--w-4), var(--w-4)) var(--under); /* kryjące (Android) */
+    padding: 4px 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -279,6 +278,13 @@
   .pollRecipientsModal .uni-foot{ align-items: center; justify-content: flex-end; }
   .pollRecipientsModal #pollRecipientsCount{ margin-right: auto; }
   .pollRecipientsSec .shareList{ max-height: min(360px, 45dvh); }
+  /* Komputer: „Odbiorcy” jest już kartą w karcie — sekcja „Udostępniono”
+     to w niej tylko podtytuł listy, bez trzeciej ramki (wiersze na drugim
+     poziomie, zgłoszenie 2026-11-08). Telefon: sekcja „Odbiorcy” nie ma
+     ramki (wypustka), więc tam ramkę ma sekcja listy. */
+  @media (min-width: 981px){
+    .pollRecipientsSec .shareSection{ padding: 0; background: none; border: 0; border-radius: 0; }
+  }
 
   @media (max-width: 600px){
     /* Listy przewijają się osobno; kafelki zachowują naturalną wysokość

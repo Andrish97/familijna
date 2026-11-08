@@ -17,8 +17,8 @@
 //
 // Zero importów przeglądarkowych — testowalne w gołym Node.
 
-import { assertTransition } from "../../shared/js/gameplay/gameStateMachine.js?v=v2026-11-08T10015";
-import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T10015";
+import { assertTransition } from "../../shared/js/gameplay/gameStateMachine.js?v=v2026-11-08T14473";
+import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T14473";
 
 
 const STRIKE_LIMIT = 3;

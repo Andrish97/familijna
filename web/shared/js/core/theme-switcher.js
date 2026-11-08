@@ -2,8 +2,8 @@
 // familijna-server/docs/jasny-motyw-plan.md): menu Auto / Jasny / Ciemny.
 // Stan trzyma page-boot.js (FamilijnaTheme); ekrany gry mają motyw zablokowany
 // i nie dostają przycisku.
-import { icon, iconText } from "./icons.js?v=v2026-11-08T10015";
-import { placeDropdown } from "./popover.js?v=v2026-11-08T10015";
+import { icon, iconText } from "./icons.js?v=v2026-11-08T14473";
+import { placeDropdown } from "./popover.js?v=v2026-11-08T14473";
 
 const ICONS = { auto: "theme-auto", light: "theme-light", dark: "theme-dark" };
 const KEYS = { auto: "common.themeAuto", light: "common.themeLight", dark: "common.themeDark" };
