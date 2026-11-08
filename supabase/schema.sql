@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict OCyXdhycZYPLbKNtL0WqKvvpXYWEaBPLdHKWngpGx4zTVRzkIfSKTOe7AQXeEsz
+\restrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -5839,6 +5839,43 @@ $$;
 
 
 --
+-- Name: app_ratings_after_unlink(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."app_ratings_after_unlink"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  v_guest boolean;
+BEGIN
+  SELECT p.is_guest INTO v_guest FROM public.profiles p WHERE p.id = OLD.user_id;
+  IF NOT coalesce(v_guest, NEW.from_guest) OR public.is_test_user(OLD.user_id) THEN
+    DELETE FROM public.app_ratings WHERE id = NEW.id;
+  END IF;
+  RETURN NULL;
+END $$;
+
+
+--
+-- Name: app_ratings_set_from_guest(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."app_ratings_set_from_guest"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF NEW.user_id IS NULL THEN
+    NEW.from_guest := CASE WHEN TG_OP = 'UPDATE' THEN OLD.from_guest ELSE false END;
+  ELSE
+    NEW.from_guest := coalesce((SELECT p.is_guest FROM public.profiles p WHERE p.id = NEW.user_id), false);
+  END IF;
+  RETURN NEW;
+END $$;
+
+
+--
 -- Name: are_friends("uuid", "uuid"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -11426,18 +11463,19 @@ $$;
 -- Name: get_ratings_admin(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION "public"."get_ratings_admin"() RETURNS TABLE("id" "uuid", "user_id" "uuid", "stars" smallint, "comment" "text", "created_at" timestamp with time zone, "username" "text", "email" "text")
+CREATE FUNCTION "public"."get_ratings_admin"() RETURNS TABLE("id" "uuid", "user_id" "uuid", "stars" smallint, "comment" "text", "created_at" timestamp with time zone, "username" "text", "email" "text", "is_guest" boolean)
     LANGUAGE "sql" SECURITY DEFINER
     SET "search_path" TO 'public', 'auth'
     AS $$
   SELECT
     r.id,
     r.user_id,
-    r.stars,
+    r.stars::smallint,
     r.comment,
     r.created_at,
     p.username,
-    p.email
+    p.email,
+    r.from_guest
   FROM public.app_ratings r
   LEFT JOIN public.profiles p ON p.id = r.user_id
   WHERE NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)
@@ -20612,10 +20650,11 @@ CREATE TABLE "public"."app_config" (
 
 CREATE TABLE "public"."app_ratings" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "user_id" "uuid" NOT NULL,
+    "user_id" "uuid",
     "stars" integer NOT NULL,
     "comment" "text",
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "from_guest" boolean DEFAULT false NOT NULL,
     CONSTRAINT "app_ratings_stars_check" CHECK ((("stars" >= 1) AND ("stars" <= 5)))
 );
 
@@ -24770,6 +24809,20 @@ CREATE TRIGGER "a_guard_resource_name_len" BEFORE INSERT OR UPDATE OF "name" ON 
 
 
 --
+-- Name: app_ratings app_ratings_after_unlink; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "app_ratings_after_unlink" AFTER UPDATE OF "user_id" ON "public"."app_ratings" FOR EACH ROW WHEN ((("old"."user_id" IS NOT NULL) AND ("new"."user_id" IS NULL))) EXECUTE FUNCTION "public"."app_ratings_after_unlink"();
+
+
+--
+-- Name: app_ratings app_ratings_set_from_guest; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "app_ratings_set_from_guest" BEFORE INSERT OR UPDATE ON "public"."app_ratings" FOR EACH ROW EXECUTE FUNCTION "public"."app_ratings_set_from_guest"();
+
+
+--
 -- Name: friendships base_friend_source_close; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -25693,7 +25746,7 @@ ALTER TABLE ONLY "public"."answers"
 --
 
 ALTER TABLE ONLY "public"."app_ratings"
-    ADD CONSTRAINT "app_ratings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "app_ratings_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
 
 
 --
@@ -26896,18 +26949,14 @@ CREATE POLICY "No public access" ON "public"."reports" USING (false);
 -- Name: app_ratings Users can insert their own rating; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Users can insert their own rating" ON "public"."app_ratings" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") AND ("char_length"(COALESCE("comment", ''::"text")) <= 2000) AND (NOT COALESCE(( SELECT "p"."is_guest"
-   FROM "public"."profiles" "p"
-  WHERE ("p"."id" = "auth"."uid"())), true))));
+CREATE POLICY "Users can insert their own rating" ON "public"."app_ratings" FOR INSERT WITH CHECK ((("auth"."uid"() = "user_id") AND ("char_length"(COALESCE("comment", ''::"text")) <= 2000)));
 
 
 --
 -- Name: app_ratings Users can update their own rating; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY "Users can update their own rating" ON "public"."app_ratings" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK ((("auth"."uid"() = "user_id") AND ("char_length"(COALESCE("comment", ''::"text")) <= 2000) AND (NOT COALESCE(( SELECT "p"."is_guest"
-   FROM "public"."profiles" "p"
-  WHERE ("p"."id" = "auth"."uid"())), true))));
+CREATE POLICY "Users can update their own rating" ON "public"."app_ratings" FOR UPDATE USING (("auth"."uid"() = "user_id")) WITH CHECK ((("auth"."uid"() = "user_id") AND ("char_length"(COALESCE("comment", ''::"text")) <= 2000)));
 
 
 --
@@ -28309,5 +28358,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict OCyXdhycZYPLbKNtL0WqKvvpXYWEaBPLdHKWngpGx4zTVRzkIfSKTOe7AQXeEsz
+\unrestrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
 
