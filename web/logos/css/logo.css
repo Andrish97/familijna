@@ -79,20 +79,19 @@
   .grid .logoTileTop > .tileTags{ grid-column: 1 / -1; margin-top: 0; padding-top: 0; flex-wrap: nowrap; overflow: hidden; }
   .grid .logoTileTop .tileTags .tag:not([data-kind="from"]){ flex: 0 0 auto; }
   .grid .logoTileTop .tileTags .tag{ display: block; line-height: 20px; white-space: nowrap; }
-  .grid .logoTile[data-proposed] .logoPrev{ min-height: 0; padding: 6px; }
+  .grid .logoTile[data-proposed] .logoPrev{ min-height: 0; }
   .grid .logoTile[data-proposed] .logoPrev canvas{ height: 120px; }
 
+  /* bez własnej ramki i tła: czarna tablica leży wprost na kaflu (jedna
+     warstwa w karcie, jak edytory logo i kafle logo w Ustawieniach gry;
+     zgłoszenie 2026-11-08) */
   .logoPrev{
     flex:1;
     display:flex;
     align-items:center;
     justify-content:center;
-    border-radius: var(--r-md);
-    border: 1px solid var(--line-faint);
-    background: var(--k-20);
-    padding: 8px;
     overflow:hidden;
-    min-height: 151px; /* 135px canvas + 2×8px padding — rezerwuje miejsce przed załadowaniem canvas */
+    min-height: 135px; /* wysokość canvas — rezerwuje miejsce przed załadowaniem */
   }
   .logoPrev canvas{
     /* object-fit:contain (nie width:100%;height:auto;max-height:135px) —
