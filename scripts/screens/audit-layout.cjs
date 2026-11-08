@@ -473,7 +473,8 @@ function inspectLayout(opts) {
 
   // Wąskie pole z mocno zawiniętym tekstem (zgłoszenie 2026-11-08: treść
   // pytania ściśnięta przez niezawijany dopisek, „najbard/ziej”): słowo
-  // przełamane w środku albo co najmniej 3 linie po średnio < 9 znaków.
+  // przełamane w środku albo co najmniej 3 linie po średnio < 16 znaków w polu
+  // węższym niż 12 em lub połowa wiersza.
   {
     let budget = 30000;
     const lineTops = (rects) => [...new Set([...rects].filter((r) => r.width > 0.5).map((r) => Math.round(r.top)))];
@@ -495,7 +496,8 @@ function inspectLayout(opts) {
       budget -= trimmed.length;
       let broken = "";
       if (st.hyphens !== "auto") {
-        for (const m of text.matchAll(/\S{4,}/g)) {
+        // łamanie po łączniku („e-/mail”) jest zwykłym dzieleniem — nie liczymy
+        for (const m of text.matchAll(/[^\s\-‐–—/]{4,}/g)) {
           range.setStart(n, m.index);
           range.setEnd(n, m.index + m[0].length);
           if (lineTops(range.getClientRects()).length > 1) { broken = m[0]; break; }
@@ -504,11 +506,11 @@ function inspectLayout(opts) {
       const perLine = trimmed.length / tops.length;
       if (broken) { flagged.add(el); add("waski-tekst", el, `słowo przełamane: „${broken.slice(0, 30)}” (${Math.round(el.getBoundingClientRect().width)} px)`); }
       else if (tops.length >= 3 && perLine < 16) {
-        // < 9 znaków w linii zawsze; < 16, gdy tekst ma mniej niż połowę
-        // szerokości swojego wiersza (sąsiad zabiera miejsce).
+        // pole węższe niż 12 em albo < 50% szerokości wiersza (sąsiad zabiera
+        // miejsce); szerokie pole z samymi długimi słowami (wersaliki) — nie.
         const w = el.getBoundingClientRect().width;
         const row = el.parentElement?.getBoundingClientRect().width || w;
-        if (perLine < 9 || w < row * 0.5) { flagged.add(el); add("waski-tekst", el, `${tops.length} linie po ~${perLine.toFixed(1)} znaku (${Math.round(w)} z ${Math.round(row)} px)`); }
+        if (w < 12 * (parseFloat(st.fontSize) || 16) || w < row * 0.5) { flagged.add(el); add("waski-tekst", el, `${tops.length} linie po ~${perLine.toFixed(1)} znaku (${Math.round(w)} z ${Math.round(row)} px)`); }
       }
     }
   }

@@ -433,6 +433,29 @@
 
   .m-table tr:last-child td { border-bottom: none; }
 
+  /* Telefon: wiersz tabeli jako karta — pierwsza komórka to nagłówek karty,
+     pozostałe pod nią z etykietą kolumny (data-label z build-content.mjs).
+     W trzech wąskich kolumnach tekst łamał się co 2–3 słowa (audyt 2026-11-08). */
+  @media (max-width: 600px) {
+      .m-table-wrap { overflow-x: visible; }
+      .m-table thead { display: none; }
+      .m-table, .m-table tbody, .m-table tr, .m-table td { display: block; }
+      .m-table tr { padding: 10px 12px; border-bottom: 1px solid var(--w-8); }
+      .m-table tr:last-child { border-bottom: none; }
+      .m-table td { padding: 0; border-bottom: none; }
+      .m-table td + td { margin-top: 6px; }
+      .m-table td:first-child { color: var(--text); }
+      .m-table td:not(:first-child)::before {
+          content: attr(data-label);
+          display: block;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+          color: var(--text-faint);
+      }
+  }
+
   /* ---------- poprzedni / następny ---------- */
 
   .m-pager {
