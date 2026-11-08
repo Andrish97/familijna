@@ -7,18 +7,18 @@
 // snap-to-grid z dzisiejszego host.js (kosmetyka do dostrojenia wizualnie
 // później, nie architektura).
 
-import { initI18n, setUiLang } from "../../../shared/translation/translation.js?v=v2026-11-08T17365";
-import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-08T17365";
-import { initWakePrompt } from "../../../shared/js/core/wake-prompt.js?v=v2026-11-08T17365";
-import { guardViewportWidth } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T17365";
+import { initI18n, setUiLang } from "../../../shared/translation/translation.js?v=v2026-11-08T17374";
+import { startKeepAlive } from "../../../shared/js/core/keep-alive.js?v=v2026-11-08T17374";
+import { initWakePrompt } from "../../../shared/js/core/wake-prompt.js?v=v2026-11-08T17374";
+import { guardViewportWidth } from "../../../shared/js/core/device-guard.js?v=v2026-11-08T17374";
 
-import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-08T17365";
-import { createHostRenderer } from "./render.js?v=v2026-11-08T17365";
-import { createCoverLogoRenderer } from "./coverLogo.js?v=v2026-11-08T17365";
-import { createHostThemeApplier } from "./hostThemeManager.js?v=v2026-11-08T17365";
-import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-08T17365";
-import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-08T17365";
-import { setShift } from "../../../shared/js/core/geometry.js?v=v2026-11-08T17365";
+import { createSubscription } from "../../../shared/js/core/game-state-subscribe.js?v=v2026-11-08T17374";
+import { createHostRenderer } from "./render.js?v=v2026-11-08T17374";
+import { createCoverLogoRenderer } from "./coverLogo.js?v=v2026-11-08T17374";
+import { createHostThemeApplier } from "./hostThemeManager.js?v=v2026-11-08T17374";
+import { createDeviceLease, updateDeviceLeaseOverlay } from "../../../shared/js/core/device-lease.js?v=v2026-11-08T17374";
+import { initFullscreenButton } from "../../../shared/js/core/fullscreen.js?v=v2026-11-08T17374";
+import { setShift } from "../../../shared/js/core/geometry.js?v=v2026-11-08T17374";
 
 function parseParams() {
   const u = new URL(location.href);
