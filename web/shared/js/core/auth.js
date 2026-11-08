@@ -1,8 +1,8 @@
-import { redirectPage } from "./page-layout.js?v=v2026-11-08T23062";
+import { redirectPage } from "./page-layout.js?v=v2026-11-08T23092";
 // js/core/auth.js
-import { icon } from "./icons.js?v=v2026-11-08T23062";
-import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-08T23062";
-import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-08T23062";
+import { icon } from "./icons.js?v=v2026-11-08T23092";
+import { sb, buildSiteUrl } from "./supabase.js?v=v2026-11-08T23092";
+import { t, withLangParam } from "../../translation/translation.js?v=v2026-11-08T23092";
 
 
 const GUEST_LOCAL_MARKER_KEY = "fam:guest:session_seen";
@@ -132,7 +132,7 @@ function authApiError(status, code) {
   return err;
 }
 
-import { reservedUsernameReason, loadReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-08T23062";
+import { reservedUsernameReason, loadReservedUsernamePrefixes } from "./reserved-usernames.js?v=v2026-11-08T23092";
 
 // Strony z polem nazwy (logowanie, Konto) pobierają listę zastrzeżonych przedrostków od wejścia.
 export function preloadUsernameRules() { loadReservedUsernamePrefixes(sb()); }

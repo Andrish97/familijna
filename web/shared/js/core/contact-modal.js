@@ -1,12 +1,12 @@
-import { t } from "../../translation/translation.js?v=v2026-11-08T23062";
-import { ensureSupportEntryPoint } from "./support-modal.js?v=v2026-11-08T23062";
+import { t } from "../../translation/translation.js?v=v2026-11-08T23092";
+import { ensureSupportEntryPoint } from "./support-modal.js?v=v2026-11-08T23092";
 
 let dialog = null;
 let opening = null;
 export function openContactModal(opts = {}) {
   if (document.body?.hasAttribute("data-device-screen")) return Promise.resolve();
   if (opening) return opening;
-  opening = import("./contact-dialog.js?v=v2026-11-08T23062").then(module => {
+  opening = import("./contact-dialog.js?v=v2026-11-08T23092").then(module => {
     dialog = module;
     return module.openContactModal(opts);
   }).finally(() => { opening = null; });
