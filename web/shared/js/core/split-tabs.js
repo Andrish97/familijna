@@ -12,8 +12,8 @@
 // markActiveTab z tabs.js — role, aria, strzałki); role tabpanel tylko
 // w trybie wąskim.
 
-import { markActiveTab } from "./tabs.js?v=v2026-11-08T09471";
-import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-08T09471";
+import { markActiveTab } from "./tabs.js?v=v2026-11-08T10015";
+import { isCompactLayout, onDeviceChange } from "./device-attrs.js?v=v2026-11-08T10015";
 
 /**
  * root — .tabs-card--split; active — nazwa startowa; onChange(name) — po
