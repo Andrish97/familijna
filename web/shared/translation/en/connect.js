@@ -22,6 +22,7 @@ const en = {
       btn: "Scan QR",
       cameraError: "Camera access denied.",
       noQr: "No QR code found in the photo.",
+      foreignQr: "This QR code does not lead to Familijna.",
     },
     shared: {
       title: "Devices shared with me",

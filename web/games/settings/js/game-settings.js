@@ -557,8 +557,8 @@ function resolveLogoPreview() {
 function postPreviewRow() {
   try {
     const row = buildDisplayPreviewRow({ teams: localSettings.teams, display: localSettings.display, logoPreview: resolveLogoPreview() });
-    if (_displayReady && _displayIframe?.contentWindow) _displayIframe.contentWindow.postMessage({ type: "familijna:preview-row", row }, "*");
-    if (_hostReady && _hostIframe?.contentWindow) _hostIframe.contentWindow.postMessage({ type: "familijna:preview-row", row }, "*");
+    if (_displayReady && _displayIframe?.contentWindow) _displayIframe.contentWindow.postMessage({ type: "familijna:preview-row", row }, location.origin);
+    if (_hostReady && _hostIframe?.contentWindow) _hostIframe.contentWindow.postMessage({ type: "familijna:preview-row", row }, location.origin);
   } catch {}
 }
 
@@ -942,7 +942,7 @@ async function renderSound() {
 
   for (const cat of categories) {
     const key = cat.key;
-    const volPct = localSettings.sound.volumes[key] ?? 100;
+    const volPct = Math.max(0, Math.min(100, Math.round(Number(localSettings.sound.volumes[key] ?? 100)) || 0));
     const custom = customFiles.get(key);
     // Aktywny wariant: "__custom__" jeśli mamy własny plik, inaczej zapisany lub domyślny
     const activeVariant = custom ? VARIANT_CUSTOM

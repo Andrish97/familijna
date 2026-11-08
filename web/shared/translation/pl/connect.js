@@ -22,6 +22,7 @@ const pl = {
       btn: "Skanuj QR",
       cameraError: "Brak dostępu do kamery.",
       noQr: "Nie znaleziono kodu QR na zdjęciu.",
+      foreignQr: "Ten kod QR nie prowadzi do Familijnej.",
     },
     shared: {
       title: "Urządzenia udostępnione dla mnie",

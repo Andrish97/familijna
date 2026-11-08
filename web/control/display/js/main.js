@@ -181,6 +181,8 @@ async function bootPreview() {
   let previewTeams = {};
   let previewQueue = Promise.resolve();
   window.addEventListener("message", (e) => {
+    // Tylko od strony ustawień gry, która osadza podgląd (E24 R28).
+    if (e.origin !== location.origin || window.parent === window || e.source !== window.parent) return;
     if (e.data?.type !== "familijna:preview-row") return;
     const row = e.data.row;
     previewQueue = previewQueue.then(async () => {
@@ -260,7 +262,7 @@ async function bootPreview() {
   });
 
   document.documentElement.classList.remove("page-loading");
-  parent.postMessage({ type: "familijna:preview-ready" }, "*");
+  parent.postMessage({ type: "familijna:preview-ready" }, location.origin);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {

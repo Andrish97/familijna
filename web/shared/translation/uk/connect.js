@@ -22,6 +22,7 @@ const uk = {
       btn: "Сканувати QR",
       cameraError: "Немає доступу до камери.",
       noQr: "QR-код не знайдено на фото.",
+      foreignQr: "Цей QR-код не веде до Familijna.",
     },
     shared: {
       title: "Пристрої, надані мені",

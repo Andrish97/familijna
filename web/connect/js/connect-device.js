@@ -14,6 +14,15 @@ import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-0
 import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-08T15560";
 import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-08T15560";
 
+// Kod QR prowadzi tylko na tę samą stronę (E24 R28: bez przekierowań na obce adresy).
+function openScannedUrl(raw) {
+  let url = null;
+  try { url = new URL(String(raw || "")); } catch {}
+  const own = [location.origin, "https://www.familiada.online", "https://familiada.online"];
+  if (url && own.includes(url.origin)) { window.location.href = url.href; return; }
+  toast(t("connectDevice.scan.foreignQr"), { kind: "error" });
+}
+
 
 const btnManual           = document.getElementById("btnManual");
 const btnScanQr           = document.getElementById("btnScanQr");
@@ -235,7 +244,7 @@ async function startQrScan() {
             if (codes.length) {
               const url = codes[0].rawValue;
               stop();
-              if (url.startsWith("http")) window.location.href = url;
+              openScannedUrl(url);
               return;
             }
           } catch {}
@@ -256,7 +265,7 @@ async function startQrScan() {
             const code = window.jsQR(imageData.data, imageData.width, imageData.height);
             if (code?.data?.startsWith("http")) {
               stop();
-              window.location.href = code.data;
+              openScannedUrl(code.data);
               return;
             }
           }
@@ -311,7 +320,7 @@ async function startQrScan() {
     const imageData = canvas.getContext("2d").getImageData(0, 0, w, h);
     const code = window.jsQR(imageData.data, imageData.width, imageData.height);
     if (code?.data?.startsWith("http")) {
-      window.location.href = code.data;
+      openScannedUrl(code.data);
     } else {
       toast(t("connectDevice.scan.noQr"), { kind: "error" });
     }

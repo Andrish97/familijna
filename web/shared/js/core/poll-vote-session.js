@@ -1,5 +1,15 @@
 import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-08T15560";
 
+// FNV-1a 64-bit (hex): stała, nieodwracalna w praktyce nazwa wpisu.
+function voterSlot(text) {
+  let h = 0xcbf29ce484222325n;
+  for (const ch of new TextEncoder().encode(String(text))) {
+    h ^= BigInt(ch);
+    h = (h * 0x100000001b3n) & 0xffffffffffffffffn;
+  }
+  return h.toString(16).padStart(16, "0");
+}
+
 // Wspólny cykl ankiety; strony zachowują renderowanie i walidację swoich odpowiedzi.
 export function createPollVoteView({ qbox, closed, subEl, messages, getUser, withLangParam,
   document = globalThis.document, location = globalThis.location, schedule = setTimeout }) {
@@ -64,9 +74,16 @@ export function createPollVoteSession({ type, getClient, readContext, resolveCon
   function getVoterToken() {
     const { gameId, key, taskToken } = readContext();
     if (taskToken && taskVoterToken) return taskVoterToken;
-    const name = `fam_voter_${gameId}_${key}`;
+    // Nazwa wpisu bez klucza linku ankiety (E24 R28: wspólne urządzenie);
+    // stary wpis z kluczem w nazwie przenoszony raz.
+    const name = `fam_voter_${voterSlot(`${gameId}:${key}`)}`;
+    const legacy = `fam_voter_${gameId}_${key}`;
     const store = storage();
     let token = store.getItem(name);
+    if (!token) {
+      token = store.getItem(legacy);
+      if (token) { store.setItem(name, token); store.removeItem?.(legacy); }
+    }
     if (!token) { token = idFactory(); store.setItem(name, token); }
     return token;
   }

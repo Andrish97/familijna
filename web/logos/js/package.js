@@ -10,7 +10,8 @@ export const LOGO_NAME_MAX = 80;
 // obraz z dowolnego serwera na ekranie Prowadzącego (loadFromJSON rysunku).
 // Kopie między kontami przenosi serwer (duplicate.js), więc parser wspólny
 // (parseLogoPackage) zostawia adresy bez zmian.
-const OWN_IMAGE_URL = /^https:\/\/[^/?#]+\/storage\/v1\/object\/public\/user-logos\/[^?#]+$/i;
+// Host przypięty do własnego API (E24 R28; dawny adres familiada.online — stare eksporty).
+const OWN_IMAGE_URL = /^https:\/\/api\.(familijna\.app|familiada\.online)\/storage\/v1\/object\/public\/user-logos\/[^?#]+$/i;
 const EMBEDDED_IMAGE = /^data:image\/(png|jpe?g|gif|webp);base64,/i;
 const allowedImage = (src) => EMBEDDED_IMAGE.test(src) || OWN_IMAGE_URL.test(src);
 

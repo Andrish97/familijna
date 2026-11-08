@@ -20,7 +20,15 @@ if (deviceGate.state() !== "ok") {
 }
 
 const qs = new URLSearchParams(location.search);
-let url = qs.get("url");
+// ?url= tylko do strony głosowania lub Go tej samej domeny (E24 R28: bez kodów
+// QR do obcych adresów pod naszą domeną).
+function ownPollUrl(raw) {
+  try {
+    const x = new URL(String(raw || ""), location.href);
+    return x.origin === location.origin && /^\/(polls\/vote|go)\//.test(x.pathname) ? x.href : null;
+  } catch { return null; }
+}
+let url = ownPollUrl(qs.get("url"));
 const paramId  = qs.get("id");
 const paramKey = qs.get("key");
 
