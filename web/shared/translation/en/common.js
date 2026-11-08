@@ -1,5 +1,13 @@
 // Tłumaczenia EN — część wspólna — wczytuje ją każda strona.
 const en = {
+  pushPrompt: {
+    text: "Want notifications about invitations, polls and shares, even when the page is closed?",
+    enable: "Turn on",
+    later: "Not now",
+    enabled: "Notifications on this device have been turned on.",
+    failed: "Could not turn on notifications. Try in Account.",
+    blocked: "Notifications are blocked in this browser's settings for this site.",
+  },
   guestReminder: {
     text: "Your guest account will be deleted in a few days. Save your data before you lose it.",
     link: "Migrate now",
