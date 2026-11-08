@@ -15,18 +15,18 @@
 // Każda zakończona zmiana woła commit() -- jedno miejsce, które zapisuje
 // snapshot, oznacza „niezapisane zmiany” i odświeża podgląd.
 
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T14473";
-import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T14473";
-import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-08T14473";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-08T14473";
-import { DRAW_FONTS, DEFAULT_DRAW_FONT, ensureDrawFonts, normalizeDrawFont, sceneFontFamilies } from "../../shared/js/core/draw-fonts.js?v=v2026-11-08T14473";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T14473";
-import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-08T14473";
-import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-08T14473";
-import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-08T14473";
-import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-08T14473";
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T14473";
-import { stepperHtml, bindSteppers } from "./stepper.js?v=v2026-11-08T14473";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T14583";
+import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T14583";
+import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-08T14583";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-08T14583";
+import { DRAW_FONTS, DEFAULT_DRAW_FONT, ensureDrawFonts, normalizeDrawFont, sceneFontFamilies } from "../../shared/js/core/draw-fonts.js?v=v2026-11-08T14583";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T14583";
+import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-08T14583";
+import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-08T14583";
+import { SHAPES, shapeById, buildShapePath, buildArrowPath } from "./draw/shapes.js?v=v2026-11-08T14583";
+import { legacySceneTypes, prepareFabric } from "../../shared/js/core/fabric-compat.js?v=v2026-11-08T14583";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T14583";
+import { stepperHtml, bindSteppers } from "./stepper.js?v=v2026-11-08T14583";
 
 
 const TOOL = { SELECT: "SELECT", PAN: "PAN", TEXT: "TEXT", BRUSH: "BRUSH", ERASER: "ERASER", SHAPES: "SHAPES" };
