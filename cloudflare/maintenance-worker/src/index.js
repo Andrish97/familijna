@@ -34,7 +34,6 @@ import {
   isMaintenanceAsset,
 } from "./lib/origin/assets.js";
 import { hasAdminBypass } from "./lib/core/maintenance-bypass.js";
-import { handleNotifySubmission } from "./lib/notifications/telegram.js";
 import { handleContactAppend, handleContactSubmit } from "./lib/email/contact.js";
 import { isBot, serveDynamicSitemap } from "./lib/ssr/ssr.js";
 import { tvRedirect } from "./lib/origin/tv.js";
@@ -247,11 +246,6 @@ async function handleFetch(request, env, ctx) {
 
   // Explicit language parameters must survive proxying. Removing lang=pl
   // would make a fresh English-language browser render English instead.
-
-  // Public notification endpoint (rate-limited, no auth required) - for marketplace, lead-finder etc
-  if (url.pathname === "/_api/notify-submission" && request.method === "POST") {
-    return handleNotifySubmission(request, env);
-  }
 
   // Public contact form endpoint
   if (url.pathname === "/_api/contact/append") {

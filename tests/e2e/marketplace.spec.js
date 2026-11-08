@@ -11,7 +11,6 @@ test.use({ needs: { standard: 1 } });
 test.describe.configure({ mode: "serial" });
 
 test.beforeEach(async ({ context }) => {
-  await context.route("**/_api/notify-submission", route => route.fulfill({ status: 200, body: "{}" }));
   if (process.env.TEST_BRANCH_CODE !== "0") await serveBranchCode(context, { pages: ["marketplace"] });
   await context.addInitScript(() => localStorage.setItem("uiLang", "pl"));
 });

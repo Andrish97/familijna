@@ -381,6 +381,17 @@ module.exports = [
   { id: "manual-search-empty", category: "Dodatkowe", title: "Podręcznik — wyszukiwanie bez wyników (wspólny pusty stan)", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", devices: ["desktop", "phone"], steps: [manualSearch("qqzzxx", ".empty-state")] },
   { id: "manual-search-hit", category: "Dodatkowe", title: "Podręcznik — wybrany wynik z zaznaczonymi trafieniami", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", steps: [manualSearch("kradzież"), async (view) => { await view.locator("#manualSearch .searchText").press("Enter"); await view.locator("mark.m-hit").first().waitFor({ timeout: 5000 }); await view.waitForTimeout(300); }] },
   { id: "account", category: "Dodatkowe", title: "Konto", path: "/account/", sources: page("account"), ready: "main" },
+  // E29: powiadomienia na tym urządzeniu włączone (atrapa zgody przeglądarki i subskrypcji usługi push).
+  { id: "account-push", category: "Dodatkowe", title: "Konto — powiadomienia na tym urządzeniu (włączone, wybrane rodzaje)", path: "/account/", sources: [...page("account"), "web/shared/js/core/push.js"], fullPage: true,
+    initScript: () => {
+      const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/demo", toJSON: () => ({ endpoint: "https://fcm.googleapis.com/fcm/send/demo", keys: { p256dh: "x", auth: "y" } }), unsubscribe: async () => true };
+      const reg = { pushManager: { getSubscription: async () => sub, subscribe: async () => sub } };
+      window.PushManager = window.PushManager || function PushManager() {};
+      Object.defineProperty(window, "Notification", { configurable: true, value: Object.assign(function Notification() {}, { permission: "granted", requestPermission: async () => "granted" }) });
+      Object.defineProperty(navigator, "serviceWorker", { configurable: true, value: { register: async () => reg, ready: Promise.resolve(reg), addEventListener() {}, controller: null } });
+    },
+    db: (db) => { db.rpc.push_subscription_get = { subscribed: true, kinds: ["friend", "poll", "copy"] }; },
+    ready: () => !document.getElementById("pushKinds")?.hidden },
   // Karty formularzy: zmiana e-maila w toku (Anuluj zmianę + Wyślij ponownie), hasło, usuwanie konta — cała strona.
   { id: "account-email-pending", category: "Dodatkowe", title: "Konto — zmiana e-maila w toku, hasło i usuwanie konta (cała strona)", path: "/account/", sources: page("account"), fullPage: true,
     db: (db) => { db.user = { ...db.user, new_email: "nowy.adres@example.com" }; },

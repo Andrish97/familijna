@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
-  <meta name="app-version" content="v2026-11-08T15121"/>
+  <meta name="app-version" content="v2026-11-08T15311"/>
 
 
   <meta charset="UTF-8"/>
@@ -12,25 +12,25 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual"/>
-  <script src="/shared/js/core/page-boot.js?v=v2026-11-08T15121"></script>
+  <script src="/shared/js/core/page-boot.js?v=v2026-11-08T15311"></script>
   <link rel="preconnect" href="https://api.familijna.app" crossorigin>
   <title data-i18n="account.pageTitle">Familijna — moje konto</title>
 
-  <link rel="icon" href="/favicon.ico?v=v2026-11-08T15121" />
-  <link rel="stylesheet" href="/shared/css/blocking-overlay.css?v=v2026-11-08T15121" />
-  <link rel="stylesheet" href="/shared/style/tokens.css?v=v2026-11-08T15121"/>
-  <link rel="stylesheet" href="/shared/style/base.css?v=v2026-11-08T15121"/>
-  <link rel="stylesheet" href="/shared/style/components.css?v=v2026-11-08T15121"/>
-  <link rel="stylesheet" href="/shared/style/layout.css?v=v2026-11-08T15121"/>
-  <link rel="stylesheet" href="/shared/style/utilities.css?v=v2026-11-08T15121"/>
-  <link rel="stylesheet" href="/account/css/account.css?v=v2026-11-08T15121"/>
-  <script type="module" src="/shared/js/core/device-attrs.js?v=v2026-11-08T15121"></script>
+  <link rel="icon" href="/favicon.ico?v=v2026-11-08T15311" />
+  <link rel="stylesheet" href="/shared/css/blocking-overlay.css?v=v2026-11-08T15311" />
+  <link rel="stylesheet" href="/shared/style/tokens.css?v=v2026-11-08T15311"/>
+  <link rel="stylesheet" href="/shared/style/base.css?v=v2026-11-08T15311"/>
+  <link rel="stylesheet" href="/shared/style/components.css?v=v2026-11-08T15311"/>
+  <link rel="stylesheet" href="/shared/style/layout.css?v=v2026-11-08T15311"/>
+  <link rel="stylesheet" href="/shared/style/utilities.css?v=v2026-11-08T15311"/>
+  <link rel="stylesheet" href="/account/css/account.css?v=v2026-11-08T15311"/>
+  <script type="module" src="/shared/js/core/device-attrs.js?v=v2026-11-08T15311"></script>
   <script>document.documentElement.classList.add('page-loading')</script>
 
-  <script src="/shared/vendor/supabase-js.js?v=v2026-11-08T15121" defer></script>
-  <script src="/shared/js/core/security-warning.js?v=v2026-11-08T15121" defer></script>
-  <script type="module" src="/account/js/account.js?v=v2026-11-08T15121" defer></script>
-  <script type="module" src="/shared/js/core/topbar-controller.js?v=v2026-11-08T15121" defer></script>
+  <script src="/shared/vendor/supabase-js.js?v=v2026-11-08T15311" defer></script>
+  <script src="/shared/js/core/security-warning.js?v=v2026-11-08T15311" defer></script>
+  <script type="module" src="/account/js/account.js?v=v2026-11-08T15311" defer></script>
+  <script type="module" src="/shared/js/core/topbar-controller.js?v=v2026-11-08T15311" defer></script>
 
 </head>
 
@@ -120,15 +120,36 @@
       </section>
 
       <section class="card account-panel account-panel--email-notif" id="emailNotifSection">
-        <div class="section-title" data-i18n="account.emailNotifTitle"></div>
-        <div class="section-hint" data-i18n="account.emailNotifHint"></div>
+        <div class="section-title" data-i18n="account.notifTitle">Powiadomienia</div>
 
-        <label class="choice">
-          <input type="checkbox" id="emailNotifications"/>
-          <span data-i18n="account.emailNotifCheckbox"></span>
-        </label>
+        <div class="field account-notif-part">
+          <div class="field-label" data-i18n="account.emailNotifTitle"></div>
+          <div class="section-hint" data-i18n="account.emailNotifHint"></div>
+          <label class="choice">
+            <input type="checkbox" id="emailNotifications"/>
+            <span data-i18n="account.emailNotifCheckbox"></span>
+          </label>
+          <div class="cooldown" id="emailNotifSaved" hidden></div>
+        </div>
 
-        <div class="cooldown" id="emailNotifSaved" hidden></div>
+        <div class="field account-notif-part" id="pushNotifSection">
+          <div class="field-label" data-i18n="account.pushTitle">Na tym urządzeniu</div>
+          <div class="section-hint" data-i18n="account.pushHint">Przychodzą także przy zamkniętej aplikacji. Każde urządzenie włączasz osobno, niezależnie od maili.</div>
+          <label class="choice">
+            <input type="checkbox" id="pushNotifications"/>
+            <span data-i18n="account.pushCheckbox">Włącz powiadomienia na tym urządzeniu</span>
+          </label>
+          <div class="choice-list account-push-kinds" id="pushKinds" hidden>
+            <div class="section-hint" data-i18n="account.pushKindsLabel">Powiadamiaj o</div>
+            <label class="choice"><input type="checkbox" value="friend"/><span data-i18n="account.pushKind.friend">zaproszeniach do znajomych</span></label>
+            <label class="choice"><input type="checkbox" value="poll"/><span data-i18n="account.pushKind.poll">ankietach do zagłosowania</span></label>
+            <label class="choice"><input type="checkbox" value="base"/><span data-i18n="account.pushKind.base">udostępnionych bazach</span></label>
+            <label class="choice"><input type="checkbox" value="device"/><span data-i18n="account.pushKind.device">udostępnionych urządzeniach</span></label>
+            <label class="choice"><input type="checkbox" value="copy"/><span data-i18n="account.pushKind.copy">kopiach gier i logo</span></label>
+          </div>
+          <div class="section-hint" id="pushStatus" hidden></div>
+          <div class="cooldown" id="pushSaved" hidden></div>
+        </div>
       </section>
 
       <section class="card account-panel" id="ratingSection">
@@ -153,7 +174,7 @@
       <button class="btn-contact-footer" type="button" data-contact-modal data-i18n="common.contactBtn">Kontakt</button>
     </div>
   </main>
-  <script type="module" src="/shared/js/core/contact-modal.js?v=v2026-11-08T15121"></script>
+  <script type="module" src="/shared/js/core/contact-modal.js?v=v2026-11-08T15311"></script>
 
 </body>
 </html>

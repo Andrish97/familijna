@@ -1,9 +1,8 @@
 // src/lib/inbound-email.js -- Cloudflare Email Routing inbound handler + MIME parsing.
 import { normalizeE2ERecipient } from "../e2e/e2e-api.js";
 import { isE2EPlusAddress, e2eIdentityName } from "../e2e/e2e-lease.js";
-import { supabaseRequest, supabaseRpc, summarizeSupabaseError, normalizeRpcValue } from "../core/supabase.js";
+import { supabaseRequest, supabaseRpc, summarizeSupabaseError } from "../core/supabase.js";
 import { uploadToStorage, safeStorageName } from "../core/storage.js";
-import { getTelegramConfig, sendTelegram, claimNotifySlot } from "../notifications/telegram.js";
 import { findTicketOwner } from "./contact.js";
 import { recordMarketingReactions } from "./marketing-reactions.js";
 import { htmlToPlainTextPreview } from "./html-to-text.js";
@@ -82,7 +81,7 @@ export async function handleInboundEmail(message, env) {
   if (bodyHtml) bodyHtml = bodyHtml.slice(0, 200000);
 
   // Dokladne reguly Cloudflare kieruja konta testowe tutaj. Te wiadomosci
-  // sa test fixtures: nie trafiaja do skrzynki admina, Telegrama ani na
+  // sa test fixtures: nie trafiaja do skrzynki admina (ani powiadomien) ani na
   // prywatny forwarding. Pozostale maile zachowuja dotychczasowy przebieg.
   if (recipient) {
     const saved = await supabaseRequest(env, "/rest/v1/e2e_emails", {
@@ -213,17 +212,7 @@ export async function handleInboundEmail(message, env) {
     return;
   }
 
-  const row = Array.isArray(rpc.data) && rpc.data.length ? rpc.data[0] : normalizeRpcValue(rpc.data);
-  const savedTicket = row?.ticket_number || null;
-
-  // Notify admin via Telegram (best-effort, rate-limited)
-  try {
-    const tg = getTelegramConfig(env);
-    if (tg && await claimNotifySlot(env, "notify_email_ts")) {
-      const label = savedTicket ? `#${savedTicket}` : "(nowe)";
-      await sendTelegram(tg, `📧 Familijna — nowy email\nWiadomość ${label} od ${from}`);
-    }
-  } catch {}
+  // Powiadomienie admina: push z bazy (trigger na messages, E29).
 }
 
 export function decodeCharsetBytes(bytes, charset) {

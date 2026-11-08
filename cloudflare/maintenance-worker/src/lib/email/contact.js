@@ -3,7 +3,6 @@ import { json, readJsonOr400 } from "../core/http.js";
 import { supabaseRpc, supabaseRequest, normalizeRpcValue, summarizeSupabaseError } from "../core/supabase.js";
 import { uploadToStorage } from "../core/storage.js";
 import { buildContactEmail } from "./contact-email.js";
-import { getTelegramConfig, sendTelegram, claimNotifySlot } from "../notifications/telegram.js";
 import { htmlToPlainTextPreview } from "./html-to-text.js";
 import { normalizeLang } from "../core/utils.js";
 import { sha256Hex, clientIp, claimSlots } from "../core/rate-limit.js";
@@ -117,16 +116,7 @@ export async function handleContactSubmit(request, env) {
     console.error("[worker] contact: mail_queue insert failed:", err);
   }
 
-  // Notify admin via Telegram (best-effort, rate-limited)
-  try {
-    const tg = getTelegramConfig(env);
-    if (tg && await claimNotifySlot(env, "notify_form_ts")) {
-      await sendTelegram(tg, `📬 Familijna — nowe zgłoszenie\n#${ticket}`);
-    }
-  } catch (err) {
-    console.error("[worker] contact: telegram notify failed:", err);
-  }
-
+  // Powiadomienie admina: push z bazy (trigger na messages, E29).
   return json({ ok: true, ticket_number: ticket });
 }
 

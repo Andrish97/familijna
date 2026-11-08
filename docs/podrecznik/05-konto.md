@@ -192,13 +192,19 @@ Po kilku nieudanych próbach logowania serwis może poprosić o dodatkowe potwie
 
 W *Ustawieniach konta* znajdziesz także:
 
-- **Wiadomości e-mail** — przełącznik „Włącz powiadomienia e-mail”. Gdy jest wyłączony,
-  nie dostaniesz wiadomości o zaproszeniach do znajomych, zadaniach, udostępnionych bazach
-  i kopiach. Same zaproszenia i kopie nadal zobaczysz w serwisie.
+- **Powiadomienia → Wiadomości e-mail** — przełącznik „Włącz powiadomienia e-mail”. Gdy jest
+  wyłączony, nie dostaniesz wiadomości o zaproszeniach do znajomych, zadaniach, udostępnionych
+  bazach i kopiach. Same zaproszenia i kopie nadal zobaczysz w serwisie.
+- **Powiadomienia → Na tym urządzeniu** — „Włącz powiadomienia na tym urządzeniu” pokazuje
+  powiadomienia systemowe o tych samych sprawach, także przy zamkniętej aplikacji. Przeglądarka
+  najpierw poprosi o zgodę. Każde urządzenie włączasz osobno, niezależnie od maili, a w
+  „Powiadamiaj o” wybierasz rodzaje. Dotknięcie powiadomienia otwiera daną sprawę. Na iPhonie
+  i iPadzie powiadomienia działają po dodaniu Familijnej do ekranu początkowego.
 - **Twoja ocena systemu** — podgląd oceny i komentarza, które wystawiłeś serwisowi.
 - **Materiały Demo** — [Przywróć pliki demo] dodaje przykładowe gry, bazy pytań i logo.
 
 ![Ustawienia konta](zrzut:account)
+![Powiadomienia na tym urządzeniu](zrzut:account-push)
 ![Wyłączenie powiadomień e-mail](zrzut:people-account-notif-confirm)
 ![Przywrócenie materiałów demo](zrzut:people-account-demo-confirm)
 
