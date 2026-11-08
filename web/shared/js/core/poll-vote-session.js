@@ -1,4 +1,4 @@
-import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-08T20154";
+import { createAnonymousSubmitter } from "./poll-anonymous.js?v=v2026-11-08T20163";
 
 // FNV-1a 64-bit (hex): stała, nieodwracalna w praktyce nazwa wpisu.
 function voterSlot(text) {
