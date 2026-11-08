@@ -381,6 +381,14 @@ module.exports = [
   { id: "manual-search-empty", category: "Dodatkowe", title: "Podręcznik — wyszukiwanie bez wyników (wspólny pusty stan)", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", devices: ["desktop", "phone"], steps: [manualSearch("qqzzxx", ".empty-state")] },
   { id: "manual-search-hit", category: "Dodatkowe", title: "Podręcznik — wybrany wynik z zaznaczonymi trafieniami", path: "/manual/", sources: [...page("manual"), "web/manual/content/"], ready: ".m-part-card", steps: [manualSearch("kradzież"), async (view) => { await view.locator("#manualSearch .searchText").press("Enter"); await view.locator("mark.m-hit").first().waitFor({ timeout: 5000 }); await view.waitForTimeout(300); }] },
   { id: "account", category: "Dodatkowe", title: "Konto", path: "/account/", sources: page("account"), ready: "main" },
+  // E29: jednorazowa zachęta do powiadomień na stronie Gier (przeglądarka jeszcze nie pytała).
+  { id: "games-push-prompt", category: "Dodatkowe", title: "Moje gry — pasek „Chcesz dostawać powiadomienia…”", path: "/games/", sources: [...page("games"), "web/shared/js/core/push-prompt.js", "web/shared/js/core/push.js"],
+    initScript: () => {
+      try { localStorage.removeItem("push:prompt_dismissed"); } catch {}
+      window.PushManager = window.PushManager || function PushManager() {};
+      Object.defineProperty(window, "Notification", { configurable: true, value: Object.assign(function Notification() {}, { permission: "default", requestPermission: async () => "default" }) });
+    },
+    ready: "#pushPrompt" },
   // E29: powiadomienia na tym urządzeniu włączone (atrapa zgody przeglądarki i subskrypcji usługi push).
   { id: "account-push", category: "Dodatkowe", title: "Konto — powiadomienia na tym urządzeniu (włączone, wybrane rodzaje)", path: "/account/", sources: [...page("account"), "web/shared/js/core/push.js"], fullPage: true,
     initScript: () => {

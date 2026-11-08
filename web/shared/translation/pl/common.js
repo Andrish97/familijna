@@ -1,5 +1,13 @@
 // Tłumaczenia PL — część wspólna — wczytuje ją każda strona.
 const pl = {
+  pushPrompt: {
+    text: "Chcesz dostawać powiadomienia o zaproszeniach, ankietach i udostępnieniach, także przy zamkniętej stronie?",
+    enable: "Włącz",
+    later: "Nie teraz",
+    enabled: "Powiadomienia na tym urządzeniu zostały włączone.",
+    failed: "Nie udało się włączyć powiadomień. Spróbuj w Koncie.",
+    blocked: "Powiadomienia są zablokowane w ustawieniach przeglądarki dla tej strony.",
+  },
   guestReminder: {
     text: "Konto gościa zostanie usunięte za kilka dni. Zapisz swoje dane, zanim je stracisz.",
     link: "Migruj teraz",
