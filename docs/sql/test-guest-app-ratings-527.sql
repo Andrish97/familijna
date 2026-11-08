@@ -4,6 +4,9 @@
 -- Wszystko w transakcji wycofanej na końcu.
 \set ON_ERROR_STOP 1
 begin;
+-- 528 odbiera domyślne EXECUTE nowym funkcjom; pomocnicze pg_temp.* testu
+-- wołane jako authenticated muszą je mieć (cofane razem z transakcją).
+alter default privileges grant execute on functions to public;
 
 -- Konta: B (zwykłe), G (gość), H (gość, który zamieni się w konto),
 -- T (gość testowy e2e).

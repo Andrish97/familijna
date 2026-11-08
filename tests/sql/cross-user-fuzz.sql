@@ -9,6 +9,9 @@
 -- Znane i zamierzone przypadki: lista „expected” na końcu (z uzasadnieniem).
 \set ON_ERROR_STOP 1
 begin;
+-- 528 odbiera domyślne EXECUTE nowym funkcjom; pomocnicze pg_temp.* testu
+-- wołane jako authenticated muszą je mieć (cofane razem z transakcją).
+alter default privileges grant execute on functions to public;
 create temp table probe(code text primary key, leak boolean, note text);
 grant all on probe to public;
 create function pg_temp.as_user(p uuid) returns void language plpgsql as $$ begin
