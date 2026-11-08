@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
+\restrict zrs2TwF0ch2HLZ5UtRqUQKRANAPeSmQSROdRmcbIbK95nnSezqGSytNxtZ3ubkP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -3218,6 +3218,28 @@ $$;
 
 
 --
+-- Name: _market_game_recount("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_market_game_recount"("p_game_id" "uuid") RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  UPDATE public.market_games mg SET
+    rating_count = (SELECT COUNT(*) FROM public.market_game_ratings r
+                    WHERE r.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)),
+    avg_rating   = COALESCE((SELECT ROUND(AVG(r.stars::numeric), 2) FROM public.market_game_ratings r
+                    WHERE r.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)), 0),
+    library_count = (SELECT COUNT(*) FROM public.user_market_library l
+                    WHERE l.market_game_id = p_game_id
+                      AND NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = l.user_id))
+  WHERE mg.id = p_game_id;
+$$;
+
+
+--
 -- Name: _market_submit_game_before_content_guard("uuid", "text", "text", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -4367,6 +4389,7 @@ CREATE FUNCTION "public"."_push_market_pending"() RETURNS "trigger"
     AS $$
 BEGIN
   IF TG_OP = 'UPDATE' AND OLD.status = 'pending' THEN RETURN NULL; END IF;
+  IF public._push_sender_excluded(NEW.author_user_id, NULL) THEN RETURN NULL; END IF;
   PERFORM public.push_admin_event('market', jsonb_build_object('id', NEW.id, 'title', left(NEW.title, 60), 'lang', NEW.lang));
   RETURN NULL;
 EXCEPTION WHEN others THEN
@@ -4406,6 +4429,7 @@ CREATE FUNCTION "public"."_push_messages_inbound"() RETURNS "trigger"
     AS $$
 DECLARE v_n integer; v_ticket text;
 BEGIN
+  IF public._push_sender_excluded(NULL, NEW.from_email) THEN RETURN NULL; END IF;
   IF NEW.source = 'email' THEN
     SELECT count(*) INTO v_n FROM public.messages
      WHERE direction = 'inbound' AND source = 'email' AND NOT is_read AND deleted_at IS NULL
@@ -4483,6 +4507,23 @@ BEGIN
 EXCEPTION WHEN others THEN
   RAISE WARNING '_push_question_job: %', sqlerrm; RETURN NULL;
 END $$;
+
+
+--
+-- Name: _push_sender_excluded("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_sender_excluded"("p_user" "uuid", "p_email" "text") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = p_user)
+      OR (nullif(btrim(p_email), '') IS NOT NULL AND (
+            public.is_test_email(p_email)
+            OR EXISTS (SELECT 1 FROM public.profiles p
+                       JOIN public.stats_exclusions_effective e ON e.user_id = p.id
+                       WHERE lower(p.email) = lower(btrim(p_email)))));
+$$;
 
 
 --
@@ -5850,7 +5891,8 @@ DECLARE
   v_guest boolean;
 BEGIN
   SELECT p.is_guest INTO v_guest FROM public.profiles p WHERE p.id = OLD.user_id;
-  IF NOT coalesce(v_guest, NEW.from_guest) OR public.is_test_user(OLD.user_id) THEN
+  IF NOT coalesce(v_guest, NEW.from_guest)
+     OR EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = OLD.user_id) THEN
     DELETE FROM public.app_ratings WHERE id = NEW.id;
   END IF;
   RETURN NULL;
@@ -6087,19 +6129,11 @@ CREATE FUNCTION "public"."base_can_access"("p_base_id" "uuid", "p_user_id" "uuid
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b
     where b.id = p_base_id
-      and (
-        b.owner_id = p_user_id
-        or exists (
-          select 1
-          from public.question_base_shares s
-          where s.base_id = b.id
-            and s.user_id = p_user_id
-        )
-      )
+      and (b.owner_id = p_user_id
+        or exists (select 1 from public.question_base_shares s where s.base_id = b.id and s.user_id = p_user_id))
   );
 $$;
 
@@ -6113,20 +6147,12 @@ CREATE FUNCTION "public"."base_can_edit"("p_base_id" "uuid", "p_user_id" "uuid")
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b
     where b.id = p_base_id
-      and (
-        b.owner_id = p_user_id
-        or exists (
-          select 1
-          from public.question_base_shares s
-          where s.base_id = b.id
-            and s.user_id = p_user_id
-            and s.role = 'editor'
-        )
-      )
+      and (b.owner_id = p_user_id
+        or exists (select 1 from public.question_base_shares s
+                   where s.base_id = b.id and s.user_id = p_user_id and s.role = 'editor'))
   );
 $$;
 
@@ -6157,11 +6183,8 @@ CREATE FUNCTION "public"."base_is_owner"("p_base_id" "uuid", "p_user_id" "uuid")
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
-    where b.id = p_base_id
-      and b.owner_id = p_user_id
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b where b.id = p_base_id and b.owner_id = p_user_id
   );
 $$;
 
@@ -6406,9 +6429,9 @@ CREATE FUNCTION "public"."base_share_token_info"("p_token" "text") RETURNS TABLE
     t.status,
     t.base_id,
     t.recipient_user_id,
-    t.recipient_email,
+    null::text as recipient_email,
     t.owner_id,
-    op.email as owner_email,
+    null::text as owner_email,
     op.username as owner_username
   from public.base_share_tasks t
   JOIN public.question_bases b ON b.id=t.base_id AND b.owner_id=t.owner_id
@@ -7785,100 +7808,6 @@ BEGIN
   v_session_id := (v_data->>'session_id')::uuid;
   UPDATE public.control_runtime_sessions SET device_protocol=2 WHERE id=v_session_id;
   RETURN v_data || jsonb_build_object('device_protocol',2);
-END;
-$$;
-
-
---
--- Name: cooldown_email_get("text", "text"[]); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_get"("p_email" "text", "p_action_keys" "text"[]) RETURNS TABLE("action_key" "text", "next_allowed_at" timestamp with time zone)
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  RETURN QUERY
-  SELECT ec.action_key, ec.next_allowed_at
-  FROM public.email_cooldowns ec
-  WHERE ec.email_hash = h
-    AND ec.action_key = ANY(p_action_keys);
-END;
-$$;
-
-
---
--- Name: cooldown_email_release("text", "text", integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_release"("p_email" "text", "p_action_key" "text", "p_max_age_seconds" integer DEFAULT 60) RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  UPDATE public.email_cooldowns
-     SET next_allowed_at = now(),
-         updated_at = now()
-   WHERE email_hash = h
-     AND action_key = p_action_key
-     AND updated_at >= (now() - make_interval(secs => p_max_age_seconds));
-
-  RETURN TRUE;
-END;
-$$;
-
-
---
--- Name: cooldown_email_reserve("text", "text", integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_reserve"("p_email" "text", "p_action_key" "text", "p_cooldown_seconds" integer) RETURNS TABLE("ok" boolean, "next_allowed_at" timestamp with time zone)
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-  cur_next timestamptz;
-  new_next timestamptz;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  SELECT ec.next_allowed_at
-    INTO cur_next
-  FROM public.email_cooldowns ec
-  WHERE ec.email_hash = h
-    AND ec.action_key = p_action_key
-  FOR UPDATE;
-
-  IF NOT FOUND THEN
-    new_next := now() + make_interval(secs => p_cooldown_seconds);
-    INSERT INTO public.email_cooldowns(email_hash, action_key, next_allowed_at, updated_at)
-    VALUES (h, p_action_key, new_next, now());
-    RETURN QUERY SELECT TRUE, new_next;
-    RETURN;
-  END IF;
-
-  IF cur_next <= now() THEN
-    new_next := now() + make_interval(secs => p_cooldown_seconds);
-    UPDATE public.email_cooldowns
-      SET next_allowed_at = new_next,
-          updated_at = now()
-      WHERE email_hash = h
-        AND action_key = p_action_key;
-    RETURN QUERY SELECT TRUE, new_next;
-    RETURN;
-  END IF;
-
-  RETURN QUERY SELECT FALSE, cur_next;
-  RETURN;
 END;
 $$;
 
@@ -10975,9 +10904,12 @@ BEGIN
     WHERE s.status = 'legacy' AND NOT (g.owner_id = ANY(excluded_ids));
 
   -- Polls
-  SELECT COUNT(*) INTO poll_sessions_7d FROM public.poll_sessions WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO poll_votes_7d    FROM public.poll_votes    WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO poll_votes_total FROM public.poll_votes;
+  SELECT COUNT(*) INTO poll_sessions_7d FROM public.poll_sessions ps JOIN public.games g ON g.id = ps.game_id
+    WHERE ps.created_at >= now() - interval '7 days' AND NOT (g.owner_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO poll_votes_7d    FROM public.poll_votes v JOIN public.games g ON g.id = v.game_id
+    WHERE v.created_at >= now() - interval '7 days' AND NOT (g.owner_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO poll_votes_total FROM public.poll_votes v JOIN public.games g ON g.id = v.game_id
+    WHERE NOT (g.owner_id = ANY(excluded_ids));
 
   -- Question bases
   SELECT COUNT(*) INTO bases_total     FROM public.question_bases WHERE is_demo = false AND NOT (owner_id = ANY(excluded_ids));
@@ -11000,11 +10932,18 @@ BEGIN
   END;
 
   -- Ratings
-  SELECT COUNT(*) INTO total_ratings FROM public.app_ratings;
-  SELECT COALESCE(ROUND(AVG(stars), 1), 0) INTO avg_rating FROM public.app_ratings;
-  SELECT COUNT(*) INTO ratings_new_today FROM public.app_ratings WHERE created_at >= CURRENT_DATE;
-  SELECT COUNT(*) INTO ratings_new_7d    FROM public.app_ratings WHERE created_at >= now() - interval '7 days';
-  SELECT COUNT(*) INTO ratings_new_30d   FROM public.app_ratings WHERE created_at >= now() - interval '30 days';
+  -- 529: bez kont wykluczonych (testowe i ręcznie); ocena wygasłego gościa
+  -- (user_id null) zostaje.
+  SELECT COUNT(*) INTO total_ratings FROM public.app_ratings r
+    WHERE r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids));
+  SELECT COALESCE(ROUND(AVG(r.stars), 1), 0) INTO avg_rating FROM public.app_ratings r
+    WHERE r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids));
+  SELECT COUNT(*) INTO ratings_new_today FROM public.app_ratings r WHERE r.created_at >= CURRENT_DATE
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
+  SELECT COUNT(*) INTO ratings_new_7d    FROM public.app_ratings r WHERE r.created_at >= now() - interval '7 days'
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
+  SELECT COUNT(*) INTO ratings_new_30d   FROM public.app_ratings r WHERE r.created_at >= now() - interval '30 days'
+    AND (r.user_id IS NULL OR NOT (r.user_id = ANY(excluded_ids)));
 
   result := jsonb_build_object(
     'timestamp', now(),
@@ -11794,6 +11733,7 @@ BEGIN
         rt.created_at
       FROM public.app_ratings rt
       LEFT JOIN public.profiles pr ON pr.id = rt.user_id
+      WHERE rt.user_id IS NULL OR NOT (rt.user_id = ANY(excluded_ids))
       ORDER BY rt.created_at DESC
       LIMIT p_limit
     ) r;
@@ -15780,17 +15720,19 @@ END $$;
 
 
 --
--- Name: poll_go_owner_email_match("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+-- Name: poll_go_owner_email_blocked("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION "public"."poll_go_owner_email_match"("p_owner_id" "uuid", "p_email" "text") RETURNS "text"
+CREATE FUNCTION "public"."poll_go_owner_email_blocked"("p_token" "uuid", "p_email" "text") RETURNS "text"
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT coalesce(nullif(username, ''), email)
-  FROM public.profiles
-  WHERE id = p_owner_id
-    AND lower(btrim(email)) = lower(btrim(coalesce(p_email, '')))
+  SELECT nullif(p.username, '')
+  FROM public.poll_subscriptions ps
+  JOIN public.profiles p ON p.id = ps.owner_id
+  WHERE ps.token = p_token
+    AND lower(btrim(p.email)) = lower(btrim(coalesce(p_email, '')))
+  LIMIT 1
 $$;
 
 
@@ -19778,6 +19720,29 @@ $$;
 
 
 --
+-- Name: stats_excluded_users_recount(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."stats_excluded_users_recount"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+DECLARE
+  v_user uuid := CASE WHEN tg_op = 'DELETE' THEN OLD.user_id ELSE NEW.user_id END;
+  v_game uuid;
+BEGIN
+  FOR v_game IN
+    SELECT market_game_id FROM public.market_game_ratings WHERE user_id = v_user
+    UNION SELECT market_game_id FROM public.user_market_library WHERE user_id = v_user
+  LOOP
+    PERFORM public._market_game_recount(v_game);
+  END LOOP;
+  RETURN NULL;
+END;
+$$;
+
+
+--
 -- Name: stats_unexclude_user("uuid"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -20066,19 +20031,11 @@ END $$;
 --
 
 CREATE FUNCTION "public"."sync_market_game_rating_stats"() RETURNS "trigger"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public', 'extensions', 'pg_temp'
     AS $$
-DECLARE v_id uuid;
 BEGIN
-  v_id := COALESCE(NEW.market_game_id, OLD.market_game_id);
-  UPDATE public.market_games
-  SET
-    rating_count = (SELECT COUNT(*) FROM public.market_game_ratings r
-                    WHERE r.market_game_id = v_id AND NOT public.is_test_user(r.user_id)),
-    avg_rating   = COALESCE((SELECT ROUND(AVG(r.stars::numeric), 2) FROM public.market_game_ratings r
-                    WHERE r.market_game_id = v_id AND NOT public.is_test_user(r.user_id)), 0)
-  WHERE id = v_id;
+  PERFORM public._market_game_recount(COALESCE(NEW.market_game_id, OLD.market_game_id));
   RETURN NULL;
 END;
 $$;
@@ -20348,25 +20305,12 @@ CREATE FUNCTION "public"."trg_market_library_count"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-begin
-    if tg_op = 'INSERT' then
-        update public.market_games
-           set library_count = library_count + 1,
-               updated_at    = now()
-         where id = new.market_game_id;
-        return new;
-    end if;
-
-    if tg_op = 'DELETE' then
-        update public.market_games
-           set library_count = greatest(0, library_count - 1),
-               updated_at    = now()
-         where id = old.market_game_id;
-        return old;
-    end if;
-
-    return null;
-end;
+BEGIN
+  PERFORM public._market_game_recount(CASE WHEN tg_op = 'DELETE' THEN OLD.market_game_id ELSE NEW.market_game_id END);
+  UPDATE public.market_games SET updated_at = now()
+   WHERE id = CASE WHEN tg_op = 'DELETE' THEN OLD.market_game_id ELSE NEW.market_game_id END;
+  RETURN CASE WHEN tg_op = 'DELETE' THEN OLD ELSE NEW END;
+END;
 $$;
 
 
@@ -25271,6 +25215,13 @@ CREATE TRIGGER "resource_copy_mail_epoch" AFTER UPDATE ON "public"."resource_cop
 
 
 --
+-- Name: stats_excluded_users stats_excluded_users_recount; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "stats_excluded_users_recount" AFTER INSERT OR DELETE ON "public"."stats_excluded_users" FOR EACH ROW EXECUTE FUNCTION "public"."stats_excluded_users_recount"();
+
+
+--
 -- Name: games storage_cleanup_kick; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -28358,5 +28309,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
+\unrestrict zrs2TwF0ch2HLZ5UtRqUQKRANAPeSmQSROdRmcbIbK95nnSezqGSytNxtZ3ubkP
 

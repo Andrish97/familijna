@@ -1,10 +1,10 @@
-import { sb, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-08T15560";
-import { t } from "../../translation/translation.js?v=v2026-11-08T15560";
-import { getDevicePresenceMeta } from "./device-context.js?v=v2026-11-08T15560";
-import { startTicker } from "./background-ticker.js?v=v2026-11-08T15560";
-import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T15560";
-import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "./session-log.js?v=v2026-11-08T15560";
-import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-08T15560";
+import { sb, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-08T17365";
+import { t } from "../../translation/translation.js?v=v2026-11-08T17365";
+import { getDevicePresenceMeta } from "./device-context.js?v=v2026-11-08T17365";
+import { startTicker } from "./background-ticker.js?v=v2026-11-08T17365";
+import { blockingScreen, setBlockingIcon, setBlockingOpen } from "./blocking-screen.js?v=v2026-11-08T17365";
+import { collectDeviceInfo, createSessionLog, watchPageLifecycle, watchRuntimeErrors } from "./session-log.js?v=v2026-11-08T17365";
+import { onWakeLockChange } from "./keep-alive.js?v=v2026-11-08T17365";
 
 
 const HEARTBEAT_MS = 3_000;
@@ -157,8 +157,19 @@ export function createDeviceLease({ gameId, deviceType, key, onState }) {
         const base = params();
         return firstRegistration ? { ...base, p_meta: { ...base.p_meta, takeover: true } } : base;
       };
-      let data = await call(shouldRegister ? "control_device_instance_register" : "control_device_instance_heartbeat",
-        shouldRegister ? registerParams() : { ...params(), p_epoch: epoch });
+      let data;
+      try {
+        data = await call(shouldRegister ? "control_device_instance_register" : "control_device_instance_heartbeat",
+          shouldRegister ? registerParams() : { ...params(), p_epoch: epoch });
+      } catch (error) {
+        // Baza oznacza połączenie 'expired', gdy jego heartbeat spóźnił się
+        // ponad 12 s, a slot przejęło inne połączenie tego urządzenia; heartbeat
+        // dostaje wtedy wyjątek 'connection_expired' (400), nie stan w danych.
+        // Bez nowej rejestracji karta ponawiała ten sam heartbeat co 3 s
+        // w nieskończoność (serie 400 w logu bramki, 8.11).
+        if (shouldRegister || String(error?.message || "") !== "connection_expired") throw error;
+        data = { mode: "lease", state: "expired" };
+      }
       if (shouldRegister) firstRegistration = false;
       if (!shouldRegister && data?.mode === "lease" && data?.state === "expired") {
         // Another connection may have promoted while this tab was suspended.

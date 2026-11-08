@@ -134,6 +134,10 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   pytania, także po zakończeniu paczki. Zatrzymać się tylko przy kluczowej
   decyzji architektonicznej, której brak w ustaleniach. Manual zawsze na końcu.
 - Najpierw branch roboczy, testy, potem push na `main`.
+- **Stała zgoda na push na `main` (decyzja użytkownika 2026-11-08):** agent
+  wypycha na `main` (migracje, Pages, panel admina) bez pytania o zgodę za
+  każdym razem — bramki wdrożenia (testy, log migracji, kontrola produkcji)
+  obowiązują dalej.
 - Unit: `cd tests && node --test unit/*.test.js`.
 - E2E: workflow `e2e-tests.yml` (workflow_dispatch) z niepustym
   `spec_filter` — nigdy całego zestawu (`scripts/agent-tools/e2e-seq.sh`). Spece z `tests/e2e/helpers/local-site.js`

@@ -7,6 +7,9 @@
 --   psql -h /var/tmp/pgfam -p 5499 -U postgres -d fam -f tests/sql/abuse-probes.sql
 \set ON_ERROR_STOP 1
 begin;
+-- 528 odbiera domyślne EXECUTE nowym funkcjom; pomocnicze pg_temp.* testu
+-- wołane jako authenticated muszą je mieć (cofane razem z transakcją).
+alter default privileges grant execute on functions to public;
 
 create temp table probe(code text primary key, leak boolean, note text);
 grant all on probe to public;

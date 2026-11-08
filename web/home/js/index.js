@@ -1,13 +1,13 @@
-import { redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T15560";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T15560";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15560";
-import { initI18n, withLangParam, applyTranslations, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-08T15560";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T15560";
-import { icon, starRating } from "../../shared/js/core/icons.js?v=v2026-11-08T15560";
-import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-08T15560";
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15560";
-import { setProgress, setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T15560";
-import { homeSeo, homeSchemas, schemaJson } from "../../shared/js/core/home-seo.js?v=v2026-11-08T15560";
+import { redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T17365";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T17365";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T17365";
+import { initI18n, withLangParam, applyTranslations, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-08T17365";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T17365";
+import { icon, starRating } from "../../shared/js/core/icons.js?v=v2026-11-08T17365";
+import { onSwipe } from "../../shared/js/core/swipe.js?v=v2026-11-08T17365";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T17365";
+import { setProgress, setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-08T17365";
+import { homeSeo, homeSchemas, schemaJson } from "../../shared/js/core/home-seo.js?v=v2026-11-08T17365";
 
 
 async function redirectIfSession() {
@@ -369,7 +369,7 @@ function initShotCarousels() {
 function initImageViewer() {
   const main = document.querySelector("main.wrap");
   let viewerPromise;
-  const getViewer = () => viewerPromise ||= import("../../shared/js/core/image-viewer.js?v=v2026-11-08T15560").then(({ createImageViewer }) => createImageViewer({
+  const getViewer = () => viewerPromise ||= import("../../shared/js/core/image-viewer.js?v=v2026-11-08T17365").then(({ createImageViewer }) => createImageViewer({
     mount: main,
     before: main?.querySelector(":scope > .footer") || null,
     backBtn: document.getElementById("btnImageViewerBack"),
