@@ -1,7 +1,7 @@
 // Liczniki skrótów do Znajomych i Subskrybentów.
 // Znajomi: oczekujące zaproszenia przychodzące (badges_get).
 // Subskrybenci: aktywne adresy na liście właściciela (contacts_list).
-import { sb } from "./supabase.js?v=v2026-11-08T23092";
+import { sb } from "./supabase.js?v=v2026-11-08T23100";
 
 // badges_get wołają topbar (Znajomi), Gry (Zadania) i Bazy — równoczesne
 // wywołania dzielą jedno zapytanie, wynik ważny BADGES_TTL_MS (wcześniej
