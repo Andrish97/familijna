@@ -88,6 +88,23 @@ test('VAPID: JWT ES256 z aud = origin usługi, podpis zgodny z kluczem publiczny
   assert.ok(ok, 'podpis VAPID poprawny');
 });
 
+test('VAPID: klucz prywatny bez zer wiodących (31 bajtów) dopełniany do 32 — podpis poprawny', async () => {
+  // Node getPrivateKey() obcina zera wiodące: co ~256. klucz ma 31 bajtów
+  // (losowo czerwony test wyżej, CI 42531769974). Szukamy takiego klucza.
+  let ecdh;
+  for (let i = 0; i < 5000; i++) {
+    ecdh = crypto.createECDH('prime256v1');
+    ecdh.generateKeys();
+    if (ecdh.getPrivateKey().length < 32) break;
+  }
+  assert.ok(ecdh.getPrivateKey().length < 32, 'znaleziony klucz 31-bajtowy');
+  const vapid = { publicKey: b64urlEncode(ecdh.getPublicKey()), privateKey: b64urlEncode(ecdh.getPrivateKey()), subject: 'mailto:kontakt@familijna.app' };
+  const header = await vapidAuthorization('https://fcm.googleapis.com/fcm/send/abc', vapid, 1_800_000_000);
+  const m = header.match(/^vapid t=([^.]+)\.([^.]+)\.([^,]+), k=(.+)$/);
+  const pub = crypto.createPublicKey({ key: { kty: 'EC', crv: 'P-256', x: b64urlEncode(ecdh.getPublicKey().subarray(1, 33)), y: b64urlEncode(ecdh.getPublicKey().subarray(33)) }, format: 'jwk' });
+  assert.ok(crypto.verify('sha256', Buffer.from(`${m[1]}.${m[2]}`), { key: pub, dsaEncoding: 'ieee-p1363' }, Buffer.from(b64urlDecode(m[3]))));
+});
+
 test('żądanie push: nagłówki usługi i temat oczyszczony do 32 znaków', async () => {
   const dev = newDevice();
   const ecdh = crypto.createECDH('prime256v1');

@@ -32,8 +32,12 @@ function ecJwk(publicRaw, privateRaw) {
   if (publicRaw.length !== 65 || publicRaw[0] !== 4) throw new Error("invalid_public_key");
   const jwk = { kty: "EC", crv: "P-256", x: b64urlEncode(publicRaw.slice(1, 33)), y: b64urlEncode(publicRaw.slice(33, 65)), ext: true };
   if (privateRaw) {
-    if (privateRaw.length !== 32) throw new Error("invalid_private_key");
-    jwk.d = b64urlEncode(privateRaw);
+    // Klucz P-256 bywa zapisany bez zer wiodących (np. Node getPrivateKey()
+    // co ~256. klucz daje 31 bajtów) — dopełniamy do 32, dłuższy jest błędny.
+    if (!privateRaw.length || privateRaw.length > 32) throw new Error("invalid_private_key");
+    const d = new Uint8Array(32);
+    d.set(privateRaw, 32 - privateRaw.length);
+    jwk.d = b64urlEncode(d);
   }
   return jwk;
 }
