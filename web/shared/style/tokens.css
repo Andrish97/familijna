@@ -110,6 +110,9 @@
   --r-md: 14px;                  /* przyciski, pola, wiersze, kafle */
   --r-lg: 20px;                  /* karty, okna, wypustki */
   --r-sheet: 28px;               /* górne rogi arkusza na telefonie */
+  /* Miejsce na poświatę fokusu/zaznaczenia (pierścień do 3 px) przy krawędzi
+     przewijanego kontenera: wcięcie skompensowane ujemnym marginesem. */
+  --ring-room: 4px;
   --r-pill: 999px;
 
   /* ── typografia ─────────────────────────────────────────────── */

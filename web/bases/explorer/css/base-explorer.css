@@ -1266,6 +1266,9 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    /* poświata pola nazwy przy bocznych krawędziach (--ring-room) */
+    padding-inline: var(--ring-room);
+    margin-inline: calc(-1 * var(--ring-room));
   }
 
   .export-modal .xGrid2 {
@@ -1551,7 +1554,8 @@
   }
 
   /* ===== Okno Przenieś do / Kopiuj do (ui/move-modal.js) ===== */
-  .moveBody { display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+  /* poświata wyszukiwarki przy krawędziach (--ring-room); u góry bez marginesu */
+  .moveBody { display: flex; flex-direction: column; gap: 10px; min-height: 0; padding: var(--ring-room) var(--ring-room) 0; margin: calc(-1 * var(--ring-room)) calc(-1 * var(--ring-room)) 0; }
   .moveSearch { flex: 0 0 auto; margin-right: 0; width: 100%; box-sizing: border-box; } /* .searchBox z paska ma margin-right */
   .moveSearch .ico { width: 16px; height: 16px; color: var(--text-muted); }
   /* ===== Drzewo folderów — jeden wygląd (lewy panel i okno „Przenieś do”,

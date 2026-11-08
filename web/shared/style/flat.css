@@ -1217,7 +1217,9 @@
     gap: 12px;
   }
   .uni-body {
-    margin-top: 14px;
+    /* miejsce na poświatę pól przy krawędzi przewijanej treści (--ring-room) */
+    margin: calc(14px - var(--ring-room)) calc(-1 * var(--ring-room)) calc(-1 * var(--ring-room));
+    padding: var(--ring-room);
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -3107,8 +3109,8 @@
      (zgłoszenie 2026-11-08: okno „Szukaj…” na telefonie). */
   :where(:root[data-sheet]) .modal--sheet.sheet-active .sheet-modal-body {
     flex: 1 1 auto;
-    margin: -4px;
-    padding: 4px;
+    margin: calc(-1 * var(--ring-room));
+    padding: var(--ring-room);
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
@@ -3145,6 +3147,9 @@
     flex: 0 1 auto;
     min-height: 0;
     overflow: hidden;
+    /* poświata pól przy bocznych krawędziach wypełnienia (--ring-room) */
+    padding-inline: var(--ring-room);
+    margin-inline: calc(-1 * var(--ring-room));
   }
   :where(:root[data-sheet]) .modal--sheet.sheet-active .sheet-fill > .shareSection { margin: 0; }
   :where(:root[data-sheet]) .modal--sheet.sheet-active .sheet-modal-body:has(.sheet-fill:not([hidden]), > .sheet-scroll:not([hidden])) > :not(.sheet-fill, .sheet-scroll),

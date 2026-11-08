@@ -398,6 +398,79 @@ function inspectLayout(opts) {
     if (getComputedStyle(el).display !== "none") add("hidden-widoczny", el, `display: ${getComputedStyle(el).display}`);
   }
 
+  // Poświata/obwódka (outline, box-shadow ze spread: zaznaczenie, fokus) ucięta
+  // przez przodka z overflow innym niż visible (zgłoszenie 2026-11-08: kanciasta
+  // poświata pola w oknie od dołu, zaznaczone pytanie w edytorze gry). Pola
+  // tekstowe sprawdzane także z kursorem (fokus, :focus-within), bez animacji.
+  const ringOf = (st) => {
+    const e = { l: 0, r: 0, t: 0, b: 0 };
+    if (st.outlineStyle !== "none") {
+      const w = parseFloat(st.outlineWidth) || 0, v = w + (parseFloat(st.outlineOffset) || 0);
+      if (w > 0 && v > 0) Object.assign(e, { l: v, r: v, t: v, b: v });
+    }
+    if (st.boxShadow && st.boxShadow !== "none") {
+      for (const sh of st.boxShadow.split(/,(?![^(]*\))/)) {
+        if (/inset/.test(sh)) continue;
+        const n = (sh.replace(/[a-z-]+\([^)]*\)|#[0-9a-f]+/gi, "").match(/-?[\d.]+px/g) || []).map(parseFloat);
+        const [x = 0, y = 0, , spread = 0] = n;
+        // spread > 24 px: maska przyciemniająca (np. poza kadrem), nie obwódka
+        if (spread <= 0 || spread > 24) continue;
+        e.l = Math.max(e.l, spread - x); e.r = Math.max(e.r, spread + x);
+        e.t = Math.max(e.t, spread - y); e.b = Math.max(e.b, spread + y);
+      }
+    }
+    return e;
+  };
+  const ringClipped = (el, note = "") => {
+    const ring = ringOf(getComputedStyle(el));
+    if (Math.max(ring.l, ring.r, ring.t, ring.b) < 0.5) return;
+    const r = el.getBoundingClientRect();
+    for (let a = el.parentElement; a && a !== document.documentElement; a = a.parentElement) {
+      const st = getComputedStyle(a);
+      if (st.overflowX === "visible" && st.overflowY === "visible") continue;
+      const ar = a.getBoundingClientRect();
+      const c = { l: ar.left + (parseFloat(st.borderLeftWidth) || 0), r: ar.right - (parseFloat(st.borderRightWidth) || 0),
+        t: ar.top + (parseFloat(st.borderTopWidth) || 0), b: ar.bottom - (parseFloat(st.borderBottomWidth) || 0) };
+      if (r.right <= c.l || r.left >= c.r || r.bottom <= c.t || r.top >= c.b) return;
+      const sides = [];
+      // W osi przewijania liczy się tylko krawędź treści (początek/koniec
+      // przewijania) — w środku listy element zawsze może stać przy krawędzi.
+      const atStart = (axis) => !/(auto|scroll)/.test(axis === "x" ? st.overflowX : st.overflowY) || (axis === "x" ? a.scrollLeft : a.scrollTop) <= 0.5;
+      const atEnd = (axis) => !/(auto|scroll)/.test(axis === "x" ? st.overflowX : st.overflowY) ||
+        (axis === "x" ? a.scrollLeft >= a.scrollWidth - a.clientWidth - 0.5 : a.scrollTop >= a.scrollHeight - a.clientHeight - 0.5);
+      if (st.overflowX !== "visible") {
+        if (atStart("x") && r.left >= c.l - 0.5 && r.left - ring.l < c.l - 0.5) sides.push("lewo");
+        if (atEnd("x") && r.right <= c.r + 0.5 && r.right + ring.r > c.r + 0.5) sides.push("prawo");
+      }
+      if (st.overflowY !== "visible") {
+        if (atStart("y") && r.top >= c.t - 0.5 && r.top - ring.t < c.t - 0.5) sides.push("góra");
+        if (atEnd("y") && r.bottom <= c.b + 0.5 && r.bottom + ring.b > c.b + 0.5) sides.push("dół");
+      }
+      if (sides.length) add("obcieta-poswiata", el, `${note}${sides.join(", ")} — przycina ${label(a)} (overflow ${st.overflowX}/${st.overflowY})`);
+      return;
+    }
+  };
+  for (const el of root.querySelectorAll("*")) {
+    if (el.closest("svg, canvas")) continue;
+    if (visible(el)) ringClipped(el);
+  }
+  {
+    const calm = document.createElement("style");
+    calm.textContent = "*, *::before, *::after { transition: none !important; animation: none !important; }";
+    document.head.append(calm);
+    const before = document.activeElement;
+    const fields = [...root.querySelectorAll("input:not([type=checkbox]):not([type=radio]):not([type=hidden]):not([type=range]):not([type=color]), textarea")]
+      .filter((el) => !el.disabled && visible(el)).slice(0, 12);
+    for (const f of fields) {
+      f.focus({ preventScroll: true });
+      if (document.activeElement !== f) continue;
+      for (let e = f, i = 0; e && i < 3; e = e.parentElement, i++) ringClipped(e, "fokus: ");
+      f.blur();
+    }
+    if (before && before.focus && before !== document.body) before.focus({ preventScroll: true });
+    calm.remove();
+  }
+
   // Uniknąć powtórzeń (te same elementy w listach).
   const seen = new Set();
   return out.filter((p) => { const k = `${p.kind}|${p.el.replace(/:\d+/g, "")}`; if (seen.has(k)) return false; seen.add(k); return true; });

@@ -364,6 +364,10 @@
     background: linear-gradient(var(--w-8), var(--w-8)) var(--under); /* jak .btn */
     overflow: hidden;
   }
+  /* Steper przycina rogi (overflow), więc poświata fokusu jest na całej ramce
+     stepera, nie na polu w środku (byłaby ucięta u góry i u dołu). */
+  .stepper:focus-within{ border-color: var(--g-35); box-shadow: 0 0 0 3px var(--g-10); }
+  .stepper .inp:focus-visible{ box-shadow: none; }
   .editorToolbar .stepper .stepBtn{
     height: 100%;
     min-height: 0;
@@ -644,6 +648,8 @@
     border-radius: var(--r-md);
     border: 1px solid var(--line-faint);
     overflow:hidden;
+    /* obraz nie dotyka krawędzi: obwódka ramki kadru cała (--ring-room) */
+    padding: var(--ring-room);
     display:flex;
     align-items:center;
     justify-content:center;
@@ -825,6 +831,9 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
+    /* pierścień zaznaczonego kafla przy krawędziach przewijanej siatki (--ring-room) */
+    padding: var(--ring-room);
+    margin: calc(-1 * var(--ring-room));
     -webkit-overflow-scrolling: touch;
     /* bez scrollbar-gutter: stała rezerwa na pasek przewijania odsuwała kafle
        od prawej krawędzi — marginesy mają być symetryczne jak w Grach i Bazach */

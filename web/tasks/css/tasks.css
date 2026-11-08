@@ -8,7 +8,9 @@
     min-height: 0;
     overflow: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 0 0 12px;
+    /* poświata pola szukania przy bocznych krawędziach (--ring-room) */
+    padding: 0 var(--ring-room) 12px;
+    margin-inline: calc(-1 * var(--ring-room));
     border-radius: var(--r-md);
   }
   .tasks-card .rowsSection + .rowsSection{
