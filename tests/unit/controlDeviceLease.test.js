@@ -156,3 +156,55 @@ test("refresh() po powrocie karty czeka na heartbeat w toku i zwraca nową rolę
   assert.deepEqual(calls, ["control_device_instance_register", "control_device_instance_heartbeat"]);
   lease.stop();
 });
+
+test("heartbeat z wyjątkiem connection_expired (baza oznaczyła połączenie jako wygasłe) rejestruje nową instancję", async () => {
+  const calls = [];
+  let heartbeatError = null;
+  let registerEpoch = 1;
+  const client = {
+    rpc(name, params) {
+      calls.push({ name, params });
+      return { abortSignal: async () => name === "control_device_instance_heartbeat"
+        ? { data: null, error: heartbeatError }
+        : { data: { mode: "lease", state: "primary", epoch: registerEpoch }, error: null } };
+    },
+  };
+  const listeners = new Map();
+  let nextId = 0;
+  const context = {
+    sb: () => client, t: key => key,
+    document: { visibilityState: "visible", hasFocus: () => true, addEventListener() {}, removeEventListener() {}, getElementById: () => null },
+    window: { addEventListener(name, fn) { listeners.set(name, fn); }, removeEventListener() {} },
+    crypto: { randomUUID: () => `connection-${++nextId}` }, AbortSignal,
+    getDevicePresenceMeta: () => ({}), startTicker: () => () => {}, ...sessionLogStubs(), navigator: { onLine: true },
+  };
+  const create = vm.runInNewContext(`${source}; createDeviceLease;`, context);
+  const lease = create({ gameId: "game", deviceType: "display", key: "key" });
+  await lease.start();
+  const originalId = lease.connectionId;
+
+  heartbeatError = { message: "connection_expired", code: "P0001" };
+  registerEpoch = 4;
+  listeners.get("focus")();
+  await new Promise(resolve => setImmediate(resolve));
+
+  assert.deepEqual(calls.map(call => call.name), [
+    "control_device_instance_register",
+    "control_device_instance_heartbeat",
+    "control_device_instance_register",
+  ]);
+  assert.notEqual(lease.connectionId, originalId);
+  assert.equal(calls[2].params.p_connection_id, lease.connectionId);
+  assert.equal(calls[2].params.p_meta.takeover, undefined, "bez przejęcia — kolejka jak przy wznowieniu");
+  assert.equal(lease.state, "primary");
+  assert.equal(lease.actionArgs().p_epoch, 4);
+
+  // Inny błąd (np. limit czasu) nie zmienia połączenia.
+  heartbeatError = { message: "TimeoutError" };
+  const idBefore = lease.connectionId;
+  listeners.get("focus")();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(lease.connectionId, idBefore);
+  assert.equal(lease.state, "unavailable");
+  lease.stop();
+});
