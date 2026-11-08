@@ -355,15 +355,21 @@ test("ustawienia gry: wygląd — reset sekcji przywraca domyślne kolory", asyn
   await loginAs(page, context, accounts.standard[0]);
 
   const gameId = await createGame(page, {
-    settings: { display: { colors: { A: "#111111", B: "#222222", BACKGROUND: "#333333", DOT: "#444444" }, theme: null, logoId: null } },
+    settings: { display: { colors: { A: "#111111", B: "#222222", BACKGROUND: "#333333", DOT: "#444444" }, theme: "modern", logoId: null } },
   });
   try {
     await openSettings(page, gameId);
     await switchTab(page, "display");
     await expect(page.locator('.swatchBtn[data-color-key="A"]')).toHaveCSS("background-color", "rgb(17, 17, 17)");
+    // Podgląd Wyświetlacza w motywie z ustawień (paski motywu „modern”).
+    const display = page.frameLocator("#gsDisplayIframeHolder iframe");
+    await expect(display.locator(".modern-slot").first()).toBeAttached({ timeout: 20_000 });
 
     await page.locator("#btnDisplayReset").click();
     await page.locator(".uni-foot .btn.gold:visible").click(); // potwierdź reset sekcji
+
+    // Reset wraca też do motywu domyślnego w podglądzie (dawniej zostawał poprzedni).
+    await expect(display.locator(".modern-slot")).toHaveCount(0, { timeout: 20_000 });
 
     // Domyślny kolor A z DEFAULT_SETTINGS to #FF8C1A = rgb(255,140,26) (zapis: wielkie litery, core/color.js)
     await expect(page.locator('.swatchBtn[data-color-key="A"]')).toHaveCSS("background-color", "rgb(255, 140, 26)");
