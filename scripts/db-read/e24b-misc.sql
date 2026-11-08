@@ -1,7 +1,7 @@
 -- Przegląd E24 (2026-11): domyślne prawa i inne schematy (same liczby/bool).
 -- def_*: wpisy ALTER DEFAULT PRIVILEGES w public dające anon/authenticated prawa do nowych tabel (r) / funkcji (f).
 -- fn_public_exec: funkcje public (dowolne) wykonywalne przez PUBLIC (bez REVOKE). definer_total: wszystkie SECURITY DEFINER w public.
--- rt_pol: polityki realtime.messages; graphql: rozszerzenie pg_graphql; st_pol_*: polityki storage.objects.
+-- rt_pol: polityki realtime.messages, graphql: rozszerzenie pg_graphql, st_pol_*: polityki storage.objects.
 select
   (select count(*) from pg_default_acl d, aclexplode(d.defaclacl) a where d.defaclnamespace = 'public'::regnamespace and d.defaclobjtype = 'r' and a.grantee in ('anon'::regrole, 'authenticated'::regrole)) as def_tables,
   (select count(*) from pg_default_acl d, aclexplode(d.defaclacl) a where d.defaclnamespace = 'public'::regnamespace and d.defaclobjtype = 'f' and a.grantee in ('anon'::regrole, 'authenticated'::regrole)) as def_funcs,
