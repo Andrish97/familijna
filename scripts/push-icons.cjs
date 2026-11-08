@@ -6,6 +6,7 @@
 // scripts/app-icons.cjs:
 //   <nazwa>.png         192 px — rysunek w kolorze aplikacji na jej tle,
 //   badge-<nazwa>.png    96 px — biała sylwetka na przezroczystym (pasek Androida),
+//                        prawie na całą powierzchnię i z grubszą kreską (czytelna po pomniejszeniu),
 //   action-<nazwa>.png   48 px — rysunek na przezroczystym (przyciski powiadomienia).
 // Wyjście: web/assets/img/push/ (aplikacja) oraz katalog panelu admina
 // (domyślnie ../familijna-server/admin-panel/web/admin/icons/push, gdy istnieje;
@@ -33,9 +34,12 @@ function iconFile(name) {
   return path.join(repo, "web", m[1]);
 }
 
-function glyph(name, color, x, y, size) {
+function glyph(name, color, x, y, size, strokeWidth) {
   let svg = fs.readFileSync(iconFile(name), "utf8").trim();
-  svg = svg.replace(/currentColor/g, color)
+  svg = svg.replace(/currentColor/g, color);
+  // Grubsza kreska (pasek Androida pomniejsza ikonę do ~24 dp — cienkie linie bledną).
+  if (strokeWidth) svg = svg.replace(/stroke-width="[\d.]+"/g, `stroke-width="${strokeWidth}"`).replace(/\sopacity="[\d.]+"/g, "");
+  svg = svg
     .replace(/<svg\b([^>]*)>/, (_, attrs) => `<svg${attrs.replace(/\s(width|height|x|y|id)="[^"]*"/g, "")} x="${x}" y="${y}" width="${size}" height="${size}">`);
   return svg;
 }
@@ -73,7 +77,8 @@ async function main() {
   for (const name of KINDS) {
     // Duża ikona: Android przycina do koła — rysunek w środkowych ~58 %.
     files[`${name}.png`] = await render(page, compose(192, glyph(name, FG, 40, 40, 112), BG), 192, false);
-    files[`badge-${name}.png`] = await render(page, compose(96, glyph(name, "#ffffff", 12, 12, 72)), 96, true);
+    // Pasek Androida: sylwetka prawie na całą ikonę (jak w innych aplikacjach), gruba kreska.
+    files[`badge-${name}.png`] = await render(page, compose(96, glyph(name, "#ffffff", 3, 3, 90, 2.6)), 96, true);
   }
   for (const name of ACTIONS) {
     files[`action-${name}.png`] = await render(page, compose(48, glyph(name, ACTION, 6, 6, 36)), 48, true);
