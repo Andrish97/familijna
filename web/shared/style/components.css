@@ -2849,8 +2849,13 @@
     margin: 0;
     border: 0;
   }
+  /* Wcięcie 4 px skompensowane ujemnym marginesem: poświata aktywnego pola
+     (box-shadow) przy krawędzi przewijanej treści nie jest ucinana na prosto
+     (zgłoszenie 2026-11-08: okno „Szukaj…” na telefonie). */
   :where(:root[data-sheet]) .modal--sheet.sheet-active .sheet-modal-body {
     flex: 1 1 auto;
+    margin: -4px;
+    padding: 4px;
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
