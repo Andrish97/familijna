@@ -1,4 +1,4 @@
-import { qrDataUrl } from "../core/qr-code.js?v=v2026-11-08T23180";
+import { qrDataUrl } from "../core/qr-code.js?v=v2026-11-08T23184";
 
 // QR generowany lokalnie i od razu (SVG w data:), bez zewnętrznego API:
 // wcześniej przez chwilę widać było samą białą ramkę <img>. Cichą strefę
