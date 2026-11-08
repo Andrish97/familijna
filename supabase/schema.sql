@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
+\restrict AsRtdJqMM3NHYOeydrgvLHnDLuWyOKO9nekbIceFDCOi2Iec33eJrXPVSDp6EcS
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -6087,19 +6087,11 @@ CREATE FUNCTION "public"."base_can_access"("p_base_id" "uuid", "p_user_id" "uuid
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b
     where b.id = p_base_id
-      and (
-        b.owner_id = p_user_id
-        or exists (
-          select 1
-          from public.question_base_shares s
-          where s.base_id = b.id
-            and s.user_id = p_user_id
-        )
-      )
+      and (b.owner_id = p_user_id
+        or exists (select 1 from public.question_base_shares s where s.base_id = b.id and s.user_id = p_user_id))
   );
 $$;
 
@@ -6113,20 +6105,12 @@ CREATE FUNCTION "public"."base_can_edit"("p_base_id" "uuid", "p_user_id" "uuid")
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b
     where b.id = p_base_id
-      and (
-        b.owner_id = p_user_id
-        or exists (
-          select 1
-          from public.question_base_shares s
-          where s.base_id = b.id
-            and s.user_id = p_user_id
-            and s.role = 'editor'
-        )
-      )
+      and (b.owner_id = p_user_id
+        or exists (select 1 from public.question_base_shares s
+                   where s.base_id = b.id and s.user_id = p_user_id and s.role = 'editor'))
   );
 $$;
 
@@ -6157,11 +6141,8 @@ CREATE FUNCTION "public"."base_is_owner"("p_base_id" "uuid", "p_user_id" "uuid")
     SET "search_path" TO 'public'
     SET "row_security" TO 'off'
     AS $$
-  select exists (
-    select 1
-    from public.question_bases b
-    where b.id = p_base_id
-      and b.owner_id = p_user_id
+  select p_user_id is not null and p_user_id = auth.uid() and exists (
+    select 1 from public.question_bases b where b.id = p_base_id and b.owner_id = p_user_id
   );
 $$;
 
@@ -6406,9 +6387,9 @@ CREATE FUNCTION "public"."base_share_token_info"("p_token" "text") RETURNS TABLE
     t.status,
     t.base_id,
     t.recipient_user_id,
-    t.recipient_email,
+    null::text as recipient_email,
     t.owner_id,
-    op.email as owner_email,
+    null::text as owner_email,
     op.username as owner_username
   from public.base_share_tasks t
   JOIN public.question_bases b ON b.id=t.base_id AND b.owner_id=t.owner_id
@@ -7785,100 +7766,6 @@ BEGIN
   v_session_id := (v_data->>'session_id')::uuid;
   UPDATE public.control_runtime_sessions SET device_protocol=2 WHERE id=v_session_id;
   RETURN v_data || jsonb_build_object('device_protocol',2);
-END;
-$$;
-
-
---
--- Name: cooldown_email_get("text", "text"[]); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_get"("p_email" "text", "p_action_keys" "text"[]) RETURNS TABLE("action_key" "text", "next_allowed_at" timestamp with time zone)
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  RETURN QUERY
-  SELECT ec.action_key, ec.next_allowed_at
-  FROM public.email_cooldowns ec
-  WHERE ec.email_hash = h
-    AND ec.action_key = ANY(p_action_keys);
-END;
-$$;
-
-
---
--- Name: cooldown_email_release("text", "text", integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_release"("p_email" "text", "p_action_key" "text", "p_max_age_seconds" integer DEFAULT 60) RETURNS boolean
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  UPDATE public.email_cooldowns
-     SET next_allowed_at = now(),
-         updated_at = now()
-   WHERE email_hash = h
-     AND action_key = p_action_key
-     AND updated_at >= (now() - make_interval(secs => p_max_age_seconds));
-
-  RETURN TRUE;
-END;
-$$;
-
-
---
--- Name: cooldown_email_reserve("text", "text", integer); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION "public"."cooldown_email_reserve"("p_email" "text", "p_action_key" "text", "p_cooldown_seconds" integer) RETURNS TABLE("ok" boolean, "next_allowed_at" timestamp with time zone)
-    LANGUAGE "plpgsql" SECURITY DEFINER
-    SET "search_path" TO 'public'
-    AS $$
-DECLARE
-  h text;
-  cur_next timestamptz;
-  new_next timestamptz;
-BEGIN
-  h := md5(lower(trim(p_email)));
-
-  SELECT ec.next_allowed_at
-    INTO cur_next
-  FROM public.email_cooldowns ec
-  WHERE ec.email_hash = h
-    AND ec.action_key = p_action_key
-  FOR UPDATE;
-
-  IF NOT FOUND THEN
-    new_next := now() + make_interval(secs => p_cooldown_seconds);
-    INSERT INTO public.email_cooldowns(email_hash, action_key, next_allowed_at, updated_at)
-    VALUES (h, p_action_key, new_next, now());
-    RETURN QUERY SELECT TRUE, new_next;
-    RETURN;
-  END IF;
-
-  IF cur_next <= now() THEN
-    new_next := now() + make_interval(secs => p_cooldown_seconds);
-    UPDATE public.email_cooldowns
-      SET next_allowed_at = new_next,
-          updated_at = now()
-      WHERE email_hash = h
-        AND action_key = p_action_key;
-    RETURN QUERY SELECT TRUE, new_next;
-    RETURN;
-  END IF;
-
-  RETURN QUERY SELECT FALSE, cur_next;
-  RETURN;
 END;
 $$;
 
@@ -15780,17 +15667,19 @@ END $$;
 
 
 --
--- Name: poll_go_owner_email_match("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+-- Name: poll_go_owner_email_blocked("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION "public"."poll_go_owner_email_match"("p_owner_id" "uuid", "p_email" "text") RETURNS "text"
+CREATE FUNCTION "public"."poll_go_owner_email_blocked"("p_token" "uuid", "p_email" "text") RETURNS "text"
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
     AS $$
-  SELECT coalesce(nullif(username, ''), email)
-  FROM public.profiles
-  WHERE id = p_owner_id
-    AND lower(btrim(email)) = lower(btrim(coalesce(p_email, '')))
+  SELECT nullif(p.username, '')
+  FROM public.poll_subscriptions ps
+  JOIN public.profiles p ON p.id = ps.owner_id
+  WHERE ps.token = p_token
+    AND lower(btrim(p.email)) = lower(btrim(coalesce(p_email, '')))
+  LIMIT 1
 $$;
 
 
@@ -28358,5 +28247,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Vl0sxhnZ7te2zhcylnAxrLzFcCmAK9b0IvaSAka3l4QeTSZNqQ6vHa77u1gcAPc
+\unrestrict AsRtdJqMM3NHYOeydrgvLHnDLuWyOKO9nekbIceFDCOi2Iec33eJrXPVSDp6EcS
 
