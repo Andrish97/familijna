@@ -4,7 +4,7 @@
 // font_5x7.json (glyphs = loadFont5x7(), jak w ustawieniach gry) przez
 // hasDisplayGlyph; SQL stosuje tę samą regułę (public.fam_answer_invalid_chars,
 // public.fam_answer_clean).
-import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-08T23273";
+import { hasDisplayGlyph } from "../display/fonts.js?v=v2026-11-08T23371";
 
 export const GAME_NAME_MAX = 80;
 export const QUESTION_MAX = 100;
