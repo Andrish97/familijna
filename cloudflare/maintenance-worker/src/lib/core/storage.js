@@ -1,7 +1,23 @@
 // src/lib/storage.js -- Supabase Storage (message-attachments bucket) helpers.
 import { getSupabaseConfig } from "./supabase.js";
 
+// Nazwa pliku z obcego maila/formularza jako jeden bezpieczny człon ścieżki.
+export function safeStorageName(name) {
+  const base = String(name || "").split(/[\\/]/).pop();
+  const clean = base.replace(/[^\w.\-]/g, "_").replace(/^\.+/, "_").slice(0, 100);
+  return clean || "file";
+}
+
+export function isSafeAttachmentPath(p) {
+  const parts = String(p || "").split("/");
+  return parts.length === 2 && parts[0] === "message-attachments"
+    && /^[\w.\-]{1,200}$/.test(parts[1]) && parts[1] !== "." && parts[1] !== "..";
+}
+
 export async function uploadToStorage(env, bucketPath, data_b64, mimeType, { upsert = false } = {}) {
+  // E24 (2026-11): klucz serwisowy pisze tylko do message-attachments, bez
+  // członów "." / ".." (fetch rozwija je w adresie) i bez ? # % \.
+  if (!isSafeAttachmentPath(bucketPath)) throw new Error("storage_upload_failed:bad_path");
   const cfg = getSupabaseConfig(env);
   if (!cfg) throw new Error("storage_upload_failed:missing_supabase_config");
   // bucketPath format: "message-attachments/{path}" or just "{bucket}/{path}"
