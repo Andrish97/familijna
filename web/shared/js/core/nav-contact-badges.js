@@ -8,12 +8,24 @@ import { sb } from "./supabase.js?v=v2026-11-08T15284";
 // dwa identyczne zapytania przy każdym wejściu na Gry).
 const BADGES_TTL_MS = 2000;
 let badgesCache = null; // { at, promise }
+// Licznik na ikonie zainstalowanej aplikacji (E29): czekające zaproszenia
+// do znajomych i zadania (ankiety). Bez obsługi w przeglądarce — nic.
+function updateAppBadge(row) {
+  try {
+    const n = Math.max(0, Number(row?.friends_pending) || 0) + Math.max(0, Number(row?.tasks_pending) || 0);
+    if (n > 0) navigator.setAppBadge?.(n)?.catch?.(() => {});
+    else navigator.clearAppBadge?.()?.catch?.(() => {});
+  } catch {}
+}
+
 export function fetchBadges() {
   const now = Date.now();
   if (badgesCache && now - badgesCache.at < BADGES_TTL_MS) return badgesCache.promise;
   const promise = Promise.resolve(sb().rpc("badges_get")).then(({ data, error }) => {
     if (error) throw error;
-    return (Array.isArray(data) ? data[0] : data) || {};
+    const row = (Array.isArray(data) ? data[0] : data) || {};
+    updateAppBadge(row);
+    return row;
   });
   const entry = { at: now, promise };
   badgesCache = entry;
