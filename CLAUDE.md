@@ -138,6 +138,11 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   wypycha na `main` (migracje, Pages, panel admina) bez pytania o zgodę za
   każdym razem — bramki wdrożenia (testy, log migracji, kontrola produkcji)
   obowiązują dalej.
+- **Stała zgoda na wdrożenia (decyzja użytkownika 2026-11-08):** agent sam uruchamia
+  wszystko, co nie wymaga konfiguracji poza jego dostępem — wdrożenia na serwerze
+  (`familijna-server` `server.yml`: apps, supabase, deploy, admin-panel), Workery
+  (w tym starej domeny), migracje, Pages. Właściciela prosi tylko o rzeczy w panelach
+  Cloudflare/GitHuba (reguły, Access, sekrety, środowiska) i o przerwę techniczną.
 - Unit: `cd tests && node --test unit/*.test.js`.
 - E2E: workflow `e2e-tests.yml` (workflow_dispatch) z niepustym
   `spec_filter` — nigdy całego zestawu (`scripts/agent-tools/e2e-seq.sh`). Spece z `tests/e2e/helpers/local-site.js`
