@@ -4,11 +4,11 @@
 // Krój i jego miary ustawia CSS motywu (--host-font…), kroje mogą być wszyte
 // w plik (host.fonts); linie papieru i tablica to stałe przełączniki z pliku.
 // Schemat: familijna-server/docs/motywy.md.
-import { sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-08T15433";
-import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-08T15433";
-import { isCustomThemeKey, loadCustomTheme } from "../../../shared/js/display/custom-themes.js?v=v2026-11-08T15433";
-import { loadBuiltinThemes, resolveHost } from "../../../shared/js/display/theme-registry.js?v=v2026-11-08T15433";
-import { evaluateOutputs, hostRulesCss } from "../../../shared/js/display/theme-file.js?v=v2026-11-08T15433";
+import { sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-08T15445";
+import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-08T15445";
+import { isCustomThemeKey, loadCustomTheme } from "../../../shared/js/display/custom-themes.js?v=v2026-11-08T15445";
+import { loadBuiltinThemes, resolveHost } from "../../../shared/js/display/theme-registry.js?v=v2026-11-08T15445";
+import { evaluateOutputs, hostRulesCss } from "../../../shared/js/display/theme-file.js?v=v2026-11-08T15445";
 
 const FALLBACK_KEY = "wings";
 const DEFAULT_COLORS = { A: "#ff8c1a", B: "#138a50", DOT: "#d7ff3d" };
