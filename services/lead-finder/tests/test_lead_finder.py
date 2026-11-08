@@ -282,6 +282,12 @@ class PipelineTest(unittest.TestCase):
         self.db = FakeDb()
         self.engine = pipeline.Engine(self.db, None, 'http://searx')
         self.engine.run_id, self.engine.status, self.engine.target = 'r1', 'running', 10
+        # Przerwa wyszukiwarki po odmowach w testach 0 s (na serwerze 10 min).
+        self._cfg = pipeline.cfg
+        pipeline.cfg = lambda k, d=None: 0 if k == 'SEARCH_PAUSE_S' else self._cfg(k, d)
+
+    def tearDown(self):
+        pipeline.cfg = self._cfg
 
     def cand(self, ref, name, domain, emails, source='search', cat='k1'):
         return {'source': source, 'source_ref': ref, 'name': name, 'url': f'https://{domain}', 'domain': domain,
@@ -374,7 +380,10 @@ class PipelineTest(unittest.TestCase):
         finally:
             search.search, pipeline.Classifier = orig_search, orig_cls
         self.assertEqual(db.tables['marketing_search_queries_log'], [])  # nic nie „zużyte”
-        self.assertLessEqual(e.stats['search_queries'], 12)  # wstrzymane po serii odmów
+        # Odmowy = przerwa i ponowienie, nie koniec: sprawdzone wszystkie 20 fraz × 2 strony,
+        # koniec dopiero, gdy nowe frazy nie dają kontaktów — jako „brak źródeł”, nie sukces.
+        self.assertEqual(e.stats['search_queries'], 40)
+        self.assertTrue(e.exhausted)
         self.assertEqual(e.search_reasons, {'google': 'CAPTCHA', 'bing': 'timeout'})
 
     def test_run_search_end_to_end(self):
@@ -398,6 +407,34 @@ class PipelineTest(unittest.TestCase):
         self.assertEqual(e.stats['search_engine_errors'], 1)
         self.assertEqual({r['query_text'] for r in db.tables['marketing_search_queries_log']},
                          {'search:k1:1:dj wesele', 'search:k1:2:dj wesele'})
+
+    def test_refresh_until_dry(self):
+        """Do skutku: nowe frazy dopisywane, dopóki dają kontakty; 3 suche dopisania z rzędu = koniec."""
+        db, e = self.db, self.engine
+        db.tables['marketing_categories'] = [
+            {'id': 'k1', 'name': 'DJ', 'is_active': True, 'description': 'x', 'queries': ['q0'], 'pkd': [], 'expanded_at': 'x', 'created_at': 1}]
+        counter = {'n': 0}
+
+        class Endless(FakeClassifier):
+            async def more_queries(self, category, used):
+                counter['n'] += 1
+                return [f'q{counter["n"]}']
+
+        async def fake_search(client, base, phrase, pageno=1, timeout=25):
+            n = int(phrase[1:])
+            # Frazy q0..q4 dają po jednym kontakcie (strona 1), dalsze nic.
+            if pageno == 1 and n <= 4:
+                return [{'url': f'https://dj{n}.pl', 'title': f'DJ {n}', 'content': f'biuro@dj{n}.pl'}], []
+            return [], []
+        orig_search, orig_cls = search.search, pipeline.Classifier
+        search.search, pipeline.Classifier = fake_search, Endless
+        try:
+            run(e.run_search(50))
+        finally:
+            search.search, pipeline.Classifier = orig_search, orig_cls
+        self.assertEqual(len(db.tables['marketing_verified_contacts']), 5)  # więcej niż 2 dopisania fraz
+        self.assertTrue(e.exhausted)
+        self.assertLessEqual(counter['n'], 4 + 3)  # po 3 suchych dopisaniach koniec, bez pętli
 
     def test_exhausted_phrases_refreshed_once_and_saved(self):
         db, e = self.db, self.engine

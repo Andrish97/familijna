@@ -81,6 +81,7 @@ class Engine:
         self.fetch_budget = 0
         self.attempts = {}
         self.search_down = 0          # kolejne zapytania bez wyników z odmową silników
+        self.exhausted = False        # przebieg skończył się przed celem, bo zabrakło źródeł
         self.search_reasons = {}      # silnik -> powód odmowy (do logu)
         # Przebieg w bazie (migracja 519): dzierżawa, puls, przejęcie po restarcie.
         self.lease = None
@@ -370,8 +371,12 @@ class Engine:
             return
         log.info(f'Kategorie: {", ".join(c["name"] for c in cats)}. CEIDG: {"tak" if self.ceidg and self.ceidg.enabled else "brak klucza"}.')
         queues = {c['id']: [q for q in search_queries(c, cfg('SEARCH_PAGES', 2)) if q not in self.done_queries] for c in cats}
-        refreshes = dict.fromkeys(queues, 0)
-        search_stopped = False
+        # Do skutku: nowe frazy dopisywane bez limitu, dopóki dają kontakty.
+        # Kategoria „wyschła” po REFRESH_DRY_LIMIT dopisaniach z rzędu bez nowego
+        # kontaktu; odmowy wyszukiwarek = przerwa SEARCH_PAUSE_S, nie koniec.
+        dry = dict.fromkeys(queues, 0)
+        verified_at_refresh = {}
+        search_paused_until = 0.0
         partial_wait = cfg('PARTIAL_BATCH_WAIT', 300)
         waiting_since = {}
         ceidg_task = asyncio.create_task(self.ceidg_producer())
@@ -386,20 +391,40 @@ class Engine:
                         break
                     cat = cats[(turn + i) % len(cats)]
                     q = queues[cat['id']]
-                    if not q and not search_stopped and refreshes[cat['id']] < cfg('QUERY_REFRESH_PER_RUN', 2):
-                        refreshes[cat['id']] += 1
-                        q.extend(await self.refresh_queries(classifier, cat))
+                    if not q and time.monotonic() >= search_paused_until and dry[cat['id']] < cfg('REFRESH_DRY_LIMIT', 3):
+                        # Najpierw ocena czekających kandydatów tej kategorii — inaczej
+                        # kontakty z ostatnich fraz nie są jeszcze policzone i kategoria
+                        # wygląda na „suchą” za wcześnie.
+                        while self.verified < target and await self._pending(cat):
+                            if await self.classify_once(classifier, cat) == -1:
+                                break
+                        before = verified_at_refresh.get(cat['id'])
+                        if before is not None:
+                            dry[cat['id']] = 0 if self.verified > before else dry[cat['id']] + 1
+                        if dry[cat['id']] < cfg('REFRESH_DRY_LIMIT', 3):
+                            verified_at_refresh[cat['id']] = self.verified
+                            fresh = await self.refresh_queries(classifier, cat)
+                            if not fresh:
+                                dry[cat['id']] += 1
+                            q.extend(fresh)
                     picked += [q.pop(0) for _ in range(min(len(q), max(1, parallel // len(cats))))]
                 turn += 1
+                if picked and time.monotonic() < search_paused_until:
+                    for q in picked:  # przerwa wyszukiwarki — frazy wracają do kolejki
+                        queues[q.split(':', 3)[1]].append(q)
+                    picked = []
                 if picked:
                     await asyncio.gather(*(self.run_search_query(q) for q in picked))
                     if self.search_down >= cfg('SEARCH_DOWN_LIMIT', 8):
                         reasons = ', '.join(f'{k} ({v})' if v else k for k, v in sorted(self.search_reasons.items())) or 'brak szczegółów'
+                        pause = cfg('SEARCH_PAUSE_S', 600)
                         log.error(f'Wyszukiwarka nie zwraca wyników — silniki odmawiają: {reasons}. '
-                                  'Wstrzymuję wyszukiwarkę w tym przebiegu (frazy wracają do puli).')
-                        queues = {k: [] for k in queues}
-                        search_stopped = True
-                sources_left = any(queues.values()) or not ceidg_task.done()
+                                  f'Przerwa {pause // 60} min, potem ponowię (frazy wracają do puli).')
+                        search_paused_until = time.monotonic() + pause
+                        self.search_down = 0
+                search_waiting = time.monotonic() < search_paused_until
+                can_refresh = any(dry[c['id']] < cfg('REFRESH_DRY_LIMIT', 3) for c in cats)
+                sources_left = any(queues.values()) or not ceidg_task.done() or search_waiting or can_refresh
                 # Ocena: pełne paczki; niepełne, gdy źródła się skończyły albo
                 # kandydaci czekają dłużej niż PARTIAL_BATCH_WAIT (np. sam CEIDG
                 # dostarcza kilka firm na kilka minut — bez tego przebieg stoi).
@@ -424,9 +449,13 @@ class Engine:
                 await self.save_stats()
                 if not picked and not judged:
                     if not sources_left:
-                        log.info('Wszystkie frazy i wpisy CEIDG sprawdzone — koniec przebiegu.')
+                        dried = ', '.join(c['name'] for c in cats if dry[c['id']] >= cfg('REFRESH_DRY_LIMIT', 3))
+                        log.error(f'Brak dalszych źródeł: {self.verified}/{target} kontaktów. Nowe frazy nie dają już '
+                                  f'kontaktów ({dried or "wszystkie kategorie"}), CEIDG sprawdzony. Dodaj kategorię '
+                                  'albo klucz CEIDG, żeby szukać dalej.')
+                        self.exhausted = True
                         break
-                    await asyncio.sleep(5)  # czekamy na CEIDG
+                    await asyncio.sleep(5)  # czekamy na CEIDG albo koniec przerwy wyszukiwarki
         finally:
             ceidg_task.cancel()
 
@@ -494,6 +523,7 @@ class Engine:
         self.stats = dict.fromkeys(STAT_KEYS, 0)
         self.attempts = {}
         self.categories = []
+        self.exhausted = False
         resumed = int(run.get('resumed') or 0) > 0
         self.status = {'paused': 'paused', 'cancel_requested': 'cancelled'}.get(run.get('status'), 'running')
         if resumed:
@@ -513,8 +543,11 @@ class Engine:
                 raise Stopped()
             self.status = 'completed'
             final = 'completed'
-            msg = f'Zlecenie zakończone. Nowe kontakty: {self.verified}/{self.target}.'
-            log.info(msg)
+            if self.verified >= self.target:
+                log.info(f'Zlecenie zakończone. Nowe kontakty: {self.verified}/{self.target}.')
+            else:
+                # Nie „zakończone” — cel nieosiągnięty, bo zabrakło źródeł (powód wyżej w logu).
+                log.error(f'Zlecenie zatrzymane przed celem — brak dalszych źródeł: {self.verified}/{self.target}.')
             # Powiadomienie admina o końcu i błędzie: trigger na marketing_runs (E29).
         except Stopped:
             final = 'cancelled'

@@ -37,9 +37,13 @@ oznaczają ukończenia zlecenia.
 
 Marketing (parametry w `config.txt` z familijna-server, wartości domyślne w kodzie):
 `PARTIAL_BATCH_WAIT=300` — po tylu sekundach niepełna paczka kandydatów kategorii
-idzie do oceny, nawet gdy CEIDG jeszcze pracuje; `QUERY_REFRESH_PER_RUN=2` — ile
-razy w przebiegu DeepSeek dopisuje nowe frazy kategorii, której wszystkie frazy
-są już sprawdzone (`CATEGORY_QUERIES_MAX=400` fraz na kategorię);
+idzie do oceny, nawet gdy CEIDG jeszcze pracuje; przebieg szuka do skutku: DeepSeek dopisuje nowe frazy kategorii, której
+wszystkie frazy są sprawdzone, bez limitu, dopóki dają kontakty —
+`REFRESH_DRY_LIMIT=3` dopisań z rzędu bez nowego kontaktu kończy daną kategorię
+(`CATEGORY_QUERIES_MAX=400` fraz na kategorię); odmowy wyszukiwarek
+(`SEARCH_DOWN_LIMIT=8` zapytań z rzędu) to przerwa `SEARCH_PAUSE_S=600`, nie koniec;
+przebieg przed celem kończy się tylko, gdy żadna kategoria nie daje już kontaktów,
+a CEIDG jest sprawdzony (log: „brak dalszych źródeł”);
 `CEIDG_QUERY_ATTEMPTS=2` — próby jednej strony CEIDG w przebiegu (potem następny
 przebieg). Kod PKD wspólny dla kilku kategorii jest pobierany raz, a firm już
 znanych nie dopytujemy o szczegóły. Zapytanie CEIDG ma twardy limit 60 s.
