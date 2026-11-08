@@ -584,11 +584,10 @@ test.describe("games: audyt -- eksport do bazy", () => {
       const exportOnce = async () => {
         await page.locator("#btnExportBase").click();
         await expect(page.locator("#exportBaseOverlay")).toBeVisible();
-        // przycisk włącza się dopiero po wczytaniu listy baz (select jest
-        // wtedy budowany od nowa -- wcześniejszy klik trafiłby w stary)
+        // przycisk włącza się dopiero po wczytaniu listy baz (lista jest
+        // wtedy budowana od nowa -- wcześniejszy klik trafiłby w starą)
         await expect(page.locator("#btnExportBaseDo")).toBeEnabled({ timeout: 15000 });
-        await page.locator("#baseSelectWrap .ui-select-btn").click();
-        await page.locator("#baseSelectWrap .menu-item", { hasText: baseName }).click();
+        await page.locator("#baseSelectWrap label", { hasText: baseName }).click();
         await page.locator("#btnExportBaseDo").click();
       };
 

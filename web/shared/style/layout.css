@@ -502,6 +502,11 @@
   .change-type-option input { margin: 0; }
   .change-type-name { font-weight: 900; }
   .change-type-desc { grid-column: 2; font-size: .88rem; line-height: 1.35; color: var(--text-soft); }
+  /* Nazwa i dopisek w jednej linii (np. „Eksport do bazy”: baza + własna/
+     współdzielona); dopisek po prawej, a gdy się nie mieści — pod nazwą. */
+  .change-type-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; }
+  .change-type-line > .change-type-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .change-type-meta { margin-left: auto; font-size: .82rem; font-weight: 700; color: var(--text-soft); white-space: nowrap; }
   /* Zamknięta ankieta: „Zachowaj …” tylko pod wybranym typem. */
   .change-type-keep { grid-column: 2; display: none; align-items: center; gap: 8px; margin-top: 6px; font-size: .9rem; font-weight: 700; }
   .change-type-option:has(input[type="radio"]:checked) .change-type-keep { display: flex; }

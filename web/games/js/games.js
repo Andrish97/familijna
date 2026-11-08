@@ -14,7 +14,6 @@ import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-
 import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-08T20300";
 import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-08T20300";
 import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T20300";
-import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-08T20300";
 import { maybeShowGuestMigrateReminder } from "../../shared/js/core/guest-migrate-reminder.js?v=v2026-11-08T20300";
 
 import { initPwa, isStandalone, isIOSSafari, isMobileDevice, canOfferPwaInstall } from "../../shared/js/core/pwa.js?v=v2026-11-08T20300";
@@ -141,7 +140,6 @@ const btnExportBaseDo = document.getElementById("btnExportBaseDo");
 const btnExportBaseCancel = document.getElementById("btnExportBaseCancel");
 const exportBaseMsg = document.getElementById("exportBaseMsg");
 
-let baseSelectApi = null; // ui-select API
 
 // Export base progress (w modalu eksportu do bazy)
 const exportBaseProg = document.getElementById("exportBaseProg");
@@ -458,14 +456,11 @@ async function listExportableBases() {
   return out.filter((b) => (seen.has(b.id) ? false : (seen.add(b.id), true)));
 }
 
+// Lista baz z jednym wyborem (karty jak w „Zmień typ”): nazwa i rodzaj
+// (własna / współdzielona) w jednej linii, gdy się mieszczą.
 function renderBaseSelect(bases) {
   if (!baseSelectWrap) return;
-
-  // Zniszcz poprzedni ui-select jeśli istnieje
-  if (baseSelectApi) {
-    baseSelectApi.destroy();
-    baseSelectApi = null;
-  }
+  baseSelectWrap.replaceChildren();
 
   if (!bases || !bases.length) {
     // Brak baz - pokaż komunikat (przycisk wyłączony: inaczej klik zamieniał
@@ -479,25 +474,30 @@ function renderBaseSelect(bases) {
   baseSelectWrap.hidden = false;
   if (btnExportBaseDo) btnExportBaseDo.disabled = false;
 
-  // Przygotuj opcje
-  const options = bases.map(b => ({
-    value: b.id,
-    label: b.name || MSG.exportBaseBaseFallback(),
-  }));
-
-  // Inicjalizuj ui-select
-  baseSelectApi = initUiSelect(baseSelectWrap, {
-    options,
-    value: options[0]?.value || "",
-    placeholder: MSG.exportBasePick(),
-    onChange: (value) => {
-      // Można dodać walidację jeśli potrzeba
-    },
+  bases.forEach((b, i) => {
+    const label = document.createElement("label");
+    label.className = "change-type-option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "exportBase";
+    input.value = b.id;
+    input.checked = i === 0;
+    const text = document.createElement("span");
+    text.className = "change-type-line";
+    const name = document.createElement("span");
+    name.className = "change-type-name";
+    name.textContent = b.name || MSG.exportBaseBaseFallback();
+    const meta = document.createElement("span");
+    meta.className = "change-type-meta";
+    meta.textContent = b.kind === "owned" ? MSG.exportBaseMetaOwned() : MSG.exportBaseMetaShared();
+    text.append(name, meta);
+    label.append(input, text);
+    baseSelectWrap.append(label);
   });
 }
 
 function getSelectedBaseId() {
-  return baseSelectApi ? baseSelectApi.getValue() : null;
+  return baseSelectWrap?.querySelector('input[name="exportBase"]:checked')?.value || null;
 }
 
 async function pickUniqueRootFolderName(baseId, desiredName) {

@@ -184,7 +184,7 @@ wymagać uzupełnienia — braki zobaczysz pod jej nazwą (→ 6.2).
 
 **Eksport do bazy pytań.** [Eksportuj do bazy] kopiuje pytania i odpowiedzi gry do wybranej
 bazy pytań. W głównym folderze bazy powstaje folder nazwany jak gra. Możesz wybrać
-swoją bazę albo bazę udostępnioną Ci z prawem edycji (→ 12.4). Jeśli nie masz takiej bazy,
+swoją bazę albo bazę udostępnioną Ci z prawem edycji (→ 12.4) — przy nazwie widać „własna” albo „współdzielona”. Jeśli nie masz takiej bazy,
 okno pokaże „Brak baz do wyboru.” — najpierw utwórz bazę (→ 9.1). Przy ankiecie otwartej lub
 zatrzymanej serwis najpierw uprzedzi, że zebrane głosy nie trafią do bazy.
 

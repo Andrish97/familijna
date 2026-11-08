@@ -2918,6 +2918,12 @@
   .sheet-modal-head[hidden],
   .sheet-modal-actions[hidden] { display: none; }
 
+  /* Okno z listą (.modal--list): gdy okno dochodzi do maksymalnej wysokości,
+     przewija się tylko lista (.modal-scroll); nagłówek i przyciski zostają. */
+  .overlay:not(.sheet-active) > .modal.modal--list { display: flex; flex-direction: column; overflow: hidden; }
+  .overlay:not(.sheet-active) > .modal.modal--list > * { flex: 0 0 auto; }
+  .overlay:not(.sheet-active) > .modal.modal--list > .modal-scroll { flex: 0 1 auto; min-height: 96px; max-height: 55vh; margin-top: 12px; overflow: auto; overscroll-behavior: contain; }
+
   :where(:root[data-sheet]) body.sheet-open { overflow: hidden; }
   /* Klawiatura ekranowa zasłania stronę (device-attrs.js): układ się nie
      zmienia. Pole z samego dołu strony: zapas wysokości klawiatury za
@@ -3799,6 +3805,11 @@
   .change-type-option input { margin: 0; }
   .change-type-name { font-weight: 900; }
   .change-type-desc { grid-column: 2; font-size: .88rem; line-height: 1.35; color: var(--text-soft); }
+  /* Nazwa i dopisek w jednej linii (np. „Eksport do bazy”: baza + własna/
+     współdzielona); dopisek po prawej, a gdy się nie mieści — pod nazwą. */
+  .change-type-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; min-width: 0; }
+  .change-type-line > .change-type-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .change-type-meta { margin-left: auto; font-size: .82rem; font-weight: 700; color: var(--text-soft); white-space: nowrap; }
   /* Zamknięta ankieta: „Zachowaj …” tylko pod wybranym typem. */
   .change-type-keep { grid-column: 2; display: none; align-items: center; gap: 8px; margin-top: 6px; font-size: .9rem; font-weight: 700; }
   .change-type-option:has(input[type="radio"]:checked) .change-type-keep { display: flex; }

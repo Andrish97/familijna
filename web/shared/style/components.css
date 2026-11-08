@@ -2687,6 +2687,12 @@
   .sheet-modal-head[hidden],
   .sheet-modal-actions[hidden] { display: none; }
 
+  /* Okno z listą (.modal--list): gdy okno dochodzi do maksymalnej wysokości,
+     przewija się tylko lista (.modal-scroll); nagłówek i przyciski zostają. */
+  .overlay:not(.sheet-active) > .modal.modal--list { display: flex; flex-direction: column; overflow: hidden; }
+  .overlay:not(.sheet-active) > .modal.modal--list > * { flex: 0 0 auto; }
+  .overlay:not(.sheet-active) > .modal.modal--list > .modal-scroll { flex: 0 1 auto; min-height: 96px; max-height: 55vh; margin-top: 12px; overflow: auto; overscroll-behavior: contain; }
+
   :where(:root[data-sheet]) body.sheet-open { overflow: hidden; }
   /* Klawiatura ekranowa zasłania stronę (device-attrs.js): układ się nie
      zmienia. Pole z samego dołu strony: zapas wysokości klawiatury za

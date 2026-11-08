@@ -177,7 +177,7 @@
 
     <!-- Modal: eksport do bazy pytań -->
     <div class="overlay modal--sheet" id="exportBaseOverlay" hidden>
-      <div class="modal">
+      <div class="modal modal--list">
         <div class="mHead">
           <div class="mTitle" data-i18n="games.exportBase.title">Eksport do bazy</div>
           <button class="btn sm" id="btnExportBaseCancel" type="button" aria-label="Zamknij" data-i18n-aria-label="common.modal.closeLabel"><i class="ico" data-icon="close"></i></button>
@@ -186,15 +186,7 @@
           <span data-i18n="games.exportBase.subtitle">Wybierz bazę pytań. Zostanie utworzony folder w głównym katalogu o nazwie jak gra.</span>
         </div>
 
-        <div class="field">
-          <div class="ui-select" id="baseSelectWrap">
-            <button class="btn sm ui-select-btn" type="button" aria-haspopup="listbox" aria-expanded="false">
-              <span class="ui-select-label">—</span>
-              <span class="ui-select-caret" aria-hidden="true"><i class="ico" data-icon="caret-down"></i></span>
-            </button>
-            <div class="ui-select-menu" role="listbox"></div>
-          </div>
-        </div>
+        <div class="change-type modal-scroll" id="baseSelectWrap" role="radiogroup" data-i18n-aria-label="games.exportBase.title" aria-label="Eksport do bazy"></div>
 
         <!-- PROGRES: export do bazy (ukryty, pokazuje się tylko podczas exportu) -->
         <div id="exportBaseProg" class="uni-progress" hidden>

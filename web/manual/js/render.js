@@ -21,7 +21,7 @@ export function manualArticle(manual, ch, t, href) {
   const part = manual.parts.find((p) => p.chapters.includes(ch.id));
   const sections = ch.sections.filter((s) => s.level === 2);
   const pager = (c, cls, label) => c
-    ? `<a class="m-pager-link ${cls}" href="${esc(href(c.id))}" data-ch="${c.id}"><span class="m-pager-label">${esc(label)}</span><span class="m-pager-title">${esc(c.title)}</span></a>`
+    ? `<a class="m-pager-link ${cls}" href="${esc(href(c.id))}" data-ch="${c.id}"><span class="m-pager-arrow" aria-hidden="true"><i class="ico" data-icon="${cls === "next" ? "arrow-right" : "arrow-left"}"></i></span><span class="m-pager-label">${esc(label)}</span><span class="m-pager-title">${esc(c.title)}</span></a>`
     : `<span class="m-pager-link ${cls} is-empty"></span>`;
   return `<header class="m-head">${part ? `<div class="m-crumb">${esc(part.title)}</div>` : ""}<h1 class="m-title">${esc(ch.title)}</h1>
     <a class="m-ref" href="${esc(href(null))}" data-ch="">${esc(t("manual.toc"))}</a>

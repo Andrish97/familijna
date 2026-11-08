@@ -208,7 +208,14 @@ module.exports = [
       await view.waitForTimeout(300);
     }] },
   { id: "games-export-base", category: CAT, title: "Moje gry — okno Eksportuj do bazy (wybór bazy)", path: "/games/", sources: GAMES, ready: "#grid .card",
-    steps: [select(IDS.game), open("#btnExportBase", "#exportBaseOverlay"), click("#baseSelectWrap .ui-select-btn", 400)] },
+    db: (db) => { const b = db.tables.question_bases.at(-1); db.tables.question_base_shares.push({ base_id: b.id, user_id: db.user.id, role: "editor", created_at: b.created_at }); b.owner_id = id("8410", 1); },
+    steps: [select(IDS.game), open("#btnExportBase", "#exportBaseOverlay"), wait(300)] },
+  { id: "games-export-base-many", category: CAT, title: "Moje gry — Eksportuj do bazy: dużo baz (przewija się tylko lista), długa nazwa (dopisek pod nazwą)", path: "/games/", sources: GAMES, ready: "#grid .card",
+    db: (db) => {
+      const base = db.tables.question_bases[0];
+      for (let i = 0; i < 14; i++) db.tables.question_bases.push({ ...base, id: id("8420", i + 1), name: i === 1 ? "Pytania z rodzinnych spotkań świątecznych, urodzinowych i imieninowych u dziadków" : `${base.name} ${i + 2}`, updated_at: base.updated_at });
+    },
+    steps: [select(IDS.game), open("#btnExportBase", "#exportBaseOverlay"), wait(300)] },
   { id: "games-export-base-empty", category: CAT, title: "Moje gry — Eksportuj do bazy: brak baz", path: "/games/", sources: GAMES, ready: "#grid .card",
     db: (db) => { db.tables.question_bases = []; },
     steps: [select(IDS.game), open("#btnExportBase", "#exportBaseOverlay"), wait(300)] },

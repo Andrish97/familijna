@@ -184,7 +184,7 @@ need to be completed — you will see what is missing under its name (→ 6.2).
 
 **Export to a question base.** [Export to base] copies the game's questions and answers to the selected
 question base. A folder named after the game is created in the base's root folder. You can choose
-your own base or a base shared with you with edit rights (→ 12.4). If you don't have such a base,
+your own base or a base shared with you with edit rights (→ 12.4) — next to the name you see "owned" or "shared". If you don't have such a base,
 the window shows "No bases found." — create a base first (→ 9.1). For an open or stopped poll, the app
 first warns you that the collected votes won't be copied to the base.
 
