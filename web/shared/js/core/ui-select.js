@@ -1,6 +1,5 @@
 import { icon, iconText } from "./icons.js?v=v2026-11-07T22371";
 import { placeUnder, clearPlacement } from "./popover.js?v=v2026-11-07T22371";
-import { setVars } from "./ui-metrics.js?v=v2026-11-07T22371";
 
 
 export function initUiSelect(root, { options = [], value = "", placeholder = "—", onChange, disabled = false } = {}) {
@@ -43,8 +42,6 @@ export function initUiSelect(root, { options = [], value = "", placeholder = "�
     const match = currentOptions.find((opt) => String(opt.value) === currentValue);
     if (match?.icon) label.innerHTML = iconText(match.icon, match.label);
     else label.textContent = match ? match.label : placeholder;
-    // opcja z krojem pisma (np. wybór czcionki): etykieta tym krojem (--font)
-    setVars(label, { "--font": match?.font || null });
     // pełna nazwa w dymku — na przycisku może być ucięta wielokropkiem
     if (match?.label) btn.title = match.label; else btn.removeAttribute("title");
     for (const item of menu.querySelectorAll(".menu-item")) {
@@ -59,7 +56,6 @@ export function initUiSelect(root, { options = [], value = "", placeholder = "�
       value: String(opt.value ?? ""),
       label: String(opt.label ?? ""),
       icon: opt.icon || "",
-      font: opt.font || "",
       dirty: !!opt.dirty,
     }));
     menu.innerHTML = "";
@@ -73,7 +69,6 @@ export function initUiSelect(root, { options = [], value = "", placeholder = "�
         const text = document.createElement("span");
         text.className = "menu-item-label";
         text.textContent = opt.label || placeholder;
-        if (opt.font) setVars(text, { "--font": opt.font });
         item.appendChild(text);
       }
       if (opt.dirty) {

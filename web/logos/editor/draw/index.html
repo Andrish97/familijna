@@ -164,6 +164,19 @@
     </div>
   </main>
 
+  <!-- Wybór czcionki (narzędzie Tekst): poza kartą edytora, żeby żadna
+       warstwa karty (kreska paska) nie rysowała się nad oknem -->
+  <div id="drawFontPickPop" class="fontPickPop" hidden>
+    <div class="fontPickPanel ctxPop">
+      <div class="fontPickSearch">
+        <!-- To samo pole szukania co listy (silnik: .searchBox--field). -->
+        <label class="searchBox searchBox--field"><i class="ico" data-icon="search"></i><input id="drawFontSearchInp" class="searchText" type="text" enterkeyhint="search" placeholder="Szukaj fontu…" data-i18n-placeholder="logoEditor.draw.ui.fontSearchPlaceholder" aria-label="Szukaj fontu…" data-i18n-aria-label="logoEditor.draw.ui.fontSearchPlaceholder"><button id="drawFontSearchClear" class="btn-plain searchClear" type="button" hidden aria-label="Wyczyść" data-i18n-aria-label="common.clear" title="Wyczyść" data-i18n-title="common.clear"><i class="ico" data-icon="close"></i></button></label>
+      </div>
+      <div id="drawFontList" class="fontPickList"></div>
+      <div id="drawFontEmpty" class="fontPickEmpty" hidden data-i18n="logoEditor.draw.ui.fontNoResults">Brak wyników</div>
+    </div>
+  </div>
+
   <script type="module" src="/shared/js/core/contact-modal.js?v=v2026-11-07T22371"></script>
   <script type="module" src="/shared/js/core/topbar-controller.js?v=v2026-11-07T22371"></script>
 
