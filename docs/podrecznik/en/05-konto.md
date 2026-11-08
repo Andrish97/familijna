@@ -158,14 +158,20 @@ in …".
 > choose [Cancel change] in *Account settings*, change your password and report it to
 > kontakt@familijna.app.
 
-**Password.** In the "Password" section, enter the new password and choose [Change password]. The password must have:
+**Password.** In the "Password" section, enter your current password, the new password twice, and choose
+[Change password]. If the current password is wrong, you will see "Invalid password.". The new password must have:
 
 - at least 8 characters,
 - a lowercase and an uppercase letter,
 - a digit,
 - a special character (for example `!` or `#`).
 
-The new password must be different from the previous one. You can change your password once an hour.
+The new password must be different from the previous one. You can change your password once an hour. After every
+password change — also through the link from an email — the account address receives the message
+"FAMILIJNA — Your password was changed".
+
+Don't remember your current password? Choose [Forgot your password?|envelope] — a link to set a new password
+is sent to the account address, just like after [Forgot password] on the *Login* page (→ 5.7).
 
 ![Password too weak](zrzut:people-account-password-weak)
 ![Changes once an hour — countdown](zrzut:people-account-cooldowns)

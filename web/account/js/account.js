@@ -1,13 +1,14 @@
 import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-08T21320";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T21320";
 import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-08T21320";
-import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly, reauthWithPassword } from "../../shared/js/core/auth.js?v=v2026-11-08T21320";
+import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly, reauthWithPassword, resetPasswordByLogin } from "../../shared/js/core/auth.js?v=v2026-11-08T21320";
 import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-08T21320";
 import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } from "../../shared/js/core/push.js?v=v2026-11-08T21320";
 import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T21320";
 import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js?v=v2026-11-08T21320";
 import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T21320";
 import { toast } from "../../shared/js/core/toast.js?v=v2026-11-08T21320";
+import { getTurnstileToken } from "../../shared/js/core/turnstile.js?v=v2026-11-08T21320";
 import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T21320";
 import { isGuestUser, hideForGuest } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T21320";
 import "../../shared/js/core/contact-modal.js?v=v2026-11-08T21320";
@@ -18,7 +19,10 @@ const usernameInput = document.getElementById("username");
 const emailInput = document.getElementById("email");
 const emailRepeatInput = document.getElementById("email2");
 const emailActions = document.getElementById("emailActions");
+const passCurrent = document.getElementById("passCurrent");
 const pass1 = document.getElementById("pass1");
+const passForgot = document.getElementById("passForgot");
+const passForgotCaptcha = document.getElementById("passForgotCaptcha");
 const pass2 = document.getElementById("pass2");
 const deletePassword = document.getElementById("deletePassword");
 
@@ -861,20 +865,52 @@ async function handleEmailCancel() {
   }
 }
 
+// „Nie pamiętasz hasła?”: link resetu na adres konta, jak „Przypomnij hasło”
+// na logowaniu (Worker: Turnstile, limity i cooldown wysyłki na adres).
+async function handlePassForgot() {
+  if (!currentEmail || !passForgot) return;
+  passForgot.disabled = true;
+  try {
+    let captchaToken;
+    try {
+      captchaToken = await getTurnstileToken(passForgotCaptcha, { lang: getUiLang(), size: "flexible" });
+    } catch {
+      setErr(t("auth.captchaRequired"));
+      return;
+    }
+    const res = await resetPasswordByLogin(currentEmail, getUiLang(), captchaToken);
+    if (res.sent) setStatus(t("account.statusPasswordResetSent", { email: currentEmail }));
+    else setErr(t("account.errCooldown", { time: formatRemaining(Math.max(0, res.nextAllowedAtMs - Date.now())) }));
+  } catch (e) {
+    console.error(e);
+    setErr(niceAuthError(e));
+  } finally {
+    passForgot.disabled = false;
+  }
+}
+
 async function handlePassSave() {
   let reserved = false;
   try {
+    const current = String(passCurrent.value || "");
     const a = String(pass1.value || "");
     const b = String(pass2.value || "");
+    if (!current) throw new Error(t("account.errPasswordCurrentMissing"));
     if (a !== b) throw new Error(t("account.errPasswordMismatch"));
     validatePassword(a);
 
     await reserveCooldownOrThrow(CD.password);
     reserved = true;
 
-    const { error } = await sb().auth.updateUser({ password: a });
-    if (error) throw error;
+    // Obecne hasło sprawdza GoTrue (SECURITY_UPDATE_PASSWORD_REQUIRE_CURRENT_PASSWORD);
+    // po zmianie GoTrue wysyła mail „Hasło zostało zmienione” (hook send-email).
+    const { error } = await sb().auth.updateUser({ password: a, current_password: current });
+    if (error) {
+      if (/current_password/.test(String(error.code || ""))) throw new Error(t("account.errInvalidPassword"));
+      throw error;
+    }
 
+    passCurrent.value = "";
     pass1.value = "";
     pass2.value = "";
     setStatus(t("account.statusPasswordSaved"));
@@ -952,7 +988,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // cooldown: server state (cross-device)
   bindCooldown({ key: CD.username, labelEl: usernameCooldownEl, disableEls: [usernameInput, saveUsername] });
   bindCooldown({ key: CD.email, labelEl: emailCooldownEl, disableEls: [emailInput, emailRepeatInput, saveEmail, resendEmailChange] });
-  bindCooldown({ key: CD.password, labelEl: passwordCooldownEl, disableEls: [pass1, pass2, savePass] });
+  bindCooldown({ key: CD.password, labelEl: passwordCooldownEl, disableEls: [passCurrent, pass1, pass2, savePass] });
   startCooldownTicker();
 
   try {
@@ -965,6 +1001,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   saveUsername?.addEventListener("click", handleUsernameSave);
   saveEmail?.addEventListener("click", handleEmailSave);
   savePass?.addEventListener("click", handlePassSave);
+  passForgot?.addEventListener("click", handlePassForgot);
   deleteAccount?.addEventListener("click", handleDeleteAccount);
 
   resendEmailChange?.addEventListener("click", handleEmailResend);
@@ -990,6 +1027,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (e.key !== "Enter") return;
     e.preventDefault();
     saveEmail?.click();
+  });
+
+  passCurrent?.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    pass1?.focus();
   });
 
   pass1?.addEventListener("keydown", (e) => {

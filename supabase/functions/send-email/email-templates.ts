@@ -4,7 +4,7 @@
 // żadnej wersji, wysyłka kończy się błędem (linki w mailu i tak prowadzą na stronę).
 
 export type EmailLang = "pl" | "en" | "uk";
-export type EmailType = "signup" | "guest_migrate" | "recovery" | "email_change" | "email_change_notice";
+export type EmailType = "signup" | "guest_migrate" | "recovery" | "email_change" | "email_change_notice" | "password_changed_notice";
 
 export type CopyBlock = {
   subject: string;
@@ -27,6 +27,7 @@ const TYPE_KEYS: Record<EmailType, string> = {
   recovery: "recovery",
   email_change: "emailChange",
   email_change_notice: "emailChangeNotice",
+  password_changed_notice: "passwordChangedNotice",
 };
 
 const REQUIRED_FIELDS: (keyof CopyBlock)[] = [

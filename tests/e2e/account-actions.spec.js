@@ -164,11 +164,18 @@ test("[Przywróć pliki demo] i [Usuń konto i dane]: [Anuluj] i puste hasło ni
   expect(alive).toBe(true);
 });
 
-test("hasło (tylko CI): to samo co obecne — komunikat, bez blokady na godzinę", async ({ page, context, accounts, loginAs }) => {
+test("hasło (tylko CI): błędne obecne hasło i to samo co obecne — komunikaty, bez blokady na godzinę", async ({ page, context, accounts, loginAs }) => {
   test.skip(LOCAL, "lokalna atrapa logowania nie zna haseł");
   test.setTimeout(90_000);
   await loginAs(page, context, accounts.disposable[0]);
   await openAccount(page);
+  // Błędne obecne hasło: odmowa GoTrue (wymóg obecnego hasła), hasło bez zmian.
+  await page.fill("#passCurrent", "Zle-Haslo-1!");
+  await page.fill("#pass1", "Nowe-Haslo-1!");
+  await page.fill("#pass2", "Nowe-Haslo-1!");
+  await page.click("#savePass");
+  await expectToast(page, "Nieprawidłowe hasło.", { error: true });
+  await page.fill("#passCurrent", process.env.TEST_PASSWORD);
   await page.fill("#pass1", process.env.TEST_PASSWORD);
   await page.fill("#pass2", process.env.TEST_PASSWORD);
   await page.click("#savePass");

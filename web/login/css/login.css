@@ -50,15 +50,6 @@
       flex-wrap: wrap;
   }
 
-  .link {
-      border: 0;
-      background: 0 0;
-      color: var(--accent);
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 0;
-  }
-
 
   :where(.auth-shell) .cooldown {
       display: block;

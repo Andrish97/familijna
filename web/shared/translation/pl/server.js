@@ -121,6 +121,16 @@ const pl = {
       copyHint: "Link nie działa? Skopiuj i wklej do przeglądarki:",
       footer: "Wiadomość automatyczna — prosimy nie odpowiadać.",
     },
+    passwordChangedNotice: {
+      subject: "FAMILIJNA — Hasło zostało zmienione",
+      subtitle: "Zmiana hasła",
+      title: "Hasło zostało zmienione",
+      desc: "Hasło do Twojego konta FAMILIJNA zostało właśnie zmienione.",
+      btn: "ZALOGUJ SIĘ",
+      ignore: "Jeśli to nie Ty — na stronie logowania wybierz „Przypomnij hasło”, ustaw nowe hasło i zgłoś to na kontakt@familijna.app. Jeśli to Ty, nic nie musisz robić.",
+      copyHint: "Link nie działa? Skopiuj i wklej do przeglądarki:",
+      footer: "Wiadomość automatyczna — prosimy nie odpowiadać.",
+    },
   },
   contactEmail: {
     greeting: "Witaj,",

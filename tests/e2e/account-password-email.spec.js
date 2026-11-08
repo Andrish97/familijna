@@ -94,11 +94,12 @@ async function openLoginWithCaptchaBypass(page, context) {
 
 // Hasło konta z powrotem na TEST_PASSWORD (to samo, które ustawia lease) --
 // zalogowana sesja na stronie aplikacji, ta sama metoda co account.js.
-async function restoreTestPassword(page) {
-  await page.evaluate(async (password) => {
-    const { error } = await window.__sbClient.auth.updateUser({ password });
+// GoTrue wymaga obecnego hasła (SECURITY_UPDATE_PASSWORD_REQUIRE_CURRENT_PASSWORD).
+async function restoreTestPassword(page, currentPassword) {
+  await page.evaluate(async ({ password, current }) => {
+    const { error } = await window.__sbClient.auth.updateUser({ password, current_password: current });
     if (error) throw new Error("restore password: " + error.message);
-  }, process.env.TEST_PASSWORD);
+  }, { password: process.env.TEST_PASSWORD, current: currentPassword });
 }
 
 test("konto disposable: reset hasla przez prawdziwy e-mail i przywrocenie stanu", async ({ page, context, accounts }, testInfo) => {
@@ -136,6 +137,11 @@ test("konto disposable: reset hasla przez prawdziwy e-mail i przywrocenie stanu"
     // /login po 900 ms; URL jest stabilniejszym sygnalem niz migajacy tekst.
     await page.waitForURL(/\/login\/?(?:[?#]|$)/, { timeout: 30_000 });
 
+    // Reset linkiem (sesja recovery) nie wymaga obecnego hasła, a GoTrue wysyła
+    // powiadomienie o zmianie hasła (hook send-email, teksty authEmail.passwordChangedNotice).
+    const notice = await waitForEmail({ recipient: account.email, after, subject: /Hasło zostało zmienione/i });
+    expect(notice, "powiadomienie o zmianie hasła").toBeTruthy();
+
     await openLoginWithCaptchaBypass(page, context);
     await page.locator("#email").fill(account.email);
     await page.locator("#pass").fill(temporaryPassword);
@@ -143,7 +149,7 @@ test("konto disposable: reset hasla przez prawdziwy e-mail i przywrocenie stanu"
     await page.waitForURL(/\/games\/?(?:[?#]|$)/, { timeout: 30_000 });
 
     // Przywrócenie stanu: kolejne testy logują się hasłem testowym.
-    await restoreTestPassword(page);
+    await restoreTestPassword(page, temporaryPassword);
   } finally {
     await clearMailbox(account.email);
   }

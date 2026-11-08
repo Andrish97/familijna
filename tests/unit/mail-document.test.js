@@ -100,7 +100,7 @@ test('all four auth variants keep language, source metadata and genuine action U
   const source = read('supabase/functions/send-email/index.ts');
   const helper = source.slice(source.indexOf('function renderEmail')).replace('(t: CopyBlock, link: string, lang: EmailLang): string', '(t, link, lang)');
   const context = vm.createContext({ renderMailDocument }); vm.runInContext(helper, context);
-  for (const lang of ['pl','en','uk']) for (const type of ['signup','guestMigrate','recovery','emailChange','emailChangeNotice']) {
+  for (const lang of ['pl','en','uk']) for (const type of ['signup','guestMigrate','recovery','emailChange','emailChangeNotice','passwordChangedNotice']) {
     const copy = translations[lang].authEmail[type]; assert.ok(copy, `${lang}.${type}`);
     const actionUrl = `https://www.familijna.app/login/confirm/?token_hash=existing&type=${type}&lang=${lang}`;
     const html = context.renderEmail({ ...copy, source: `authEmail.${type}@${lang}` }, actionUrl, lang);

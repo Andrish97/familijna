@@ -121,6 +121,16 @@ const en = {
       copyHint: "Link not working? Copy and paste it into your browser:",
       footer: "This is an automated message — please do not reply.",
     },
+    passwordChangedNotice: {
+      subject: "FAMILIJNA — Your password was changed",
+      subtitle: "Password change",
+      title: "Your password was changed",
+      desc: "The password for your FAMILIJNA account has just been changed.",
+      btn: "LOG IN",
+      ignore: "If this wasn’t you — on the login page choose “Forgot password”, set a new password and report it to kontakt@familijna.app. If it was you, no action is needed.",
+      copyHint: "Link not working? Copy and paste it into your browser:",
+      footer: "This is an automated message — please do not reply.",
+    },
   },
   contactEmail: {
     greeting: "Hello,",

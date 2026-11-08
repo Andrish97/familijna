@@ -231,7 +231,7 @@ module.exports = [
   { id: "people-account-password-mismatch", category: C, title: "Konto — zmiana hasła: hasła różnią się (błąd)", path: "/account/", sources: ACCOUNT, ready: "#ratingEditBtn",
     steps: [fill([["#pass1", "NoweHaslo#2026"], ["#pass2", "NoweHaslo#2025"]]), click("#savePass"), toastShown] },
   { id: "people-account-password-weak", category: C, title: "Konto — zmiana hasła: za słabe hasło (błąd)", path: "/account/", sources: ACCOUNT, ready: "#ratingEditBtn",
-    steps: [fill([["#pass1", "haslo"], ["#pass2", "haslo"]]), click("#savePass"), toastShown] },
+    steps: [fill([["#passCurrent", "Familijna#2025"], ["#pass1", "haslo"], ["#pass2", "haslo"]]), click("#savePass"), toastShown] },
   { id: "people-account-email-sent", category: C, title: "Konto — zmiana e-maila wysłana (komunikat)", path: "/account/", sources: ACCOUNT, ready: "#ratingEditBtn",
     db: (db) => { db.rpc.cooldown_reserve = `fn:() => [{ ok: true, next_allowed_at: new Date(Date.now() + 3600e3).toISOString() }]`; db.rpc.initiate_email_change_intent = { ok: true }; },
     steps: [fill([["#email", "jan.nowy@example.com"], ["#email2", "jan.nowy@example.com"]]), click("#saveEmail"), toastShown] },

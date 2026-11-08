@@ -102,10 +102,13 @@
       <section class="card account-panel" id="passwordSection">
         <div class="section-title" data-i18n="account.passwordTitle">Hasło</div>
         <div class="section-hint" data-i18n="account.passwordHint">Minimum 8 znaków, małe/duże litery, cyfra i znak specjalny.</div>
+        <input class="inp" id="passCurrent" type="password" placeholder="Obecne hasło" autocomplete="current-password" data-i18n-placeholder="account.passwordCurrentPlaceholder"/>
         <input class="inp" id="pass1" type="password" placeholder="Nowe hasło" autocomplete="new-password" data-i18n-placeholder="account.passwordPlaceholder"/>
         <input class="inp" id="pass2" type="password" placeholder="Powtórz nowe hasło" autocomplete="new-password" data-i18n-placeholder="account.passwordRepeatPlaceholder"/>
         <div class="cooldown" id="passwordCooldown" hidden></div>
-        <div class="cluster cluster--end account-actions">
+        <div class="contact-captcha" id="passForgotCaptcha" hidden></div>
+        <div class="cluster account-actions account-actions--split">
+          <button class="link" id="passForgot" type="button" data-i18n="account.passwordForgot" data-i18n-icon="envelope">Nie pamiętasz hasła?</button>
           <button class="btn sm gold" id="savePass" type="button" data-i18n="account.passwordSave" data-i18n-icon="save">Zmień hasło</button>
         </div>
       </section>

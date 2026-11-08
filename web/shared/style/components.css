@@ -1899,6 +1899,24 @@
     font-weight: 900;
   }
 
+  /* Przycisk w postaci odnośnika (np. „Przypomnij hasło” na logowaniu,
+     „Nie pamiętasz hasła?” w Ustawieniach konta). */
+  .link {
+    appearance: none;
+    padding: 0;
+    border: 0;
+    background: 0 0;
+    color: var(--accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .link > .ico { width: 1.1em; height: 1.1em; margin-right: 4px; vertical-align: -.2em; }
+  .link:disabled { cursor: default; opacity: .6; }
+
   /* ── Pole szukania (lupa, X czyści tekst) ──────────────────────── */
   .searchBox {
     display: flex;

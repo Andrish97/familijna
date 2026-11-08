@@ -158,14 +158,21 @@ ponownie za …”.
 > w *Ustawieniach konta* wybierz [Anuluj zmianę], zmień hasło i zgłoś to na
 > kontakt@familijna.app.
 
-**Hasło.** W sekcji „Hasło” wpisz nowe hasło i wybierz [Zmień hasło]. Hasło musi mieć:
+**Hasło.** W sekcji „Hasło” wpisz obecne hasło, dwa razy nowe hasło i wybierz [Zmień hasło].
+Przy błędnym obecnym haśle zobaczysz „Nieprawidłowe hasło.”. Nowe hasło musi mieć:
 
 - co najmniej 8 znaków,
 - małą i wielką literę,
 - cyfrę,
 - znak specjalny (na przykład `!` lub `#`).
 
-Nowe hasło musi różnić się od poprzedniego. Hasło można zmieniać raz na godzinę.
+Nowe hasło musi różnić się od poprzedniego. Hasło można zmieniać raz na godzinę. Po każdej
+zmianie hasła — także przez link z maila — na adres konta przychodzi wiadomość
+„FAMILIJNA — Hasło zostało zmienione”.
+
+Nie pamiętasz obecnego hasła? Wybierz [Nie pamiętasz hasła?|envelope] — na adres konta
+przyjdzie link do ustawienia nowego hasła, tak jak po [Przypomnij hasło] na stronie
+*Logowanie* (→ 5.7).
 
 ![Za słabe hasło](zrzut:people-account-password-weak)
 ![Zmiany możliwe raz na godzinę — odliczanie](zrzut:people-account-cooldowns)

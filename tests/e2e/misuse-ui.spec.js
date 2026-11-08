@@ -142,6 +142,9 @@ test.describe("Konto: błędne dane", () => {
       expect(await toastText(page), value).toContain(msg);
     }
 
+    await page.click("#savePass");
+    expect(await toastText(page)).toContain("Podaj obecne hasło");
+    await page.fill("#passCurrent", "Obecne-Haslo-1!");
     await page.fill("#pass1", "Dobre-Haslo-1");
     await page.fill("#pass2", "Inne-Haslo-1");
     await page.click("#savePass");

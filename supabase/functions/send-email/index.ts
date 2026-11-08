@@ -440,6 +440,19 @@ serve(async (req) => {
     const lang = pickLang(payload, redirectUrl);
     const type = payload.email_data.email_action_type;
 
+    // Powiadomienie GoTrue po zmianie hasła (MAILER_NOTIFICATIONS_PASSWORD_CHANGED_ENABLED):
+    // bez tokenu, tylko informacja z przyciskiem do logowania (tam „Przypomnij hasło”).
+    if (type === "password_changed_notification") {
+      const to = String(payload.user.email || "").trim();
+      if (!to) return json({ ok: true });
+      const copy = await getEmailCopy("password_changed_notice", lang);
+      const html = renderEmail(copy, `${baseOrigin}/login/?lang=${lang}`, lang);
+      await sendEmail(to, copy.subject, html, { requestId, actorUserId });
+      await writeLog({ requestId, event: "request_done", status: "ok", actorUserId, recipientEmail: to,
+        meta: { actionType: type, flow: "password_changed" } });
+      return json({ ok: true });
+    }
+
     if (type === "email_change" || type === "email_change_current" || type === "email_change_new") {
       const userId = String(payload.user.id || "").trim();
       const fallbackUser = userId ? await loadUserEmailFallbacks(userId) : { email: "", emailNew: "", pendingMetaEmail: "" };

@@ -100,6 +100,9 @@
   .account-field-group[hidden]{ display: none; }
   .account-field-group > .inp{ width: 100%; }
   #emailActions[hidden] ~ .account-actions > #saveEmail{ display: none; }
+  /* Hasło: „Nie pamiętasz hasła?” po lewej, „Zmień hasło” po prawej
+     (telefon: odnośnik nad przyciskiem na całą szerokość). */
+  .account-actions--split{ justify-content: space-between; align-items: center; flex-wrap: wrap; }
   @media (max-width: 600px) {
 
     .account-actions .btn{ flex: 1 1 0; min-width: 0; }

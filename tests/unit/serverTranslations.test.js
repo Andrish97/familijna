@@ -56,7 +56,7 @@ test("send-email: każdy typ maila ma komplet pól authEmail w PL/EN/UK", () => 
     .matchAll(/:\s*"(\w+)"/g)].map((m) => m[1]);
   const required = [...src.slice(src.indexOf("REQUIRED_FIELDS"), src.indexOf("];", src.indexOf("REQUIRED_FIELDS")))
     .matchAll(/"(\w+)"/g)].map((m) => m[1]);
-  assert.deepEqual(typeKeys, ["signup", "guestMigrate", "recovery", "emailChange", "emailChangeNotice"]);
+  assert.deepEqual(typeKeys, ["signup", "guestMigrate", "recovery", "emailChange", "emailChangeNotice", "passwordChangedNotice"]);
   assert.ok(required.includes("subject") && required.includes("btn"), `REQUIRED_FIELDS: ${required}`);
 
   for (const lang of LANGS) {
