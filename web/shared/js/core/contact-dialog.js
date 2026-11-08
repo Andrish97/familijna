@@ -120,7 +120,7 @@ function ensureModal() {
   if (modalEl) return;
   modalEl = document.createElement("div");
   modalEl.id = "contactModalOverlay";
-  modalEl.className = "overlay contact-modal-overlay";
+  modalEl.className = "overlay modal--sheet contact-modal-overlay";
   modalEl.hidden = true;
   modalEl.innerHTML = buildModalHtml();
   const modal = modalEl.querySelector(":scope > .modal");

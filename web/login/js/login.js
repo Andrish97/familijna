@@ -24,9 +24,10 @@ import {
   clearGuestLocalMarker,
   initPasswordToggles,
   resetPasswordToggles,
-} from "../../shared/js/core/auth.js?v=v2026-11-08T15035";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T15035";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15035";
+} from "../../shared/js/core/auth.js?v=v2026-11-08T15040";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T15040";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15040";
+import { isSheetViewport } from "../../shared/js/core/modal-sheet.js?v=v2026-11-08T15040";
 
 import { PAGES, manualHref } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15035";
 import { copyGoReturnUrl, isScreenshotId } from "../../shared/js/core/poll-links.js?v=v2026-11-08T15035";
@@ -415,6 +416,8 @@ async function askCaptchaToken() {
       cancelText: t("index.captchaCancel"),
       body: mount,
       initialFocus: mount,
+      // Weryfikacja to coś więcej niż OK/Anuluj: na dotyku okno od dołu (E28).
+      sheet: isSheetViewport() ? { fit: true } : null,
       onReady: ({ okBtn }) => {
         okBtnRef = okBtn;
         if (okBtnRef) okBtnRef.hidden = true;
