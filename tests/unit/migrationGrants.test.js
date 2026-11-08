@@ -1,7 +1,7 @@
 // E24 (przegląd 2026-11-08, R11): od migracji 529 każda nowa funkcja w public ma
-// jawne prawa (GRANT/REVOKE EXECUTE w tym samym pliku), a każda nowa tabela public
-// ma RLS. Domyślnie (528) nowe funkcje nie są wykonywalne przez anon/authenticated —
-// funkcja wołana ze strony potrzebuje GRANT EXECUTE … TO anon/authenticated.
+// w tym samym pliku REVOKE … FROM PUBLIC (prawo domyślne Postgresa = także anon),
+// a funkcja wołana ze strony jawne GRANT EXECUTE … TO anon/authenticated.
+// Każda nowa tabela public ma RLS.
 import test from "node:test";
 import assert from "node:assert";
 import fs from "node:fs";
@@ -17,20 +17,20 @@ function migrations() {
     .map((f) => ({ f, sql: fs.readFileSync(path.join(DIR, f), "utf8").replace(/--[^\n]*/g, "") }));
 }
 
-test("nowe funkcje public mają jawne GRANT/REVOKE EXECUTE", () => {
+test("nowe funkcje public mają REVOKE … FROM PUBLIC", () => {
   const bad = [];
   for (const { f, sql } of migrations()) {
     const re = /create\s+(?:or\s+replace\s+)?function\s+(?:"?public"?\.)"?([a-z_0-9]+)"?\s*\(/gi;
     let m;
     while ((m = re.exec(sql))) {
       const name = m[1];
-      const has = new RegExp(`(grant|revoke)[^;]*execute[^;]*on\\s+function\\s+(?:"?public"?\\.)"?${name}"?\\b`, "i").test(sql)
-        || new RegExp(`(grant|revoke)[^;]*on\\s+function\\s+(?:"?public"?\\.)"?${name}"?\\b`, "i").test(sql);
+      // PUBLIC (domyślne prawo Postgresa) daje funkcję każdemu, także anon.
+      const has = new RegExp(`revoke[^;]*on\\s+function\\s+(?:"?public"?\\.)"?${name}"?\\b[^;]*from[^;]*\\bpublic\\b`, "i").test(sql);
       const trigger = new RegExp(`function\\s+(?:"?public"?\\.)"?${name}"?\\s*\\([^)]*\\)\\s*returns\\s+trigger`, "i").test(sql);
       if (!has && !trigger) bad.push(`${f}: ${name}`);
     }
   }
-  assert.deepStrictEqual(bad, [], "funkcje bez jawnych praw:\n" + bad.join("\n"));
+  assert.deepStrictEqual(bad, [], "funkcje bez REVOKE … FROM PUBLIC:\n" + bad.join("\n"));
 });
 
 test("nowe tabele public mają RLS", () => {
