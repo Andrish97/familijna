@@ -125,6 +125,8 @@ const en = {
       },
     },
     image: {
+      stepDown: "Decrease",
+      stepUp: "Increase",
       pickImage: "Choose image",
       brightness: "Brightness",
       contrast: "Contrast",

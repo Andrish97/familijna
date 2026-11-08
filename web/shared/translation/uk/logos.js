@@ -125,6 +125,8 @@ const uk = {
       },
     },
     image: {
+      stepDown: "Зменшити",
+      stepUp: "Збільшити",
       pickImage: "Вибрати зображення",
       brightness: "Яскравість",
       contrast: "Контраст",

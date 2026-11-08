@@ -91,7 +91,9 @@ Keyboard shortcuts do not work while you are typing text.
    You can rotate the image by 90° and straighten it. The layout of the panels adapts to the shape
    of the image and the window — after you release the straightening slider.
 3. Adjust the look with the sliders: brightness, contrast, gamma, black, white and dither (the graininess
-   of tonal transitions). [Invert] swaps light and dark areas, [Reset] undoes the settings.
+   of tonal transitions). A setting's button shows its slider in the bar below the tools (straightening
+   at first); − and + change the value by one step, held down — faster and faster. [Invert] swaps
+   light and dark areas, [Reset] undoes the settings.
 
 ![Image logo — choosing an image](zrzut:logos-market-image-empty)
 ![Crop and sliders](zrzut:logo-image)

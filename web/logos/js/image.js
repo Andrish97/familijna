@@ -11,7 +11,6 @@ import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-07T22371";
 import { t } from "../../shared/translation/translation.js?v=v2026-11-07T22371";
 import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-07T22371";
 import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits, fitPreview } from "./render.js?v=v2026-11-07T22371";
-import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T22371";
 import { setBox } from "../../shared/js/core/geometry.js?v=v2026-11-07T22371";
 import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-07T22371";
 
@@ -698,29 +697,82 @@ export function initImageEditor(ctx) {
   }
 
   // =========================================================
-  // Popover suwaków: jeden panel naraz, pod przyciskiem
+  // Pasek suwaka pod narzędziami (decyzja użytkownika 2026-11-07): zawsze
+  // widoczny, jeden suwak naraz, na starcie prostowanie; przycisk w pasku
+  // narzędzi wybiera, który suwak jest w pasku. Nic nie zasłania obrazu.
+  // Przyciski − i + zmieniają wartość o krok suwaka; przytrzymane powtarzają
+  // krok coraz szybciej (gamma i dither mają krok 0,01).
   // =========================================================
-  const panelsWrap = $("imgPanels");
   const panelBtns = Array.from(document.querySelectorAll(".imgSetBtn"));
   const panels = Array.from(document.querySelectorAll("#imgPanels .imgPanel"));
-  let openPanel = null;
+  const DEFAULT_PANEL = "straighten";
 
-  function closePanels() {
-    openPanel = null;
-    panelsWrap?.classList.remove("is-open");
-    for (const b of panelBtns) b.classList.remove("is-active");
-    for (const p of panels) p.classList.remove("is-open");
-  }
-
-  function openPanelAt(name, anchor) {
-    if (!panelsWrap) return;
-    openPanel = name;
-    for (const b of panelBtns) b.classList.toggle("is-active", b.dataset.panel === name);
+  function showPanel(name) {
+    for (const b of panelBtns) {
+      const on = b.dataset.panel === name;
+      b.classList.toggle("is-active", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    }
     for (const p of panels) p.classList.toggle("is-open", p.dataset.panel === name);
-    panelsWrap.classList.add("is-open");
-
-    placeDropdown(anchor, panelsWrap, { align: "start" });
   }
+  // dawne „zamknij panel” = powrót do domyślnego suwaka
+  const closePanels = () => showPanel(DEFAULT_PANEL);
+
+  function stepSlider(input, dir) {
+    if (!input || input.disabled) return;
+    const before = input.value;
+    if (dir > 0) input.stepUp(); else input.stepDown();
+    if (input.value === before) return;
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  function addStepButtons(panel) {
+    const input = panel.querySelector('input[type="range"]');
+    if (!input || panel.querySelector(".imgStepRow")) return;
+    const row = document.createElement("div");
+    row.className = "imgStepRow";
+    const btn = (dir) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "btn sm icon imgStepBtn";
+      b.dataset.dir = String(dir);
+      b.dataset.i18nAriaLabel = dir > 0 ? "logoEditor.image.stepUp" : "logoEditor.image.stepDown";
+      b.setAttribute("aria-label", t(b.dataset.i18nAriaLabel));
+      b.textContent = dir > 0 ? "+" : "−";
+      let timer = null, n = 0;
+      const stop = () => {
+        clearTimeout(timer); timer = null;
+        if (n) input.dispatchEvent(new Event("change", { bubbles: true }));
+        n = 0;
+      };
+      const tick = () => {
+        stepSlider(input, dir);
+        n++;
+        timer = setTimeout(tick, n < 6 ? 140 : n < 20 ? 60 : 25); // przyspiesza
+      };
+      b.addEventListener("pointerdown", (e) => {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        b.setPointerCapture?.(e.pointerId);
+        stepSlider(input, dir);
+        n = 1;
+        timer = setTimeout(tick, 400);
+      });
+      for (const ev of ["pointerup", "pointercancel", "lostpointercapture"]) b.addEventListener(ev, stop);
+      // klawiatura (Enter/Spacja) -- jeden krok
+      b.addEventListener("click", (e) => {
+        if (e.detail !== 0) return;
+        stepSlider(input, dir);
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      return b;
+    };
+    input.before(row);
+    row.append(btn(-1), input, btn(1));
+  }
+  for (const p of panels) addStepButtons(p);
+  window.addEventListener("i18n:lang", () => {
+    for (const b of document.querySelectorAll(".imgStepBtn")) b.setAttribute("aria-label", t(b.dataset.i18nAriaLabel));
+  });
 
   // =========================================================
   // Zdarzenia (raz, przy starcie strony)
@@ -784,18 +836,7 @@ export function initImageEditor(ctx) {
     if (ctx.getMode?.() === "IMAGE") resetToDefaults();
   });
 
-  for (const b of panelBtns) {
-    b.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (openPanel === b.dataset.panel) closePanels();
-      else openPanelAt(b.dataset.panel, b);
-    });
-  }
-  window.addEventListener("pointerdown", (e) => {
-    if (!openPanel || e.target.closest?.("#imgPanels, .imgSetBtn")) return;
-    closePanels();
-  });
-  window.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanels(); });
+  for (const b of panelBtns) b.addEventListener("click", () => showPanel(b.dataset.panel));
   window.addEventListener("i18n:lang", syncLabels);
 
   // Zmiana rozmiaru okna albo samego pola: przelicz piksele ramki z kadru.

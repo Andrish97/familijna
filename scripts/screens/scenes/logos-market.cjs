@@ -170,10 +170,10 @@ module.exports = [
 // Obrót o 90°: obraz staje się wysoki, układ dobiera się do nowych proporcji
 { id: "logos-market-image-rotated", category: CAT, title: "Edytor obrazu — obraz obrócony o 90° (układ z nowych proporcji)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
     steps: [wait(800), click("#btnImgRotR", 1200)] },
-// Suwaki ustawień obrazu: przycisk w pasku otwiera jeden wysuwany panel z suwakiem
-{ id: "logos-market-image-slider-bright", category: CAT, title: "Edytor obrazu — suwak jasności (wysuwany panel)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
+// Pasek suwaka pod narzędziami: przycisk ustawienia wybiera suwak w pasku
+{ id: "logos-market-image-slider-bright", category: CAT, title: "Edytor obrazu — pasek suwaka: jasność", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
     steps: [wait(800), click('.imgSetBtn[data-panel="bright"]', 500)] },
-{ id: "logos-market-image-slider-straighten", category: CAT, title: "Edytor obrazu — suwak prostowania (wysuwany panel)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
+{ id: "logos-market-image-slider-straighten", category: CAT, title: "Edytor obrazu — pasek suwaka: prostowanie (domyślnie)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,
     steps: [wait(800), click('.imgSetBtn[data-panel="straighten"]', 500)] },
 // Prostowanie o dowolny kąt (suwak): układ dobrany po puszczeniu suwaka
 { id: "logos-market-image-straightened", category: CAT, title: "Edytor obrazu — prostowanie o 25° (układ z obrysu obróconego obrazu)", path: `/logos/editor/image/?id=${id("8300", 47)}`, sources: IMAGE_ED, ready: "#logoName:not([disabled])", devices: [...EDITOR_DEVICES, "tablet-landscape"], settle: 1500,

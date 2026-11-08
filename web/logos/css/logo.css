@@ -661,58 +661,38 @@
   }
 
   /* =========================================================
-     IMAGE: roll-up slider popover (jeden panel na raz)
+     IMAGE: pasek suwaka pod narzędziami (zawsze widoczny, jeden suwak
+     naraz; nazwa i wartość z lewej, −, suwak, +). Nic nie zasłania obrazu.
   ========================================================= */
-
   #imgPanels{
-    position: fixed;     /* nie zależy od overflow toolbara */
-    z-index: calc(var(--z-top) + 1);
-    display: none;
-    left: 0;
-    top: 0;
-    pointer-events: auto;
+    border-top: 1px solid var(--line-faint);
+    padding-top: 10px;
   }
-
-  #imgPanels.is-open{ display: block; }
-
-  #imgPanels .imgPanel{
-    display: none;       /* pokazujemy tylko aktywny */
-  }
-
-  /* wygląd jak .ui-select-menu (css/base.css) i .ctxPop: kryjące tło, bez
-     półprzezroczystości -- tak jak pozostałe wysuwane listy w systemie */
-  #imgPanels .imgPanel.is-open{
-    display: block;
-    width: min(420px, calc(100vw - 16px));
-    box-sizing: border-box;
-    border-radius: var(--r-md);
-    border: 1px solid var(--line);
-    background: var(--bg);
-    box-shadow: 0 24px 60px var(--k-70);
-    color: var(--text);
-    padding: 12px;
-  }
-
+  #imgPanels .imgPanel{ display: none; }
+  #imgPanels .imgPanel.is-open{ display: flex; align-items: center; gap: 14px; }
   #imgPanels .imgPanelTitle{
-    font-weight: 1000;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    font-size: 12px;
-    opacity: .86;
+    flex: 0 0 auto;
+    min-width: 150px;
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     gap: 10px;
-    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  #imgPanels .imgPanelVal{ font-family: var(--font-mono); color: var(--accent); }
+  #imgPanels .imgStepRow{ flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; }
+  #imgPanels .imgStepBtn{ flex: 0 0 auto; min-width: 32px; font-size: 16px; }
+  #imgPanels .rng.v{ flex: 1 1 auto; min-width: 0; height: 20px; }
+  @media (pointer: coarse){
+    #imgPanels .rng.v{ height: 32px; }
+    #imgPanels .imgStepBtn{ min-width: 44px; min-height: 44px; }
   }
 
   #toolsImage .imgRotBtn{ min-width: 32px; padding: 0 8px; }
   #toolsImage .imgRotBtn .ico{ width: 18px; height: 18px; }
 
-  #imgPanels .rng.v{
-    width: 100%;
-    height: 20px;
-  }
+
   /* =========================================================
      IMAGE: auto layout (row/col) sterowane klasą z JS
   ========================================================= */

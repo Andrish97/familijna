@@ -91,7 +91,9 @@ Skróty klawiszowe nie działają podczas wpisywania tekstu.
    Możesz obrócić obraz o 90° i wyprostować go. Układ pól dopasowuje się do kształtu obrazu
    i okna — po puszczeniu suwaka prostowania.
 3. Dopasuj wygląd suwakami: jasność, kontrast, gamma, czerń, biel i dither (ziarnistość
-   przejść tonalnych). [Odwróć] zamienia jasne miejsca z ciemnymi, [Przywróć] cofa ustawienia.
+   przejść tonalnych). Przycisk ustawienia pokazuje jego suwak w pasku pod narzędziami (na początku
+   prostowanie); − i + zmieniają wartość o jeden krok, przytrzymane — coraz szybciej. [Odwróć]
+   zamienia jasne miejsca z ciemnymi, [Przywróć] cofa ustawienia.
 
 ![Logo z obrazu — wybór obrazu](zrzut:logos-market-image-empty)
 ![Kadr i suwaki](zrzut:logo-image)

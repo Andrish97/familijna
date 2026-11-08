@@ -125,6 +125,8 @@ const pl = {
       },
     },
     image: {
+      stepDown: "Zmniejsz",
+      stepUp: "Zwiększ",
       pickImage: "Wybierz obraz",
       brightness: "Jasność",
       contrast: "Kontrast",
