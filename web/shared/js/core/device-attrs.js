@@ -10,8 +10,8 @@
 //   data-keyboard-room  zapas pod treścią (html::after), gdy pole z samego
 //                    dołu strony trzeba podnieść ponad koniec strony
 // Początkowe atrybuty ustawia klasyczny page-boot.js; ten moduł je aktualizuje.
-import "./page-layout.js?v=v2026-11-08T21561";
-import { editableFocused } from "./device-guard.js?v=v2026-11-08T21561";
+import "./page-layout.js?v=v2026-11-08T21565";
+import { editableFocused } from "./device-guard.js?v=v2026-11-08T21565";
 
 export const { NARROW_MAX, deviceLayout } = globalThis.FamilijnaDevice;
 
