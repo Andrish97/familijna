@@ -1,10 +1,20 @@
 name: Deploy legacy domain Worker
 
 # Worker starej domeny familiada.online (przeprowadzka na familijna.app).
-# Tylko ręcznie, w dniu przełączenia; trasy ustawia się w panelu Cloudflare
-# (lista w cloudflare/legacy-domain-worker/wrangler.toml).
+# Wdrażany automatycznie po zmianie jego kodu na main (decyzja właściciela
+# 2026-11-08), najpierw testy; ręcznie też można. Trasy ustawia się w panelu
+# Cloudflare (lista w cloudflare/legacy-domain-worker/wrangler.toml).
 on:
+  push:
+    branches: ["main"]
+    paths:
+      - "cloudflare/legacy-domain-worker/**"
+      - ".github/workflows/deploy-legacy-worker.yml"
   workflow_dispatch: {}
+
+concurrency:
+  group: deploy-legacy-worker
+  cancel-in-progress: false
 
 # E24 R26: token GitHuba tylko do odczytu.
 permissions:
