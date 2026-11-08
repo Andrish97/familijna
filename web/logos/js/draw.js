@@ -19,7 +19,7 @@ import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-07T22371"
 import { initUiSelect } from "../../shared/js/core/ui-select.js?v=v2026-11-07T22371";
 import { placeDropdown } from "../../shared/js/core/popover.js?v=v2026-11-07T22371";
 import { t } from "../../shared/translation/translation.js?v=v2026-11-07T22371";
-import { v as cacheBust } from "../../shared/js/core/cache-bust.js?v=v2026-11-07T22371";
+import { DRAW_FONTS, DEFAULT_DRAW_FONT, ensureDrawFonts, normalizeDrawFont, sceneFontFamilies } from "../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
 import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-07T22371";
 import { DOT_W, DOT_H, TYPE_PIX, PIX_FORMAT, packBits, unpackBits } from "./render.js?v=v2026-11-07T22371";
 import { WORLD_W, WORLD_H, sceneToBits } from "./draw/raster.js?v=v2026-11-07T22371";
@@ -50,7 +50,7 @@ const LINE_STYLES = [
 const DEFAULT_TOOL_SETTINGS = {
   BRUSH: { stroke: 6, fg: "WHITE", lineStyle: "solid" },
   SHAPES: { stroke: 6, fg: "WHITE", lineStyle: "solid", fill: false, fillColor: "WHITE" },
-  TEXT: { fg: "WHITE", font: "", size: 80, lineHeight: 1, spacing: 0, bold: false, italic: false, underline: false, align: "center" },
+  TEXT: { fg: "WHITE", font: DEFAULT_DRAW_FONT, size: 80, lineHeight: 1, spacing: 0, bold: false, italic: false, underline: false, align: "center" },
   ERASER: { size: 10 },
 };
 
@@ -88,6 +88,7 @@ function mergeSettings(saved) {
   out.SHAPES.stroke = fit(out.SHAPES.stroke, RANGE.stroke, DEFAULT_TOOL_SETTINGS.SHAPES.stroke);
   out.ERASER.size = fit(out.ERASER.size, RANGE.eraser, DEFAULT_TOOL_SETTINGS.ERASER.size);
   out.TEXT.size = fit(out.TEXT.size, RANGE.fontSize, DEFAULT_TOOL_SETTINGS.TEXT.size);
+  out.TEXT.font = normalizeDrawFont(out.TEXT.font); // tylko czcionki z zestawu
   return out;
 }
 
@@ -670,7 +671,7 @@ export function initDrawEditor(ctx) {
       underline: s.underline,
       textAlign: s.align,
       fill: hex(s.fg),
-      ...(s.font ? { fontFamily: s.font } : {}),
+      fontFamily: s.font,
     });
     canvas.add(obj);
     keepInWorld(obj);
@@ -789,7 +790,7 @@ export function initDrawEditor(ctx) {
   function renderSettings() {
     renderSettingsContent();
     const fontBtn = $("cFont");
-    if (fontBtn) setVars(fontBtn.querySelector(".ui-select-label"), { "--font": fontBtn.dataset.font || null });
+    if (fontBtn) setVars(fontBtn.querySelector(".ui-select-label"), { "--font": fontBtn.dataset.font ? `"${fontBtn.dataset.font}"` : null });
     if (!toolCtx || !selectedObjects().length || (tool !== TOOL.SELECT && tool !== TOOL.TEXT)) return;
     toolCtx.insertAdjacentHTML("beforeend", group(toggleBtn("cDelete", false, icon("close"), T("deleteSelection"), "danger")));
     $("cDelete").setAttribute("aria-keyshortcuts", "Delete Backspace");
@@ -881,7 +882,7 @@ export function initDrawEditor(ctx) {
   }
 
   function textSettingsHtml(v) {
-    const font = DRAW_FONTS.find((f) => f.value === v.font) || DRAW_FONTS[0];
+    const font = FONT_LIST.find((f) => f.value === v.font) || FONT_LIST[0];
     const fontLabel = font?.label || T("fontFallback");
     // wygląd listy wyboru (jak „Styl”); nazwa wybranej czcionki jej krojem (--font)
     return (
@@ -979,36 +980,22 @@ export function initDrawEditor(ctx) {
   // =========================================================
   // Wybór fontu (popover z wyszukiwarką)
   // =========================================================
-  let DRAW_FONTS = [];
+  // Lista: własny zestaw czcionek (shared/js/core/draw-fonts.js); pozycja
+  // { value, label } jak dawniej — value = fontFamily w scenie.
+  const FONT_LIST = DRAW_FONTS.map((f) => ({ value: f.family, label: f.family }));
   let fontOnSelect = null;
   let fontCurrent = "";
 
-  async function loadFonts() {
-    if (DRAW_FONTS.length) return;
-    try {
-      const res = await fetch(await cacheBust(new URL("../data/fonts.json", import.meta.url).href), { cache: "no-store" });
-      const data = res.ok ? await res.json() : [];
-      DRAW_FONTS = Array.isArray(data) ? data.filter((f) => f?.value && f?.label) : [];
-    } catch {
-      DRAW_FONTS = [];
-    }
-  }
-
   async function loadSceneFonts() {
     const textObjects = canvas?.getObjects?.().filter(isTextObj) || [];
-    const families = new Set(textObjects.map(obj => {
-      const style = [obj.fontStyle, obj.fontWeight].filter(value => value && value !== "normal").join(" ");
-      return `${style ? `${style} ` : ""}${Math.max(1, Number(obj.fontSize) || 16)}px ${obj.fontFamily || "sans-serif"}`;
-    }));
-    await Promise.all([...families].map(font => document.fonts?.load(font, "Familijna").catch(() => [])));
-    await document.fonts?.ready;
+    await ensureDrawFonts(textObjects.map((obj) => obj.fontFamily));
   }
 
   // pozycja listy: nazwa i przykład napisany tą czcionką (wygląd .menu-item jak w ui-select)
   function renderFontList() {
     const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const q = norm(fontSearch?.value || "");
-    const list = q ? DRAW_FONTS.filter((f) => norm(f.label).includes(q) || norm(f.value).includes(q)) : DRAW_FONTS;
+    const list = q ? FONT_LIST.filter((f) => norm(f.label).includes(q) || norm(f.value).includes(q)) : FONT_LIST;
     fontEmpty.hidden = list.length > 0;
     fontList.innerHTML = "";
     for (const f of list) {
@@ -1021,11 +1008,13 @@ export function initDrawEditor(ctx) {
       name.textContent = f.label;
       const sample = document.createElement("span");
       sample.className = "fontPickSwatch";
-      setVars(sample, { "--font": f.value });
+      setVars(sample, { "--font": `"${f.value}"` });
       sample.textContent = T("sampleText");
       item.append(name, sample);
       item.addEventListener("click", () => {
-        fontOnSelect?.(f.value);
+        const select = fontOnSelect;
+        // wybrana czcionka załadowana przed rysowaniem (bez mignięcia zastępczej)
+        void ensureDrawFonts([f.value]).then(() => { select?.(f.value); canvas?.requestRenderAll(); schedulePreview(10); });
         closeFontPicker();
       });
       fontList.appendChild(item);
@@ -1034,11 +1023,13 @@ export function initDrawEditor(ctx) {
 
 
   function openFontPicker(current, onSelect) {
-    if (!fontPop || !DRAW_FONTS.length) return;
+    if (!fontPop) return;
     fontCurrent = current || "";
     fontOnSelect = onSelect;
     placeDropdown($("cFont") || $("toolsDraw"), fontPop, { align: "start" });
     fontPop.hidden = false;
+    // próbki na liście: wszystkie czcionki zestawu (raz na stronę)
+    void ensureDrawFonts(FONT_LIST.map((f) => f.value));
     fontSearch.value = "";
     if ($("drawFontSearchClear")) $("drawFontSearchClear").hidden = true;
     renderFontList();
@@ -1546,7 +1537,21 @@ export function initDrawEditor(ctx) {
       if (layer) canvas.add(layer);
       return;
     }
-    await loadScene(source.fabricData);
+    const scene = withDrawFonts(source.fabricData);
+    await ensureDrawFonts(sceneFontFamilies(scene)); // przed wczytaniem: Fabric mierzy napisy przy tworzeniu
+    await loadScene(scene);
+  }
+
+  // fontFamily tylko z zestawu (plik .famlogo albo scena sprzed zestawu)
+  function withDrawFonts(scene) {
+    const copy = JSON.parse(JSON.stringify(scene));
+    const visit = (o) => {
+      if (!o || typeof o !== "object") return;
+      if (/text/i.test(o.type || "")) o.fontFamily = normalizeDrawFont(o.fontFamily);
+      o.objects?.forEach(visit);
+    };
+    copy.objects?.forEach(visit);
+    return copy;
   }
 
   // =========================================================
@@ -1555,12 +1560,12 @@ export function initDrawEditor(ctx) {
   return {
     async open(payload = null) {
       paneDraw.hidden = false;
-      await loadFonts();
       if (!canvas) installCanvas();
 
       const source = payload?.source || {};
       bg = source.bg === "WHITE" || source.bg === "BLACK" ? source.bg : source.fabricData?.background ? toBW(source.fabricData.background) : "BLACK";
       settings = mergeSettings(source.toolSettings);
+      await ensureDrawFonts([settings.TEXT.font]); // czcionka narzędzia Tekst gotowa przed pierwszym napisem
       holdSpace = holdCtrl = false;
       baseTool = tool = TOOL.SELECT;
       drawing = null;

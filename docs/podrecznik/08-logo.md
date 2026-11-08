@@ -54,7 +54,7 @@ i białym; białe elementy zaświecą się na Wyświetlaczu.
 | Pędzel | B | rysowanie odręczne |
 | Gumka | E | usuwa elementy, których dotknie |
 | Kształty | S | linia, prostokąt, elipsa, wielokąt, gwiazda, strzałki, serce i inne |
-| Tekst | T | napisy — do wyboru wiele krojów pisma |
+| Tekst | T | napisy — 30 krojów pisma z polskimi i ukraińskimi literami, na każdym urządzeniu takie same |
 
 ![Edytor rysunku](zrzut:logo-draw)
 ![Pędzel](zrzut:logos-market-draw-brush)

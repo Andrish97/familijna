@@ -54,7 +54,7 @@ and white; the white elements will light up on the Display.
 | Brush | B | freehand drawing |
 | Eraser | E | removes the elements it touches |
 | Shapes | S | line, rectangle, ellipse, polygon, star, arrows, heart and more |
-| Text | T | captions — with many typefaces to choose from |
+| Text | T | captions — 30 typefaces with Polish and Ukrainian letters, the same on every device |
 
 ![Drawing editor](zrzut:logo-draw)
 ![Brush](zrzut:logos-market-draw-brush)

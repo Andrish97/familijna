@@ -1,4 +1,5 @@
 // The file importer and copy sender use the same canonical logo package.
+import { normalizeDrawFont } from "../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
 import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-07T22371";
 
 
@@ -20,6 +21,8 @@ function cleanScene(node) {
     if (out[key] && typeof out[key] === "object" && typeof out[key].src === "string" && !allowedImage(out[key].src)) delete out[key];
   }
   if (out.fill && typeof out.fill === "object" && typeof out.fill.source === "string" && !allowedImage(out.fill.source)) delete out.fill;
+  // tekst: tylko czcionki z zestawu (plik zapisany przed zestawem — odpowiednik)
+  if (/text/i.test(out.type || "")) out.fontFamily = normalizeDrawFont(out.fontFamily);
   if (Array.isArray(out.objects)) {
     out.objects = out.objects
       .filter((o) => !(o && typeof o === "object" && typeof o.src === "string" && !allowedImage(o.src)))

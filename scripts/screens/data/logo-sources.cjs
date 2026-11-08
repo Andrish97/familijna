@@ -12,7 +12,7 @@ const star = (cx, cy, r) => {
   }
   return { type: "polygon", points, left: cx - r, top: cy - r, fill: "#ffffff", stroke: null };
 };
-const text = (t, left, top, fontSize, extra = {}) => ({ type: "i-text", text: t, left, top, originX: "center", originY: "center", fontSize, fontWeight: "bold", fontFamily: "Arial, Helvetica, sans-serif", fill: "#ffffff", textAlign: "center", styles: {}, ...extra });
+const text = (t, left, top, fontSize, extra = {}) => ({ type: "i-text", text: t, left, top, originX: "center", originY: "center", fontSize, fontWeight: "bold", fontFamily: "Roboto", fill: "#ffffff", textAlign: "center", styles: {}, ...extra });
 // Ścieżka SVG ("M x y C … Z") jako tablica komend, jak w JSON Fabric 5.
 const pathCmds = (d) => d.trim().split(/(?=[MLCQZz])/).map((part) => {
   const [cmd, ...nums] = part.trim().split(/[\s,]+/);

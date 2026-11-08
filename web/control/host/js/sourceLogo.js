@@ -1,6 +1,7 @@
 // Host-only renderer for the source preserved in a logo's payload.
 // Logo editors and their stored formats are deliberately not changed here.
 
+import { ensureDrawFonts, drawFontFaceCss, normalizeDrawFont, sceneFontFamilies } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
 import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-07T22371";
 
 const FRAME_W = 1280;
@@ -360,6 +361,15 @@ function stabilizeDrawStrokes(scene) {
   return scene;
 }
 
+function quoteSceneFonts(scene) {
+  const visit = (object) => {
+    if (!object || typeof object !== "object") return;
+    if (/text/i.test(object.type || "")) object.fontFamily = `'${normalizeDrawFont(object.fontFamily)}'`;
+    object.objects?.forEach(visit);
+  };
+  scene.objects?.forEach(visit);
+}
+
 async function renderDrawLogo(logo, dot) {
   const source = logo?.payload?.source || {};
   const savedScene = source.fabricData;
@@ -374,6 +384,13 @@ async function renderDrawLogo(logo, dot) {
     // Composite the saved Fabric canvas in its original object order. Uniform
     // strokes stop group scaling from multiplying their displayed thickness.
     const scene = stabilizeDrawStrokes(JSON.parse(JSON.stringify(savedScene)));
+    // czcionki z zestawu rysunku: załadowane na stronie (pomiar napisów)
+    // i osadzone w SVG (obraz SVG nie widzi czcionek strony); nazwy w cudzysłowie,
+    // bo np. „Exo 2” bez niego nie jest poprawną nazwą w CSS
+    const families = sceneFontFamilies(scene).map(normalizeDrawFont);
+    await ensureDrawFonts(families);
+    const fontCss = await drawFontFaceCss(families);
+    quoteSceneFonts(scene);
     const background = source.bg === "WHITE" ? "#fff" : source.bg === "BLACK" ? "#000" : savedScene.background;
     scene.background = background || "";
     scene.backgroundColor = background || "";
@@ -397,7 +414,7 @@ async function renderDrawLogo(logo, dot) {
     const maskId = `host-draw-mask-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}`;
     const filterId = `${maskId}-luma`;
     const outputHeight = Math.max(1, Math.round(FRAME_W * height / width));
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${FRAME_W}" height="${outputHeight}" preserveAspectRatio="xMidYMid meet"><defs>${definitions}<filter id="${filterId}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"/></filter><mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}" mask-type="luminance"><rect width="${width}" height="${height}" fill="#000"/><g filter="url(#${filterId})">${sceneContent}</g></mask></defs><rect width="${width}" height="${height}" fill="${safeXml(colorHex(dot))}" mask="url(#${maskId})"/></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${FRAME_W}" height="${outputHeight}" preserveAspectRatio="xMidYMid meet"><defs>${fontCss ? `<style>${fontCss}</style>` : ""}${definitions}<filter id="${filterId}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0.2126 0.7152 0.0722 0 0 0 0 0 1 0"/></filter><mask id="${maskId}" maskUnits="userSpaceOnUse" x="0" y="0" width="${width}" height="${height}" mask-type="luminance"><rect width="${width}" height="${height}" fill="#000"/><g filter="url(#${filterId})">${sceneContent}</g></mask></defs><rect width="${width}" height="${height}" fill="${safeXml(colorHex(dot))}" mask="url(#${maskId})"/></svg>`;
     const image = new Image();
     image.alt = logo?.name || ""; // ozdobny, gdy logo bez nazwy
     image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
