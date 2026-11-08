@@ -20,3 +20,14 @@ przycisku [Kontakt] (sama ikona — nazwa pojawia się w dymku).
 > Uwaga: wsparcie jest dobrowolne i nie daje żadnych dodatkowych funkcji ani korzyści
 > w serwisie — jest po prostu podziękowaniem. Uwagi i pomysły na rozwój możesz przesłać
 > przez formularz kontaktu (→ 19.6).
+
+## 21.3 Muzyka i czcionki
+
+**Muzyka „Klasyczna”.** Intro, zakończenie, przejście między rundami i motyw finału to
+utwory wygenerowane dla serwisu w Suno (suno.com) w ramach płatnego planu, który pozwala
+na użycie komercyjne. Nie są fragmentami programów telewizyjnych ani cudzych nagrań.
+
+**Czcionki.** Kroje pisma w edytorze rysunku logo (→ 8.3), na ekranie Prowadzącego (→ 16.3)
+i w logo „Źródło” to czcionki na wolnych licencjach (SIL Open Font License albo Apache),
+dołączone do serwisu. Możesz ich używać bez opłat i bez pytania o zgodę — także na imprezach
+komercyjnych. Na każdym urządzeniu wyglądają tak samo.

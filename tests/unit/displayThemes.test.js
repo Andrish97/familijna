@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -64,21 +65,16 @@ test("Nowoczesny: bez trzeciego koloru, gradient drużyn zależy od stanu", () =
 });
 
 test("Prowadzący z pliku: krój i miary w CSS motywu, CSS zawężony do motywu, tło niezależne od T", () => {
-  // Prowadzący bez czcionek systemowych: każdy motyw ma krój wszyty w plik
-  // (Kaseton: Merriweather zamiast Georgii, decyzja użytkownika 2026-11-08).
+  // Prowadzący bez czcionek systemowych (decyzja użytkownika 2026-11-08): każdy
+  // motyw wbudowany wskazuje czcionkę serwisu z web/shared/fonts/ (host.fonts[].file,
+  // jedno miejsce na pliki; Kaseton: Merriweather zamiast Georgii).
   for (const theme of themes) assert.match(theme.host.css[":root"]["--host-font"], /^"(Caveat|JetBrainsMono|Merriweather)-Variable"/, theme.key);
-  // Krój spoza systemu jest wszyty w motyw (host.fonts) — strona nie ma własnych plików krojów.
   for (const theme of themes) {
     const first = /^"([^"]+)"/.exec(theme.host.css[":root"]["--host-font"])?.[1];
-    if (first) assert.ok(theme.host.fonts.some((font) => font.family === first), `${theme.key}: brak ${first} w host.fonts`);
+    const font = theme.host.fonts.find((f) => f.family === first);
+    assert.ok(font?.file, `${theme.key}: ${first} bez pliku serwisu w host.fonts`);
+    assert.ok(fs.existsSync(new URL(`../../web/shared/fonts/${font.file}.woff2`, import.meta.url)), `${theme.key}: brak pliku ${font.file}`);
   }
-  assert.equal(byKey.modern.host.fonts.length, 3, "JetBrains Mono: latin + latin-ext + cyrillic");
-  // pytania po ukraińsku: cyrylica wszyta w każdy motyw z zakresami (bez czcionki systemowej)
-  for (const theme of themes) {
-    const ranges = theme.host.fonts.map((font) => font.unicodeRange || "");
-    if (ranges.some(Boolean)) assert.ok(ranges.some((r) => r.includes("U+0400-045F")), `${theme.key}: brak cyrylicy`);
-  }
-  assert.ok(byKey.modern.host.fonts.every((font) => font.unicodeRange));
   assert.match(hostRulesCss(byKey.classic.host.css), /--host-font: "Caveat-Variable", cursive; --host-font-ratio: 1;/);
   const css = hostRulesCss(byKey.wings.host.css);
   assert.match(css, /^html\[data-host-style\] \{[^}]*--host-background: #152238;/m);

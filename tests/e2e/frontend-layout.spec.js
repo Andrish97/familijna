@@ -27,7 +27,7 @@ test("refaktor: domyślne logo, fonty, tłumaczenia i outro są dostępne", asyn
     expect(response.status(), path).toBe(200);
     expect(await response.json(), path).toBeTruthy();
   }
-  for (const path of ["/shared/translation/pl/common.js", "/shared/translation/en/common.js", "/shared/translation/uk/common.js", "/control/host/fonts/Unbounded-Variable.ttf", "/assets/audio/show_outro/classic.mp3"]) {
+  for (const path of ["/shared/translation/pl/common.js", "/shared/translation/en/common.js", "/shared/translation/uk/common.js", "/shared/fonts/unbounded.woff2", "/assets/audio/show_outro/classic.mp3"]) {
     const response = await productionGet(request,path);
     expect(response.status(), path).toBe(200);
     expect(response.headers()["content-type"], path).not.toContain("text/html");

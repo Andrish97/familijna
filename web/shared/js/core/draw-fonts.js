@@ -2,7 +2,9 @@
 // zestaw dołączony do serwisu — wszędzie wygląda tak samo, niezależnie od
 // czcionek zainstalowanych w systemie. Jeden plik .woff2 na czcionkę
 // (zmienna: wszystkie grubości w jednym pliku), litery łacińskie, polskie
-// i cyrylica. Pliki i licencje: web/shared/fonts/draw/.
+// i cyrylica. Pliki i licencje: web/shared/fonts/ (jedno miejsce na wszystkie
+// czcionki serwisu, także „papieru” Prowadzącego z motywów — SHARED_FONT_FILES
+// w display/theme-file.js).
 //
 // W scenie rysunku (fabricData) obiekt tekstu ma fontFamily = `family`.
 // Edytor, podgląd na Wyświetlaczu i ekran prowadzącego ładują czcionkę
@@ -46,7 +48,10 @@ export const DRAW_FONTS = [
 export const DEFAULT_DRAW_FONT = "Roboto";
 
 const BY_FAMILY = new Map(DRAW_FONTS.map((f) => [f.family, f]));
-const fileUrl = (f) => new URL(`../../fonts/draw/${f.file}.woff2`, import.meta.url).href;
+/** Adres pliku czcionki serwisu (web/shared/fonts/<file>.woff2). */
+export const sharedFontUrl = (file) => new URL(`../../fonts/${file}.woff2`, import.meta.url).href;
+const fileUrl = (f) => sharedFontUrl(f.file);
+
 
 /** Czcionka z zestawu albo null. */
 export const drawFontOf = (family) => BY_FAMILY.get(String(family || "").trim()) || null;

@@ -41,7 +41,12 @@ export const DEFAULT_PANELS = {
   big: [640, 307.33656], left: [113.658, 337.33654], right: [1164.342, 337.33654],
   top: [640, 57.165475], longA: [356.8, 546.68763], longB: [923.2, 546.68763],
 };
-// Kroje Prowadzącego wszyte w plik (host.fonts): woff2, woff, ttf, otf.
+// Kroje Prowadzącego (host.fonts): wszyte w plik (woff2, woff, ttf, otf) albo
+// wskazane po nazwie pliku czcionki serwisu (web/shared/fonts/).
+// Pliki czcionek serwisu (web/shared/fonts/<plik>.woff2), które motyw może wskazać
+// zamiast wszywać krój (host.fonts[].file). Bez importu: kopię walidatora dostaje
+// funkcja Edge; zgodność z draw-fonts.js pilnuje test displayThemeFile.
+export const SHARED_FONT_FILES = new Set(["roboto", "montserrat", "rubik", "nunito", "comfortaa", "exo2", "jura", "tektur", "oswald", "unbounded", "russoone", "delagothicone", "rubikmonoone", "climatecrisis", "rubikbubbles", "ruslandisplay", "merriweather", "playfairdisplay", "robotoslab", "yesevaone", "kurale", "poiretone", "lobster", "pacifico", "caveat", "marckscript", "pressstart2p", "tiny5", "handjet", "jetbrainsmono"]);
 export const FONT_MAX_BYTES = 250 * 1024;
 export const FONTS_MAX = 3;
 const FONT_FAMILY = /^[A-Za-z][A-Za-z0-9 -]{0,39}$/;
@@ -498,24 +503,30 @@ function parseLabel(raw, what, max = THEME_NAME_MAX) {
   return out;
 }
 
-// host.fonts: [{ family, data: "data:font/woff2;base64,…", weight?, style? }].
+// host.fonts: [{ family, data: "data:font/woff2;base64,…", weight?, style? }]
+// albo [{ family, file: "caveat", … }] — czcionka serwisu z web/shared/fonts/
+// (SHARED_FONT_FILES; motywy wbudowane, bez kopii pliku w motywie).
 function parseFonts(raw) {
   if (raw === undefined) return [];
   if (!Array.isArray(raw) || raw.length > FONTS_MAX) reject("fonts", "lista");
   return raw.map((font) => {
     if (!isObject(font) || typeof font.family !== "string" || !FONT_FAMILY.test(font.family)) reject("fonts", font?.family ?? "family");
-    const m = typeof font.data === "string" ? FONT_DATA.exec(font.data) : null;
-    if (!m) reject("fonts", `${font.family}: data`);
-    let head;
-    try { head = atob(m[2].slice(0, 8)).slice(0, 4); } catch { reject("fonts", `${font.family}: base64`); }
-    if (!FONT_MAGIC[m[1]].includes(head)) reject("fonts", `${font.family}: to nie plik ${m[1]}`);
-    if (Math.floor(m[2].length * 3 / 4) > FONT_MAX_BYTES) reject("fonts", `${font.family}: za duży`);
+    const file = font.file === undefined ? null : String(font.file);
+    if (file !== null && !SHARED_FONT_FILES.has(file)) reject("fonts", `${font.family}: file`);
+    const m = file === null && typeof font.data === "string" ? FONT_DATA.exec(font.data) : null;
+    if (file === null && !m) reject("fonts", `${font.family}: data`);
+    if (m) {
+      let head;
+      try { head = atob(m[2].slice(0, 8)).slice(0, 4); } catch { reject("fonts", `${font.family}: base64`); }
+      if (!FONT_MAGIC[m[1]].includes(head)) reject("fonts", `${font.family}: to nie plik ${m[1]}`);
+      if (Math.floor(m[2].length * 3 / 4) > FONT_MAX_BYTES) reject("fonts", `${font.family}: za duży`);
+    }
     const weight = String(font.weight ?? "400");
     if (!/^(?:[1-9]00)(?: [1-9]00)?$/.test(weight)) reject("fonts", `${font.family}: weight`);
     const style = font.style ?? "normal";
     if (style !== "normal" && style !== "italic") reject("fonts", `${font.family}: style`);
     if (font.unicodeRange !== undefined && (typeof font.unicodeRange !== "string" || !FONT_RANGE.test(font.unicodeRange))) reject("fonts", `${font.family}: unicodeRange`);
-    return { family: font.family, data: font.data, weight, style, ...(font.unicodeRange ? { unicodeRange: font.unicodeRange } : {}) };
+    return { family: font.family, ...(file !== null ? { file } : { data: font.data }), weight, style, ...(font.unicodeRange ? { unicodeRange: font.unicodeRange } : {}) };
   });
 }
 

@@ -61,10 +61,6 @@ be accepted.
 
 "Display preview" and "Host preview" show the effect of your changes as you make them.
 
-**Theme fonts.** The text on the Host screen (handwritten in the Classic theme, serif in Cabinet,
-typewriter-style in the others) and the text logo shown as "Source" use fonts under a free licence
-(SIL Open Font License), included with the app — also at commercial events.
-
 ## 16.4 Sound
 
 The game has 10 sounds: intro, outro, round transition, final theme, buzzer press, correct answer, wrong answer, repeat answer in the final, time's up and answer reveal. For each of them you can:
@@ -83,9 +79,7 @@ the settings cannot be saved.
 Custom files are saved in the app together with the game when you choose [Save] — they will work on any
 device where you start this game.
 
-**"Classic" music.** The intro, outro, round transition and final theme are tracks generated
-for this app with Suno (suno.com) on a paid plan that allows commercial use. They are not
-excerpts from TV shows or anyone else's recordings.
+**"Classic" music.** Where it comes from and on what terms we use it — → 21.3.
 
 > Note: deleting a custom file (the icon next to its name) and [Restore defaults] in the
 > "Sound" section delete the files right away, even if you don't save your changes afterwards. [Restore defaults]

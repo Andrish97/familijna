@@ -4,6 +4,8 @@
 // Krój i jego miary ustawia CSS motywu (--host-font…), kroje mogą być wszyte
 // w plik (host.fonts); linie papieru i tablica to stałe przełączniki z pliku.
 // Schemat: familijna-server/docs/motywy.md.
+import { sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
+import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-07T22371";
 import { isCustomThemeKey, loadCustomTheme } from "../../../shared/js/display/custom-themes.js?v=v2026-11-07T22371";
 import { loadBuiltinThemes, resolveHost } from "../../../shared/js/display/theme-registry.js?v=v2026-11-07T22371";
 import { evaluateOutputs, hostRulesCss } from "../../../shared/js/display/theme-file.js?v=v2026-11-07T22371";
@@ -14,11 +16,14 @@ const DEFAULT_COLORS = { A: "#ff8c1a", B: "#138a50", DOT: "#d7ff3d" };
 const loadedFonts = new Map();
 function loadFonts(fonts) {
   return Promise.all((fonts || []).map((font) => {
-    const id = `${font.family}|${font.weight}|${font.style}|${font.unicodeRange || ""}|${font.data.length}`;
+    const id = `${font.family}|${font.weight}|${font.style}|${font.unicodeRange || ""}|${font.file || font.data.length}`;
     if (!loadedFonts.has(id)) {
-      const bytes = Uint8Array.from(atob(font.data.slice(font.data.indexOf(",") + 1)), (c) => c.charCodeAt(0));
-      const face = new FontFace(font.family, bytes, { weight: font.weight, style: font.style, ...(font.unicodeRange ? { unicodeRange: font.unicodeRange } : {}) });
-      loadedFonts.set(id, face.load().then((loaded) => { document.fonts.add(loaded); })
+      const opts = { weight: font.weight, style: font.style, ...(font.unicodeRange ? { unicodeRange: font.unicodeRange } : {}) };
+      // czcionka serwisu (web/shared/fonts/) albo wszyta w plik motywu
+      const source = font.file
+        ? cacheBust(sharedFontUrl(font.file)).then((url) => new FontFace(font.family, `url("${url}") format("woff2")`, opts))
+        : Promise.resolve(new FontFace(font.family, Uint8Array.from(atob(font.data.slice(font.data.indexOf(",") + 1)), (c) => c.charCodeAt(0)), opts));
+      loadedFonts.set(id, source.then((face) => face.load()).then((loaded) => { document.fonts.add(loaded); })
         .catch((error) => console.warn(`[host2] krój ${font.family} niedostępny:`, error)));
     }
     return loadedFonts.get(id);

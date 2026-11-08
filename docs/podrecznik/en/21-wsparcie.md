@@ -20,3 +20,14 @@ pages, next to the [Contact] button (an icon only — the name shows in a toolti
 > Note: support is voluntary and gives no extra features or benefits in the
 > service — it is simply a thank-you. You can send feedback and ideas
 > through the contact form (→ 19.6).
+
+## 21.3 Music and fonts
+
+**"Classic" music.** The intro, outro, round transition and final theme are tracks generated
+for this app with Suno (suno.com) on a paid plan that allows commercial use. They are not
+excerpts from TV shows or anyone else's recordings.
+
+**Fonts.** The typefaces in the logo drawing editor (→ 8.3), on the Host screen (→ 16.3)
+and in the "Source" logo are fonts under free licences (SIL Open Font License or Apache),
+included with the app. You can use them without fees or asking for permission — also at
+commercial events. They look the same on every device.

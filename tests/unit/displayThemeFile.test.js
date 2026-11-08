@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
   parseThemeFile, sanitizeThemeArtwork, serializeThemeFile, evaluateOutputs, hostRulesCss,
-  customThemeId, customThemeKey, THEME_FILE_TYPE, THEME_ARTWORK_MAX_BYTES, THEME_FILE_MAX_BYTES,
+  customThemeId, customThemeKey, THEME_FILE_TYPE, THEME_ARTWORK_MAX_BYTES, THEME_FILE_MAX_BYTES, SHARED_FONT_FILES,
 } from "../../web/shared/js/display/theme-file.js";
 
 const read = (path) => fs.readFileSync(new URL("../../" + path, import.meta.url), "utf8");
@@ -263,4 +263,15 @@ test("kopia walidatora dla funkcji Edge jest aktualna (node scripts/sync-display
   const source = read("web/shared/js/display/theme-file.js");
   const copy = read("supabase/functions/_shared/display-theme-file.js");
   assert.equal(copy, "// Wygenerowane przez scripts/sync-display-theme-file.cjs. Edytuj web/shared/js/display/theme-file.js.\n" + source);
+});
+
+test("czcionki serwisu dla motywów: lista = zestaw rysunku + Unbounded, pliki w web/shared/fonts/", async () => {
+  const { DRAW_FONTS } = await import("../../web/shared/js/core/draw-fonts.js");
+  assert.deepEqual([...SHARED_FONT_FILES].sort(), [...new Set([...DRAW_FONTS.map((f) => f.file), "unbounded"])].sort());
+  for (const name of SHARED_FONT_FILES) assert.ok(fs.existsSync(new URL(`../../web/shared/fonts/${name}.woff2`, import.meta.url)), name);
+  // motyw może wskazać plik serwisu zamiast wszywać krój; nieznany plik — odmowa
+  const ok = parseThemeFile(file({ host: { fonts: [{ family: "Caveat-Variable", file: "caveat", weight: "400 700" }] } }));
+  assert.equal(ok.ok, true, ok.error);
+  assert.deepEqual(ok.theme.host.fonts, [{ family: "Caveat-Variable", file: "caveat", weight: "400 700", style: "normal" }]);
+  assert.equal(errorOf(file({ host: { fonts: [{ family: "X", file: "../evil" }] } })), "fonts");
 });

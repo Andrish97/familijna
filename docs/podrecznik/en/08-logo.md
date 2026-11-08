@@ -88,9 +88,6 @@ Useful shortcuts and rules:
 
 Keyboard shortcuts do not work while you are typing text.
 
-**Fonts.** The typefaces of the Text tool are fonts under free licences (SIL Open Font License
-or Apache), included with the app — you can use them in logos without fees or asking for permission,
-also at commercial events. They look the same on every device.
 
 ## 8.4 Creating a logo from an image
 

@@ -61,10 +61,6 @@ zostaną przyjęte.
 
 „Podgląd wyświetlacza” i „Podgląd prowadzącego” pokazują efekt zmian na bieżąco.
 
-**Czcionki motywów.** Napisy na ekranie Prowadzącego (odręczne w motywie Klasycznym, szeryfowe w Kasetonie,
-maszynowe w pozostałych) i logo tekstowe w postaci „Źródło” używają czcionek na wolnej licencji
-(SIL Open Font License), dołączonych do serwisu — także podczas imprez komercyjnych.
-
 ## 16.4 Dźwięk
 
 Gra ma 10 dźwięków: intro, zakończenie, przejście między rundami, motyw finału, naciśnięcie przycisku, poprawna odpowiedź, błędna odpowiedź, powtórzenie w finale, koniec czasu i odsłonięcie odpowiedzi. Dla każdego możesz:
@@ -83,9 +79,7 @@ ustawień nie da się zapisać.
 Własne pliki zapisują się w serwisie razem z grą po wybraniu [Zapisz] — zadziałają na każdym
 urządzeniu, na którym uruchomisz tę grę.
 
-**Muzyka „Klasyczna”.** Intro, zakończenie, przejście między rundami i motyw finału to
-utwory wygenerowane dla serwisu w Suno (suno.com) w ramach płatnego planu, który pozwala
-na użycie komercyjne. Nie są fragmentami programów telewizyjnych ani cudzych nagrań.
+**Muzyka „Klasyczna”.** Skąd pochodzi i na jakich zasadach jej używamy — → 21.3.
 
 > Uwaga: usunięcie własnego pliku (ikona przy jego nazwie) oraz [Przywróć domyślne] w sekcji
 > „Dźwięk” usuwają pliki od razu, nawet jeśli potem nie zapiszesz zmian. [Przywróć domyślne]

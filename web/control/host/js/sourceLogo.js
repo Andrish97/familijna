@@ -1,7 +1,8 @@
 // Host-only renderer for the source preserved in a logo's payload.
 // Logo editors and their stored formats are deliberately not changed here.
 
-import { ensureDrawFonts, drawFontFaceCss, normalizeDrawFont, sceneFontFamilies } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
+import { ensureDrawFonts, drawFontFaceCss, normalizeDrawFont, sceneFontFamilies, sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-07T22371";
+import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-07T22371";
 import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-07T22371";
 
 const FRAME_W = 1280;
@@ -33,7 +34,7 @@ function canvasOf(width, height) {
 function loadWordmarkFont() {
   if (!fontPromise) {
     fontPromise = (async () => {
-      const font = new FontFace("HostUnbounded", 'url("/control/host/fonts/Unbounded-Variable.ttf?v=v2026-11-07T22371")', { weight: "200 900" });
+      const font = new FontFace("HostUnbounded", `url("${await cacheBust(sharedFontUrl("unbounded"))}") format("woff2")`, { weight: "200 900" });
 
       await font.load();
       document.fonts.add(font);
