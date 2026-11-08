@@ -14,12 +14,12 @@
 // wstrzyknięcie zależności (ten sam wzorzec co dzisiejsze createRounds/
 // createFinal), więc dają się testować w gołym Node z atrapą store.
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T21312";
-import { createPersist, StaleWriteError } from "./persist.js?v=v2026-11-08T21312";
-import { makeDefaultState, DEFAULT_SETTINGS, PERSISTED_KEYS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-08T21312";
-import { expiredTimerOnHydrate } from "./timerResume.js?v=v2026-11-08T21312";
-import { createWriteOrder, confirmedRevisionOnly, metadataRowApplies } from "./writeOrder.js?v=v2026-11-08T21312";
-import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T21312";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T21320";
+import { createPersist, StaleWriteError } from "./persist.js?v=v2026-11-08T21320";
+import { makeDefaultState, DEFAULT_SETTINGS, PERSISTED_KEYS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-08T21320";
+import { expiredTimerOnHydrate } from "./timerResume.js?v=v2026-11-08T21320";
+import { createWriteOrder, confirmedRevisionOnly, metadataRowApplies } from "./writeOrder.js?v=v2026-11-08T21320";
+import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-08T21320";
 
 
 // Zapis wystarczy: baza sama wysyła nowy wiersz urządzeniom i Control
