@@ -1,16 +1,16 @@
-import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T15311";
+import { holdPageLayout, redirectPage } from "../../shared/js/core/page-layout.js?v=v2026-11-08T15552";
 // web/go/js/go.js
-import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-08T15311";
-import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-08T15311";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15311";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T15311";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15311";
-import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-08T15311";
-import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15311";
+import { parseGoLink, goKindMatches, goErrorKey, baseStateKey, matchesGoRecipient } from "../../shared/js/core/go-contract.js?v=v2026-11-08T15552";
+import { anonymousPollDestination, validAnonymousPollParams, screenshotSnakeUrl } from "../../shared/js/core/poll-links.js?v=v2026-11-08T15552";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15552";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-08T15552";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15552";
+import { icon, sharingActionIcon } from "../../shared/js/core/icons.js?v=v2026-11-08T15552";
+import { alertModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15552";
 
-import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-08T15311";
-import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15311";
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15311";
+import { logSnake } from "../../shared/js/core/snake-log.js?v=v2026-11-08T15552";
+import { linkTo } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15552";
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15552";
 
 const i18nReady = initEntryPage("go", { ready: initI18n({ withSwitcher: true }) }).then(() => {
   document.querySelector("main[data-skel-step]")?.classList.add("skel-step-ready");
@@ -397,10 +397,9 @@ async function subscribeByEmail() {
     return;
   }
   try {
-    const ownerId = resolvedInviteData?.owner_id;
-    if (ownerId) {
-      // Cudze profile nie są czytelne (migracja 445): porównanie w bazie.
-      const { data: ownerName } = await sb().rpc("poll_go_owner_email_match", { p_owner_id: ownerId, p_email: email });
+    if (resolvedInviteData?.owner_id) {
+      // Porównanie z adresem właściciela w bazie, tylko po tokenie zaproszenia (E24 R10).
+      const { data: ownerName } = await sb().rpc("poll_go_owner_email_blocked", { p_token: goToken, p_email: email });
       if (ownerName) {
         await alertModal({ text: MSG.ownerEmailBlocked(ownerName) });
         return;

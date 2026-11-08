@@ -194,6 +194,11 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   a pracę zaczyna dopiero, gdy `maintenance.yml` (tylko odczyt: stan przerwy
   i aktywność) potwierdzi, że przerwa jest włączona.
 - Migracje bezpieczne (dodające) od razu na `main`, potem testy.
+- **Prawa nowych funkcji (E24, 2026-11-08):** od migracji 528 nowa funkcja
+  w `public` nie jest domyślnie wykonywalna przez `anon`/`authenticated` —
+  funkcja wołana ze strony dostaje jawne `GRANT EXECUTE … TO anon/authenticated`,
+  serwerowa `REVOKE … FROM PUBLIC` (zapadka `unit/migrationGrants.test.js`;
+  nowa tabela — `ENABLE ROW LEVEL SECURITY`).
 - Migracje tylko do przodu: `supabase/migrations/YYYY-MM-DD_NNN_*.sql`,
   stosowane po pushu na `main`; `schema.sql` aktualizuje CI.
 - Scalanie `main` z konfliktami wersji `?v=`: `python3 scripts/resolve-version-conflicts.py`

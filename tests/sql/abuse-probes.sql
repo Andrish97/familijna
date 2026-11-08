@@ -438,6 +438,9 @@ select pg_temp.legit('L13 migracja gościa z mocnym hasłem', '90000000-0000-400
   $q$do $d$ begin if not (public.guest_stage_migration('gosc_ok', 'Abcdef1!')->>'ok')::boolean then raise exception 'odmowa'; end if; end $d$$q$);
 select pg_temp.legit('L14 ocena systemu (zarejestrowany)', 'b0000000-0000-4000-8000-00000000000b',
   $q$insert into public.app_ratings(user_id, stars, comment) values (auth.uid(), 4, 'ok')$q$);
+select pg_temp.legit('L14b ocena systemu (gość, 527)', '90000000-0000-4000-8000-000000000009',
+  $q$insert into public.app_ratings(user_id, stars, comment) values (auth.uid(), 5, 'ok')$q$,
+  $q$exists (select 1 from public.app_ratings where user_id = '90000000-0000-4000-8000-000000000009' and from_guest)$q$);
 select pg_temp.legit('L15 potwierdzenie własnego adresu', 'a0000000-0000-4000-8000-00000000000a',
   $q$select public.email_mark_confirmed('probe-a@probe.test')$q$,
   $q$exists (select 1 from public.email_intents where email = 'probe-a@probe.test' and status = 'confirmed')$q$);

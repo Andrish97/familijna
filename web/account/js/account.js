@@ -1,18 +1,18 @@
-import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-08T15311";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15311";
-import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-08T15311";
-import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-08T15311";
-import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-08T15311";
-import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } from "../../shared/js/core/push.js?v=v2026-11-08T15311";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15311";
-import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15311";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15311";
-import { toast } from "../../shared/js/core/toast.js?v=v2026-11-08T15311";
-import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15311";
-import { isGuestUser, hideForGuest } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T15311";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-08T15311";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T15311";
-import { openRatingEditor } from "../../shared/js/core/rating-system.js?v=v2026-11-08T15311";
+import { ensureUsernameAvailable } from "../../shared/js/core/username-availability.js?v=v2026-11-08T15552";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T15552";
+import { cooldownGet, cooldownReserve, cooldownRelease, mailCooldownEmailReserve } from "../../shared/js/core/cooldown.js?v=v2026-11-08T15552";
+import { updateUserLanguage, validatePassword, validateUsername, preloadUsernameRules, signOut, niceAuthError, initPasswordToggles, convertGuestToRegisteredEmailOnly } from "../../shared/js/core/auth.js?v=v2026-11-08T15552";
+import { getUserEmailNotificationsFlag, setUserEmailNotificationsFlag } from "../../shared/js/core/user-flags.js?v=v2026-11-08T15552";
+import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } from "../../shared/js/core/push.js?v=v2026-11-08T15552";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T15552";
+import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js?v=v2026-11-08T15552";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T15552";
+import { toast } from "../../shared/js/core/toast.js?v=v2026-11-08T15552";
+import { confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T15552";
+import { isGuestUser, hideForGuest } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T15552";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-08T15552";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-08T15552";
+import { openRatingEditor } from "../../shared/js/core/rating-system.js?v=v2026-11-08T15552";
 
 const usernameInput = document.getElementById("username");
 const emailInput = document.getElementById("email");
@@ -650,16 +650,15 @@ async function loadProfile(user) {
   if (!user) return; // initPage przekierował na logowanie
 
   if (isGuestUser(user)) {
-    // Gość nie ma username/email/hasła ani oceny/demo (demo dotyka
-    // wyłącznie zwykłych kont) — z całej strony zostaje mu sekcja usuwania
-    // konta (uproszczone potwierdzenie, patrz handleDeleteAccount) oraz
-    // sekcja migracji (zamiany konta gościa na pełne, patrz niżej).
+    // Gość nie ma username/email/hasła ani demo (demo dotyka wyłącznie
+    // zwykłych kont) — zostaje mu ocena systemu (jak każdemu, 527), sekcja
+    // usuwania konta (uproszczone potwierdzenie, patrz handleDeleteAccount)
+    // oraz sekcja migracji (zamiany konta gościa na pełne, patrz niżej).
     hideForGuest(user, [
       document.getElementById("usernameSection"),
       document.getElementById("emailSection"),
       document.getElementById("passwordSection"),
       document.getElementById("emailNotifSection"),
-      document.getElementById("ratingSection"),
       document.getElementById("demoSection"),
       // pole hasła siedzi w .pass-wrap razem z przyciskiem „pokaż hasło”
       deletePassword?.closest(".pass-wrap") || deletePassword,
@@ -668,6 +667,8 @@ async function loadProfile(user) {
     if (deleteHintEl) deleteHintEl.textContent = t("account.deleteHintGuest");
 
     if (migrateSection) migrateSection.hidden = false;
+    window.addEventListener("i18n:lang", () => loadUserRating(user.id));
+    await loadUserRating(user.id);
     await refreshMigrateState();
 
     return;
