@@ -1,9 +1,9 @@
 // Host-only renderer for the source preserved in a logo's payload.
 // Logo editors and their stored formats are deliberately not changed here.
 
-import { ensureDrawFonts, drawFontFaceCss, normalizeDrawFont, sceneFontFamilies, sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-08T23264";
-import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-08T23264";
-import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-08T23264";
+import { ensureDrawFonts, drawFontFaceCss, normalizeDrawFont, sceneFontFamilies, sharedFontUrl } from "../../../shared/js/core/draw-fonts.js?v=v2026-11-08T23273";
+import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-08T23273";
+import { prepareFabric } from "../../../shared/js/core/fabric-compat.js?v=v2026-11-08T23273";
 
 const FRAME_W = 1280;
 const FRAME_H = 720;
@@ -49,7 +49,7 @@ function loadFabric() {
   if (!fabricPromise) {
     fabricPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = "/shared/vendor/fabric.min.js?v=v2026-11-08T23264";
+      script.src = "/shared/vendor/fabric.min.js?v=v2026-11-08T23273";
       script.async = true;
       script.onload = () => globalThis.fabric?.StaticCanvas ? resolve(prepareFabric(globalThis.fabric)) : reject(new Error("Fabric.js did not initialize"));
       script.onerror = () => reject(new Error("Fabric.js could not be loaded"));
