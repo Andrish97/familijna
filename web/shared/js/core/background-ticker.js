@@ -2,7 +2,7 @@
 // Gdy Worker jest niedostępny, zwykły setInterval.
 export function startTicker(callback, intervalMs) {
   try {
-    const worker = new Worker(new URL("./ticker-worker.js?v=v2026-11-08T15074", import.meta.url));
+    const worker = new Worker(new URL("./ticker-worker.js?v=v2026-11-08T15082", import.meta.url));
     worker.onmessage = () => callback();
     worker.postMessage({ intervalMs });
     return () => worker.terminate();

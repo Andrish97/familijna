@@ -3,31 +3,31 @@
   "themes": [
     {
       "key": "wings",
-      "file": "/shared/themes/wings.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/wings.json?v=v2026-11-08T15082"
     },
     {
       "key": "radar",
-      "file": "/shared/themes/radar.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/radar.json?v=v2026-11-08T15082"
     },
     {
       "key": "cabinet",
-      "file": "/shared/themes/cabinet.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/cabinet.json?v=v2026-11-08T15082"
     },
     {
       "key": "ribbon",
-      "file": "/shared/themes/ribbon.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/ribbon.json?v=v2026-11-08T15082"
     },
     {
       "key": "bridge",
-      "file": "/shared/themes/bridge.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/bridge.json?v=v2026-11-08T15082"
     },
     {
       "key": "classic",
-      "file": "/shared/themes/classic.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/classic.json?v=v2026-11-08T15082"
     },
     {
       "key": "modern",
-      "file": "/shared/themes/modern.json?v=v2026-11-08T15074"
+      "file": "/shared/themes/modern.json?v=v2026-11-08T15082"
     }
   ]
 }
