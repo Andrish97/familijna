@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict mC38eG3003boDjLJqeBS3sIiFdfUWRDoFJqKiLFdx9zT7zPYR243juUoYRrNdRQ
+\restrict zrs2TwF0ch2HLZ5UtRqUQKRANAPeSmQSROdRmcbIbK95nnSezqGSytNxtZ3ubkP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -4389,6 +4389,7 @@ CREATE FUNCTION "public"."_push_market_pending"() RETURNS "trigger"
     AS $$
 BEGIN
   IF TG_OP = 'UPDATE' AND OLD.status = 'pending' THEN RETURN NULL; END IF;
+  IF public._push_sender_excluded(NEW.author_user_id, NULL) THEN RETURN NULL; END IF;
   PERFORM public.push_admin_event('market', jsonb_build_object('id', NEW.id, 'title', left(NEW.title, 60), 'lang', NEW.lang));
   RETURN NULL;
 EXCEPTION WHEN others THEN
@@ -4428,6 +4429,7 @@ CREATE FUNCTION "public"."_push_messages_inbound"() RETURNS "trigger"
     AS $$
 DECLARE v_n integer; v_ticket text;
 BEGIN
+  IF public._push_sender_excluded(NULL, NEW.from_email) THEN RETURN NULL; END IF;
   IF NEW.source = 'email' THEN
     SELECT count(*) INTO v_n FROM public.messages
      WHERE direction = 'inbound' AND source = 'email' AND NOT is_read AND deleted_at IS NULL
@@ -4505,6 +4507,23 @@ BEGIN
 EXCEPTION WHEN others THEN
   RAISE WARNING '_push_question_job: %', sqlerrm; RETURN NULL;
 END $$;
+
+
+--
+-- Name: _push_sender_excluded("uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_push_sender_excluded"("p_user" "uuid", "p_email" "text") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = p_user)
+      OR (nullif(btrim(p_email), '') IS NOT NULL AND (
+            public.is_test_email(p_email)
+            OR EXISTS (SELECT 1 FROM public.profiles p
+                       JOIN public.stats_exclusions_effective e ON e.user_id = p.id
+                       WHERE lower(p.email) = lower(btrim(p_email)))));
+$$;
 
 
 --
@@ -28290,5 +28309,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mC38eG3003boDjLJqeBS3sIiFdfUWRDoFJqKiLFdx9zT7zPYR243juUoYRrNdRQ
+\unrestrict zrs2TwF0ch2HLZ5UtRqUQKRANAPeSmQSROdRmcbIbK95nnSezqGSytNxtZ3ubkP
 
