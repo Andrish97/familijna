@@ -1,6 +1,6 @@
 // The file importer and copy sender use the same canonical logo package.
-import { normalizeDrawFont } from "../../shared/js/core/draw-fonts.js?v=v2026-11-09T11593";
-import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-09T11593";
+import { normalizeDrawFont } from "../../shared/js/core/draw-fonts.js?v=v2026-11-09T12154";
+import { DOT_W, DOT_H, TYPE_GLYPH, TYPE_PIX, PIX_FORMAT, normalizeRows } from "./render.js?v=v2026-11-09T12154";
 
 
 // Nazwa logo: jak w polu nazwy i w bazie (migracja 514).

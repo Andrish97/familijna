@@ -1,8 +1,8 @@
-import { initI18n, t, withLangParam } from "../../shared/translation/translation.js?v=v2026-11-09T11593";
-import { formatMaintenanceCountdown, formatMaintenanceReturnAt } from "../../shared/js/core/maintenance-format.js?v=v2026-11-09T11593";
-import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-09T11593";
+import { initI18n, t, withLangParam } from "../../shared/translation/translation.js?v=v2026-11-09T12154";
+import { formatMaintenanceCountdown, formatMaintenanceReturnAt } from "../../shared/js/core/maintenance-format.js?v=v2026-11-09T12154";
+import { getUser } from "../../shared/js/core/auth.js?v=v2026-11-09T12154";
 
-const ENDPOINT = "/maintenance-state.json?v=v2026-11-09T11593";
+const ENDPOINT = "/maintenance-state.json?v=v2026-11-09T12154";
 
 const POLL_MS = 30000;
 
