@@ -1,10 +1,10 @@
 // theme_manager.js
 // Menadżer motywów – motywy wbudowane (web/shared/themes/) i wgrane, THEME command
-import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-09T01142";
-import { createLayoutTheme } from "./theme_layouts.js?v=v2026-11-09T01142";
-import { isCustomThemeKey, loadCustomTheme } from "./custom-themes.js?v=v2026-11-09T01142";
-import { loadBuiltinThemes } from "./theme-registry.js?v=v2026-11-09T01142";
-import { DEFAULT_PANELS } from "./theme-file.js?v=v2026-11-09T01142";
+import { t, getUiLang } from "../../translation/translation.js?v=v2026-11-09T11473";
+import { createLayoutTheme } from "./theme_layouts.js?v=v2026-11-09T11473";
+import { isCustomThemeKey, loadCustomTheme } from "./custom-themes.js?v=v2026-11-09T11473";
+import { loadBuiltinThemes } from "./theme-registry.js?v=v2026-11-09T11473";
+import { DEFAULT_PANELS } from "./theme-file.js?v=v2026-11-09T11473";
 
 
 let THEMES = {};
