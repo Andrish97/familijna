@@ -6,7 +6,7 @@ import { bindDrawer } from "../../shared/js/core/drawer.js?v=v2026-11-09T01142";
 // Zmiana rozdziału to replaceState (jak karty, tabs.js): „Wstecz” wraca do poprzedniej strony.
 // Strona ma działać nawet bez auth: najpierw treść, potem initPage „miękko”.
 
-import { initI18n, setUiLang, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-09T01142";
+import { initI18n, getUiLang, t } from "../../shared/translation/translation.js?v=v2026-11-09T01142";
 import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-09T01142";
 import { hydrateIcons, icon } from "../../shared/js/core/icons.js?v=v2026-11-09T01142";
 import "../../shared/js/core/contact-modal.js?v=v2026-11-09T01142";
@@ -78,14 +78,6 @@ function sectionOf(el) {
     if (h.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING) found = h.id.replace(/^s-/, "").replace(/-/g, ".");
   }
   return found;
-}
-
-async function initManualI18n() {
-  const params = new URLSearchParams(location.search);
-  if (!params.has("lang") && !localStorage.getItem("uiLang")) {
-    await setUiLang("pl", { persist: true, updateUrl: true, apply: false });
-  }
-  await initI18n({ withSwitcher: true });
 }
 
 async function loadContent(lang) {
@@ -353,7 +345,8 @@ function wirePanel() {
 
 async function init() {
   wirePanel();
-  const i18nP = initManualI18n().catch((err) => {
+  // Język z adresu (meta i18n-lang=url), nie z przeglądarki -- translation.js.
+  const i18nP = initI18n({ withSwitcher: true }).catch((err) => {
     console.error("[manual] i18n nieaktywny:", err);
   });
   initPage("manual", { ready: i18nP }).catch((err) => {

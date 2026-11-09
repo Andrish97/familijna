@@ -88,6 +88,11 @@ export function getUiLang() {
   const stored = safeGetLocalStorage("uiLang");
   if (stored) return normalizeLang(stored);
 
+  // Strony do indeksowania (meta i18n-lang=url): adres bez ?lang to wersja
+  // polska z canonicalem bez parametru. Język przeglądarki przetłumaczyłby ten
+  // sam adres (Googlebot renderuje z en-US) i Google sklejał PL z ?lang=en.
+  if (typeof document !== "undefined" && document.querySelector?.('meta[name="i18n-lang"][content="url"]')) return "pl";
+
   if (navigator?.language) return normalizeLang(navigator.language);
   return "pl";
 }
