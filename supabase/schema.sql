@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 8NAjdMxe77LhgiDtKMfadr12i4QNJeEVmaZBvAtGhJsGWo9pZf0qbTMGNvDk9mU
+\restrict VNYsbbwD8Cr6KY4DvDfLc7DGqS70bhgldRFldOw7QPNpIDnvNWocSqukhyXypEP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -15112,15 +15112,33 @@ $$;
 
 
 --
+-- Name: marketing_categories_keep_contacts(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."marketing_categories_keep_contacts"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.marketing_verified_contacts c WHERE c.category_id = OLD.id) THEN
+    RAISE EXCEPTION 'marketing_category_has_contacts' USING ERRCODE = 'P0001',
+      HINT = 'Kategorię z kontaktami można tylko przenieść do archiwum.';
+  END IF;
+  RETURN OLD;
+END $$;
+
+
+--
 -- Name: marketing_categories_list(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION "public"."marketing_categories_list"() RETURNS TABLE("id" "uuid", "name" "text", "is_active" boolean, "description" "text", "queries" "text"[], "pkd" "text"[], "expanded_at" timestamp with time zone, "created_at" timestamp with time zone, "contacts" integer)
+CREATE FUNCTION "public"."marketing_categories_list"() RETURNS TABLE("id" "uuid", "name" "text", "is_active" boolean, "description" "text", "queries" "text"[], "pkd" "text"[], "expanded_at" timestamp with time zone, "created_at" timestamp with time zone, "contacts" integer, "archived_at" timestamp with time zone)
     LANGUAGE "sql" STABLE
     SET "search_path" TO 'public', 'pg_temp'
     AS $$
   SELECT k.id, k.name, k.is_active, k.description, k.queries, k.pkd, k.expanded_at, k.created_at,
-         (SELECT count(*)::int FROM public.marketing_verified_contacts c WHERE c.category_id = k.id)
+         (SELECT count(*)::int FROM public.marketing_verified_contacts c WHERE c.category_id = k.id),
+         k.archived_at
     FROM public.marketing_categories k
    ORDER BY k.created_at, k.name;
 $$;
@@ -21407,6 +21425,8 @@ CREATE TABLE "public"."marketing_categories" (
     "pkd" "text"[] DEFAULT '{}'::"text"[] NOT NULL,
     "expanded_at" timestamp with time zone,
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "archived_at" timestamp with time zone,
+    CONSTRAINT "marketing_categories_archived_inactive" CHECK ((("archived_at" IS NULL) OR (NOT "is_active"))),
     CONSTRAINT "marketing_categories_name_check" CHECK ((("length"("btrim"("name")) >= 1) AND ("length"("btrim"("name")) <= 80)))
 );
 
@@ -25090,6 +25110,13 @@ CREATE TRIGGER "market_sync_questions" AFTER INSERT OR UPDATE OF "payload" ON "p
 
 
 --
+-- Name: marketing_categories marketing_categories_keep_contacts; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER "marketing_categories_keep_contacts" BEFORE DELETE ON "public"."marketing_categories" FOR EACH ROW EXECUTE FUNCTION "public"."marketing_categories_keep_contacts"();
+
+
+--
 -- Name: profiles poll_identity_profile; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -28345,5 +28372,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8NAjdMxe77LhgiDtKMfadr12i4QNJeEVmaZBvAtGhJsGWo9pZf0qbTMGNvDk9mU
+\unrestrict VNYsbbwD8Cr6KY4DvDfLc7DGqS70bhgldRFldOw7QPNpIDnvNWocSqukhyXypEP
 
