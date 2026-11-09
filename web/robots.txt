@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+# ret = adres powrotu (kontekst nawigacji, nie osobna strona). Linki Wskazówek
+# niosą go łańcuchowo: gra x rozdział x prywatność x język = tysiące kopii
+# z canonicalem bez ret (Search Console 2026-11-09).
+Disallow: /*?ret=
+Disallow: /*&ret=
 
 Sitemap: https://www.familijna.app/sitemap.xml
