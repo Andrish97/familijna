@@ -1,5 +1,5 @@
-import { icon, iconText } from "./icons.js?v=v2026-11-09T00205";
-import { placeUnder, clearPlacement } from "./popover.js?v=v2026-11-09T00205";
+import { icon, iconText } from "./icons.js?v=v2026-11-09T01142";
+import { placeUnder, clearPlacement } from "./popover.js?v=v2026-11-09T01142";
 
 
 export function initUiSelect(root, { options = [], value = "", placeholder = "—", onChange, disabled = false } = {}) {
