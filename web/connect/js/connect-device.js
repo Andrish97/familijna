@@ -1,18 +1,18 @@
 // js/pages/connect-device.js
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-08T23371";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-08T23371";
-import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-08T23371";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-08T23371";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-08T23371";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-08T23371";
-import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-08T23371";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-08T23371";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-08T23371";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-08T23371";
-import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-08T23371";
-import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-08T23371";
-import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-08T23371";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-09T00150";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-09T00150";
+import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-09T00150";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-09T00150";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-09T00150";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-09T00150";
+import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-09T00150";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-09T00150";
+import { icon } from "../../shared/js/core/icons.js?v=v2026-11-09T00150";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-09T00150";
+import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-09T00150";
+import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-09T00150";
+import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-09T00150";
 
 // Kod QR prowadzi tylko na tę samą stronę (E24 R28: bez przekierowań na obce adresy).
 function openScannedUrl(raw) {
@@ -193,7 +193,7 @@ async function loadJsQR() {
   if (window.jsQR) return;
   await new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-08T23371";
+    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-09T00150";
     s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });
