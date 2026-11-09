@@ -2,6 +2,7 @@
 const pl = {
   marketplace: {
     seoDescription: "Pobierz gotowe pytania i odpowiedzi do gry drużynowej. Gry społeczności na imprezę, wesele, zajęcia szkolne lub spotkanie z rodziną.",
+    seoGameDescription: "{title} — gotowe pytania i odpowiedzi do darmowej gry drużynowej. Poprowadź rozgrywkę w Familijna.",
     title: "Gry Społeczności",
     pageTitle: "Gry Społeczności — gotowe pytania do gry",
     subtitle: "Przeglądaj gry stworzone przez społeczność i dodawaj je do swojej biblioteki.",
