@@ -4,9 +4,9 @@
 // tylko po kliknięciu); „Nie teraz” chowa pasek na stałe na tym urządzeniu.
 // Nie pokazuje się, gdy przeglądarka już zdecydowała (zgoda/blokada) albo
 // nie obsługuje powiadomień (iPhone bez ekranu początkowego).
-import { t } from "../../translation/translation.js?v=v2026-11-09T12154";
-import { pushSupport, enablePush } from "./push.js?v=v2026-11-09T12154";
-import { toast } from "./toast.js?v=v2026-11-09T12154";
+import { t } from "../../translation/translation.js?v=v2026-11-09T13091";
+import { pushSupport, enablePush } from "./push.js?v=v2026-11-09T13091";
+import { toast } from "./toast.js?v=v2026-11-09T13091";
 
 const DISMISSED_KEY = "push:prompt_dismissed";
 

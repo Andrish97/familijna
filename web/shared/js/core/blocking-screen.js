@@ -5,8 +5,8 @@
 // resource-lock.js (zasób edytowany gdzie indziej). Identyfikatory części:
 // <id>Icon, <id>Title, <id>Msg, <id><key> (przyciski).
 
-import { t } from "../../translation/translation.js?v=v2026-11-09T12154";
-import { icon } from "./icons.js?v=v2026-11-09T12154";
+import { t } from "../../translation/translation.js?v=v2026-11-09T13091";
+import { icon } from "./icons.js?v=v2026-11-09T13091";
 
 /**
  * Nakładka o danym id (tworzona raz). actions: [{ key, i18n, iconName, accent }].

@@ -16,10 +16,10 @@
 // lub tablet, a w pionie strona się mieści), w innym razie „Za małe okno”
 // (komputer, telewizor albo strona, której obrót nie pomoże, np. próg 980 px).
 
-import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-09T12154";
+import { hidePageGuard, showPageGuard } from "./page-overlay.js?v=v2026-11-09T13091";
 
 
-import "./page-boot.js?v=v2026-11-09T12154";
+import "./page-boot.js?v=v2026-11-09T13091";
 export const { getDeviceProfile, editableFocused, PHONE_MAX_SHORT_SIDE } = globalThis.FamilijnaDevice;
 const { keyboardLikely, KEYBOARD_CLOSE_MS } = globalThis.FamilijnaDevice;
 export const MIN_WORK_WIDTH = 980;
