@@ -1,15 +1,15 @@
-import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-09T11473";
+import { escapeHtmlAttribute as esc } from "../../../../shared/js/core/html-escape.js?v=v2026-11-09T11593";
 // base-explorerjs/ui/toolbar.js
 // Przyciski paska narzędzi z rejestru akcji (actions/registry.js): kolejność,
 // grupy, ikony, dymki ze skrótem i powodem niedostępności, widoczność
 // i dostępność — bez własnych reguł. Klik woła runAction.
 
-import { ACTIONS, TOOLBAR_GROUPS, actionById, actionState } from "../actions/registry.js?v=v2026-11-09T11473";
-import { buildContext } from "../actions/context.js?v=v2026-11-09T11473";
-import { runAction } from "../actions/run.js?v=v2026-11-09T11473";
-import { formatShortcut } from "../platform.js?v=v2026-11-09T11473";
-import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-09T11473";
-import { t } from "../../../../shared/translation/translation.js?v=v2026-11-09T11473";
+import { ACTIONS, TOOLBAR_GROUPS, actionById, actionState } from "../actions/registry.js?v=v2026-11-09T11593";
+import { buildContext } from "../actions/context.js?v=v2026-11-09T11593";
+import { runAction } from "../actions/run.js?v=v2026-11-09T11593";
+import { formatShortcut } from "../platform.js?v=v2026-11-09T11593";
+import { icon } from "../../../../shared/js/core/icons.js?v=v2026-11-09T11593";
+import { t } from "../../../../shared/translation/translation.js?v=v2026-11-09T11593";
 
 const GROUP_LABEL = {
   history: "baseExplorer.toolbar.groupHistory",
