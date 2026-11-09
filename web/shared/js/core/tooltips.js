@@ -1,6 +1,6 @@
 // Wygląd: .app-tooltip w silniku stylów (web/shared/style/components.css).
-import { EDGE_PAD, clamp } from "./ui-metrics.js?v=v2026-11-09T13091";
-import { setFloat } from "./geometry.js?v=v2026-11-09T13091";
+import { EDGE_PAD, clamp } from "./ui-metrics.js?v=v2026-11-09T13161";
+import { setFloat } from "./geometry.js?v=v2026-11-09T13161";
 function install() {
   if (typeof document === "undefined" || document.documentElement.dataset.tooltipSystem) return;
   document.documentElement.dataset.tooltipSystem = "ready";

@@ -1,37 +1,37 @@
-import { escapeHtmlText as escapeHtml } from "../../shared/js/core/html-escape.js?v=v2026-11-09T13091";
-import { changeGameType } from "./change-type.js?v=v2026-11-09T13091";
-import { gameTransferDropsVotes, normalizeGamePackage } from "../../shared/js/core/game-transfer-format.js?v=v2026-11-09T13091";
-import { bindResourceDuplicate } from "../../shared/js/core/resource-duplicate.js?v=v2026-11-09T13091";
-import { bindResourceSend } from "../../shared/js/core/resource-send.js?v=v2026-11-09T13091";
-import { loadResourceCopyOffers, decideResourceCopy } from "../../shared/js/core/resource-copy-inbox.js?v=v2026-11-09T13091";
-import { tileTagsHtml, proposedTags, proposedActionsHtml, bindProposedActions } from "../../shared/js/core/proposed-tile.js?v=v2026-11-09T13091";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-09T13091";
-import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-09T13091";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-09T13091";
-import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-09T13091";
-import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-09T13091";
-import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-09T13091";
-import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-09T13091";
-import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-09T13091";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-09T13091";
-import { maybeShowGuestMigrateReminder } from "../../shared/js/core/guest-migrate-reminder.js?v=v2026-11-09T13091";
+import { escapeHtmlText as escapeHtml } from "../../shared/js/core/html-escape.js?v=v2026-11-09T13161";
+import { changeGameType } from "./change-type.js?v=v2026-11-09T13161";
+import { gameTransferDropsVotes, normalizeGamePackage } from "../../shared/js/core/game-transfer-format.js?v=v2026-11-09T13161";
+import { bindResourceDuplicate } from "../../shared/js/core/resource-duplicate.js?v=v2026-11-09T13161";
+import { bindResourceSend } from "../../shared/js/core/resource-send.js?v=v2026-11-09T13161";
+import { loadResourceCopyOffers, decideResourceCopy } from "../../shared/js/core/resource-copy-inbox.js?v=v2026-11-09T13161";
+import { tileTagsHtml, proposedTags, proposedActionsHtml, bindProposedActions } from "../../shared/js/core/proposed-tile.js?v=v2026-11-09T13161";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-09T13161";
+import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-09T13161";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-09T13161";
+import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-09T13161";
+import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-09T13161";
+import { initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-09T13161";
+import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-09T13161";
+import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-09T13161";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-09T13161";
+import { maybeShowGuestMigrateReminder } from "../../shared/js/core/guest-migrate-reminder.js?v=v2026-11-09T13161";
 
-import { initPwa, isStandalone, isIOSSafari, isMobileDevice, canOfferPwaInstall } from "../../shared/js/core/pwa.js?v=v2026-11-09T13091";
-import { syncPushSubscription } from "../../shared/js/core/push.js?v=v2026-11-09T13091";
-import { maybeShowPushPrompt } from "../../shared/js/core/push-prompt.js?v=v2026-11-09T13091";
-import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-09T13091";
-import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-09T13091";
-import { openDialog, closeDialog, isOverlayOpen, handleSheetBack } from "../../shared/js/core/modal-sheet.js?v=v2026-11-09T13091";
-import { setMessage } from "../../shared/js/core/toast.js?v=v2026-11-09T13091";
+import { initPwa, isStandalone, isIOSSafari, isMobileDevice, canOfferPwaInstall } from "../../shared/js/core/pwa.js?v=v2026-11-09T13161";
+import { syncPushSubscription } from "../../shared/js/core/push.js?v=v2026-11-09T13161";
+import { maybeShowPushPrompt } from "../../shared/js/core/push-prompt.js?v=v2026-11-09T13161";
+import { createPollResults } from "../../shared/js/core/poll-results.js?v=v2026-11-09T13161";
+import { sortAnswersByPoints } from "../../shared/js/core/answer-order.js?v=v2026-11-09T13161";
+import { openDialog, closeDialog, isOverlayOpen, handleSheetBack } from "../../shared/js/core/modal-sheet.js?v=v2026-11-09T13161";
+import { setMessage } from "../../shared/js/core/toast.js?v=v2026-11-09T13161";
 
 // Zarejestruj listener PWA jak najwcześniej – beforeinstallprompt może odpalić przed requireAuth
 const pwaApi = initPwa();
 // Jeśli beforeinstallprompt już odpalił zanim dodaliśmy listener w IIFE, sprawdzimy po zalogowaniu
 
-import { exportGame, importGame, downloadJson } from "./games-import-export.js?v=v2026-11-09T13091";
-import { setTopbarNavPriority } from '../../shared/js/core/topbar-controller.js?v=v2026-11-09T13091';
+import { exportGame, importGame, downloadJson } from "./games-import-export.js?v=v2026-11-09T13161";
+import { setTopbarNavPriority } from '../../shared/js/core/topbar-controller.js?v=v2026-11-09T13161';
 
-import "../../shared/js/core/contact-modal.js?v=v2026-11-09T13091";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-09T13161";
 
 import {
   TYPES,
@@ -40,14 +40,14 @@ import {
   validateGame,
   rulesFromState,
   editGate,
-} from "../../shared/js/core/game-validate.js?v=v2026-11-09T13091";
-import { isResourceBusy, acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-09T13091";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-09T13091";
-import { initListSearch } from "../../shared/js/core/list-search.js?v=v2026-11-09T13091";
-import { gameStateKey, SORT_LIST } from "../../shared/js/core/list-filter.js?v=v2026-11-09T13091";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-09T13091";
-import { bindLocalizedFilePicker } from "../../shared/js/core/file-picker.js?v=v2026-11-09T13091";
-import { setProgress, ratioPct } from "../../shared/js/core/ui-metrics.js?v=v2026-11-09T13091";
+} from "../../shared/js/core/game-validate.js?v=v2026-11-09T13161";
+import { isResourceBusy, acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-09T13161";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-09T13161";
+import { initListSearch } from "../../shared/js/core/list-search.js?v=v2026-11-09T13161";
+import { gameStateKey, SORT_LIST } from "../../shared/js/core/list-filter.js?v=v2026-11-09T13161";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-09T13161";
+import { bindLocalizedFilePicker } from "../../shared/js/core/file-picker.js?v=v2026-11-09T13161";
+import { setProgress, ratioPct } from "../../shared/js/core/ui-metrics.js?v=v2026-11-09T13161";
 
 const MSG = {
   exportBaseEmpty: () => t("games.exportBase.empty"),
