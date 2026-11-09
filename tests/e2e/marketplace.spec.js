@@ -287,8 +287,12 @@ test("gość może dodać i usunąć kopię, ale nie ocenia ani nie wysyła gry"
   // widziane (fam:guest:info_shown:<id>), więc strona startuje bez „OK”
   const game = await publishedGame(page);
   try {
-    // bezpośredni link do gry: siatka pokazuje 20 kart naraz, a kolejność zależy od katalogu
-    await page.goto(`${URL}/game/${game.id}`, { waitUntil: "domcontentloaded" });
+    // bezpośredni link do gry: siatka pokazuje 20 kart naraz, a kolejność zależy od katalogu.
+    // Adres ze slugiem (publiczny): /game/<uuid> przekierowuje tylko Worker, a kod
+    // brancha jest serwowany bez niego (TEST_BRANCH_CODE).
+    const slug = (await rpc(page, "market_game_detail", { p_id: game.id }))?.[0]?.slug;
+    expect(slug, "opublikowana gra ma slug").toBeTruthy();
+    await page.goto(`${URL}/game/${slug}`, { waitUntil: "domcontentloaded" });
     await expect(page.locator("#btnAddLibrary")).toBeVisible({ timeout: 20_000 });
     await expect(page.locator(".mkt-star-input")).toHaveCount(0);
     await expect(page.locator("#btnMySent")).toBeHidden();
