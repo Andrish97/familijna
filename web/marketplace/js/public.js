@@ -62,10 +62,19 @@ export function selectRows(rows,{search="",filter="all",sort="recommended",lang=
         || n(b.library_count)-n(a.library_count) || new Date(b.created_at)-new Date(a.created_at);
     });
 }
+// Opis gry do wyszukiwarek: zdanie z tytułem + opis autora, do 160 znaków
+// (sam krótki opis autora lub tytuł Bing zgłaszał jako za krótki opis meta).
+export function gameSeoDescription(game,t,max=160) {
+  const base=t("marketplace.seoGameDescription",{title:String(game.title||"").trim()});
+  const text=[base,String(game.description||"").replace(/\s+/g," ").trim()].filter(Boolean).join(" ");
+  if(text.length<=max) return text;
+  const cut=text.slice(0,max-1);
+  return `${cut.slice(0,Math.max(cut.lastIndexOf(" "),base.length)).replace(/[\s.,;:—-]+$/,"")}…`;
+}
 export function marketSeo(lang,t,game=null,privatePreview=false) {
   const canonical=`https://www.familijna.app${game ? `/marketplace/game/${encodeURIComponent(game.slug)}` : catalogPath(lang)}`;
   return { lang:publicLang(lang), title:game ? `${game.title} — Familijna` : t("marketplace.pageTitle"),
-    description:game ? game.description || game.title : t("marketplace.seoDescription"), url:canonical,
+    description:game ? gameSeoDescription(game,t) : t("marketplace.seoDescription"), url:canonical,
     robots:privatePreview ? "noindex, nofollow" : "index, follow" };
 }
 export function marketSchema(seo,game) {

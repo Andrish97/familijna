@@ -2,6 +2,7 @@
 const en = {
   marketplace: {
     seoDescription: "Find ready-made questions and answers for team games. Community games for parties, weddings, school activities and family gatherings.",
+    seoGameDescription: "{title} — ready-made questions and answers for a free team game. Host the game in Familijna.",
     title: "Community Games",
     pageTitle: "Community Games — ready-made game questions",
     subtitle: "Browse games created by the community and add them to your library.",
