@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
-const { VERSION, withImporters, expandI18nParts } = require("../../scripts/screens/changes.cjs");
+const { VERSION, withImporters, expandI18nParts, sceneIdsFromDiff } = require("../../scripts/screens/changes.cjs");
 const scenes = require("../../scripts/screens/scenes.cjs");
 
 test("same znaczniki wersji (?v= i meta app-version) nie są zmianą", () => {
@@ -49,4 +49,25 @@ test("sceny podglądu urządzeń (?preview=1) idą przez ramkę rodzica", () => 
   // nadrzędnej (E24 R28); scena bez ramki daje pustą tablicę (2026-11-12).
   const bad = scenes.filter((s) => String(s.path).includes("preview=1") && !s.frame).map((s) => s.id);
   assert.deepEqual(bad, []);
+});
+
+test("zmiana definicji scen wybiera tylko zmienione wpisy", () => {
+  const text = [
+    "const page = (p) => [p];", // 1
+    "module.exports = [", // 2
+    '{ id: "a", path: "/a/" },', // 3
+    '{ id: "b", path: "/b/",', // 4
+    "    steps: [] },", // 5
+    "// pomocnicze", // 6
+    "];", // 7
+    "for (const id of [\"a\"]) module.exports.push({ id: `${id}-phone` });", // 8
+  ].join("\n");
+  const ids = new Set(["a", "b", "a-phone"]);
+  const at = (from, count) => `@@ -1 +${from}${count === undefined ? "" : `,${count}`} @@\n`;
+  // Wpis b (linia kontynuacji) -- b i scena z szablonu.
+  assert.deepEqual([...sceneIdsFromDiff(text, at(5), ids)].sort(), ["a-phone", "b"]);
+  // Usunięte linie we wpisie a.
+  assert.deepEqual([...sceneIdsFromDiff(text, at(3, 0), ids)].sort(), ["a", "a-phone"]);
+  // Poza wpisami: funkcja pomocnicza, komentarz, kod po tablicy -- cały plik.
+  for (const line of [1, 6, 8]) assert.equal(sceneIdsFromDiff(text, at(line), ids), null);
 });
