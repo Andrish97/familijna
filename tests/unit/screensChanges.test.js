@@ -43,3 +43,10 @@ test("część słownika dotyczy tylko stron z nią w meta i18n-parts", () => {
   // część wspólna -- jak translation.js (każda strona z tłumaczeniami)
   assert.deepEqual(expandI18nParts(["web/shared/translation/uk/common.js"]), ["web/shared/translation/translation.js"]);
 });
+
+test("sceny podglądu urządzeń (?preview=1) idą przez ramkę rodzica", () => {
+  // Wyświetlacz i Prowadzący w trybie podglądu przyjmują stan tylko od strony
+  // nadrzędnej (E24 R28); scena bez ramki daje pustą tablicę (2026-11-12).
+  const bad = scenes.filter((s) => String(s.path).includes("preview=1") && !s.frame).map((s) => s.id);
+  assert.deepEqual(bad, []);
+});

@@ -58,15 +58,15 @@ module.exports = [
   },
   {
     id: "display-theme-custom", category: "play", title: "Wyświetlacz — motyw wgrany",
-    path: "/control/display/?preview=1", devices: ["desktop-1400"], sources: SOURCES,
+    path: "/control/display/?preview=1", frame: true, devices: ["desktop-1400"], sources: SOURCES,
     db: (db) => { db.http = { ...(db.http || {}), ...http }; },
     ready: () => document.readyState === "complete",
-    steps: [async (view, { lang }) => {
+    steps: [async (view, { lang, page }) => {
       const { buildGameState } = await import("../data/game-state.mjs");
       const row = buildGameState(lang, "round");
       row.detail.display.theme = KEY;
       await view.waitForTimeout(1200);
-      await view.evaluate((row) => window.postMessage({ type: "familijna:preview-row", row }, "*"), row);
+      await page.evaluate((row) => document.getElementById("screensFrame").contentWindow.postMessage({ type: "familijna:preview-row", row }, location.origin), row);
       await view.waitForSelector(`#baseSvg[data-display-theme="${KEY}"]`);
       await view.waitForSelector("#gameScreen:not(.hidden)");
       await view.waitForTimeout(800);

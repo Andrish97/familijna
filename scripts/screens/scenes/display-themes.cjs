@@ -6,16 +6,16 @@ const themeBackground = (theme) => (require(`../../../web/shared/themes/${theme}
 module.exports = themes.flatMap((theme) => [
   {
     id: `display-theme-${theme}`, category: "play", title: `Wyświetlacz — ${theme}`,
-    path: "/control/display/?preview=1", devices: ["desktop-1400"],
+    path: "/control/display/?preview=1", frame: true, devices: ["desktop-1400"],
     sources: ["web/shared/js/display/", "web/shared/themes/"],
     ready: () => document.readyState === "complete",
-    steps: [async (view, { lang }) => {
+    steps: [async (view, { lang, page }) => {
       const { buildGameState } = await import("../data/game-state.mjs");
       const row = buildGameState(lang, "round");
       row.detail.display.theme = theme;
             row.detail.display.colors.BACKGROUND = themeBackground(theme) || row.detail.display.colors.BACKGROUND;
       await view.waitForTimeout(1200);
-      await view.evaluate(row => window.postMessage({ type: "familijna:preview-row", row }, "*"), row);
+      await page.evaluate((row) => document.getElementById("screensFrame").contentWindow.postMessage({ type: "familijna:preview-row", row }, location.origin), row);
       await view.waitForSelector(`#baseSvg[data-display-theme="${theme}"]`);
       await view.waitForSelector("#gameScreen:not(.hidden)");
       await view.waitForTimeout(800);
