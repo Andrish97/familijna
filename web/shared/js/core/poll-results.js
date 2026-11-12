@@ -4,9 +4,9 @@
 // Lista budowana raz; potem tylko liczby i szerokości pasków (przejście CSS).
 // Gotowe odpowiedzi punktowane są pokazywane malejąco według punktów;
 // otwarte wyniki zachowują kolejność źródłową albo pojawiania się wpisów.
-import { t } from "../../translation/translation.js?v=v2026-11-12T13423";
-import { sortAnswersByPoints } from "./answer-order.js?v=v2026-11-12T13423";
-import { setProgress } from "./ui-metrics.js?v=v2026-11-12T13423";
+import { t } from "../../translation/translation.js?v=v2026-11-12T13431";
+import { sortAnswersByPoints } from "./answer-order.js?v=v2026-11-12T13431";
+import { setProgress } from "./ui-metrics.js?v=v2026-11-12T13431";
 
 
 // poll_stopped: te same surowe wiersze co na żywo (głosy już się nie zmieniają)
