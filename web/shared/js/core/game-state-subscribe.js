@@ -8,10 +8,14 @@
 // i żywego lease — bez logowania) musi pasować do tematu.
 // Pomiar e2e 40868645209: p50 141 ms, p90 158 ms, 0 zgubionych.
 //
-// Odczyt stanu RPC tylko przy starcie i po każdym (ponownym) dołączeniu
-// do kanału — kanał nie przechowuje wiadomości wysłanych, gdy urządzenie
-// było odłączone (telefon w tle, zerwane łącze). Nie ma dzwonków ani
-// odpytywania.
+// Odczyt stanu RPC przy starcie i po każdym (ponownym) dołączeniu do kanału
+// — kanał nie przechowuje wiadomości wysłanych, gdy urządzenie było
+// odłączone (telefon w tle, zerwane łącze).
+//
+// Tryb zapasowy (decyzja właściciela 2026-11-14): gdy kanał nie działa dłużej
+// niż POLL_FALLBACK_AFTER_MS (np. komputer blokuje WebSockety — antywirus,
+// proxy; eksport 13.11: potwierdzenia planszy 11–100 s), widoczna karta czyta
+// stan z bazy co POLL_MS, aż kanał wróci. Przy działającym kanale bez odpytywania.
 
 import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-14T11110";
 import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-14T11110";
@@ -20,9 +24,12 @@ import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realti
 import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-14T11110";
 
 const TRANSPORT = "broadcast";
-const NOT_RESYNC_SOURCES = new Set([TRANSPORT, "rpc_bootstrap", "press"]);
+const POLL_SOURCE = "rpc_poll";
+const NOT_RESYNC_SOURCES = new Set([TRANSPORT, "rpc_bootstrap", "press", POLL_SOURCE]);
+export const POLL_FALLBACK_AFTER_MS = 5_000;
+export const POLL_MS = 2_000;
 
-export function createSubscription({ gameId, deviceType, key, onRow, onError, onCompletion = null, signal = false, sameRevChanged = null, getLeaseArgs = () => ({}), beforeResync = null, log = () => {} }) {
+export function createSubscription({ gameId, deviceType, key, onRow, onError, onCompletion = null, signal = false, sameRevChanged = null, getLeaseArgs = () => ({}), beforeResync = null, log = () => {}, onLiveChange = null }) {
   let active = false;
   let channel = null;
   let signalChannel = null;
@@ -46,6 +53,11 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
   let hiddenAt = document.visibilityState === "hidden" ? performance.now() : null;
   let lastRenderedRev = -1;
   let sync;
+  // Tryb zapasowy: odczyt z bazy co POLL_MS, gdy kanał nie działa.
+  let polling = false;
+  let pollTimer = null;
+  let pollStartTimer = null;
+  let pollStartedAt = 0;
   // Pomiar łącza w trakcie gry (migracja 466): tylko start, spowolnienie
   // i powrót do normy; zapis jak diagnostyka — nigdy nie blokuje gry.
   const network = createNetworkMonitor({
@@ -223,7 +235,9 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
         lastSocketClose = { at: performance.now(), details };
         globalThis.__sbDeviceRealtimeLastClose = details;
         if (outage) Object.assign(outage.socketClose, details);
-        sendDiagnostic("transport_state", "socket_closed", TRANSPORT, { status, ...details });
+        // W trybie zapasowym kolejne nieudane próby kanału (co 15 s) nie
+        // trafiają do dziennika — wystarczy poll_started/poll_stopped.
+        if (!polling) sendDiagnostic("transport_state", "socket_closed", TRANSPORT, { status, ...details });
       });
       globalThis.__sbDeviceRealtimeCloseObserverAttached = closeObserverAttached;
       // debug helper (jak globalThis.__sbClient w supabase.js)
@@ -232,8 +246,40 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
     return realtime;
   }
 
+  function pollTick() {
+    pollTimer = null;
+    if (!active || !polling) return;
+    if (document.visibilityState === "visible") void fetchGuarded(POLL_SOURCE);
+    pollTimer = setTimeout(pollTick, POLL_MS);
+  }
+  function armPollFallback() {
+    if (!active || connected || polling || pollStartTimer) return;
+    pollStartTimer = setTimeout(() => {
+      pollStartTimer = null;
+      if (!active || connected || polling) return;
+      polling = true;
+      pollStartedAt = performance.now();
+      sendDiagnostic("transport_state", "poll_started", "rpc", { status, poll_ms: POLL_MS });
+      onLiveChange?.(false);
+      pollTick();
+    }, POLL_FALLBACK_AFTER_MS);
+  }
+  function stopPollFallback() {
+    clearTimeout(pollStartTimer);
+    pollStartTimer = null;
+    clearTimeout(pollTimer);
+    pollTimer = null;
+    if (!polling) return;
+    polling = false;
+    sendDiagnostic("transport_state", "poll_stopped", "rpc", {
+      status, duration_ms: Math.max(0, Math.round(performance.now() - pollStartedAt)),
+    });
+    onLiveChange?.(true);
+  }
+
   function onChannelReady() {
     if (!active) return;
+    stopPollFallback();
     retry.reset();
     if (plannedRefreshAt != null) {
       sendDiagnostic("transport_state", "token_refresh", TRANSPORT, {
@@ -268,8 +314,9 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
 
   function onChannelFailure(nextStatus, error = null) {
     noteFailure(nextStatus, error);
+    armPollFallback();
     const retryMs = retry.schedule();
-    if (retryMs !== null) sendDiagnostic("transport_state", "reconnect_scheduled", TRANSPORT, { status: nextStatus, retry_ms: retryMs });
+    if (retryMs !== null && !polling) sendDiagnostic("transport_state", "reconnect_scheduled", TRANSPORT, { status: nextStatus, retry_ms: retryMs });
     console.warn(`[device-realtime] ${nextStatus}; ponowne dołączenie`);
   }
 
@@ -343,7 +390,10 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
             status: "TOKEN_ERROR", error_class: String(error?.name || "Error").slice(0, 80),
           });
         }
-      } else noteFailure("TOKEN_ERROR", error);
+      } else {
+        noteFailure("TOKEN_ERROR", error);
+        armPollFallback();
+      }
       console.info("[device-realtime] token kanału niedostępny; ponawiam", error);
       clearTimeout(tokenTimer);
       tokenTimer = setTimeout(() => { if (active) void startChannel(); }, tokenRetryMs);
@@ -417,6 +467,7 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
     renderIncidentOpen = false;
     tokenAuthIncidentOpen = false;
     retry.cancel();
+    stopPollFallback();
     document.removeEventListener("visibilitychange", onVisibility);
     window.removeEventListener("pageshow", resyncAfterLease);
     window.removeEventListener("online", resyncAfterLease);
@@ -437,5 +488,5 @@ export function createSubscription({ gameId, deviceType, key, onRow, onError, on
     return signalChannel.send({ type: "broadcast", event, payload }).then((result) => result === "ok").catch(() => false);
   }
 
-  return { start, stop, applyRow, refetchNow, sendSignal, isConnected() { return connected; } };
+  return { start, stop, applyRow, refetchNow, sendSignal, isConnected() { return connected; }, isPolling() { return polling; } };
 }

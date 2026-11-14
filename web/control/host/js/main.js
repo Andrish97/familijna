@@ -246,6 +246,8 @@ async function main() {
     getLeaseArgs: () => lease.actionArgs(),
     beforeResync: () => lease.refresh(),
     log: lease.log,
+    // Tryb zapasowy kanału (odczyt z bazy) widoczny w Control jako podpowiedź.
+    onLiveChange: (live) => lease.setMeta({ realtime_live: live }),
     onRow: async (row) => {
       lease.setProgress({ receivedRev: Number(row.rev) || 0 });
       // Język idzie za operatorem w Control (patrz control/display/js/main.js —

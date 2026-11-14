@@ -313,6 +313,12 @@ module.exports = [
     db: (db) => {
       db.rpc.control_devices_snapshot = "fn:(args, db) => { db.__snapN = (db.__snapN || 0) + 1; const lost = db.__snapN > 3; const dev = (on, hidden) => ({ primary_online: on, waiting_count: 0, visibility: hidden ? 'hidden' : 'visible', focused: on, audio_unlocked: true, meta: {}, last_seen_at: new Date(Date.now() - (on ? 0 : 20e3)).toISOString() }); return { ok: true, devices: { display: dev(true, false), host: dev(!lost, lost), buzzer: dev(!lost, lost) } }; }";
     } },
+  // Decyzja 2026-11-14: Wyświetlacz bez kanału na żywo (tryb zapasowy, odczyt
+  // z bazy co 2 s) — ostrzeżenie nad podpowiedzią, gra trwa.
+  { id: "play-control-device-no-live", category: CAT, title: "Control — Wyświetlacz bez połączenia na żywo: ostrzeżenie (antywirus/VPN), gra trwa", path: CONTROL_URL, sources: CONTROL, gameState: "round", ready: ".c2-hint-warn", devices: DESKTOP, settle: 600,
+    db: (db) => {
+      db.rpc.control_devices_snapshot = "fn:() => { const dev = (meta) => ({ primary_online: true, waiting_count: 0, visibility: 'visible', focused: true, audio_unlocked: true, meta, last_seen_at: new Date().toISOString() }); return { ok: true, devices: { display: dev({ realtime_live: false }), host: dev({}), buzzer: dev({}) } }; }";
+    } },
   { id: "play-control-leave-confirm", category: CAT, title: "Control — okno „Gra w toku” przy wyjściu do Moich gier", path: CONTROL_URL, sources: CONTROL, gameState: "round", ready: ".c2-tile", devices: DESKTOP, settle: 600,
     steps: [async (view) => { await view.waitForTimeout(600); await view.locator("#btnBack").click(); }, waitModal(".uni-modal")] },
   { id: "play-control-restart-confirm", category: CAT, title: "Control — okno „Zacznij od nowa” na ekranie końca gry", path: CONTROL_URL, sources: CONTROL, gameState: "finale", ready: ".c2-intro", devices: DESKTOP, settle: 600,

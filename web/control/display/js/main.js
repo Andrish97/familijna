@@ -506,6 +506,8 @@ window.addEventListener("DOMContentLoaded", async () => {
       getLeaseArgs: () => lease.actionArgs(),
       beforeResync: () => lease.refresh(),
       log: lease.log,
+    // Tryb zapasowy kanału (odczyt z bazy) widoczny w Control jako podpowiedź.
+    onLiveChange: (live) => lease.setMeta({ realtime_live: live }),
       onRow: async (row) => {
         lease.setProgress({ receivedRev: Number(row.rev) || 0 });
         setSfxMuted(row.detail?.settings?.soundMuted);

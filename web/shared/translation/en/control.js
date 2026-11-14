@@ -52,6 +52,7 @@ const en = {
       displayHiddenSameBrowser: "The Display is in the background of this browser — board and sound will lag.",
       deviceAsleep: "Asleep: {devices} — unlock it and return to its page. The game goes on.",
       deviceOffline: "No connection: {devices} — check the device network. The game goes on.",
+      deviceNoLive: "No live connection: {devices} — the picture lags. Check antivirus or VPN.",
     },
     title: "Familijna — control panel",
     logout: "Log out",

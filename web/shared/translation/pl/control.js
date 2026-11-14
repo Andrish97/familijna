@@ -52,6 +52,7 @@ const pl = {
       displayHiddenSameBrowser: "Wyświetlacz jest w tle tej przeglądarki — plansza i dźwięk będą się spóźniać.",
       deviceAsleep: "Uśpione: {devices} — odblokuj i wróć do strony urządzenia. Gra trwa dalej.",
       deviceOffline: "Bez połączenia: {devices} — sprawdź sieć urządzenia. Gra trwa dalej.",
+      deviceNoLive: "Bez połączenia na żywo: {devices} — obraz się spóźnia. Sprawdź antywirus lub VPN.",
     },
     title: "Familijna — panel sterowania",
     logout: "Wyloguj",

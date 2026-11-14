@@ -982,7 +982,12 @@ async function main() {
   function absentDevicesNotice() {
     const blocking = blockingDevices(store.state, presenceFlags);
     const absent = missingDevices(store.state, presenceFlags).filter((kind) => !blocking.includes(kind));
-    if (!absent.length) return null;
+    if (!absent.length) {
+      // Urządzenie połączone, ale bez kanału na żywo (tryb zapasowy: odczyt
+      // z bazy co 2 s) — zwykle antywirus, VPN lub proxy blokuje WebSockety.
+      const slow = ["display", "host", "buzzer"].filter((kind) => presenceFlags[kind] && lastDeviceDiagnostics?.[kind]?.realtimeLive === false);
+      return slow.length ? t("control.hints.deviceNoLive", { devices: slow.map(deviceLabel).join(", ") }) : null;
+    }
     const asleep = absent.filter((kind) => absenceCause(lastDeviceDiagnostics?.[kind]) === "asleep");
     const key = asleep.length === absent.length ? "control.hints.deviceAsleep" : "control.hints.deviceOffline";
     return t(key, { devices: absent.map(deviceLabel).join(", ") });

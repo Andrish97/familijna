@@ -94,6 +94,11 @@ Each item: **symptom** → possible cause → what to do.
 
 ## 19.5 Device problems
 
+- **“No live connection” above the hint in the panel** → the device cannot keep a live connection
+  to the service (usually blocked by antivirus, a VPN, a firewall or a company network) → the game
+  goes on, but the picture and sound on that device lag by 2–3 seconds. Turn off web protection in
+  the antivirus or the VPN for this site, or use another network or browser. The message disappears
+  by itself when the connection comes back.
 - **The panel shows a device as asleep** → the phone
   with the buttons or the host tablet went dark or was switched to another app → keep the screen
   on for the whole game, plug the device into a charger, lengthen the automatic screen lock

@@ -94,6 +94,11 @@ Każdy punkt: **objaw** → możliwa przyczyna → co zrobić.
 
 ## 19.5 Problemy z urządzeniami
 
+- **„Bez połączenia na żywo” nad podpowiedzią w panelu** → urządzenie nie może utrzymać połączenia
+  na żywo z serwisem (zwykle blokuje je antywirus, VPN, zapora albo sieć firmowa) → gra trwa dalej,
+  ale obraz i dźwięk na tym urządzeniu spóźniają się o 2–3 sekundy. Wyłącz ochronę sieci
+  w antywirusie lub VPN dla tej strony albo użyj innej sieci lub przeglądarki. Komunikat znika
+  sam, gdy połączenie wróci.
 - **Panel pokazuje urządzenie jako uśpione** → telefon
   z przyciskami albo tablet prowadzącego zgasł lub przełączono na inną aplikację → trzymaj ekran
   włączony przez całą grę, podłącz urządzenie do ładowarki, wydłuż czas automatycznej blokady

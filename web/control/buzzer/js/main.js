@@ -150,6 +150,8 @@ async function main() {
     getLeaseArgs: () => lease.actionArgs(),
     beforeResync: () => lease.refresh(),
     log: lease.log,
+    // Tryb zapasowy kanału (odczyt z bazy) widoczny w Control jako podpowiedź.
+    onLiveChange: (live) => lease.setMeta({ realtime_live: live }),
     // Potwierdzenie planszy z bazy (zdarzenie completion na kanale Przycisku).
     onCompletion: applyCompletion,
     // Bez podbicia rev powiadamiamy też o wygaśnięciu blokady i potwierdzeniu

@@ -97,6 +97,8 @@ export function createPresence({ gameId, onChange, onTransientError }) {
         audioDiagnostic: meta.audio_diagnostic || null,
         audioLockReason: typeof meta.audio_lock_reason === "string" ? meta.audio_lock_reason : null,
         audioLockDetail: typeof meta.audio_lock_detail === "string" ? meta.audio_lock_detail : null,
+        // Urządzenie bez kanału na żywo czyta stan z bazy (tryb zapasowy).
+        realtimeLive: meta.realtime_live !== false,
       }];
     }));
     const fp = JSON.stringify({
@@ -104,6 +106,7 @@ export function createPresence({ gameId, onChange, onTransientError }) {
       deviceVisibility: Object.fromEntries(Object.entries(deviceDiagnostics).map(([kind, item]) => [kind, [item.visibility, item.focused, item.browserContextId, item.waitingCount]])),
       displayAudioDiagnosticId: deviceDiagnostics.display.audioDiagnostic?.id || null,
       displayAudioLock: [deviceDiagnostics.display.audioLockReason, deviceDiagnostics.display.audioLockDetail],
+      realtimeLive: KINDS.map(kind => deviceDiagnostics[kind].realtimeLive),
     });
     if (fp === lastReported) return;
     lastReported = fp;
