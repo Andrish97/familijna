@@ -1,4 +1,4 @@
-// Version: v2026-11-12T13583
+// Version: v2026-11-14T11110
 // sw.js – Service Worker aplikacji: instalacja PWA i powiadomienia push (E29),
 // bez offline cache. Treść powiadomienia (tytuł, ikony, przyciski, adres)
 // składa funkcja Edge push-send; zapis urządzenia: web/shared/js/core/push.js.
