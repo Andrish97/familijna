@@ -3,8 +3,8 @@
 // ui-select (placeUnder), menu kontekstowe (placeAtPoint). Zawsze w oknie,
 // EDGE_PAD od krawędzi.
 
-import { EDGE_PAD as PAD, ANCHOR_GAP as GAP, LIST_GAP, LIST_MIN_HEIGHT, clamp } from "./ui-metrics.js?v=v2026-11-14T11320";
-import { setFloat, clearFloat, measureHidden } from "./geometry.js?v=v2026-11-14T11320";
+import { EDGE_PAD as PAD, ANCHOR_GAP as GAP, LIST_GAP, LIST_MIN_HEIGHT, clamp } from "./ui-metrics.js?v=v2026-11-14T11404";
+import { setFloat, clearFloat, measureHidden } from "./geometry.js?v=v2026-11-14T11404";
 
 /**
  * Menu pod przyciskiem anchor, wyrównane do jego prawej krawędzi (align
