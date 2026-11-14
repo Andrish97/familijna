@@ -39,6 +39,10 @@ test("ustalone rysunki: anuluj ≠ błąd, info i „!” bez kółka, telefon z
   assert.notEqual(svg("cancel"), svg("error"));
   assert.doesNotMatch(svg("info"), /r="[89]/, "info bez kółka");
   assert.doesNotMatch(svg("error"), /r="[89]/, "„!” bez kółka");
+  // Wskazówki: „?” bez kółka, ta sama grubość kreski i kropka co „!” i „i”.
+  assert.doesNotMatch(svg("help"), /r="[89]/, "„?” bez kółka");
+  assert.match(svg("help"), /stroke-width="3\.4"/, "„?” — kreska jak w „!”");
+  assert.match(svg("help"), /<circle cx="12" cy="19\.5" r="2"\/>/, "„?” — kropka jak w „!”");
   assert.match(svg("phone"), /M19\.7 7a7\.2 7\.2 0 0 1 0 10/, "telefon z falami sygnału");
   assert.match(svg("host"), /rect x="16\.8" y="3" width="4" height="7"/, "host z mikrofonem");
   assert.match(svg("buzzer"), /M5\.75 11\.25a6\.25 6.25 0 0 1 12\.5 0Z/, "buzzer — przycisk z boku");

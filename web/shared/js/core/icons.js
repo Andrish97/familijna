@@ -19,6 +19,8 @@ export const ICONS = Object.freeze({
   error: "/assets/icons/actions/error.svg?v=v2026-11-14T12020",
   warning: "/assets/icons/actions/warning.svg?v=v2026-11-14T12020",
   info: "/assets/icons/actions/info.svg?v=v2026-11-14T12020",
+  // Znak zapytania: przycisk „Wskazówki” w górnym pasku (info zostaje ikoną ogólną).
+  help: "/assets/icons/actions/help.svg?v=v2026-11-14T12020",
   save: "/assets/icons/actions/save.svg?v=v2026-11-14T12020",
   refresh: "/assets/icons/actions/refresh.svg?v=v2026-11-14T12020",
   restore: "/assets/icons/actions/restore.svg?v=v2026-11-14T12020",
