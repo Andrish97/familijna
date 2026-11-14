@@ -2,7 +2,7 @@
 // Jeden krok = krok pola (atrybut step); przytrzymany przycisk powtarza krok
 // coraz szybciej. Pole dostaje `input` przy każdym kroku i jedno `change` po
 // puszczeniu (jak przy przeciąganiu suwaka) -- historia zmian ma jeden wpis.
-import { t } from "../../shared/translation/translation.js?v=v2026-11-14T13542";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-14T14505";
 
 const DELAYS = (n) => (n < 6 ? 140 : n < 20 ? 60 : 25);
 
