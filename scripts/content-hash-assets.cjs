@@ -19,9 +19,25 @@ function allFiles(root, dir = root) {
   });
 }
 
+// Zrzuty Wskazówek: treść rozdziałów (scripts/manual/build-content.mjs) podaje
+// obrazy bez ?v= (źródło bez wersji, więc bez zmian przy każdym wydaniu). W wydaniu
+// dostają ?v=, a niżej wersję z treści obrazu: zmieniony zrzut ma nowy adres od
+// razu, niezmieniony zostaje w pamięci przeglądarki i Workera na rok.
+const MANUAL_SHOT = /(\/manual\/img\/[a-zA-Z0-9_./-]+\.webp)(?!\?v=)/g;
+function versionManualShots(root, files) {
+  const content = path.join(root, 'manual', 'content') + path.sep;
+  for (const file of files) {
+    if (!file.startsWith(content) || path.extname(file) !== '.js') continue;
+    const source = fs.readFileSync(file, 'utf8');
+    const output = source.replace(MANUAL_SHOT, '$1?v=v0');
+    if (output !== source) fs.writeFileSync(file, output);
+  }
+}
+
 function contentHashAssets(root) {
   root = path.resolve(root);
   const files = allFiles(root).filter(file => path.basename(file) !== 'asset-hashes.json').sort();
+  versionManualShots(root, files);
   const known = new Set(files);
   const records = new Map();
   const virtuals = new Map();

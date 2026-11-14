@@ -57,3 +57,29 @@ test('zmiana części słownika zmienia wersję translation.js (części dziedzi
     fs.rmSync(root, { recursive: true, force: true });
   }
 });
+
+test('zrzuty Wskazówek dostają wersję z treści obrazu (rozdział i lista rozdziałów za nim)', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'asset-hash-manual-'));
+  const file = (name) => path.join(root, name);
+  const write = (name, data) => { fs.mkdirSync(path.dirname(file(name)), { recursive: true }); fs.writeFileSync(file(name), data); };
+  const read = (name) => fs.readFileSync(file(name), 'utf8');
+  const v = (text, name) => text.match(new RegExp(`${name}\\?v=(h[0-9a-f]+)`))[1];
+  try {
+    write('manual/content/chapter-loaders.js', 'export default { pl: { "1": () => import("./chapters/pl/1.js?v=vOLD") } };');
+    write('manual/content/chapters/pl/1.js', 'export default "<img src=\\"/manual/img/pl/a-desktop.webp\\"><img src=\\"/manual/img/pl/light/b-desktop.webp\\">";');
+    write('manual/img/pl/a-desktop.webp', Buffer.from([1]));
+    write('manual/img/pl/light/b-desktop.webp', Buffer.from([2]));
+    contentHashAssets(root);
+    const first = { a: v(read('manual/content/chapters/pl/1.js'), 'a-desktop.webp'), b: v(read('manual/content/chapters/pl/1.js'), 'b-desktop.webp'), ch: v(read('manual/content/chapter-loaders.js'), '1.js') };
+    contentHashAssets(root);
+    assert.equal(v(read('manual/content/chapters/pl/1.js'), 'a-desktop.webp'), first.a);
+    write('manual/img/pl/a-desktop.webp', Buffer.from([3]));
+    contentHashAssets(root);
+    const ch = read('manual/content/chapters/pl/1.js');
+    assert.notEqual(v(ch, 'a-desktop.webp'), first.a);
+    assert.equal(v(ch, 'b-desktop.webp'), first.b);
+    assert.notEqual(v(read('manual/content/chapter-loaders.js'), '1.js'), first.ch);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
