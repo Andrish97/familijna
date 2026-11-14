@@ -3,8 +3,8 @@
 // „jak na wyświetlaczu” (30x10 kafli po 5x7 kropek). Zamiana GLYPH ->
 // kropki: js/core/logo-preview.js (ta sama co na wyświetlaczu).
 
-import { rows30x10ToBits150, renderBitsToCanvas } from "../../shared/js/core/logo-preview.js?v=v2026-11-14T11404";
-import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-14T11404";
+import { rows30x10ToBits150, renderBitsToCanvas } from "../../shared/js/core/logo-preview.js?v=v2026-11-14T12020";
+import { setVars } from "../../shared/js/core/ui-metrics.js?v=v2026-11-14T12020";
 
 
 export const TILES_X = 30;

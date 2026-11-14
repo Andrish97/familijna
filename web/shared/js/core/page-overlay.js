@@ -4,8 +4,8 @@
 // Ekran: core/blocking-screen.js (ten sam co blokada zasobu). „Wróć” prowadzi na adres z mapy nawigacji (backHref),
 // nigdy przez history.back() ani referrer. i18n: pageGuard.*.
 
-import { applyTranslations, t, withLangParam } from "../../translation/translation.js?v=v2026-11-14T11404";
-import { blockingScreen, setBlockingIcon, setBlockingOpen, isBlockingOpen } from "./blocking-screen.js?v=v2026-11-14T11404";
+import { applyTranslations, t, withLangParam } from "../../translation/translation.js?v=v2026-11-14T12020";
+import { blockingScreen, setBlockingIcon, setBlockingOpen, isBlockingOpen } from "./blocking-screen.js?v=v2026-11-14T12020";
 
 
 export const PAGE_GUARD_ID = "pageGuard";
