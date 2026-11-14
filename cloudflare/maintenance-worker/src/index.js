@@ -65,7 +65,7 @@ export default {
     // Nagłówki bezpieczeństwa dla stron HTML (audyt E24, N3).
     const redirect = httpsRedirect(request);
     const response = redirect || await handleFetch(request, env, ctx);
-    return withSecurityHeaders(request, localizePublicPage(request, localizeHome(request, response)));
+    return withSecurityHeaders(request, await localizePublicPage(request, localizeHome(request, response)));
   }
 };
 

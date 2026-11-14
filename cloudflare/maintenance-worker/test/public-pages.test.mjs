@@ -19,6 +19,11 @@ const outboundService = async (request) => {
   if (url.pathname === '/rest/v1/rpc/market_public_catalog') return new Response('[]', {headers:{'Content-Type':'application/json'}});
   if (url.pathname.includes('/rest/')) throw new Error('guide reading must not use the database');
   if (failOrigin) return new Response('origin unavailable', { status: 503 });
+  // Wersje zrzutów Wskazówek z bieżącego wydania (scripts/content-hash-assets.cjs).
+  if (url.pathname === '/asset-hashes.json') return new Response(JSON.stringify({
+    'manual/img/pl/play-display-play-desktop.webp': '0123456789abcdef' + 'f'.repeat(48),
+    'manual/index.html': 'a'.repeat(64),
+  }), { headers: { 'Content-Type': 'application/json' } });
   let source = sources[url.pathname.slice(1)];
   if (legacyManual && url.pathname === '/manual/index.html') source = source
     .replace('content="index, follow"', 'content="noindex, nofollow"')
@@ -58,10 +63,17 @@ test('every guide chapter and index has full localized HTML, canonical, reciproc
       const heading = html.match(/<h1 class="m-title">([^<]*)<\/h1>/)?.[1];
       assert.ok(title.includes(heading));
     } else assert.match(html, /class="m-part-chapters/);
+    if (lang === 'pl' && id === '17') {
+      assert.ok(html.includes('src="/manual/img/pl/play-display-play-desktop.webp?v=h0123456789abcdef"'));
+      // Obraz spoza mapy wydania -- bez wersji (krótka pamięć jak dotąd).
+      assert.ok(html.includes('src="/manual/img/pl/light/play-display-play-desktop.webp"'));
+    }
     const bot = await mf.dispatchFetch(canonical, { headers: { 'User-Agent': 'Googlebot' } });
     assert.equal(await bot.text(), html);
   }
-  assert.ok(requests.every((path) => path === '/manual/index.html'));
+  assert.ok(requests.every((path) => path === '/manual/index.html' || path === '/asset-hashes.json'));
+  // Mapa wersji pamiętana (1 min), nie pobierana przy każdej stronie.
+  assert.equal(requests.filter((path) => path === '/asset-hashes.json').length, 1);
 });
 
 test('sitemap lists public localized documents using exactly their canonical URLs; HEAD agrees', async () => {

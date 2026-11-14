@@ -10,6 +10,7 @@ import ukPrivacy from "../../../../../web/shared/translation/uk/privacy.js";
 import { homeDictionary, homeText } from "./home.js";
 import { publicLang, publicUrl, publicSeo, publicMetaHtml } from "../../../../../web/shared/js/core/public-seo.js";
 import { manualArticle, manualToc } from "../../../../../web/manual/js/render.js";
+import { fetchWithOrigin, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE } from "../origin/origin.js";
 
 const MANUALS = { pl: plManual, en: enManual, uk: ukManual };
 const TEXTS = { pl: plText, en: enText, uk: ukText };
@@ -27,8 +28,38 @@ export function invalidManualChapter(url) {
     && !MANUAL_CHAPTERS.includes(url.searchParams.get("ch"));
 }
 
+// Zrzuty Wskazówek z wersją z treści obrazu (?v=h<skrót>), jak w wydaniu Pages
+// (scripts/content-hash-assets.cjs): zmieniony zrzut ma nowy adres od razu,
+// niezmieniony zostaje w pamięci na rok. Treść Workera pochodzi z jego wdrożenia,
+// a zrzuty odświeża CI w Pages -- wersje bierzemy więc z asset-hashes.json
+// bieżącego wydania (obraz i skrót z tego samego wydania), pamiętane 1 min.
+const MANUAL_SHOT = /(\/manual\/img\/[a-zA-Z0-9_./-]+\.webp)(?!\?v=)/g;
+const SHOT_VERSIONS_TTL = 60_000;
+let shotVersions = { at: 0, map: null };
+
+export function versionManualShots(html, versions) {
+  if (!versions) return html;
+  return html.replace(MANUAL_SHOT, (match, src) => (versions[src.slice(1)] ? `${src}?v=h${versions[src.slice(1)]}` : match));
+}
+
+async function manualShotVersions(request) {
+  if (Date.now() - shotVersions.at < SHOT_VERSIONS_TTL) return shotVersions.map;
+  try {
+    const res = await fetchWithOrigin(`${ORIGIN_BASE}/asset-hashes.json`, new Request(request.url, { method: "GET" }), ORIGIN_HOST, ORIGIN_RESOLVE);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const map = {};
+    for (const [file, hash] of Object.entries(await res.json())) if (file.startsWith("manual/img/")) map[file] = String(hash).slice(0, 16);
+    shotVersions = { at: Date.now(), map };
+  } catch (error) {
+    // Bez wersji obrazy idą jak dotąd (krótka pamięć); poprzednia mapa zostaje.
+    console.warn("[manual] asset-hashes.json:", error?.message || error);
+    shotVersions = { at: Date.now(), map: shotVersions.map };
+  }
+  return shotVersions.map;
+}
+
 // Gotowa treść z Markdown i słowników, bez bazy, sesji i rozpoznawania botów.
-export function localizePublicPage(request, response) {
+export async function localizePublicPage(request, response) {
   const url = new URL(request.url);
   const page = publicPage(url.pathname);
   if (url.hostname !== "www.familijna.app" || !page || !["GET", "HEAD"].includes(request.method)
@@ -38,6 +69,7 @@ export function localizePublicPage(request, response) {
   const t = (key, params = {}) => (homeText(dict, key) ?? key)
     .replace(/\{(\w+)\}/g, (m, name) => params[name] ?? m);
   const manual = MANUALS[lang];
+  const versions = page === "manual" ? await manualShotVersions(request) : null;
   const chapter = page === "manual" ? manual.chapters.find((ch) => ch.id === url.searchParams.get("ch")) : null;
   const seo = publicSeo(page, lang, chapter ? t("manual.chapterTitle", { title: chapter.title }) : t(`${page}.title`),
     page === "privacy" ? t("privacy.description") : chapter?.description || t("manual.startLead"), chapter);
@@ -68,7 +100,7 @@ export function localizePublicPage(request, response) {
     .on("#manualArticle", { element(el) {
       el.setAttribute("data-manual-lang", lang);
       el.setAttribute("data-manual-chapter", chapter?.id || "");
-      el.setInnerContent(manualArticle(manual, chapter, t, href), { html: true });
+      el.setInnerContent(versionManualShots(manualArticle(manual, chapter, t, href), versions), { html: true });
     } })
     .on("#manualToc", { element(el) { el.setInnerContent(manualToc(manual, chapter?.id, href), { html: true }); } })
     .on("#manualCurrent", { element(el) { el.setInnerContent(chapter?.title || t("manual.pageTitle")); } })
