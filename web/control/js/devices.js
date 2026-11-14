@@ -12,9 +12,9 @@
 // 2026-05-30_203) — to czysty lookup "kod -> share_key", niezwiązany z
 // komendami, nie wymaga żadnej zmiany dla v2.
 
-import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-14T11110";
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-14T11110";
-import { t } from "../../shared/translation/translation.js?v=v2026-11-14T11110";
+import { getUiLang } from "../../shared/translation/translation.js?v=v2026-11-14T11320";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-14T11320";
+import { t } from "../../shared/translation/translation.js?v=v2026-11-14T11320";
 
 
 // Linki urządzeń wychodzą z aplikacji (mail, QR, zakładki), więc zawsze przez /go/.
