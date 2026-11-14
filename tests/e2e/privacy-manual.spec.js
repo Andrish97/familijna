@@ -69,7 +69,7 @@ test("manual: zrzuty mają wersję z treści obrazu i wczytują się", async ({ 
   // Wydanie dopisuje ?v=h<skrót treści> (scripts/content-hash-assets.cjs): zmieniony
   // zrzut ma nowy adres od razu, niezmieniony zostaje w pamięci na rok.
   await page.goto(`${ORIGIN}/manual/?ch=17`, { waitUntil: "domcontentloaded" });
-  const shot = page.locator('.m-shot img[src*="play-display-play-desktop.webp"]').first();
+  const shot = page.locator('.m-shot img[src*="play-display-play-desktop.webp"]:visible').first();
   await expect(shot).toHaveAttribute("src", /\/manual\/img\/pl\/(light\/)?play-display-play-desktop\.webp\?v=h[0-9a-f]{16}$/);
   await shot.scrollIntoViewIfNeeded();
   await expect.poll(() => shot.evaluate((img) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
