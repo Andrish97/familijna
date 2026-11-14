@@ -5,7 +5,7 @@
 // Własny pinch-zoom/pan na canvasie podglądu, niezależny od powiększania
 // całej strony przeglądarki (patrz touch-action:none w logo.css —
 // bez tego dwa palce na canvasie zoomowałyby cały layout, nie samą treść).
-import { setShift } from "./geometry.js?v=v2026-11-14T13241";
+import { setShift } from "./geometry.js?v=v2026-11-14T13542";
 export function initPinchZoom(container, canvas, { maxScale = 6, onScale = null } = {}) {
   // Model: canvas ma transform-origin 0 0, a jego NIEPRZEKSZTAŁCONY
   // lewy-górny róg leży w kontenerze w punkcie (offX, offY) — kontener

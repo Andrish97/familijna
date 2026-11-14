@@ -1,37 +1,37 @@
-import { escapeHtmlText as escapeHtml } from "../../shared/js/core/html-escape.js?v=v2026-11-14T13241";
-import { bindResourceDuplicate } from "../../shared/js/core/resource-duplicate.js?v=v2026-11-14T13241";
+import { escapeHtmlText as escapeHtml } from "../../shared/js/core/html-escape.js?v=v2026-11-14T13542";
+import { bindResourceDuplicate } from "../../shared/js/core/resource-duplicate.js?v=v2026-11-14T13542";
 // js/pages/bases.js
 // Lista baz pytań (warstwa 1) – styl i ergonomia jak strona gier (games).
 
-import { baseExportSnapshot } from "../../shared/js/core/base-transfer-format.js?v=v2026-11-14T13241";
+import { baseExportSnapshot } from "../../shared/js/core/base-transfer-format.js?v=v2026-11-14T13542";
 
-import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-14T13241";
+import { addRenameGesture } from "../../shared/js/core/rename-gesture.js?v=v2026-11-14T13542";
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-14T13241";
-import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-14T13241";
-import { ROW_GONE } from "../../shared/js/core/db-guard.js?v=v2026-11-14T13241";
-import { acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-14T13241";
-import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-14T13241";
-import { isGuestUser, hideForGuest } from "../../shared/js/core/guest-mode.js?v=v2026-11-14T13241";
-import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-14T13241";
-import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-14T13241";
-import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-14T13241";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-14T13241";
-import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-14T13241";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-14T13241";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-14T13241";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-14T13241";
-import { createCooldownTicker, formatCooldownRemaining } from "../../shared/js/core/cooldown.js?v=v2026-11-14T13241";
-import { shareRowEl, shareSectionEl, shareCooldownEl, shareBulkActionsEl, attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-14T13241";
-import { toggleGroupEl } from "../../shared/js/core/toggle-group.js?v=v2026-11-14T13241";
-import { toast, hideToast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-14T13241";
-import { tileTagsHtml, proposedTags, proposedActionsHtml, bindProposedActions } from "../../shared/js/core/proposed-tile.js?v=v2026-11-14T13241";
-import { initListSearch } from "../../shared/js/core/list-search.js?v=v2026-11-14T13241";
-import { SORT_LIST } from "../../shared/js/core/list-filter.js?v=v2026-11-14T13241";
-import { sendNotificationMail, goLinkToken } from "../../shared/js/core/notify-mail.js?v=v2026-11-14T13241";
-import { bindLocalizedFilePicker } from "../../shared/js/core/file-picker.js?v=v2026-11-14T13241";
-import { emptyState } from "../../shared/js/core/empty-state.js?v=v2026-11-14T13241";
-import { setProgress, ratioPct } from "../../shared/js/core/ui-metrics.js?v=v2026-11-14T13241";
+import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-14T13542";
+import { fetchBadges } from "../../shared/js/core/nav-contact-badges.js?v=v2026-11-14T13542";
+import { ROW_GONE } from "../../shared/js/core/db-guard.js?v=v2026-11-14T13542";
+import { acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js?v=v2026-11-14T13542";
+import { alertModal, confirmModal, promptModal, progressModal } from "../../shared/js/core/modal.js?v=v2026-11-14T13542";
+import { isGuestUser, hideForGuest } from "../../shared/js/core/guest-mode.js?v=v2026-11-14T13542";
+import { getUiLang, initI18n, t } from "../../shared/translation/translation.js?v=v2026-11-14T13542";
+import { linkTo, PAGES } from "../../shared/js/core/nav-map.js?v=v2026-11-14T13542";
+import { tabFromUrl, setTab, markActiveTab } from "../../shared/js/core/tabs.js?v=v2026-11-14T13542";
+import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-14T13542";
+import { openDialog, closeDialog, isOverlayOpen } from "../../shared/js/core/modal-sheet.js?v=v2026-11-14T13542";
+import "../../shared/js/core/contact-modal.js?v=v2026-11-14T13542";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-14T13542";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-14T13542";
+import { createCooldownTicker, formatCooldownRemaining } from "../../shared/js/core/cooldown.js?v=v2026-11-14T13542";
+import { shareRowEl, shareSectionEl, shareCooldownEl, shareBulkActionsEl, attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-14T13542";
+import { toggleGroupEl } from "../../shared/js/core/toggle-group.js?v=v2026-11-14T13542";
+import { toast, hideToast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-14T13542";
+import { tileTagsHtml, proposedTags, proposedActionsHtml, bindProposedActions } from "../../shared/js/core/proposed-tile.js?v=v2026-11-14T13542";
+import { initListSearch } from "../../shared/js/core/list-search.js?v=v2026-11-14T13542";
+import { SORT_LIST } from "../../shared/js/core/list-filter.js?v=v2026-11-14T13542";
+import { sendNotificationMail, goLinkToken } from "../../shared/js/core/notify-mail.js?v=v2026-11-14T13542";
+import { bindLocalizedFilePicker } from "../../shared/js/core/file-picker.js?v=v2026-11-14T13542";
+import { emptyState } from "../../shared/js/core/empty-state.js?v=v2026-11-14T13542";
+import { setProgress, ratioPct } from "../../shared/js/core/ui-metrics.js?v=v2026-11-14T13542";
 
 const i18nReady = initI18n({ withSwitcher: true });
 i18nReady.then(() => {
