@@ -65,6 +65,19 @@ test("manual: publiczny rozdział i metadane działają anonimowo w PL/EN/UK", a
   }
 });
 
+test("manual: zrzuty mają wersję z treści obrazu i wczytują się", async ({ page }) => {
+  // Wydanie dopisuje ?v=h<skrót treści> (scripts/content-hash-assets.cjs): zmieniony
+  // zrzut ma nowy adres od razu, niezmieniony zostaje w pamięci na rok.
+  await page.goto(`${ORIGIN}/manual/?ch=17`, { waitUntil: "domcontentloaded" });
+  const shot = page.locator('.m-shot img[src*="play-display-play-desktop.webp"]').first();
+  await expect(shot).toHaveAttribute("src", /\/manual\/img\/pl\/(light\/)?play-display-play-desktop\.webp\?v=h[0-9a-f]{16}$/);
+  await shot.scrollIntoViewIfNeeded();
+  await expect.poll(() => shot.evaluate((img) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+  const res = await page.request.get(new URL(await shot.getAttribute("src"), ORIGIN).href);
+  expect(res.status()).toBe(200);
+  expect(res.headers()["cache-control"]).toContain("immutable");
+});
+
 test("privacy: parametr ret dopuszcza tylko bezpieczny powrót w obrębie serwisu", async ({ page, context, accounts, loginAs }) => {
   // Powrót prowadzi do instrukcji, która wymaga sesji (bez niej: logowanie).
   await loginAs(page, context, accounts.standard[0]);
