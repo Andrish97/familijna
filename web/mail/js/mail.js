@@ -1,12 +1,12 @@
-import { initI18n, t } from '../../shared/translation/translation.js?v=v2026-11-14T12020';
-import { icon, iconText, sharingActionIcon } from '../../shared/js/core/icons.js?v=v2026-11-14T12020';
-import { toast } from '../../shared/js/core/toast.js?v=v2026-11-14T12020';
-import { confirmModal } from '../../shared/js/core/modal.js?v=v2026-11-14T12020';
-import { tabFromUrl, setTab as setUrlTab } from '../../shared/js/core/tabs.js?v=v2026-11-14T12020';
-import { initSplitTabs } from '../../shared/js/core/split-tabs.js?v=v2026-11-14T12020';
-import { attachListTools } from '../../shared/js/core/share-sections.js?v=v2026-11-14T12020';
-import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-14T12020";
-import { getTurnstileToken } from "../../shared/js/core/turnstile.js?v=v2026-11-14T12020";
+import { initI18n, t } from '../../shared/translation/translation.js?v=v2026-11-14T13241';
+import { icon, iconText, sharingActionIcon } from '../../shared/js/core/icons.js?v=v2026-11-14T13241';
+import { toast } from '../../shared/js/core/toast.js?v=v2026-11-14T13241';
+import { confirmModal } from '../../shared/js/core/modal.js?v=v2026-11-14T13241';
+import { tabFromUrl, setTab as setUrlTab } from '../../shared/js/core/tabs.js?v=v2026-11-14T13241';
+import { initSplitTabs } from '../../shared/js/core/split-tabs.js?v=v2026-11-14T13241';
+import { attachListTools } from '../../shared/js/core/share-sections.js?v=v2026-11-14T13241';
+import { initEntryPage } from "../../shared/js/core/page-init.js?v=v2026-11-14T13241";
+import { getTurnstileToken } from "../../shared/js/core/turnstile.js?v=v2026-11-14T13241";
 
 
 const $ = id => document.getElementById(id);
