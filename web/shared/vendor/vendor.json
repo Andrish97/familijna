@@ -4,7 +4,7 @@
     {
       "file": "supabase-js.js",
       "package": "@supabase/supabase-js",
-      "version": "2.118.0",
+      "version": "2.119.0",
       "license": "MIT",
       "source": "dist/umd/supabase.js",
       "minify": false,
