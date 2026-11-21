@@ -53,10 +53,15 @@
     transition: opacity var(--dur-slow) ease-in;
   }
   html[data-page-redirect] body { opacity: 0; pointer-events: none; }
-  html.page-loading body:not(.skel-body), html[data-layout-pending] body:not(.skel-body) { opacity: 0; }
-  /* Strony ze szkieletem: tło i pasek z logo od pierwszego wyświetlenia
-     (sekcje paska i kroki [data-skel-step] mają własne ukrywanie), reszta
-     strony po starcie JS — bez czekania na moduły z pustym ekranem. */
+  /* Strony aplikacji ze szkieletem: tło i pasek z logo od pierwszego
+     wyświetlenia (sekcje paska i kroki [data-skel-step] mają własne
+     ukrywanie), reszta po starcie JS — bez pustego ekranu na czas modułów.
+     Strony wejścia, które przekierowują po sprawdzeniu sesji (główna,
+     logowanie, Go, głosowanie: body[data-entry-redirect]) zostają w całości ukryte: źródło
+     przekierowania nie może mignąć (e2e atomic-navigation). */
+  html.page-loading body:not(.skel-body), html[data-layout-pending] body:not(.skel-body),
+  html.page-loading body[data-entry-redirect],
+  html[data-layout-pending] body[data-entry-redirect] { opacity: 0; }
   html.page-loading body.skel-body > :not(.topbar),
   html[data-layout-pending] body.skel-body > :not(.topbar) { opacity: 0; }
   body.skel-body > :not(.topbar) { transition: opacity var(--dur-slow) ease-in; }
