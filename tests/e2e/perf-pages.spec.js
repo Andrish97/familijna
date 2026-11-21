@@ -47,7 +47,8 @@ function installProbe(context) {
       const steps = [...document.querySelectorAll("[data-skel-step]")];
       if (steps.every((s) => s.classList.contains("skel-step-ready"))) probe.stepsAt = performance.now();
     };
-    new MutationObserver(checkSteps).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["class"] });
+    // Skrypt startowy działa przed <html> — obserwujemy cały dokument.
+    new MutationObserver(checkSteps).observe(document, { subtree: true, attributes: true, attributeFilter: ["class"] });
     document.addEventListener("DOMContentLoaded", checkSteps);
   });
 }
@@ -113,6 +114,11 @@ async function measure(page, url, label) {
       req: res.length + 1, kb: kb(res) + Math.round((nav.transferSize || 0) / 1024), jsReq: js.length, jsKb: kb(js),
     };
   });
+  // Tylko zapytania startu strony: odświeżanie cykliczne (co 20–30 s) pomijamy.
+  const windowEnd = Math.max(m.shown || 0, m.data || 0) + 5000;
+  const startup = calls.filter((c) => c.start <= windowEnd);
+  calls.length = 0;
+  calls.push(...startup);
   const db = calls.length
     ? `${calls.length} zapytań ${ms(Math.min(...calls.map((c) => c.start)))}→${ms(Math.max(...calls.map((c) => c.end)))} ms, fale ${dbWaves(calls)}`
     : "0";

@@ -672,14 +672,15 @@ async function loadProfile(user) {
 
     if (migrateSection) migrateSection.hidden = false;
     window.addEventListener("i18n:lang", () => loadUserRating(user.id));
-    await loadUserRating(user.id);
-    await refreshMigrateState();
+    await Promise.all([loadUserRating(user.id), refreshMigrateState()]);
 
     return;
   }
 
   const syncLanguage = () => updateUserLanguage(getUiLang());
-  await syncLanguage();
+  // Zapis języka w koncie tylko przy różnicy (zapis do serwera logowania przy
+  // każdym wejściu był zbędną rundą; pomiar perf-pages 2026-11-21).
+  if (user.user_metadata?.language !== getUiLang()) void syncLanguage();
   window.addEventListener("i18n:lang", () => {
     syncLanguage();
     // refresh dynamic texts after language switch
@@ -692,13 +693,15 @@ async function loadProfile(user) {
   emailInput.value = user.email || "";
   currentEmail = user.email || "";
 
-  await initEmailNotificationsUi(user);
   void initPushUi();
-  await loadUserRating(user.id);
   await wireDemoActions(user);
-
-  await refreshAuthEmailState();
-  await loadCooldownsFromServer();
+  // Odczyty niezależne od siebie — równolegle (wcześniej 5 kolejnych rund).
+  await Promise.all([
+    initEmailNotificationsUi(user),
+    loadUserRating(user.id),
+    refreshAuthEmailState(),
+    loadCooldownsFromServer(),
+  ]);
   startEmailStateWatcher();
 }
 
