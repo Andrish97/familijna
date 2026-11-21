@@ -209,10 +209,8 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   `?v=` przy odwołaniach do plików. Wersje dokłada build przy wdrożeniu
   (`npm run build:site`: `scripts/version-assets.js` + skróty z treści
   w `scripts/content-hash-assets.cjs`), zmieniony plik = nowy adres, reszta
-  zostaje w cache. Zapadka `unit/noSourceVersions.test.js`; naprawa i po scaleniu
-  gałęzi sprzed tej zmiany: `node scripts/strip-source-versions.mjs` (konflikty
-  w hunkach, gdzie jedna strona zmieniła same wersje: `python3
-  scripts/resolve-version-conflicts.py` po `git -c merge.conflictstyle=diff3 merge`).
+  zostaje w cache. Zapadka `unit/noSourceVersions.test.js`; naprawa (także po
+  scaleniu gałęzi sprzed tej zmiany): `node scripts/strip-source-versions.mjs`.
   **Nigdy `git checkout --ours -- web`** ani `git add -A` przy nierozwiązanych
   konfliktach — zgubiło zmiany innych sesji (2026-10-09).
 - Bez fallbacków: żadnych aliasów starych adresów ani przekierowań.
