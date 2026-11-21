@@ -8,7 +8,7 @@
 // stringi (placeholdery jak na stronie: "{ticket}"), bez funkcji.
 //
 // Gdy origin leży, a w pamięci nie ma żadnej wersji — rzucamy błąd.
-import { ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE, fetchWithOrigin } from "../origin/origin.js";
+import { ORIGIN_BASE, fetchWithOrigin } from "../origin/origin.js";
 import { normalizeLang } from "./utils.js";
 
 const CACHE_TTL_MS = 10 * 60 * 1000;
@@ -18,7 +18,7 @@ const cache = new Map();
 
 async function fetchTranslationCode(lang) {
   const url = `${ORIGIN_BASE}/shared/translation/${lang}/server.js?t=${Date.now()}`;
-  const res = await fetchWithOrigin(url, new Request(url), ORIGIN_HOST, ORIGIN_RESOLVE);
+  const res = await fetchWithOrigin(url, new Request(url));
   if (res.status !== 200) throw new Error(`HTTP ${res.status} for /shared/translation/${lang}/server.js`);
   return res.text();
 }

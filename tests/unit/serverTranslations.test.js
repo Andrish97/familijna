@@ -134,10 +134,12 @@ test("formatText podstawia placeholdery jak t() na stronie", () => {
 
 // ── działanie z podmienionym fetch ──────────────────────────────────────────
 
-function mockFetch(t, { originDown = false } = {}) {
+async function mockFetch(t, { originDown = false } = {}) {
+  // Teksty serwera Worker czyta z plików strony (binding ASSETS).
+  const { bindStaticAssets } = await import(`../../${WORKER}/lib/origin/origin.js`);
   const originalFetch = globalThis.fetch;
   const calls = [];
-  globalThis.fetch = async (url) => {
+  const handler = async (url) => {
     const u = String(url instanceof Request ? url.url : url);
     calls.push(u);
     const m = u.match(/\/translation\/(\w+)\/server\.js/);
@@ -147,12 +149,14 @@ function mockFetch(t, { originDown = false } = {}) {
     }
     throw new Error(`unexpected fetch: ${u}`);
   };
-  t.after(() => { globalThis.fetch = originalFetch; });
+  globalThis.fetch = handler;
+  bindStaticAssets({ ASSETS: { fetch: handler } });
+  t.after(() => { globalThis.fetch = originalFetch; bindStaticAssets({}); });
   return calls;
 }
 
 test("buildContactEmail: każdy typ maila w PL/EN/UK używa tekstów z tłumaczeń", async (t) => {
-  mockFetch(t);
+  await mockFetch(t);
   const { buildContactEmail } = await import(`../../${WORKER}/lib/email/contact-email.js`);
   for (const lang of LANGS) {
     const tr = DICTS[lang].contactEmail;
@@ -190,7 +194,7 @@ test("publiczny HTML kart i pytań używa etykiet interfejsu PL/EN/UK", async ()
 
 test("worker: tłumaczenia są cache'owane — jeden fetch na język", async (t) => {
   const fresh = await import(`../../${WORKER}/lib/core/translations.js?cache-test`);
-  const calls = mockFetch(t);
+  const calls = await mockFetch(t);
   for (let i = 0; i < 3; i++) {
     for (const lang of LANGS) await fresh.getTranslationSection(lang, "contactEmail");
   }
@@ -199,6 +203,6 @@ test("worker: tłumaczenia są cache'owane — jeden fetch na język", async (t)
 
 test("worker: origin niedostępny i pusty cache → czytelny błąd", async (t) => {
   const fresh = await import(`../../${WORKER}/lib/core/translations.js?origin-down`);
-  mockFetch(t, { originDown: true });
+  await mockFetch(t, { originDown: true });
   await assert.rejects(fresh.getTranslationSection("en", "contactEmail"), /Cannot load translations/);
 });

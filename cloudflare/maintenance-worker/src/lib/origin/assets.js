@@ -1,4 +1,4 @@
-// src/lib/assets.js -- static asset path classification + edge-cached serving.
+// src/lib/assets.js -- static asset path classification + serving from ASSETS.
 import { fetchWithOrigin } from "./origin.js";
 
 // Dopasowanie po rozszerzeniu, nie po folderze — assety żyją w dziesiątkach
@@ -39,26 +39,17 @@ function cacheControlFor(url) {
     : "public, max-age=600";
 }
 
-export async function serveStaticAsset(request, url, ctx, originBase, originHost, resolveOverride) {
-  const edgeCache = caches.default;
-  const cacheKey = new Request(url.toString(), request);
-
-  const cached = await edgeCache.match(cacheKey);
-  if (cached && !(cached.headers.get("Content-Type") || "").includes("text/html")) return cached;
-  // An old/bad origin response must not pin HTML under a JS/CSS URL for a year.
-  if (cached) await edgeCache.delete(cacheKey);
-
+// Pliki z bindingu ASSETS leżą już w sieci Cloudflare — bez osobnej pamięci
+// caches.default; nagłówek Cache-Control decyduje o pamięci przeglądarki.
+export async function serveStaticAsset(request, url, ctx, originBase) {
   const target = new URL(url.pathname + url.search, originBase);
-  const res = await fetchWithOrigin(target.toString(), request, originHost, resolveOverride, {
+  const res = await fetchWithOrigin(target.toString(), request, {
     staticAsset: true,
     cacheControl: cacheControlFor(url),
   });
 
   if ((res.headers.get("Content-Type") || "").includes("text/html") && res.status === 200) {
     return new Response("Invalid static asset response", { status: 502, headers: { "Content-Type": "text/plain", "Cache-Control": "no-store" } });
-  }
-  if (request.method === "GET" && res.status === 200) {
-    ctx.waitUntil(edgeCache.put(cacheKey, res.clone()));
   }
   return res;
 }

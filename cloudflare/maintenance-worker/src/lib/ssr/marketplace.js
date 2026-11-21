@@ -4,7 +4,7 @@ import uk from "../../../../../web/shared/translation/uk/marketplace.js";
 import { homeDictionary, homeText } from "./home.js";
 import { publicLang } from "../../../../../web/shared/js/core/public-seo.js";
 import { cardHtml, questionsHtml, publicRow, publicGame, selectRows, marketSeo, marketSchema, catalogPath, UUID_RE, validSlug, esc, starsHtml } from "../../../../../web/marketplace/js/public.js";
-import { fetchFromOrigin, serveNotFoundPage, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE } from "../origin/origin.js";
+import { fetchFromOrigin, serveNotFoundPage, ORIGIN_BASE } from "../origin/origin.js";
 
 export const isMarketPath=(path)=>["/marketplace","/marketplace/","/marketplace/index.html"].includes(path) || path.startsWith("/marketplace/game/");
 export function marketText(lang) {
@@ -79,7 +79,7 @@ export async function cachedPublicCatalog(env,now=Date.now(),ctx=null) {
 export async function servePublicMarketplace(request,env,url,ctx=null) {
   const param=url.pathname.startsWith("/marketplace/game/")?url.pathname.slice("/marketplace/game/".length):null;
   if(param!==null && !validSlug(param) && !UUID_RE.test(param))
-    return serveNotFoundPage(request,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE);
+    return serveNotFoundPage(request,ORIGIN_BASE);
   let games,game=null,template;
   const timings=[];
   try {
@@ -89,14 +89,14 @@ export async function servePublicMarketplace(request,env,url,ctx=null) {
     const [rows,detail,source]=await Promise.all([
       timed("catalog",cachedPublicCatalog(env,Date.now(),ctx)),
       param ? timed("detail",publicMarketRpc(env,UUID_RE.test(param)?"market_game_detail":"market_game_by_slug",UUID_RE.test(param)?{p_id:param}:{p_slug:param})) : Promise.resolve([]),
-      timed("origin",fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE)),
+      timed("origin",fetchFromOrigin(new Request(request,{method:"GET"}),originUrl,ORIGIN_BASE)),
     ]);
     games=rows;template=source;
     if(param) {
       game=publicGame(detail[0]);
       const summary=game && rows.find((g)=>g.id===game.id);
       if (summary) { game.avg_rating=summary.avg_rating; game.rating_count=summary.rating_count; }
-      if(!game) return serveNotFoundPage(request,ORIGIN_BASE,ORIGIN_HOST,ORIGIN_RESOLVE);
+      if(!game) return serveNotFoundPage(request,ORIGIN_BASE);
       if(UUID_RE.test(param)) return Response.redirect(`https://www.familijna.app/marketplace/game/${game.slug}`,301);
     }
     if(template.status!==200||!template.headers.get("Content-Type")?.includes("text/html")) throw new Error("public_market_template");

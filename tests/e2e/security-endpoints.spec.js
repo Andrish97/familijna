@@ -188,34 +188,13 @@ test("P2 Worker: formularz kontaktu bez tokenu Turnstile = 400", async ({ reques
   }
 });
 
-// Bezpośredni origin Pages: Host domeny własnej, certyfikat serwera GitHuba.
-// Zwykły URL *.github.io przekierowuje do domeny własnej — nie sprawdza pliku.
-function pagesOriginStatus(pathname) {
-  const https = require("node:https");
-  const dns = require("node:dns");
-  return new Promise((resolve, reject) => {
-    const req = https.get({
-      hostname: "familijna.app", servername: "andrish97.github.io", path: pathname,
-      lookup: (_host, options, done) => dns.lookup("andrish97.github.io", { ...options, family: 4 }, done),
-    }, res => {
-      res.resume();
-      resolve({status: res.statusCode, github: !!res.headers["x-github-request-id"]});
-    });
-    req.setTimeout(15000, () => req.destroy(new Error("timeout originu Pages")));
-    req.on("error", reject);
-  });
-}
-
-test("prywatny panel: stare pliki usunięte z originu Pages", async () => {
-  // Znany publiczny plik potwierdza właściwy origin, zanim sprawdzimy odmowy.
-  const control = await pagesOriginStatus("/index.html");
-  expect(control.github).toBe(true);
-  expect(control.status).toBe(200);
+// Pliki strony serwuje Worker z Workers Static Assets (od 2026-11-21, bez
+// GitHub Pages): dawnych plików panelu nie ma w publicznym wydaniu.
+test("prywatny panel: stare pliki panelu niedostępne na stronie", async ({ request }) => {
   for (const path of ["/admin/index.html", "/admin/js/admin.js", "/manifest-admin.webmanifest"]) {
-    const res = await pagesOriginStatus(path);
-    log(`old Pages ${path}`, res.status);
-    expect(res.github).toBe(true);
-    expect(res.status).toBe(404);
+    const res = await request.get(`${WWW}${path}`);
+    log(`old panel file ${path}`, res.status());
+    expect(res.status()).toBe(404);
   }
 });
 

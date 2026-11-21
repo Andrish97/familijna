@@ -10,7 +10,7 @@ import ukPrivacy from "../../../../../web/shared/translation/uk/privacy.js";
 import { homeDictionary, homeText } from "./home.js";
 import { publicLang, publicUrl, publicSeo, publicMetaHtml } from "../../../../../web/shared/js/core/public-seo.js";
 import { manualArticle, manualToc } from "../../../../../web/manual/js/render.js";
-import { fetchWithOrigin, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE } from "../origin/origin.js";
+import { fetchWithOrigin, ORIGIN_BASE } from "../origin/origin.js";
 
 const MANUALS = { pl: plManual, en: enManual, uk: ukManual };
 const TEXTS = { pl: plText, en: enText, uk: ukText };
@@ -45,7 +45,7 @@ export function versionManualShots(html, versions) {
 async function manualShotVersions(request) {
   if (Date.now() - shotVersions.at < SHOT_VERSIONS_TTL) return shotVersions.map;
   try {
-    const res = await fetchWithOrigin(`${ORIGIN_BASE}/asset-hashes.json`, new Request(request.url, { method: "GET" }), ORIGIN_HOST, ORIGIN_RESOLVE);
+    const res = await fetchWithOrigin(`${ORIGIN_BASE}/asset-hashes.json`, new Request(request.url, { method: "GET" }));
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const map = {};
     for (const [file, hash] of Object.entries(await res.json())) if (file.startsWith("manual/img/")) map[file] = String(hash).slice(0, 16);

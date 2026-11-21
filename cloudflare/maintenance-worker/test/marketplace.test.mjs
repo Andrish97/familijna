@@ -3,11 +3,14 @@ import assert from 'node:assert/strict';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
 import {fixtureOrigin,row,detail,gameId} from './market-fixture.mjs';
+// Pliki strony przychodzą z bindingu ASSETS (Workers Static Assets), pozostałe
+// żądania (Supabase) przez fetch — ten sam podstawiony serwer obsługuje oba.
+const assetsOrigin = (handler) => ({ outboundService: handler, serviceBindings: { ASSETS: handler } });
 let mf,bundle;
 const state={},requests=[];
 before(async()=>{
  bundle=(await build({entryPoints:[new URL('../src/index.js',import.meta.url).pathname],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'})).outputFiles[0].text;
- mf=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin(state,requests)});
+ mf=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(fixtureOrigin(state,requests))});
 });
 after(async()=>mf?.dispose());
 test('catalogue uses existing UI, full crawlable links and equal HTML for people/bots in every locale',async()=>{
@@ -64,7 +67,7 @@ test('API or template failure is 503, never an empty 200 or a false 404',async()
  // Świeża instancja: bez katalogu w pamięci Workera (60 s), jak pierwsze wejście po błędzie bazy.
  for(const flag of ['fail','originFail']){
   const local={[flag]:true};
-  const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin(local,[])});
+  const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(fixtureOrigin(local,[]))});
   try {
    for(const path of ['/marketplace','/marketplace/game/'+row.slug]){
     const response=await fresh.dispatchFetch('https://www.familijna.app'+path);
@@ -75,7 +78,7 @@ test('API or template failure is 503, never an empty 200 or a false 404',async()
 });
 test('catalogue page keeps the public catalogue in Worker memory; detail is always fresh',async()=>{
  const calls=[];
- const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin({},calls)});
+ const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(fixtureOrigin({},calls))});
  try {
   for(const path of ['/marketplace','/marketplace?lang=en','/marketplace/game/'+row.slug,'/marketplace/game/'+row.slug]){
    const response=await fresh.dispatchFetch('https://www.familijna.app'+path);assert.equal(response.status,200);await response.text();
@@ -94,7 +97,7 @@ test('private preview URL has noindex and never contains non-public payload or a
 test('sitemap is fresh and public; 105 games are not truncated and counter updates do not invent lastmod',async()=>{
  state.rows=Array.from({length:105},(_,i)=>({...row,id:`00000000-0000-4000-8000-${String(i).padStart(12,'0')}`,slug:'public-game-'+i,updated_at:'2099-01-01'}));
  // Świeża instancja: katalog Społeczności z poprzednich testów siedzi w pamięci Workera (60 s).
- const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin(state,[])});
+ const fresh=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(fixtureOrigin(state,[]))});
  let response=await fresh.dispatchFetch('https://www.familijna.app/marketplace');
  assert.equal(((await response.text()).match(/<a class="mkt-card/g)||[]).length,105);await fresh.dispose();
  response=await mf.dispatchFetch('https://www.familijna.app/sitemap.xml');let xml=await response.text();
@@ -106,7 +109,7 @@ test('sitemap is fresh and public; 105 games are not truncated and counter updat
 });
 test('maintenance gate applies equally and does not query public API',async()=>{
  const calls=[];
- const other=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:fixtureOrigin({},calls)});
+ const other=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(fixtureOrigin({},calls))});
  try{
   await (await other.getKVNamespace('MAINT_KV')).put('state',JSON.stringify({enabled:true,mode:'message'}));
   for(const ua of ['Mozilla/5.0','Googlebot']){

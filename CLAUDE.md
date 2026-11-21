@@ -47,7 +47,7 @@ przepisuje CI), Supabase, Cloudflare Worker. Strony w `web/`.
    `serveBranchCode` (`tests/e2e/helpers/branch-code.js` — strony i cały
    front z plików brancha, baza/Worker/konta produkcyjne), workflow uruchomiony
    na branchu (`REF=<branch>`). Nowy katalog strony dopisać do `CODE_DIRS`.
-3. **Wdrożenie Pages** (push na `main`) dopiero po zielonych testach z pkt 2.
+3. **Wdrożenie strony** (push na `main` → `deploy-worker.yml`: Worker z plikami strony, Workers Static Assets) dopiero po zielonych testach z pkt 2.
 4. **Testy kontrolne na produkcji** po wdrożeniu — te same, punktowe spece.
 5. Etap jest zrobiony dopiero po pkt 4 (wpis w Dzienniku z numerem przebiegu).
 
@@ -135,13 +135,13 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   decyzji architektonicznej, której brak w ustaleniach. Manual zawsze na końcu.
 - Najpierw branch roboczy, testy, potem push na `main`.
 - **Stała zgoda na push na `main` (decyzja użytkownika 2026-11-08):** agent
-  wypycha na `main` (migracje, Pages, panel admina) bez pytania o zgodę za
+  wypycha na `main` (migracje, strona i Worker, panel admina) bez pytania o zgodę za
   każdym razem — bramki wdrożenia (testy, log migracji, kontrola produkcji)
   obowiązują dalej.
 - **Stała zgoda na wdrożenia (decyzja użytkownika 2026-11-08):** agent sam uruchamia
   wszystko, co nie wymaga konfiguracji poza jego dostępem — wdrożenia na serwerze
   (`familijna-server` `server.yml`: apps, supabase, deploy, admin-panel), Workery
-  (w tym starej domeny), migracje, Pages. Właściciela prosi tylko o rzeczy w panelach
+  (w tym starej domeny, razem z plikami strony), migracje. Właściciela prosi tylko o rzeczy w panelach
   Cloudflare/GitHuba (reguły, Access, sekrety, środowiska) i o przerwę techniczną.
 - Unit: `cd tests && node --test unit/*.test.js`.
 - E2E: workflow `e2e-tests.yml` (workflow_dispatch) z niepustym

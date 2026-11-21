@@ -1,16 +1,10 @@
-// src/lib/origin.js -- static site files (Workers Static Assets binding ASSETS,
-// fallback: proxying to the GitHub Pages origin), maintenance/404
-// pages, and host/path classification.
+// src/lib/origin.js -- pliki strony z Workers Static Assets (binding ASSETS,
+// wrangler.toml [assets]), strony przerwy i 404, klasyfikacja hostów i ścieżek.
 import { withHeaders } from "../core/http.js";
 import { isScreenshotId } from "../../../../../web/shared/js/core/poll-links.js";
 
-// Fetch from apex origin but resolve directly to GitHub Pages to avoid recursion.
-// Z bindingiem ASSETS (Workers Static Assets, wrangler.toml [assets]) pliki
-// strony pochodzą z wdrożenia Workera, a te stałe służą już tylko za adres
-// bazowy (ścieżka) — bez bindingu Worker dalej pobiera je z GitHub Pages.
-export const ORIGIN_BASE = "https://familijna.app";
-export const ORIGIN_HOST = "familijna.app";
-export const ORIGIN_RESOLVE = "andrish97.github.io";
+// Adres bazowy plików strony; z bindingu ASSETS liczy się tylko ścieżka.
+export const ORIGIN_BASE = "https://www.familijna.app";
 
 // Binding jest stały dla wdrożenia, więc wystarczy go zapamiętać na początku
 // każdego wywołania (fetch/email/scheduled) — wszystkie pobrania plików strony
@@ -20,17 +14,17 @@ export function bindStaticAssets(env) {
   staticAssets = env?.ASSETS && typeof env.ASSETS.fetch === "function" ? env.ASSETS : null;
 }
 
-// Workers Static Assets z html_handling = "none" serwuje dokładne pliki; katalog
-// (ścieżka z „/” na końcu) dostaje index.html jak na GitHub Pages.
-function assetRequest(url, init) {
+// html_handling = "none" serwuje dokładne pliki; katalog (ścieżka z „/” na
+// końcu) dostaje index.html.
+function assetRequest(url, request) {
   const target = new URL(url);
   if (target.pathname.endsWith("/")) target.pathname += "index.html";
-  return new Request(target.toString(), { method: init.method, headers: init.headers, redirect: "manual" });
+  return new Request(target.toString(), { method: request.method || "GET", headers: request.headers, redirect: "manual" });
 }
 
-export async function serveMaintenance(request, originBase, originHost, resolveOverride) {
+export async function serveMaintenance(request, originBase) {
   const maintUrl = new URL("/maintenance/index.html", originBase);
-  const res = await fetchWithOrigin(maintUrl.toString(), request, originHost, resolveOverride);
+  const res = await fetchWithOrigin(maintUrl.toString(), request);
 
   return new Response(res.body, {
     status: 503,
@@ -42,9 +36,9 @@ export async function serveMaintenance(request, originBase, originHost, resolveO
   });
 }
 
-export async function serveNotFoundPage(request, originBase, originHost, resolveOverride) {
+export async function serveNotFoundPage(request, originBase) {
   const notFoundUrl = new URL("/404.html", originBase);
-  const res = await fetchWithOrigin(notFoundUrl.toString(), request, originHost, resolveOverride);
+  const res = await fetchWithOrigin(notFoundUrl.toString(), request);
 
   const base = new Response(res.body, {
     status: 404,
@@ -107,12 +101,12 @@ export function isBlockedPath(host, pathname) {
   return false;
 }
 
-export function fetchFromOrigin(request, url, originBase, originHost, resolveOverride) {
+export function fetchFromOrigin(request, url, originBase) {
   const isTvConnect = ["/connect", "/connect/", "/connect/index.html"].includes(url.pathname)
     && url.searchParams.get("tv") === "1";
   const targetPath = isTvConnect ? "/connect/tv/index.html" : pageIndexPath(url.pathname);
   const target = new URL(targetPath + url.search, originBase);
-  return fetchWithOrigin(target.toString(), request, originHost, resolveOverride);
+  return fetchWithOrigin(target.toString(), request);
 }
 
 const PAGE_ROUTES = new Set([
@@ -140,13 +134,13 @@ export function pageIndexPath(pathname) {
   return PAGE_ROUTES.has(route) ? `/${route}/index.html` : pathname;
 }
 
-export async function fetchWith404(request, originBase, originHost, resolveOverride) {
+export async function fetchWith404(request, originBase) {
   const url = new URL(request.url);
   if (url.pathname === "/404.html") {
-    return serveNotFoundPage(request, originBase, originHost, resolveOverride);
+    return serveNotFoundPage(request, originBase);
   }
   const originStart = Date.now();
-  const res = await fetchFromOrigin(request, url, originBase, originHost, resolveOverride);
+  const res = await fetchFromOrigin(request, url, originBase);
   const originMs = Date.now() - originStart;
   if (res.status >= 300 && res.status < 400) return res;
   if (res.status !== 404) {
@@ -158,39 +152,25 @@ export async function fetchWith404(request, originBase, originHost, resolveOverr
         headers: {
           "Content-Type": ct,
           "Cache-Control": "no-store",
-          // Czas pobrania z originu (GitHub Pages) — pomiar TTFB, 2026-11-05.
+          // Czas pobrania pliku strony (ASSETS) — pomiar TTFB, 2026-11-05.
           "Server-Timing": `origin;dur=${originMs}`,
           ...(["/maintenance", "/maintenance/", "/maintenance/index.html"].includes(url.pathname)
             ? { "X-Robots-Tag": "noindex, follow" } : {}),
-          "X-GitHub-Request-Id": res.headers.get("X-GitHub-Request-Id") || ""
         }
       });
     }
     return res;
   }
 
-  // Jak dawniej GitHub Pages: brakujący adres dostaje stronę 404 niezależnie
-  // od nagłówka Accept (ASSETS z not_found_handling "none" oddaje puste 404).
-  return serveNotFoundPage(request, originBase, originHost, resolveOverride);
+  // Brakujący adres dostaje stronę 404 niezależnie od nagłówka Accept
+  // (ASSETS z not_found_handling "none" oddaje puste 404).
+  return serveNotFoundPage(request, originBase);
 }
 
-export async function fetchWithOrigin(url, request, originHost, resolveOverride, opts = {}) {
-  const headers = new Headers(request.headers);
-  if (originHost) headers.set("Host", originHost);
-
-  const method = request.method || "GET";
-  const init = {
-    method,
-    headers,
-    redirect: "manual",
-    cf: resolveOverride ? { resolveOverride } : undefined,
-  };
-
-  if (method !== "GET" && method !== "HEAD") {
-    init.body = request.body;
-  }
-
-  const res = staticAssets ? await staticAssets.fetch(assetRequest(url, init)) : await fetch(url, init);
+export async function fetchWithOrigin(url, request, opts = {}) {
+  if (!staticAssets) throw new Error("Brak bindingu ASSETS (wrangler.toml [assets])");
+  const res = await staticAssets.fetch(assetRequest(url, request));
+  const headers = request.headers;
 
   // Preserve origin redirects, including Location, rather than returning
   // their HTML body without a destination.

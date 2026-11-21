@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { build } from 'esbuild';
 import { Miniflare, Response } from 'miniflare';
+// Pliki strony przychodzą z bindingu ASSETS (Workers Static Assets), pozostałe
+// żądania (Supabase) przez fetch — ten sam podstawiony serwer obsługuje oba.
+const assetsOrigin = (handler) => ({ outboundService: handler, serviceBindings: { ASSETS: handler } });
 
 const source = readFileSync(new URL('../../../web/index.html', import.meta.url), 'utf8');
 let mf;
@@ -17,10 +20,10 @@ before(async () => {
   mf = new Miniflare({
     modules: true, script: bundle.outputFiles[0].text, compatibilityDate: '2024-01-01',
     kvNamespaces: ['MAINT_KV'],
-    outboundService: async () => {
+    ...assetsOrigin(async () => {
       originRequests++;
       return new Response(originHtml, { headers: { 'Content-Type': 'text/html; charset=utf-8', ETag: 'origin-template' } });
-    },
+    }),
   });
 });
 

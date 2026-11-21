@@ -53,8 +53,7 @@ const en = {
       <h2 class="m-h2">5. Third-Party Service Providers</h2>
       <p class="m-p">We rely on the following third-party services:</p>
       <ul class="m-ul">
-        <li>GitHub Pages (front-end hosting)</li>
-        <li>Cloudflare (DNS, security, encrypted backups)</li>
+        <li>Cloudflare (front-end hosting, DNS, security, encrypted backups)</li>
         <li>Supabase (backend and database) – self-hosted in the EU (Contabo)</li>
         <li>Zeptomail (primary email delivery)</li>
         <li>Brevo (email fallback)</li>

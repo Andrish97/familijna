@@ -7,16 +7,19 @@ import {createRequire} from 'node:module';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
 import {fixtureOrigin,row,detail} from './market-fixture.mjs';
+// Pliki strony przychodzą z bindingu ASSETS (Workers Static Assets), pozostałe
+// żądania (Supabase) przez fetch — ten sam podstawiony serwer obsługuje oba.
+const assetsOrigin = (handler) => ({ outboundService: handler, serviceBindings: { ASSETS: handler } });
 const root=fileURLToPath(new URL('../../../',import.meta.url));
 const {chromium}=createRequire(import.meta.url)(path.join(root,'tests/node_modules/@playwright/test'));
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.webp':'image/webp','.png':'image/png','.woff2':'font/woff2'};
 const bundle=(await build({entryPoints:[path.join(root,'cloudflare/maintenance-worker/src/index.js')],bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'})).outputFiles[0].text;
 const state={},api=fixtureOrigin(state);
-const mf=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},outboundService:async req=>{
+const mf=new Miniflare({modules:true,script:bundle,compatibilityDate:'2024-01-01',kvNamespaces:['MAINT_KV'],bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'},...assetsOrigin(async req=>{
  const u=new URL(req.url);if(u.pathname.startsWith('/rest/'))return api(req);
  const file=path.resolve(root,'web','.'+u.pathname);
  return file.startsWith(path.join(root,'web')+path.sep)&&fs.existsSync(file)&&fs.statSync(file).isFile()?new Response(fs.readFileSync(file),{headers:{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}}):new Response('missing',{status:404});
-}});
+})});
 const browser=await chromium.launch({headless:true});
 const out=process.env.MARKET_SCREEN_DIR;
 if(out)fs.mkdirSync(out,{recursive:true});

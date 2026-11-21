@@ -53,8 +53,7 @@ const pl = {
       <h2 class="m-h2">5. Podmioty przetwarzające</h2>
       <p class="m-p">Serwis korzysta z infrastruktury:</p>
       <ul class="m-ul">
-        <li>GitHub Pages (hosting interfejsu)</li>
-        <li>Cloudflare (DNS, zabezpieczenia, zaszyfrowane kopie zapasowe)</li>
+        <li>Cloudflare (hosting interfejsu, DNS, zabezpieczenia, zaszyfrowane kopie zapasowe)</li>
         <li>Supabase (serwer aplikacji i baza danych) – serwer własny w UE (Contabo)</li>
         <li>Zeptomail (główny dostawca e-mail)</li>
         <li>Brevo (zapasowy dostawca poczty)</li>

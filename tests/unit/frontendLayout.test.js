@@ -59,13 +59,13 @@ test("all page folders use index.html, and Worker fetches them without redirects
   }
   assert.equal(pageIndexPath("/builder"), "/builder");
   assert.equal(fs.existsSync(path.join(ROOT, "builder.html")), false);
-  const original = globalThis.fetch;
+  const { bindStaticAssets } = await import("../../cloudflare/maintenance-worker/src/lib/origin/origin.js");
   const requests = [];
-  globalThis.fetch = async (url) => { requests.push(url); return new Response("page", { headers: { "Content-Type": "text/html" } }); };
-  t.after(() => { globalThis.fetch = original; });
-  const result = await fetchFromOrigin(new Request("https://www.familijna.app/games/?lang=en"), new URL("https://www.familijna.app/games/?lang=en"), "https://familijna.app", "familijna.app", "andrish97.github.io");
+  bindStaticAssets({ ASSETS: { fetch: async (req) => { requests.push(req.url); return new Response("page", { headers: { "Content-Type": "text/html" } }); } } });
+  t.after(() => bindStaticAssets({}));
+  const result = await fetchFromOrigin(new Request("https://www.familijna.app/games/?lang=en"), new URL("https://www.familijna.app/games/?lang=en"), "https://www.familijna.app");
   assert.equal(result.status, 200);
-  assert.deepEqual(requests, ["https://familijna.app/games/index.html?lang=en"]);
+  assert.deepEqual(requests, ["https://www.familijna.app/games/index.html?lang=en"]);
 });
 
 test("public application blocks private panel assets and allows maintenance assets", () => {

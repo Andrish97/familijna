@@ -228,7 +228,7 @@ export async function handleE2EApi(request, env, url) {
   return json({ ok: false, error: "not_found" }, 404);
 }
 
-export async function handleE2ELoginBypass(request, env, url, originBase, originHost, resolveOverride) {
+export async function handleE2ELoginBypass(request, env, url, originBase) {
   const secret = env.E2E_BYPASS_SECRET;
   if (!secret) return null;
 
@@ -246,7 +246,7 @@ export async function handleE2ELoginBypass(request, env, url, originBase, origin
 
   console.log("[e2e] bypass captcha for /login, nonce:", payload.nonce);
 
-  const res = await fetchFromOrigin(request, url, originBase, originHost, resolveOverride);
+  const res = await fetchFromOrigin(request, url, originBase);
   if (res.status !== 200) return res;
 
   const rewriter = new HTMLRewriter().on("body", {

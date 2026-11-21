@@ -1,12 +1,15 @@
-name: Deploy GitHub Pages
+name: Version assets (?v= w repo)
+
+# Po pushu na main przepisuje wersje ?v= w web/ i zapisuje je w repo
+# („ci: update version hashes [skip ci]”) — źródła dla testów z gałęzi,
+# zrzutów i scalania. Stronę wdraża deploy-worker.yml (Workers Static Assets),
+# który sam liczy wersje z treści plików; GitHub Pages wyłączone 2026-11-21.
 
 permissions:
   contents: write
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: version-assets
   cancel-in-progress: true
 
 on:
@@ -30,12 +33,8 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  deploy:
-    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip pages]')
+  version:
     runs-on: ubuntu-22.04
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -61,23 +60,3 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-        with:
-          enablement: true
-
-      - name: Install build dependencies
-        run: npm ci --prefix tests --no-audit --no-fund
-
-      - name: Prepare minified public-only deployment directory
-        run: node scripts/build-public.cjs
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: "_site_public"
-
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4

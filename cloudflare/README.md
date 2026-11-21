@@ -31,24 +31,25 @@ Worker ma binding `ASSETS` (`wrangler.toml` → `[assets]`, katalog
 najpierw przez Worker (bramka przerwy, blokady, SSR, nagłówki), a pliki pobiera
 on sam przez `env.ASSETS.fetch` w `fetchWithOrigin()` (`src/lib/origin/origin.js`).
 `html_handling = "none"` — dokładne pliki, katalog `/x/` → `/x/index.html`
-robi Worker. Bez bindingu (np. wdrożenie bez sekcji `[assets]`) Worker
-pobiera pliki z GitHub Pages jak wcześniej (`ORIGIN_RESOLVE`) — to droga powrotu.
+robi Worker; brakujący adres zawsze dostaje stronę 404. Wdraża
+`.github/workflows/deploy-worker.yml` (każda zmiana `web/`). GitHub Pages
+wyłączone 2026-11-21; bez bindingu Worker odmawia (brak drogi zapasowej).
 Cache: URL z `?v=` (wersja z treści pliku) → `max-age=31536000, immutable`,
 bez `?v=` → `max-age=600`, HTML → `no-store` (`src/lib/origin/assets.js`).
 
 ### Pretty URLs (bez .html)
-Każda strona ma `<nazwa>/index.html` w artefakcie Pages. Worker pobiera ten
+Każda strona ma `<nazwa>/index.html` w plikach strony (ASSETS). Worker pobiera ten
 plik wewnętrznie dla tras `/nazwa` oraz `/nazwa/`, zachowując parametry.
 Nie wymaga to przekierowania przeglądarki. Linki aplikacji używają `/nazwa/`.
 
 **Aktualne mapowania w workerze:**
-- `/games/` → Pages `/games/index.html`; analogicznie dla pozostałych znanych stron.
+- `/games/` → plik `/games/index.html`; analogicznie dla pozostałych znanych stron.
 - Brak fallbacków zasobów pod dawnymi ścieżkami oraz brak przekierowania `/builder`.
 - Frontend jest publikowany z `web/`; ta nazwa nie jest częścią adresów URL.
 
 ### Publiczny katalog Gier Społeczności
 `/marketplace/` i `/marketplace/game/<slug>` otrzymują ten sam pełny HTML
-niezależnie od User-Agent. Worker składa istniejący szablon Pages wspólnym
+niezależnie od User-Agent. Worker składa istniejący szablon strony wspólnym
 rendererem `web/marketplace/js/public.js`; pytania są w dotychczasowym oknie.
 Przeglądarka przejmuje HTML bez ponownego pobierania listy. Zwykłe linki
 oraz odczyt katalogu i pytań działają również bez JavaScriptu.
@@ -140,12 +141,10 @@ Example:
 ---
 
 ## DNS (recap)
-- `@` (apex): A records for GitHub Pages
-- `www`: CNAME → `andrish97.github.io` (Proxy ON)
-- `*`: CNAME → `andrish97.github.io` (Proxy ON)
-- `panel`: CNAME → your panel origin (Proxy ON if routed through worker)
-- `supabase`: CNAME → your supabase origin (Proxy ON if routed through worker)
-- `api`: CNAME → your API origin (Proxy ON if routed through worker)
+- `@` (apex), `www`, `*`: `AAAA 100::` (Proxy ON) — adres zastępczy, ruch
+  obsługuje Worker `familijna` przez trasy (plik importu:
+  `familijna-server/docs/dns/familijna-app-bez-pages.txt`)
+- `panel`, `supabase`, `api`, `docker`, `admin`: A → serwer (Proxy ON)
 
 
 Regresja przejęcia HTML Wskazówek: po `npm ci` w `tests` i w katalogu

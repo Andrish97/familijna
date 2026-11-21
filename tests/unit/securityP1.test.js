@@ -81,19 +81,18 @@ test('N3: bez zmian dla usług przepuszczanych, nie-HTML; istniejąca CSP uzupe�
   assert.equal(tools.headers.get('Content-Security-Policy').split("frame-ancestors").length, 2);
 });
 
-test('N3: Worker dokłada nagłówki do strony z Pages', async () => {
+test('N3: Worker dokłada nagłówki do strony z plików ASSETS', async () => {
   const { default: worker } = await import('../../cloudflare/maintenance-worker/src/index.js');
   const { setStateCache } = await import('../../cloudflare/maintenance-worker/src/lib/core/state.js');
   setStateCache({ enabled: false, mode: 'off' });
-  const prev = globalThis.fetch;
-  globalThis.fetch = async () => new Response('<p>Gry</p>', { headers: { 'Content-Type': 'text/html' } });
-  try {
-    const res = await worker.fetch(new Request('https://www.familijna.app/games/', { headers: { Accept: 'text/html' } }), {}, { waitUntil() {} });
+  const ASSETS = { fetch: async () => new Response('<p>Gry</p>', { headers: { 'Content-Type': 'text/html' } }) };
+  {
+    const res = await worker.fetch(new Request('https://www.familijna.app/games/', { headers: { Accept: 'text/html' } }), { ASSETS }, { waitUntil() {} });
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('X-Content-Type-Options'), 'nosniff');
     assert.equal(res.headers.get('Cache-Control'), 'no-store');
     assert.match(await res.text(), /Gry/);
-  } finally { globalThis.fetch = prev; }
+  }
 });
 
 // ── N6 ────────────────────────────────────────────────────────────────────

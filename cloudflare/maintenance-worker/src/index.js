@@ -16,8 +16,6 @@ import { getState } from "./lib/core/state.js";
 import { json, withHeaders } from "./lib/core/http.js";
 import {
   ORIGIN_BASE,
-  ORIGIN_HOST,
-  ORIGIN_RESOLVE,
   bindStaticAssets,
   fetchFromOrigin,
   fetchWith404,
@@ -134,22 +132,19 @@ async function handleFetch(request, env, ctx) {
     // subrequest (bez sesji/ciasteczka logowania) wpada w bramkę Access i
     // origin staje się nieosiągalny (błąd "3 warstwy Cloudflare" widoczny
     // 15.09 po wdrożeniu tej zmiany, cofniętej w tym samym commicie).
-    // resolveOverride ma sens tylko gdy wskazuje NA ZEWNĄTRZ strefy (patrz
-    // ORIGIN_RESOLVE = "andrish97.github.io" niżej) - żeby ominąć
-    // zapętlenie subrequestu w tego samego Workera, nie żeby "użyć DNS".
     return fetch(request);
   }
 
   // Unknown subdomains: 404 when maintenance OFF, maintenance page when ON
   if (host.endsWith(".familijna.app") && !isKnownHost(host)) {
     if (isCommonAsset(url.pathname)) {
-      return fetchFromOrigin(request, url, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+      return fetchFromOrigin(request, url, ORIGIN_BASE);
     }
     const state = await getState(env);
     if (!state.enabled || state.mode === "off") {
-      return serveNotFoundPage(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+      return serveNotFoundPage(request, ORIGIN_BASE);
     }
-    return serveMaintenance(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return serveMaintenance(request, ORIGIN_BASE);
   }
 
   // Statyczne assety (dowolny folder, dopasowane po rozszerzeniu, nie po
@@ -159,11 +154,11 @@ async function handleFetch(request, env, ctx) {
   // odpowiedź w blokach powyżej. Patrz isStaticAssetPath — jeden wyjątek
   // (/maintenance-state.json) zostaje w normalnej bramce, bo czyta KV.
   if ((request.method === "GET" || request.method === "HEAD") && isStaticAssetPath(url.pathname)) {
-    return serveStaticAsset(request, url, ctx, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return serveStaticAsset(request, url, ctx, ORIGIN_BASE);
   }
 
   if (["GET", "HEAD"].includes(request.method) && invalidManualChapter(url)) {
-    return serveNotFoundPage(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return serveNotFoundPage(request, ORIGIN_BASE);
   }
 
   // E2E test bypass — tylko strona logowania, tylko z poprawnym jednorazowym
@@ -174,7 +169,7 @@ async function handleFetch(request, env, ctx) {
     ["/login", "/login/", "/login/index.html"].includes(url.pathname) &&
     request.method === "GET"
   ) {
-    const e2eRes = await handleE2ELoginBypass(request, env, url, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    const e2eRes = await handleE2ELoginBypass(request, env, url, ORIGIN_BASE);
     if (e2eRes) return e2eRes;
   }
 
@@ -226,7 +221,7 @@ async function handleFetch(request, env, ctx) {
   if (["GET", "HEAD"].includes(request.method) && isMarketPath(url.pathname)) {
     const state = await getState(env);
     if (state.enabled && state.mode !== "off" && !isBypass && !await authorizeE2EApi(request, env)) {
-      return serveMaintenance(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+      return serveMaintenance(request, ORIGIN_BASE);
     }
     return servePublicMarketplace(request, env, url, ctx);
   }
@@ -240,7 +235,7 @@ async function handleFetch(request, env, ctx) {
 
   // Bypass → przepuszcza WSZYSTKO (nawet przy włączonym maintenance)
   if (isBypass) {
-    return fetchWith404(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return fetchWith404(request, ORIGIN_BASE);
   }
 
   // Admin API should not be exposed on public hosts
@@ -263,20 +258,20 @@ async function handleFetch(request, env, ctx) {
   if (request.method === "GET" && isBot(request)) {
     const p = url.pathname;
     if (p === "/" || p === "/index.html" || p.startsWith("/privacy")) {
-      return fetchWith404(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+      return fetchWith404(request, ORIGIN_BASE);
     }
   }
 
   // Block settings on public hosts (serve custom 404)
   if (isBlockedPath(host, url.pathname) || isLockedSnake(url)) {
-    return serveNotFoundPage(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return serveNotFoundPage(request, ORIGIN_BASE);
   }
 
   // Signed, short-lived production-test token bypasses maintenance only.
   // It grants no account session or access to admin endpoints.
   if (host === "www.familijna.app" && ["GET", "HEAD"].includes(request.method)
       && await authorizeE2EApi(request, env)) {
-    return fetchWith404(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return fetchWith404(request, ORIGIN_BASE);
   }
 
   // GLOBAL GATE
@@ -286,16 +281,16 @@ async function handleFetch(request, env, ctx) {
     if (["/connect/", "/connect", "/connect/index.html"].includes(url.pathname) && url.searchParams.get("tv") === "1") {
       const tvUrl = new URL(url);
       tvUrl.pathname = "/connect/tv/index.html";
-      return withHeaders(await fetchFromOrigin(request, tvUrl, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE), { "Cache-Control": "no-store", Vary: "User-Agent" });
+      return withHeaders(await fetchFromOrigin(request, tvUrl, ORIGIN_BASE), { "Cache-Control": "no-store", Vary: "User-Agent" });
     }
-    return fetchWith404(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE); // brak prac
+    return fetchWith404(request, ORIGIN_BASE); // brak prac
   }
 
   // allow access to the maintenance page and its assets
   if (isMaintenanceAsset(url.pathname)) {
-    return fetchWith404(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+    return fetchWith404(request, ORIGIN_BASE);
   }
 
   // block everything else
-  return serveMaintenance(request, ORIGIN_BASE, ORIGIN_HOST, ORIGIN_RESOLVE);
+  return serveMaintenance(request, ORIGIN_BASE);
 }

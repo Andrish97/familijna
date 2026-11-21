@@ -5,6 +5,9 @@ import { build } from 'esbuild';
 import { Miniflare, Response } from 'miniflare';
 import { PUBLIC_LANGS, publicUrl } from '../../../web/shared/js/core/public-seo.js';
 import manual from '../../../web/manual/content/pl.js';
+// Pliki strony przychodzą z bindingu ASSETS (Workers Static Assets), pozostałe
+// żądania (Supabase) przez fetch — ten sam podstawiony serwer obsługuje oba.
+const assetsOrigin = (handler) => ({ outboundService: handler, serviceBindings: { ASSETS: handler } });
 
 let mf;
 let bundle;
@@ -34,7 +37,7 @@ const outboundService = async (request) => {
 before(async () => {
   bundle = (await build({ entryPoints: [new URL('../src/index.js', import.meta.url).pathname], bundle: true,
     write: false, format: 'esm', platform: 'browser', target: 'es2022' })).outputFiles[0].text;
-  mf = new Miniflare({ modules: true, script: bundle, compatibilityDate: '2024-01-01', kvNamespaces: ['MAINT_KV'], bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'}, outboundService });
+  mf = new Miniflare({ modules: true, script: bundle, compatibilityDate: '2024-01-01', kvNamespaces: ['MAINT_KV'], bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'}, ...assetsOrigin(outboundService) });
 });
 after(async () => mf?.dispose());
 
@@ -148,7 +151,7 @@ test('technical document is noindex; actual maintenance remains 503 with Retry-A
     assert.equal(response.headers.get('X-Robots-Tag'), 'noindex, follow');
     await response.text();
   }
-  const maintenance = new Miniflare({ modules: true, script: bundle, compatibilityDate: '2024-01-01', kvNamespaces: ['MAINT_KV'], bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'}, outboundService });
+  const maintenance = new Miniflare({ modules: true, script: bundle, compatibilityDate: '2024-01-01', kvNamespaces: ['MAINT_KV'], bindings:{SUPABASE_URL:'https://api.test',SUPABASE_ANON_KEY:'anon-only'}, ...assetsOrigin(outboundService) });
   try {
     await (await maintenance.getKVNamespace('MAINT_KV')).put('state', JSON.stringify({ enabled: true, mode: 'message' }));
     const response = await maintenance.dispatchFetch('https://www.familijna.app/manual/?ch=6');

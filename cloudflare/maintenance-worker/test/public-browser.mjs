@@ -7,15 +7,18 @@ import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
 import { build } from 'esbuild';
 import { Miniflare, Response } from 'miniflare';
+// Pliki strony przychodzą z bindingu ASSETS (Workers Static Assets), pozostałe
+// żądania (Supabase) przez fetch — ten sam podstawiony serwer obsługuje oba.
+const assetsOrigin = (handler) => ({ outboundService: handler, serviceBindings: { ASSETS: handler } });
 const root = fileURLToPath(new URL('../../../', import.meta.url));
 const { chromium } = createRequire(import.meta.url)(path.join(root, 'tests/node_modules/@playwright/test'));
 const mime = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.json':'application/json', '.webp':'image/webp', '.svg':'image/svg+xml', '.png':'image/png' };
 const bundle = await build({ entryPoints:[path.join(root,'cloudflare/maintenance-worker/src/index.js')], bundle:true, write:false, format:'esm', platform:'browser', target:'es2022' });
-const mf = new Miniflare({ modules:true, script:bundle.outputFiles[0].text, compatibilityDate:'2024-01-01', kvNamespaces:['MAINT_KV'], outboundService:async(request) => {
+const mf = new Miniflare({ modules:true, script:bundle.outputFiles[0].text, compatibilityDate:'2024-01-01', kvNamespaces:['MAINT_KV'], ...assetsOrigin(async(request) => {
   const file = path.resolve(root, 'web', `.${new URL(request.url).pathname}`);
   if (!file.startsWith(path.join(root,'web')+path.sep) || !fs.existsSync(file) || !fs.statSync(file).isFile()) return new Response('Not found',{status:404});
   return new Response(fs.readFileSync(file),{headers:{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}});
-} });
+})});
 const browser = await chromium.launch({headless:true});
 try {
   for (const width of [390,1400]) for (const earlyClick of [false,true]) {

@@ -196,8 +196,7 @@ jobs:
             [ "$attempt" = 5 ] && exit 1
             sleep $((attempt * 5))
           done
-          gh workflow run deploy-pages.yml --ref main
-          # Pliki strony serwuje też Worker (Workers Static Assets).
+          # Pliki strony serwuje Worker (Workers Static Assets).
           gh workflow run deploy-worker.yml --ref main
 
       # Wskazówki (/manual/) czytają zrzuty z web/manual/img/<język>/ — tylko sceny
@@ -252,6 +251,5 @@ jobs:
             [ "$attempt" = 5 ] && exit 1
             sleep $((attempt * 5))
           done
-          gh workflow run deploy-pages.yml --ref main
-          # Pliki strony serwuje też Worker (Workers Static Assets).
+          # Pliki strony serwuje Worker (Workers Static Assets).
           gh workflow run deploy-worker.yml --ref main

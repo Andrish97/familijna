@@ -40,10 +40,10 @@ const SOURCE_EXT = ['.html', '.js', '.json', '.css', '.webmanifest'];
 // referencji tym mechanizmem (to kod routingu, nie strona ładująca assety).
 // "supabase" i "services" pomijane z tego samego powodu co "cloudflare" —
 // to kod backendu (Edge Functions, migracje, osobno wdrażany serwis
-// lead-finder), nigdy nie trafia na GitHub Pages, więc nie ma czego
+// lead-finder), nigdy nie trafia do plików strony, więc nie ma czego
 // wersjonować, a skanowanie go to tylko niepotrzebna praca i ryzyko takiej
 // samej pomyłki jak w Workerze. Cała ta lista jest teraz świadomie
-// lustrem wykluczeń z rsync w .github/workflows/deploy-pages.yml (krok
+// lustrem dawnych wykluczeń z rsync w workflow wdrożenia strony (krok
 // "Prepare public-only deployment directory") — jeśli tamta lista się
 // zmieni, zmień i tę.
 // "vendor" (web/shared/vendor) jest wyjątkiem od lustra rsync: pliki trafiają

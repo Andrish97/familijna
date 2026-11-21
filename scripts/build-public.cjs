@@ -49,7 +49,7 @@ async function buildPublic({ source = path.join(__dirname, '../web'), out = path
   totals.hashes = contentHashAssets(out);
   // Workers Static Assets (wrangler.toml [assets]): plików technicznych artefaktu
   // nie publikujemy. Plik .assetsignore wrangler pomija sam.
-  await fs.writeFile(path.join(out, '.assetsignore'), ['.familijna-build.json', 'CNAME', 'package.json', ''].join('\n'));
+  await fs.writeFile(path.join(out, '.assetsignore'), ['.familijna-build.json', 'package.json', ''].join('\n'));
   return totals;
 }
 module.exports = { buildPublic };
