@@ -16,20 +16,20 @@
 // setStealMsg/setRevealMsg/ROUNDS_MSG/FINAL_MSG, ale jako czysta funkcja
 // bieżącego game_state (web/js/gameplay/hints.js), nie ulotny stan ustawiany przy
 // każdym zdarzeniu — "wszystko idzie przez tabelę stanów".
-import { getRoundsHint, getFinalHint, getFinalEntryShortcuts, teamName } from "../../shared/js/gameplay/hints.js?v=v2026-11-21T19003";
-import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-21T19003";
-import { getSfxCategories, getSfxVariant, isSfxPlaying, playSfxPreview, stopSfxPreview, stopSfx, onSfxEnd, setSfxVolume } from "../../shared/js/core/sfx.js?v=v2026-11-21T19003";
-import { buildDisplayPreviewRow } from "../../shared/js/gameplay/previewRow.js?v=v2026-11-21T19003";
-import { DEFAULT_SETTINGS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-21T19003";
-import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-21T19003";
+import { getRoundsHint, getFinalHint, getFinalEntryShortcuts, teamName } from "../../shared/js/gameplay/hints.js?v=v2026-11-21T20391";
+import { t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-21T20391";
+import { getSfxCategories, getSfxVariant, isSfxPlaying, playSfxPreview, stopSfxPreview, stopSfx, onSfxEnd, setSfxVolume } from "../../shared/js/core/sfx.js?v=v2026-11-21T20391";
+import { buildDisplayPreviewRow } from "../../shared/js/gameplay/previewRow.js?v=v2026-11-21T20391";
+import { DEFAULT_SETTINGS } from "../../shared/js/gameplay/gameStateShape.js?v=v2026-11-21T20391";
+import { icon, iconText } from "../../shared/js/core/icons.js?v=v2026-11-21T20391";
 
-import { previewPendingRoundEndDestination } from "./engine.js?v=v2026-11-21T19003";
-import { fitGameplayText, watchGameplayText } from "./fit-text.js?v=v2026-11-21T19003";
-import { displayTextSegments } from "../../shared/js/gameplay/displayText.js?v=v2026-11-21T19003";
-import { hasDisplayGlyph } from "../../shared/js/display/fonts.js?v=v2026-11-21T19003";
-import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-21T19003";
-import { FINAL_DISPLAY_MAX } from "../../shared/js/core/answer-text.js?v=v2026-11-21T19003";
-import { setCell } from "../../shared/js/core/geometry.js?v=v2026-11-21T19003";
+import { previewPendingRoundEndDestination } from "./engine.js?v=v2026-11-21T20391";
+import { fitGameplayText, watchGameplayText } from "./fit-text.js?v=v2026-11-21T20391";
+import { displayTextSegments } from "../../shared/js/gameplay/displayText.js?v=v2026-11-21T20391";
+import { hasDisplayGlyph } from "../../shared/js/display/fonts.js?v=v2026-11-21T20391";
+import { loadFont5x7 } from "../../shared/js/core/logo-preview.js?v=v2026-11-21T20391";
+import { FINAL_DISPLAY_MAX } from "../../shared/js/core/answer-text.js?v=v2026-11-21T20391";
+import { setCell } from "../../shared/js/core/geometry.js?v=v2026-11-21T20391";
 
 
 const $ = (id) => document.getElementById(id);
