@@ -1,4 +1,4 @@
-import { getTurnstileToken } from "./turnstile.js?v=v2026-11-21T20391";
+import { getTurnstileToken } from "./turnstile.js?v=v2026-11-21T21173";
 // 6-cyfrowy kod urządzenia -> { ok, device_type, game_id, share_key, … } przez
 // Worker (/_api/device/resolve, limit nieudanych prób; migracja 514).
 // err: "not_found" | "rate_limited" | "unavailable".
