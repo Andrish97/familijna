@@ -141,9 +141,11 @@ Example:
 ---
 
 ## DNS (recap)
-- `@` (apex), `www`, `*`: `AAAA 100::` (Proxy ON) — adres zastępczy, ruch
+- `@` (apex), `www`: `AAAA 100::` (Proxy ON) — adres zastępczy, ruch
   obsługuje Worker `familijna` przez trasy (plik importu:
   `familijna-server/docs/dns/familijna-app-bez-pages.txt`)
+- bez rekordu `*`: nieznane subdomeny nie istnieją (z `*` → `100::` bez trasy
+  Workera dawały 522)
 - `panel`, `supabase`, `api`, `docker`, `admin`: A → serwer (Proxy ON)
 
 
