@@ -61,3 +61,15 @@ test('with the ASSETS binding site files come from Workers Static Assets, not Gi
   assert.equal(asked.at(-1),'/nested/dir/index.html');
  } finally {globalThis.fetch=original;bindStaticAssets({});}
 });
+
+test('missing page gets the 404 page even without Accept: text/html (like GitHub Pages)',async()=>{
+ const {bindStaticAssets,fetchWith404}=await import('../../cloudflare/maintenance-worker/src/lib/origin/origin.js');
+ bindStaticAssets({ASSETS:{fetch:async req=>new URL(req.url).pathname==='/404.html'
+  ? new Response('<script src="/404/js/404.js"></script>',{headers:{'Content-Type':'text/html'}})
+  : new Response(null,{status:404})}});
+ try {
+  const response=await fetchWith404(new Request('https://www.familijna.app/brak/sciezka',{headers:{Accept:'*/*'}}),'https://familijna.app','familijna.app','andrish97.github.io');
+  assert.equal(response.status,404);assert.equal(response.headers.get('Cache-Control'),'no-store');
+  assert.match(await response.text(),/404\.js/);
+ } finally {bindStaticAssets({});}
+});

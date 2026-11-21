@@ -169,12 +169,9 @@ export async function fetchWith404(request, originBase, originHost, resolveOverr
     return res;
   }
 
-  const accept = request.headers.get("Accept") || "";
-  if (accept.includes("text/html")) {
-    return serveNotFoundPage(request, originBase, originHost, resolveOverride);
-  }
-
-  return res;
+  // Jak dawniej GitHub Pages: brakujący adres dostaje stronę 404 niezależnie
+  // od nagłówka Accept (ASSETS z not_found_handling "none" oddaje puste 404).
+  return serveNotFoundPage(request, originBase, originHost, resolveOverride);
 }
 
 export async function fetchWithOrigin(url, request, originHost, resolveOverride, opts = {}) {
