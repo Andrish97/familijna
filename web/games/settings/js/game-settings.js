@@ -1,35 +1,35 @@
-import { bindDrawer } from "../../../shared/js/core/drawer.js?v=v2026-11-21T18390";
+import { bindDrawer } from "../../../shared/js/core/drawer.js?v=v2026-11-21T18453";
 // Ustawienia gry (/games/settings/?id=<gra>): zwykła strona z ręcznym zapisem.
 // Podgląd Wyświetlacza i Prowadzącego:
 // ramki /control/display/?preview=1 (shared/js/gameplay/previewRow.js).
-import { t, getUiLang } from "../../../shared/translation/translation.js?v=v2026-11-21T18390";
-import { linkTo, backHref, backTarget } from "../../../shared/js/core/nav-map.js?v=v2026-11-21T18390";
-import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-21T18390";
-import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-21T18390";
-import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-21T18390";
-import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-21T18390";
-import { loadQuestions, guardGameState, validateGame } from "../../../shared/js/core/game-validate.js?v=v2026-11-21T18390";
-import { loadFont5x7, buildLogoPreviewCanvas } from "../../../shared/js/core/logo-preview.js?v=v2026-11-21T18390";
-import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-21T18390";
-import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-21T18390";
-import { toast } from "../../../shared/js/core/toast.js?v=v2026-11-21T18390";
-import { initUiSelect } from "../../../shared/js/core/ui-select.js?v=v2026-11-21T18390";
-import { chooseDisplayTheme } from "../../../shared/js/display/theme-config.js?v=v2026-11-21T18390";
-import { parseThemeFile, customThemeKey, customThemeId } from "../../../shared/js/display/theme-file.js?v=v2026-11-21T18390";
-import { loadBuiltinThemes } from "../../../shared/js/display/theme-registry.js?v=v2026-11-21T18390";
-import { buildDisplayPreviewRow } from "../../../shared/js/gameplay/previewRow.js?v=v2026-11-21T18390";
-import { LONG_MAX_INPUT, measureLongText, clipLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-21T18390";
+import { t, getUiLang } from "../../../shared/translation/translation.js?v=v2026-11-21T18453";
+import { linkTo, backHref, backTarget } from "../../../shared/js/core/nav-map.js?v=v2026-11-21T18453";
+import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-21T18453";
+import { normHex } from "../../../shared/js/core/color.js?v=v2026-11-21T18453";
+import { colorPickerHTML, bindColorPicker } from "../../../shared/js/core/color-picker.js?v=v2026-11-21T18453";
+import { sb } from "../../../shared/js/core/supabase.js?v=v2026-11-21T18453";
+import { loadQuestions, guardGameState, validateGame } from "../../../shared/js/core/game-validate.js?v=v2026-11-21T18453";
+import { loadFont5x7, buildLogoPreviewCanvas } from "../../../shared/js/core/logo-preview.js?v=v2026-11-21T18453";
+import { v as cacheBust } from "../../../shared/js/core/cache-bust.js?v=v2026-11-21T18453";
+import { alertModal, confirmModal } from "../../../shared/js/core/modal.js?v=v2026-11-21T18453";
+import { toast } from "../../../shared/js/core/toast.js?v=v2026-11-21T18453";
+import { initUiSelect } from "../../../shared/js/core/ui-select.js?v=v2026-11-21T18453";
+import { chooseDisplayTheme } from "../../../shared/js/display/theme-config.js?v=v2026-11-21T18453";
+import { parseThemeFile, customThemeKey, customThemeId } from "../../../shared/js/display/theme-file.js?v=v2026-11-21T18453";
+import { loadBuiltinThemes } from "../../../shared/js/display/theme-registry.js?v=v2026-11-21T18453";
+import { buildDisplayPreviewRow } from "../../../shared/js/gameplay/previewRow.js?v=v2026-11-21T18453";
+import { LONG_MAX_INPUT, measureLongText, clipLongText, dropUnsupported } from "../../../shared/js/display/long-text.js?v=v2026-11-21T18453";
 
-import { loadSfxManifest, getSfxCategories, setSfxCustomBlob, clearSfxCustomFile, clearAllSfxCustomFiles, getSfxCustomFiles, setSfxVolume, buildSfxUrl, createSfxAudio, playSfxAudio, setSfxAudioVolume, stopSfxAudio } from "../../../shared/js/core/sfx.js?v=v2026-11-21T18390";
+import { loadSfxManifest, getSfxCategories, setSfxCustomBlob, clearSfxCustomFile, clearAllSfxCustomFiles, getSfxCustomFiles, setSfxVolume, buildSfxUrl, createSfxAudio, playSfxAudio, setSfxAudioVolume, stopSfxAudio } from "../../../shared/js/core/sfx.js?v=v2026-11-21T18453";
 import {
   uploadGameSound, deleteGameSound, deleteAllGameSounds,
-} from "../../../shared/js/core/sfx-cloud.js?v=v2026-11-21T18390";
-import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-21T18390";
-import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-21T18390";
-import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-21T18390";
-import { blockingScreen, setBlockingIcon, setBlockingOpen } from "../../../shared/js/core/blocking-screen.js?v=v2026-11-21T18390";
-import { isPhoneScreen } from "../../../shared/js/core/device-guard.js?v=v2026-11-21T18390";
-import { ADVANCED_LIMITS, parseIntInRange, parseMultipliers, finalMaxPoints, roundsMaxPoints } from "./advanced-limits.js?v=v2026-11-21T18390";
+} from "../../../shared/js/core/sfx-cloud.js?v=v2026-11-21T18453";
+import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-21T18453";
+import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js?v=v2026-11-21T18453";
+import { icon } from "../../../shared/js/core/icons.js?v=v2026-11-21T18453";
+import { blockingScreen, setBlockingIcon, setBlockingOpen } from "../../../shared/js/core/blocking-screen.js?v=v2026-11-21T18453";
+import { isPhoneScreen } from "../../../shared/js/core/device-guard.js?v=v2026-11-21T18453";
+import { ADVANCED_LIMITS, parseIntInRange, parseMultipliers, finalMaxPoints, roundsMaxPoints } from "./advanced-limits.js?v=v2026-11-21T18453";
 
 // Telefon: listy pytań bez przeciągania (dotknięcie przenosi, strzałki ustawiają kolejność).
 const DRAG = !isPhoneScreen();
