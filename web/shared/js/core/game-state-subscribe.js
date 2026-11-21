@@ -17,11 +17,11 @@
 // proxy; eksport 13.11: potwierdzenia planszy 11–100 s), widoczna karta czyta
 // stan z bazy co POLL_MS, aż kanał wróci. Przy działającym kanale bez odpytywania.
 
-import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-21T18453";
-import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-21T18453";
-import { createRowSync } from "./game-state-sync.js?v=v2026-11-21T18453";
-import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-21T18453";
-import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-21T18453";
+import { sb, REALTIME_OPTIONS, SUPABASE_ANON_KEY, SUPABASE_URL } from "./supabase.js?v=v2026-11-21T19003";
+import { createNetworkMonitor, measureNetwork } from "./network-probe.js?v=v2026-11-21T19003";
+import { createRowSync } from "./game-state-sync.js?v=v2026-11-21T19003";
+import { realtimeSocketCloseDetails, observeRealtimeSocketClose } from "./realtime-socket-close.js?v=v2026-11-21T19003";
+import { createDirectRetryScheduler } from "./direct-retry-backoff.js?v=v2026-11-21T19003";
 
 const TRANSPORT = "broadcast";
 const POLL_SOURCE = "rpc_poll";
