@@ -53,7 +53,13 @@
     transition: opacity var(--dur-slow) ease-in;
   }
   html[data-page-redirect] body { opacity: 0; pointer-events: none; }
-  html.page-loading body, html[data-layout-pending] body { opacity: 0; }
+  html.page-loading body:not(.skel-body), html[data-layout-pending] body:not(.skel-body) { opacity: 0; }
+  /* Strony ze szkieletem: tło i pasek z logo od pierwszego wyświetlenia
+     (sekcje paska i kroki [data-skel-step] mają własne ukrywanie), reszta
+     strony po starcie JS — bez czekania na moduły z pustym ekranem. */
+  html.page-loading body.skel-body > :not(.topbar),
+  html[data-layout-pending] body.skel-body > :not(.topbar) { opacity: 0; }
+  body.skel-body > :not(.topbar) { transition: opacity var(--dur-slow) ease-in; }
 
   body > main,
   main {
@@ -203,6 +209,7 @@
   /* Dotyk: bez przeciągania (page-init.js blokuje dragstart) i bez przejścia opacity body (Android: artefakty GPU). */
   @media (hover: none) and (pointer: coarse) {
     body { transition: none; }
+    body.skel-body > :not(.topbar) { transition: none; }
     [draggable="true"] { -webkit-user-drag: none; }
   }
 
