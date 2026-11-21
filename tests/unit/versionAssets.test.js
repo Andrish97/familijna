@@ -1,5 +1,6 @@
-// Testy scripts/version-assets.js — cache-bustera odpalanego przy każdym
-// wdrożeniu (deploy-pages.yml). Zasoby z ?v= Worker serwuje jako
+// Testy scripts/version-assets.js — kroku budowania strony przy każdym
+// wdrożeniu (npm run build:site w deploy-worker.yml; źródła w repo są bez ?v=,
+// wersje z treści dokłada scripts/content-hash-assets.cjs). Zasoby z ?v= Worker serwuje jako
 // "immutable", więc KAŻDE lokalne odwołanie do .js/.css musi dostać ?v=
 // bieżącego wdrożenia. Odwołanie bez ?v= zostaje w cache przeglądarki ze
 // starą treścią, a ta ładuje resztę modułów ze starymi wersjami.
@@ -20,7 +21,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const WEB_ROOT = path.join(ROOT, "web");
 const SCRIPT = path.join(ROOT, "scripts/version-assets.js");
-const SKIP = new Set([".git", "node_modules", "img", "audio", "tests", "docs", "supabase", "cloudflare", "services", "searxng", ".github"]);
+const SKIP = new Set([".git", "node_modules", "_site_public", "img", "audio", "tests", "docs", "supabase", "cloudflare", "services", "searxng", ".github"]);
 const VERSION = "vTEST123";
 
 function runVersioner(dir) {

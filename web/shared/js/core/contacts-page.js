@@ -1,18 +1,18 @@
 // Znajomi i subskrybenci: wspólne listy, akcje, zaproszenia i odświeżanie.
-import { sb } from "./supabase.js?v=v2026-11-21T21173";
-import { initPage } from "./page-init.js?v=v2026-11-21T21173";
-import { linkTo, PAGES } from "./nav-map.js?v=v2026-11-21T21173";
-import { tabFromUrl, setTab } from "./tabs.js?v=v2026-11-21T21173";
-import { initSplitTabs } from "./split-tabs.js?v=v2026-11-21T21173";
-import { toast } from "./toast.js?v=v2026-11-21T21173";
-import { iconText } from "./icons.js?v=v2026-11-21T21173";
-import { confirmModal, alertModal } from "./modal.js?v=v2026-11-21T21173";
-import { shareSectionEl } from "./share-sections.js?v=v2026-11-21T21173";
-import { createCooldownTicker } from "./cooldown.js?v=v2026-11-21T21173";
-import { sendInviteMail } from "./invite-mail.js?v=v2026-11-21T21173";
-import { goLinkToken } from "./notify-mail.js?v=v2026-11-21T21173";
-import { initI18n, t } from "../../translation/translation.js?v=v2026-11-21T21173";
-import "./contact-modal.js?v=v2026-11-21T21173";
+import { sb } from "./supabase.js";
+import { initPage } from "./page-init.js";
+import { linkTo, PAGES } from "./nav-map.js";
+import { tabFromUrl, setTab } from "./tabs.js";
+import { initSplitTabs } from "./split-tabs.js";
+import { toast } from "./toast.js";
+import { iconText } from "./icons.js";
+import { confirmModal, alertModal } from "./modal.js";
+import { shareSectionEl } from "./share-sections.js";
+import { createCooldownTicker } from "./cooldown.js";
+import { sendInviteMail } from "./invite-mail.js";
+import { goLinkToken } from "./notify-mail.js";
+import { initI18n, t } from "../../translation/translation.js";
+import "./contact-modal.js";
 
 
 export async function initContactsPage(pageId) {

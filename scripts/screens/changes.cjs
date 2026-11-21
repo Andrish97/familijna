@@ -2,7 +2,7 @@
 // tylko sceny, na których wygląd zmiana może wpłynąć.
 //
 // - Plik różniący się od <base> wyłącznie znacznikami wersji `?v=` (skrypt
-//   version-assets.js przepisuje je w setkach plików) nie liczy się jako zmieniony.
+//   dawniej przepisywane w setkach plików; gałęzie sprzed 2026-11-21) nie liczy się jako zmieniony.
 // - Wspólny kod (web/shared/js, css, tłumaczenia) dotyczy tylko stron, które go
 //   wczytują -- wprost albo przez inne moduły (importy, <script>, <link>, ścieżki
 //   .js/.css/.json w kodzie).

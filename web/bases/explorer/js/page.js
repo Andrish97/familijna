@@ -3,26 +3,26 @@
 // pierwsze wczytanie (data/store.js), narysowanie (render.js) i podpięcie
 // wejść (ui/*). Logika akcji: actions/registry.js + commands.js.
 
-import { alertModal } from "../../../shared/js/core/modal.js?v=v2026-11-21T21173";
-import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js?v=v2026-11-21T21173";
-import { initI18n, t } from "../../../shared/translation/translation.js?v=v2026-11-21T21173";
-import { backHref } from "../../../shared/js/core/nav-map.js?v=v2026-11-21T21173";
-import { initPage } from "../../../shared/js/core/page-init.js?v=v2026-11-21T21173";
-import { createState, setRole, goTo } from "./state.js?v=v2026-11-21T21173";
-import { reload } from "./data/store.js?v=v2026-11-21T21173";
-import { renderAll, renderToolbar, renderList, isNarrow } from "./render.js?v=v2026-11-21T21173";
-import { createHistory } from "./history.js?v=v2026-11-21T21173";
-import { getBaseMeta, getBaseRole } from "./repo.js?v=v2026-11-21T21173";
-import { openFolder, openTrash } from "./commands.js?v=v2026-11-21T21173";
-import { wireToolbarButtons } from "./ui/toolbar.js?v=v2026-11-21T21173";
-import { wireList } from "./ui/list.js?v=v2026-11-21T21173";
-import { wireTree } from "./ui/tree.js?v=v2026-11-21T21173";
-import { wireLeft } from "./ui/left.js?v=v2026-11-21T21173";
-import { wireDnd } from "./ui/dnd.js?v=v2026-11-21T21173";
-import { wireSearch } from "./ui/search.js?v=v2026-11-21T21173";
-import { guardRoutedSheet } from "./ui/sheet-guard.js?v=v2026-11-21T21173";
-import { wireLeftView } from "./ui/left-view.js?v=v2026-11-21T21173";
-import { wireKeyboard } from "./ui/keyboard.js?v=v2026-11-21T21173";
+import { alertModal } from "../../../shared/js/core/modal.js";
+import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js";
+import { initI18n, t } from "../../../shared/translation/translation.js";
+import { backHref } from "../../../shared/js/core/nav-map.js";
+import { initPage } from "../../../shared/js/core/page-init.js";
+import { createState, setRole, goTo } from "./state.js";
+import { reload } from "./data/store.js";
+import { renderAll, renderToolbar, renderList, isNarrow } from "./render.js";
+import { createHistory } from "./history.js";
+import { getBaseMeta, getBaseRole } from "./repo.js";
+import { openFolder, openTrash } from "./commands.js";
+import { wireToolbarButtons } from "./ui/toolbar.js";
+import { wireList } from "./ui/list.js";
+import { wireTree } from "./ui/tree.js";
+import { wireLeft } from "./ui/left.js";
+import { wireDnd } from "./ui/dnd.js";
+import { wireSearch } from "./ui/search.js";
+import { guardRoutedSheet } from "./ui/sheet-guard.js";
+import { wireLeftView } from "./ui/left-view.js";
+import { wireKeyboard } from "./ui/keyboard.js";
 
 const baseNameEl = document.getElementById("baseName");
 

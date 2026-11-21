@@ -95,7 +95,7 @@ test("motywy wbudowane (web/shared/themes/*.json) to pliki w formacie importu", 
   assert.deepEqual(index.themes.map(e => `${e.key}.json`).sort(), files);
   const builtinKeys = index.themes.map(e => e.key);
   for (const entry of index.themes) {
-    // CI dopisuje do ścieżek wersję ?v= (scripts/version-assets.js).
+    // Build przy wdrożeniu dopisuje do ścieżek wersję ?v= (scripts/version-assets.js).
     assert.equal(entry.file.split("?")[0], `/shared/themes/${entry.key}.json`);
     const text = fs.readFileSync(new URL(`${entry.key}.json`, dir), "utf8");
     const result = parseThemeFile(text, { builtin: true, builtinKeys });

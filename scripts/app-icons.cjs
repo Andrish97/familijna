@@ -12,7 +12,7 @@
 //                zaokrągla rogi; przezroczyste rogi iOS zamienia na czarne).
 // Obie aplikacje przechodzą dokładnie tę samą ścieżkę, więc jakość jest równa.
 //
-// Użycie: node scripts/app-icons.cjs   (potem node scripts/version-assets.js robi CI)
+// Użycie: node scripts/app-icons.cjs   (wersje ?v= dokłada build przy wdrożeniu)
 
 const fs = require("fs");
 const path = require("path");

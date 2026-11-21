@@ -12,7 +12,7 @@
 // (domyślnie ../familijna-server/admin-panel/web/admin/icons/push, gdy istnieje;
 // inny: --admin-out=ŚCIEŻKA).
 //
-// Użycie: node scripts/push-icons.cjs   (wersje ?v= robi CI)
+// Użycie: node scripts/push-icons.cjs   (wersje ?v= dokłada build przy wdrożeniu)
 
 const fs = require("fs");
 const path = require("path");

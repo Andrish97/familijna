@@ -13,7 +13,7 @@ test('regular application pages have contact; dedicated device screens do not',(
   if(noContactModal.has(relative)){
    assert.doesNotMatch(html,/contact-modal\.js|data-contact-modal|btn-contact-footer/,file);
    if(devices.has(relative)) assert.match(html,/<body[^>]*data-device-screen/,file);
-  }else assert.match(html,/contact-modal\.js\?v=/,file);
+  }else assert.match(html,/contact-modal\.js["?]/,file);
  }
  const source=fs.readFileSync(path.join(root,'shared/js/core/contact-modal.js'),'utf8');
  assert.match(source,/ensureContactEntryPoint/);assert.match(source,/document\.body\?\.hasAttribute\("data-device-screen"\)/);assert.match(source,/contact-footer-entry--floating/);

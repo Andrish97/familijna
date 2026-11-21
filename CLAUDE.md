@@ -1,7 +1,8 @@
 # Familijna — zasady pracy (AGENTS.md — dla Codexa; treść = CLAUDE.md)
 
-Rozmawiamy po polsku. Kod: vanilla JS (moduły ES z `?v=`, wersje
-przepisuje CI), Supabase, Cloudflare Worker. Strony w `web/`.
+Rozmawiamy po polsku. Kod: vanilla JS (moduły ES; źródła bez `?v=` — wersje
+z treści plików dokłada build przy wdrożeniu), Supabase, Cloudflare Worker.
+Strony w `web/`.
 
 ## Zanim zaczniesz
 
@@ -204,10 +205,16 @@ Postgresie, wdrożyć razem i od razu testy kontrolne).
   SECURITY`. Zapadka `unit/migrationGrants.test.js` (od migracji 529).
 - Migracje tylko do przodu: `supabase/migrations/YYYY-MM-DD_NNN_*.sql`,
   stosowane po pushu na `main`; `schema.sql` aktualizuje CI.
-- Scalanie `main` z konfliktami wersji `?v=`: `python3 scripts/resolve-version-conflicts.py`
-  (po `git -c merge.conflictstyle=diff3 merge`; rozwiązuje tylko hunki, gdzie jedna strona zmieniła same wersje), resztę ręcznie, potem
-  `node scripts/version-assets.js`; przed commitem unit (test `noConflictMarkers`). **Nigdy `git checkout --ours -- web`** ani `git add -A` przy nierozwiązanych konfliktach — zgubiło
-  zmiany innych sesji (2026-10-09).
+- **Źródła bez `?v=` (decyzja użytkownika 2026-11-21):** w `web/` nie piszemy
+  `?v=` przy odwołaniach do plików. Wersje dokłada build przy wdrożeniu
+  (`npm run build:site`: `scripts/version-assets.js` + skróty z treści
+  w `scripts/content-hash-assets.cjs`), zmieniony plik = nowy adres, reszta
+  zostaje w cache. Zapadka `unit/noSourceVersions.test.js`; naprawa i po scaleniu
+  gałęzi sprzed tej zmiany: `node scripts/strip-source-versions.mjs` (konflikty
+  w hunkach, gdzie jedna strona zmieniła same wersje: `python3
+  scripts/resolve-version-conflicts.py` po `git -c merge.conflictstyle=diff3 merge`).
+  **Nigdy `git checkout --ours -- web`** ani `git add -A` przy nierozwiązanych
+  konfliktach — zgubiło zmiany innych sesji (2026-10-09).
 - Bez fallbacków: żadnych aliasów starych adresów ani przekierowań.
 - Komentarz w JS nie może zawierać `*/` (np. `editor-*/` w ścieżce).
 - **Tłumaczenia przy każdej zmianie (decyzja użytkownika 2026-10-23):** kto zmienia

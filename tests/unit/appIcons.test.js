@@ -48,8 +48,8 @@ for (const app of APPS) {
     assert.equal(colorType, 2, `${href}: apple-touch-icon musi być bez przezroczystości`);
     for (const page of app.pages) {
       const html = read(page);
-      assert.match(html, new RegExp(`<link rel="manifest" href="/${app.manifest.replace(".", "\\.")}\\?v=`), `${page}: brak manifestu`);
-      assert.match(html, new RegExp(`<link rel="apple-touch-icon" sizes="180x180" href="${href}\\?v=`), `${page}: brak apple-touch-icon`);
+      assert.match(html, new RegExp(`<link rel="manifest" href="/${app.manifest.replace(".", "\\.")}"`), `${page}: brak manifestu`);
+      assert.match(html, new RegExp(`<link rel="apple-touch-icon" sizes="180x180" href="${href}"`), `${page}: brak apple-touch-icon`);
     }
   });
 }

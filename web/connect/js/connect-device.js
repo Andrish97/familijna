@@ -1,18 +1,18 @@
 // js/pages/connect-device.js
 
-import { sb } from "../../shared/js/core/supabase.js?v=v2026-11-21T21173";
-import { isGuestUser } from "../../shared/js/core/guest-mode.js?v=v2026-11-21T21173";
-import { isMobileDevice } from "../../shared/js/core/pwa.js?v=v2026-11-21T21173";
-import { initI18n, t, getUiLang } from "../../shared/translation/translation.js?v=v2026-11-21T21173";
-import { initPage } from "../../shared/js/core/page-init.js?v=v2026-11-21T21173";
-import { alertModal, confirmModal } from "../../shared/js/core/modal.js?v=v2026-11-21T21173";
-import { toast, setMessage } from "../../shared/js/core/toast.js?v=v2026-11-21T21173";
-import "../../shared/js/core/contact-modal.js?v=v2026-11-21T21173";
-import { icon } from "../../shared/js/core/icons.js?v=v2026-11-21T21173";
-import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js?v=v2026-11-21T21173";
-import { emptyStateHtml } from "../../shared/js/core/empty-state.js?v=v2026-11-21T21173";
-import { attachListTools } from "../../shared/js/core/share-sections.js?v=v2026-11-21T21173";
-import { resolveDeviceCode } from "../../shared/js/core/device-code.js?v=v2026-11-21T21173";
+import { sb } from "../../shared/js/core/supabase.js";
+import { isGuestUser } from "../../shared/js/core/guest-mode.js";
+import { isMobileDevice } from "../../shared/js/core/pwa.js";
+import { initI18n, t, getUiLang } from "../../shared/translation/translation.js";
+import { initPage } from "../../shared/js/core/page-init.js";
+import { alertModal, confirmModal } from "../../shared/js/core/modal.js";
+import { toast, setMessage } from "../../shared/js/core/toast.js";
+import "../../shared/js/core/contact-modal.js";
+import { icon } from "../../shared/js/core/icons.js";
+import { initListHeaderLayout } from "../../shared/js/core/list-header-layout.js";
+import { emptyStateHtml } from "../../shared/js/core/empty-state.js";
+import { attachListTools } from "../../shared/js/core/share-sections.js";
+import { resolveDeviceCode } from "../../shared/js/core/device-code.js";
 
 // Kod QR prowadzi tylko na tę samą stronę (E24 R28: bez przekierowań na obce adresy).
 function openScannedUrl(raw) {
@@ -193,7 +193,7 @@ async function loadJsQR() {
   if (window.jsQR) return;
   await new Promise((res, rej) => {
     const s = document.createElement("script");
-    s.src = "/shared/vendor/jsQR.min.js?v=v2026-11-21T21173";
+    s.src = "/shared/vendor/jsQR.min.js";
     s.onload = res; s.onerror = rej;
     document.head.appendChild(s);
   });

@@ -112,6 +112,16 @@ filesToProcess.forEach(filePath => {
     return `${prefix}${assetPath}?v=${version}`;
   });
 
+  // 2b. serviceWorker.register("/sw.js"), new URL("./ticker-worker.js", import.meta.url)
+  // i elementy tablic ([["/assets/video/x.mp4", "video/mp4"]]). Tylko ścieżki od
+  // "/", "./" lub "../". Nie dotyczy wywołań pomocników (loadJson, cacheBust/v
+  // z cache-bust.js), które same dokładają wersję z version.txt.
+  if (ext === '.js') {
+    const callArgRegex = new RegExp(`((?:\\.register\\(|new URL\\(|\\[)\\s*['"])((?:\\.{1,2})?/[^'"\\s]+\\.(?:${ASSET_EXT}))(?=['"])`, 'g');
+    content = content.replace(callArgRegex, (match, prefix, assetPath) =>
+      assetPath.startsWith('//') ? match : `${prefix}${assetPath}?v=${version}`);
+  }
+
   // 3. Specjalna obsługa dla HTML (meta version i Cache-Control)
   if (ext === '.html') {
     content = content.replace(/<meta name="app-version" content="[^"]*"/g, `<meta name="app-version" content="${version}"`);
