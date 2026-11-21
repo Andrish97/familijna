@@ -18,6 +18,7 @@ import {
   ORIGIN_BASE,
   ORIGIN_HOST,
   ORIGIN_RESOLVE,
+  bindStaticAssets,
   fetchFromOrigin,
   fetchWith404,
   isKnownHost,
@@ -46,6 +47,7 @@ import { DEVICE_ROUTES } from "./lib/device/connect-code.js";
 
 export default {
   async email(message, env) {
+    bindStaticAssets(env);
     try {
       await handleInboundEmail(message, env);
     } catch (err) {
@@ -54,6 +56,7 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
+    bindStaticAssets(env);
     ctx.waitUntil(Promise.all([
       cleanupExpiredAttachments(env),
       cleanupExpiredE2EEmails(env),
@@ -62,6 +65,7 @@ export default {
   },
 
   async fetch(request, env, ctx) {
+    bindStaticAssets(env);
     // Nagłówki bezpieczeństwa dla stron HTML (audyt E24, N3).
     const redirect = httpsRedirect(request);
     const response = redirect || await handleFetch(request, env, ctx);

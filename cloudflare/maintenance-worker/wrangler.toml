@@ -6,6 +6,20 @@ compatibility_date = "2024-01-01"
 workers_dev = false
 preview_urls = false
 
+# Pliki strony (Workers Static Assets) — artefakt `node scripts/build-public.cjs`
+# (zminifikowany web/ z wersjami ?v= z treści), budowany przed `wrangler deploy`.
+# run_worker_first: każde żądanie najpierw w Workerze (bramka przerwy, blokady
+# ścieżek, SSR, nagłówki bezpieczeństwa i cache) — Worker sam pobiera pliki
+# przez env.ASSETS. html_handling = "none": dokładne pliki bez przekierowań
+# ukośnika (Worker prosi wprost o /strona/index.html); not_found_handling
+# "none": 404 bez treści, własną stronę 404 podaje Worker.
+[assets]
+directory = "../../_site_public"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+not_found_handling = "none"
+
 [[kv_namespaces]]
 binding = "MAINT_KV"
 id = "a23c036852434c5da77287d82973f183"

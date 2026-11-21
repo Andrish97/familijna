@@ -47,6 +47,9 @@ async function buildPublic({ source = path.join(__dirname, '../web'), out = path
   totals.preload = await addModulePreloads(out);
   await fs.writeFile(marker, JSON.stringify({ format: 1, totals }, null, 2) + '\n');
   totals.hashes = contentHashAssets(out);
+  // Workers Static Assets (wrangler.toml [assets]): plików technicznych artefaktu
+  // nie publikujemy. Plik .assetsignore wrangler pomija sam.
+  await fs.writeFile(path.join(out, '.assetsignore'), ['.familijna-build.json', 'CNAME', 'package.json', ''].join('\n'));
   return totals;
 }
 module.exports = { buildPublic };

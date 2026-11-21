@@ -9,6 +9,7 @@
     "wrangler": "^4.79.0"
   },
   "scripts": {
+    "build:site": "cd ../.. && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --prefix tests --no-audit --no-fund && node scripts/version-assets.js && node scripts/build-public.cjs",
     "deploy": "wrangler deploy",
     "test": "node --test test/*.test.mjs"
   }

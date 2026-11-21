@@ -24,6 +24,18 @@ repozytorium serwera.
 ### Public endpoint
 - `GET /maintenance-state.json` → `{ enabled:boolean, mode:"off|message|returnAt|countdown", returnAt:string|null }`
 
+### Pliki strony (Workers Static Assets)
+Worker ma binding `ASSETS` (`wrangler.toml` → `[assets]`, katalog
+`_site_public` z `npm run build:site` = `scripts/version-assets.js` +
+`scripts/build-public.cjs`). `run_worker_first = true`: każde żądanie przechodzi
+najpierw przez Worker (bramka przerwy, blokady, SSR, nagłówki), a pliki pobiera
+on sam przez `env.ASSETS.fetch` w `fetchWithOrigin()` (`src/lib/origin/origin.js`).
+`html_handling = "none"` — dokładne pliki, katalog `/x/` → `/x/index.html`
+robi Worker. Bez bindingu (np. wdrożenie bez sekcji `[assets]`) Worker
+pobiera pliki z GitHub Pages jak wcześniej (`ORIGIN_RESOLVE`) — to droga powrotu.
+Cache: URL z `?v=` (wersja z treści pliku) → `max-age=31536000, immutable`,
+bez `?v=` → `max-age=600`, HTML → `no-store` (`src/lib/origin/assets.js`).
+
 ### Pretty URLs (bez .html)
 Każda strona ma `<nazwa>/index.html` w artefakcie Pages. Worker pobiera ten
 plik wewnętrznie dla tras `/nazwa` oraz `/nazwa/`, zachowując parametry.

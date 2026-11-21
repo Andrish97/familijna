@@ -3,31 +3,22 @@ name: Deploy Cloudflare Worker
 on:
   push:
     branches: ["main"]
+    # Worker serwuje też pliki strony (wrangler.toml [assets]), więc każda
+    # zmiana web/ i skryptów budujących artefakt wymaga nowego wdrożenia.
     paths:
       - "cloudflare/**"
       - "!cloudflare/legacy-domain-worker/**"
-      - "web/shared/js/core/home-seo.js"
-      - "web/shared/js/core/public-seo.js"
-      - "web/marketplace/js/public.js"
-      - "web/shared/js/core/answer-order.js"
-      - "web/shared/js/core/icons.js"
-      - "web/shared/translation/*/marketplace.js"
-      - "web/manual/content/**"
-      - "web/manual/js/render.js"
-      - "web/shared/translation/*/manual.js"
-      - "web/shared/translation/*/privacy.js"
-      - "web/shared/translation/*/home.js"
-      - "web/shared/translation/*/common.js"
-      - "web/shared/js/core/go-contract.js"
-      - "web/shared/js/core/resource-clone-plan.js"
-      - "web/shared/js/core/base-transfer-format.js"
-      - "web/shared/js/core/game-transfer-format.js"
-      - "web/shared/js/core/logo-transfer-source.js"
-      - "web/shared/js/core/logo-image-data.js"
-      - "web/logos/js/package.js"
-      - "web/logos/js/render.js"
+      - "web/**"
+      - "scripts/version-assets.js"
+      - "scripts/build-public.cjs"
+      - "scripts/content-hash-assets.cjs"
+      - "scripts/module-preload.cjs"
       - ".github/workflows/deploy-worker.yml"
   workflow_dispatch: {}
+
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: true
 
 # E24 R26: token GitHuba tylko do odczytu.
 permissions:
@@ -52,6 +43,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        working-directory: cloudflare/maintenance-worker
+
+      # Pliki strony dla [assets] (_site_public): wersje ?v= z treści, minifikacja.
+      # Ten sam skrypt co w Workers Builds (polecenie budowania w panelu Cloudflare).
+      - name: Build site assets
+        run: npm run build:site
         working-directory: cloudflare/maintenance-worker
 
       - name: Test Worker rendering and HTTPS

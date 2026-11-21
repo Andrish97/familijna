@@ -35,6 +35,7 @@ test('public artifact preserves module URLs, classic scripts, CSS layers and ven
   assert.equal(await fs.readFile(path.join(out, 'index.html'), 'utf8'), '<script src="classic.js"></script>');
   await assert.rejects(fs.stat(path.join(out, 'guide.md')), { code: 'ENOENT' });
   assert.equal(totals.js.files, 4); assert.equal(totals.css.files, 3);
+  assert.match(await fs.readFile(path.join(out, '.assetsignore'), 'utf8'), /^\.familijna-build\.json$/m);
   const firstHashes = JSON.parse(await fs.readFile(path.join(out, 'asset-hashes.json'), 'utf8'));
   await fs.writeFile(path.join(source, 'module.js'), 'import { value } from "./other.js?v=otherLongerVersion"; export const url = new URL("./image.png", import.meta.url); export async function load() { return import("./later.js?v=otherLongerVersion"); } console.log(value);');
   await buildPublic({ source, out }); // Zmiana globalnego znacznika nie zmienia wyniku.

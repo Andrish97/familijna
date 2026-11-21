@@ -44,3 +44,20 @@ test('Worker serves the explicitly requested Polish page without a language redi
   assert.equal(await response.text(),'Polski');
  } finally {globalThis.fetch=original;}
 });
+
+test('with the ASSETS binding site files come from Workers Static Assets, not GitHub Pages',async()=>{
+ const {default:worker}=await import('../../cloudflare/maintenance-worker/src/index.js');
+ const {bindStaticAssets,fetchWithOrigin}=await import('../../cloudflare/maintenance-worker/src/lib/origin/origin.js');
+ const {setStateCache}=await import('../../cloudflare/maintenance-worker/src/lib/core/state.js');
+ setStateCache({enabled:false,mode:'off'});
+ const original=globalThis.fetch;const asked=[];
+ globalThis.fetch=async()=>{throw new Error('GitHub Pages must not be contacted');};
+ const ASSETS={fetch:async req=>{asked.push(new URL(req.url).pathname);return new Response('<h1>Gry</h1>',{headers:{'Content-Type':'text/html'}});}};
+ try {
+  const response=await worker.fetch(new Request('https://www.familijna.app/games/',{headers:{Accept:'text/html'}}),{ASSETS},{waitUntil(){}});
+  assert.equal(response.status,200);assert.equal(response.headers.get('Cache-Control'),'no-store');
+  assert.deepEqual(asked,['/games/index.html']);
+  await fetchWithOrigin('https://familijna.app/nested/dir/',new Request('https://www.familijna.app/nested/dir/'),'familijna.app','andrish97.github.io');
+  assert.equal(asked.at(-1),'/nested/dir/index.html');
+ } finally {globalThis.fetch=original;bindStaticAssets({});}
+});

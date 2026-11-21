@@ -1,12 +1,32 @@
-// src/lib/origin.js -- proxying to the GitHub Pages origin, maintenance/404
+// src/lib/origin.js -- static site files (Workers Static Assets binding ASSETS,
+// fallback: proxying to the GitHub Pages origin), maintenance/404
 // pages, and host/path classification.
 import { withHeaders } from "../core/http.js";
 import { isScreenshotId } from "../../../../../web/shared/js/core/poll-links.js";
 
 // Fetch from apex origin but resolve directly to GitHub Pages to avoid recursion.
+// Z bindingiem ASSETS (Workers Static Assets, wrangler.toml [assets]) pliki
+// strony pochodzą z wdrożenia Workera, a te stałe służą już tylko za adres
+// bazowy (ścieżka) — bez bindingu Worker dalej pobiera je z GitHub Pages.
 export const ORIGIN_BASE = "https://familijna.app";
 export const ORIGIN_HOST = "familijna.app";
 export const ORIGIN_RESOLVE = "andrish97.github.io";
+
+// Binding jest stały dla wdrożenia, więc wystarczy go zapamiętać na początku
+// każdego wywołania (fetch/email/scheduled) — wszystkie pobrania plików strony
+// przechodzą przez fetchWithOrigin() niżej.
+let staticAssets = null;
+export function bindStaticAssets(env) {
+  staticAssets = env?.ASSETS && typeof env.ASSETS.fetch === "function" ? env.ASSETS : null;
+}
+
+// Workers Static Assets z html_handling = "none" serwuje dokładne pliki; katalog
+// (ścieżka z „/” na końcu) dostaje index.html jak na GitHub Pages.
+function assetRequest(url, init) {
+  const target = new URL(url);
+  if (target.pathname.endsWith("/")) target.pathname += "index.html";
+  return new Request(target.toString(), { method: init.method, headers: init.headers, redirect: "manual" });
+}
 
 export async function serveMaintenance(request, originBase, originHost, resolveOverride) {
   const maintUrl = new URL("/maintenance/index.html", originBase);
@@ -173,7 +193,7 @@ export async function fetchWithOrigin(url, request, originHost, resolveOverride,
     init.body = request.body;
   }
 
-  const res = await fetch(url, init);
+  const res = staticAssets ? await staticAssets.fetch(assetRequest(url, init)) : await fetch(url, init);
 
   // Preserve origin redirects, including Location, rather than returning
   // their HTML body without a destination.

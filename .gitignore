@@ -32,3 +32,4 @@ scripts/manual/out/
 __pycache__/
 
 _site_public/
+.wrangler/

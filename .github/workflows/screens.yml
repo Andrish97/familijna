@@ -197,6 +197,8 @@ jobs:
             sleep $((attempt * 5))
           done
           gh workflow run deploy-pages.yml --ref main
+          # Pliki strony serwuje też Worker (Workers Static Assets).
+          gh workflow run deploy-worker.yml --ref main
 
       # Wskazówki (/manual/) czytają zrzuty z web/manual/img/<język>/ — tylko sceny
       # użyte w treści (![Podpis](zrzut:scena) w docs/podrecznik). Push na main
@@ -251,3 +253,5 @@ jobs:
             sleep $((attempt * 5))
           done
           gh workflow run deploy-pages.yml --ref main
+          # Pliki strony serwuje też Worker (Workers Static Assets).
+          gh workflow run deploy-worker.yml --ref main
