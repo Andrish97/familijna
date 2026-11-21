@@ -1,4 +1,4 @@
-name: Version assets (?v= w repo)
+name: Wersjonowanie plików strony (?v=)
 
 # Po pushu na main przepisuje wersje ?v= w web/ i zapisuje je w repo
 # („ci: update version hashes [skip ci]”) — źródła dla testów z gałęzi,
