@@ -469,19 +469,38 @@ window.addEventListener("DOMContentLoaded", async () => {
     let reportedRenderRev = -1;
     let loggedCompletionErrorRev = -1;
     let reportingCompletion = false;
+    // Bez dzierżawy baza i tak odmówi; po odmowie kolejne próby rzadziej
+    // (0,5 s → … → 15 s). Incydent 21.11: karta po utracie dzierżawy wysyłała
+    // potwierdzenie co 0,5 s bez końca (do ~230 odmów/min).
+    let completionFailures = 0;
+    let completionRetryAt = 0;
+    let completionFailLease = "";
     async function reportCompletion() {
       if (reportingCompletion || completedRenderRev <= 0 || completedRenderRev <= reportedRenderRev || isAnySfxPlaying()) return;
+      const args = lease.actionArgs();
+      if (!args.p_connection_id) return;
+      // Nowa dzierżawa (połączenie/epoka) — odstęp po starych odmowach nie obowiązuje.
+      const leaseNow = `${args.p_connection_id}:${args.p_epoch}`;
+      if (leaseNow !== completionFailLease) { completionFailures = 0; completionRetryAt = 0; }
+      if (Date.now() < completionRetryAt) return;
       reportingCompletion = true;
       const revision = completedRenderRev;
       try {
         const { error } = await sb().rpc("game_state_display_complete", { p_game_id: gameId, p_key: key, p_rev: revision, ...lease.actionArgs() }).abortSignal(AbortSignal.timeout(6500));
         if (!error) {
+          completionFailures = 0;
+          completionRetryAt = 0;
           reportedRenderRev = revision;
           // Control i Przycisk dostają potwierdzenie z bazy (zdarzenie
           // completion, migracja 510).
           lease.setProgress({ renderedRev: revision });
         }
-        else if (loggedCompletionErrorRev !== revision) {
+        if (error) {
+          completionFailLease = leaseNow;
+          completionFailures += 1;
+          completionRetryAt = Date.now() + Math.min(15_000, 500 * 2 ** Math.min(completionFailures, 5));
+        }
+        if (error && loggedCompletionErrorRev !== revision) {
           loggedCompletionErrorRev = revision;
           displayEventLog.report({ event_type: "runtime_error", phase: "completion_ack", error_name: error.code || error.name || "RPCError", state_rev: revision });
         }

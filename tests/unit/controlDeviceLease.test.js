@@ -208,3 +208,44 @@ test("heartbeat z wyjątkiem connection_expired (baza oznaczyła połączenie ja
   assert.equal(lease.state, "unavailable");
   lease.stop();
 });
+
+test("odmowa 'forbidden' przy heartbeat: kolejne takty coraz rzadziej, powrót karty ponawia od razu", async () => {
+  let now = 1_000_000;
+  const calls = [];
+  let heartbeatError = null;
+  const client = {
+    rpc(name) {
+      calls.push(name);
+      return { abortSignal: async () => name === "control_device_instance_heartbeat"
+        ? { data: heartbeatError ? null : { mode: "lease", state: "primary", epoch: 1 }, error: heartbeatError }
+        : { data: { mode: "lease", state: "primary", epoch: 1 }, error: null } };
+    },
+  };
+  let tickFn = null;
+  const docListeners = new Map();
+  const doc = { visibilityState: "visible", hasFocus: () => true, addEventListener(n, fn) { docListeners.set(n, fn); }, removeEventListener() {}, getElementById: () => null };
+  const context = {
+    sb: () => client, t: key => key, document: doc,
+    window: { addEventListener() {}, removeEventListener() {} },
+    crypto: { randomUUID: () => "connection-f" }, AbortSignal,
+    Date: { now: () => now },
+    getDevicePresenceMeta: () => ({}), startTicker: (fn) => { tickFn = fn; return () => {}; }, ...sessionLogStubs(), navigator: { onLine: true },
+  };
+  const create = vm.runInNewContext(`${source}; createDeviceLease;`, context);
+  const lease = create({ gameId: "game", deviceType: "display", key: "key" });
+  await lease.start();
+  heartbeatError = { message: "forbidden", code: "P0001" };
+  const beats = () => calls.filter((n) => n === "control_device_instance_heartbeat").length;
+  const flush = () => new Promise((resolve) => setImmediate(resolve));
+  tickFn(); await flush();
+  assert.equal(beats(), 1);
+  // Kolejne takty co 3 s w oknie odstępu (6 s) nie wysyłają nic.
+  now += 3_000; tickFn(); await flush();
+  assert.equal(beats(), 1, "w oknie odstępu bez żądania");
+  now += 3_500; tickFn(); await flush();
+  assert.equal(beats(), 2);
+  // Powrót karty (visibilitychange) ponawia od razu.
+  docListeners.get("visibilitychange")(); await flush();
+  assert.equal(beats(), 3);
+  lease.stop();
+});

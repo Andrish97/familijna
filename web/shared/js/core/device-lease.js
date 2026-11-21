@@ -134,8 +134,15 @@ export function createDeviceLease({ gameId, deviceType, key, onState }) {
     void collectDeviceInfo().then(logEvent, () => {});
   }
 
+  // Odmowa 'forbidden' (gra zakończona, link cofnięty) jest trwała: kolejne
+  // takty co 3 s tylko obciążały serwer (incydent 21.11: 20 odmów/min bez końca
+  // z jednej karty). Odstęp rośnie do 60 s; ręczne wznowienie (powrót karty,
+  // przejęcie) ponawia od razu.
+  let forbiddenCount = 0;
+  let forbiddenUntil = 0;
   async function heartbeat(register = false) {
     if (stopped) return null;
+    if (!register && forbiddenUntil > Date.now()) return null;
     // Wyparta karta nie odpytuje serwera; wraca tylko przez takeover().
     if (state === "replaced" && !register) return null;
     if (inFlight) {
@@ -183,10 +190,16 @@ export function createDeviceLease({ gameId, deviceType, key, onState }) {
       }
       publish(data || {});
       registerNext = false;
+      forbiddenCount = 0;
+      forbiddenUntil = 0;
       lastHeartbeatOkAt = Date.now();
       void log.flush();
       return data;
     } catch (error) {
+      if (String(error?.message || "") === "forbidden") {
+        forbiddenCount += 1;
+        forbiddenUntil = Date.now() + Math.min(60_000, HEARTBEAT_MS * 2 ** Math.min(forbiddenCount, 5));
+      }
       if (register || registerNext || mode !== "lease") registerNext = true;
       if (mode === "lease") {
         state = "unavailable";
@@ -206,9 +219,11 @@ export function createDeviceLease({ gameId, deviceType, key, onState }) {
 
   function onVisibility() {
     queuePageState("visibilitychange");
+    if (document.visibilityState === "visible") forbiddenUntil = 0;
     void heartbeat();
   }
   function onResume() {
+    forbiddenUntil = 0;
     void heartbeat();
   }
   function onPageShow() { void heartbeat(mode !== "lease"); }

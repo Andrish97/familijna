@@ -4,6 +4,8 @@
 // ponownym dołączeniu (fetchGuarded). Nieudany odczyt planuje ponowną próbę,
 // a zawieszone żądanie przerywa limit czasu po stronie fetchRow.
 
+const MAX_RETRY_MS = 30_000;
+
 export function createRowSync({ fetchRow, onRow, onError, onProgress = null, onReadStatus = null, retryMs = 2000, sameRevChanged = null, setTimer = setTimeout, now = () => globalThis.performance?.now?.() ?? Date.now() }) {
   let lastRev = -1;
   let lastRow = null;
@@ -73,10 +75,16 @@ export function createRowSync({ fetchRow, onRow, onError, onProgress = null, onR
     }
   }
 
+  // Kolejne nieudane odczyty: odstęp rośnie 2 s → 4 → 8 → … → 30 s (incydent
+  // 21.11: karta po utracie dzierżawy odpytywała co 2 s bez końca, ~25 odmów/min).
+  // Udany odczyt wraca do retryMs.
+  let failedReads = 0;
   function scheduleRetry() {
     if (retryScheduled) return;
     retryScheduled = true;
-    setTimer(() => { retryScheduled = false; fetchGuarded(); }, retryMs);
+    const delay = Math.min(MAX_RETRY_MS, retryMs * 2 ** Math.min(failedReads, 6));
+    failedReads += 1;
+    setTimer(() => { retryScheduled = false; fetchGuarded(); }, delay);
   }
 
   async function fetchOnce(source = "rpc") {
@@ -95,6 +103,7 @@ export function createRowSync({ fetchRow, onRow, onError, onProgress = null, onR
       scheduleRetry();
       return;
     }
+    failedReads = 0;
     onReadStatus?.({ ok: true, source, revision: Number(data?.rev), fetchMs: Math.max(0, Math.round(now() - startedAt)) });
     if (!data) return; // Control jeszcze nigdy nic nie zapisał dla tej gry
     await acceptRow(data, source, now(), Math.max(0, now() - startedAt)); // polling/bootstrap może nadrobić pominięty wiersz

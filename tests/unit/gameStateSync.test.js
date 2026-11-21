@@ -218,3 +218,24 @@ test("odczyt zakolejkowany w trakcie innego zachowuje źródło (rpc_doorbell)",
   await tick();
   assert.deepEqual(sources, ["rpc_doorbell", "rpc_doorbell"]);
 });
+
+test("kolejne nieudane odczyty: odstęp rośnie (2 s → 4 → 8 … do 30 s), udany odczyt go zeruje", async () => {
+  const delays = [];
+  let pending = null;
+  let fail = true;
+  const sync = createRowSync({
+    fetchRow: async () => (fail ? { error: new Error("forbidden") } : { data: row(9) }),
+    onRow: () => {},
+    retryMs: 2000,
+    setTimer: (fn, ms) => { delays.push(ms); pending = fn; },
+  });
+  await sync.fetchGuarded();
+  for (let i = 0; i < 7; i++) { const fn = pending; pending = null; fn(); await tick(2); }
+  assert.deepEqual(delays, [2000, 4000, 8000, 16000, 30000, 30000, 30000, 30000]);
+  fail = false;
+  { const fn = pending; pending = null; fn(); await tick(2); }
+  fail = true;
+  delays.length = 0;
+  await sync.fetchGuarded();
+  assert.deepEqual(delays, [2000], "po udanym odczycie znowu od 2 s");
+});
