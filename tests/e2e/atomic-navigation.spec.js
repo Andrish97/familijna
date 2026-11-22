@@ -13,12 +13,22 @@ test('niewidoczne przekierowania: sesja rozstrzyga trasę przed pierwszą klatk�
   }
   await loginAs(page, context, accounts.standard[0]);
   let source = '', target = '', visibleFrames = 0;
-  await page.exposeBinding('__routeFrame', (_, path) => { if (path === source) visibleFrames++; });
+  let diagLogged = false;
+  await page.exposeBinding('__routeFrame', (_, path, state) => {
+    if (path !== source) return;
+    visibleFrames++;
+    // [e2e-diag]: stan strony przy pierwszej widocznej klatce źródła przekierowania.
+    if (!diagLogged) { diagLogged = true; console.log(`[e2e-diag] atomic ${source}→${target}: ${state}`); }
+  });
   await page.addInitScript(() => {
     const frame = () => {
       if (document.body) {
         const css = getComputedStyle(document.body);
-        if (css.visibility !== 'hidden' && Number(css.opacity) > 0) void window.__routeFrame(location.pathname);
+        if (css.visibility !== 'hidden' && Number(css.opacity) > 0) {
+          const root = document.documentElement;
+          const attrs = (el) => [...el.attributes].map((a) => a.name === 'class' ? `.${a.value.trim().split(/\s+/).join('.')}` : a.name).join(' ');
+          void window.__routeFrame(location.pathname, `html[${attrs(root)}] body[${attrs(document.body)}] opacity=${css.opacity} ready=${document.readyState}`);
+        }
       }
       requestAnimationFrame(frame);
     };
@@ -37,6 +47,7 @@ test('niewidoczne przekierowania: sesja rozstrzyga trasę przed pierwszą klatk�
       source = new URL(path, 'https://www.familijna.app').pathname;
       target = destination;
       visibleFrames = 0;
+      diagLogged = false;
       await page.goto(path, { waitUntil: 'domcontentloaded' });
       await page.waitForURL(url => url.pathname === destination, { waitUntil: 'domcontentloaded' });
       await expect(page.locator('html')).not.toHaveAttribute('data-layout-pending', '', { timeout: 15000 });
