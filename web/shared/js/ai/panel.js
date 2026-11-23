@@ -90,7 +90,34 @@ export async function mountAiPanel({ pageId }) {
   btnStop.hidden = true;
   form.append(input, btnSend, btnStop);
 
-  panel.append(head, chats, log, form);
+  // Pasek zasłonki (telefon, dotyk — CSS pokazuje go tylko przy data-sheet):
+  // przeciągnięcie w dół albo stuknięcie zamyka, jak w oknach silnika.
+  const handle = el("button", "sheet-handle", { type: "button", "aria-label": t("aiChat.close") });
+  let dragY = null, dragLast = 0, dragMoved = false;
+  const setDrag = (px) => panel.style.setProperty("--ai-drag", `${Math.max(0, px)}px`);
+  handle.addEventListener("pointerdown", (e) => {
+    dragY = e.clientY; dragLast = e.clientY; dragMoved = false;
+    handle.setPointerCapture?.(e.pointerId);
+    panel.classList.add("is-dragging");
+  });
+  handle.addEventListener("pointermove", (e) => {
+    if (dragY === null) return;
+    if (Math.abs(e.clientY - dragY) > 4) dragMoved = true;
+    dragLast = e.clientY;
+    setDrag(e.clientY - dragY);
+  });
+  const dragEnd = () => {
+    if (dragY === null) return;
+    const dy = dragLast - dragY;
+    dragY = null;
+    panel.classList.remove("is-dragging");
+    setDrag(0);
+    if (!dragMoved || dy > Math.min(160, panel.offsetHeight * 0.25)) setOpen(false);
+  };
+  handle.addEventListener("pointerup", dragEnd);
+  handle.addEventListener("pointercancel", dragEnd);
+
+  panel.append(handle, head, chats, log, form);
   document.body.append(panel);
 
   let state = readState();

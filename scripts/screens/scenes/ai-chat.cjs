@@ -8,14 +8,15 @@ const openPanel = async (view) => {
   await view.waitForTimeout(400);
 };
 
+const vaultDb = (db) => { db.rpc.ai_vault_get = { ok: true, vault: null }; db.rpc.ai_vault_save = { ok: true }; };
+
 module.exports = [
-  { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], steps: [openPanel] },
+  { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: vaultDb, steps: [openPanel] },
 ];
 
 // Ustawienia konta → Asystent AI (web/account/js/account-ai.js): bez sejfu
 // (utworzenie) i po utworzeniu (pusta lista, dodawanie klucza).
 const ACCOUNT_SOURCES = ["web/account/", "web/shared/js/ai/vault.js", "web/shared/js/ai/keys.js"];
-const vaultDb = (db) => { db.rpc.ai_vault_get = { ok: true, vault: null }; db.rpc.ai_vault_save = { ok: true }; };
 const toSection = async (view) => {
   await view.locator("#ai .inp").first().waitFor({ state: "visible", timeout: 8000 });
   await view.locator("#ai").scrollIntoViewIfNeeded();

@@ -3143,7 +3143,24 @@
   .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .ai-form { display: flex; align-items: flex-end; gap: 6px; }
   .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
-  @media (max-width: 600px) {
-    .ai-panel { width: 100vw; border-radius: var(--r-lg) var(--r-lg) 0 0; border-right: 1px solid var(--line); }
+  .ai-panel > .sheet-handle { display: none; }
+  /* Urządzenia z zasłonkami (data-sheet: telefon, dotyk): zasłonka od dołu
+     z paskiem do przeciągania jak okna silnika; przeciągnięcie w dół albo
+     stuknięcie w pasek zamyka (panel.js, --ai-drag). */
+  :where(:root[data-sheet]) .ai-panel {
+    top: auto;
+    left: 0;
+    width: auto;
+    height: calc(100dvh - var(--topbar-h, 64px));
+    padding-top: 30px;
+    border: 1px solid var(--line);
+    border-bottom: 0;
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    background: var(--surface-modal);
+    box-shadow: var(--shadow-sheet);
+    transform: translateY(105%);
   }
+  :where(:root[data-sheet]) .ai-panel.is-open { transform: translateY(var(--ai-drag, 0px)); }
+  :where(:root[data-sheet]) .ai-panel.is-dragging { transition: none; }
+  :where(:root[data-sheet]) .ai-panel > .sheet-handle { display: grid; }
 }
