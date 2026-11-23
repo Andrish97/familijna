@@ -332,6 +332,9 @@ const uk = {
       cancel: "Ні",
     },
     tools: {
+      list_logos: "Список логотипів",
+      create_text_logo: "Новий текстовий логотип",
+      delete_logo: "Видалення логотипа",
       manual_contents: "Зміст підказок",
       manual_chapter: "Читання підказок",
       open_page: "Перехід на сторінку",

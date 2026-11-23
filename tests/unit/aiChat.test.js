@@ -19,6 +19,7 @@ const STUBS = {
   "game-content.js": "export const applyGameContent = (...a) => globalThis.__apply(...a); export const createGameWithContent = (...a) => globalThis.__create(...a);",
   "poll-mail.js": "export const sendPollInviteMails = async () => ({ total: 0, sent: 0, failed: 0, skipped: 0 });",
   "contact-invite.js": "export const createContactInvite = async () => ({ data: {}, mail: null }); export const sendContactInviteMail = async () => false;",
+  "cache-bust.js": "export const v = async (u) => u;",
   "nav-map.js": "export const PAGES = { games: {}, editor: {} }; export const linkTo = (p, q) => `/${p}/?${new URLSearchParams(q)}`;",
 };
 
@@ -198,7 +199,7 @@ test("katalog: unikalne nazwy, schemat obiektu, potwierdzenia wysyłki i nieodwr
   }
   const kind = (n, a = {}) => tools.toolByName(n).confirm?.(a) ?? null;
   for (const n of ["send_poll_invites", "invite_contact"]) assert.equal(kind(n), "send", n);
-  for (const n of ["delete_game", "abort_poll", "tally_poll"]) assert.equal(kind(n), "irreversible", n);
+  for (const n of ["delete_game", "abort_poll", "tally_poll", "delete_logo"]) assert.equal(kind(n), "irreversible", n);
   assert.equal(kind("edit_game", { operations: [{ op: "set_answers" }] }), "irreversible");
   assert.equal(kind("edit_game", { operations: [{ op: "rename" }], reset_poll_results: true }), "irreversible");
   for (const n of ["create_game", "open_poll", "stop_poll", "delete_base_items", "add_base_questions"]) assert.equal(kind(n), null, n);

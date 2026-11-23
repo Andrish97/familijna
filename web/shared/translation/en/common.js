@@ -337,6 +337,9 @@ const en = {
       cancel: "No",
     },
     tools: {
+      list_logos: "List of logos",
+      create_text_logo: "New text logo",
+      delete_logo: "Deleting a logo",
       manual_contents: "Help contents",
       manual_chapter: "Reading help",
       open_page: "Going to a page",
