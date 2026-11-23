@@ -825,7 +825,8 @@ async function delayRequests(page, { path, method, ms, match = () => true }) {
   });
 }
 
-const isPatch = (path) => (res) => res.url().includes(`/rest/v1/${path}`) && res.request().method() === "PATCH";
+// Zapis treści gry: endpoint game_content_apply (migracja 534).
+const isContentSave = (res) => res.url().includes("/rest/v1/rpc/game_content_apply") && res.request().method() === "POST";
 
 async function seedPrepared(page, gameId, questions) {
   const ids = [];
@@ -855,7 +856,7 @@ test.describe("editor: audyt -- pisanie i zapisy", () => {
 
       await qText.click();
       await page.keyboard.press("Control+A");
-      const saved = page.waitForResponse(isPatch("questions"));
+      const saved = page.waitForResponse(isContentSave);
       await page.keyboard.type("Ala ");
       await saved; // autozapis po pauzie -- wcześniej wpisywał "Ala" (trim) z powrotem do pola
       await page.waitForTimeout(300);

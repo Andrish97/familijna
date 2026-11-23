@@ -153,7 +153,7 @@ test("E21 Zmień typ: preparowana -> ankieta tekstowa na tym samym rekordzie (UI
     await tile.click();
     await expect(page.locator("#btnChangeType")).toBeEnabled({ timeout: 15000 });
     await page.locator("#btnChangeType").click();
-    await expect(page.locator(".change-type")).toBeVisible();
+    await expect(page.locator(".change-type:not(#baseSelectWrap)")).toBeVisible();
     await expect(page.locator('.change-type input[value="prepared"]')).toBeDisabled();
     const option = page.locator(".change-type-option", { has: page.locator('input[value="poll_text"]') });
     await option.click();
@@ -188,7 +188,7 @@ test("Zmień typ: zamknięta ankieta -> preparowana z zachowanymi punktami, bez 
     await tile.click();
     await expect(page.locator("#btnChangeType")).toBeEnabled({ timeout: 15000 });
     await page.locator("#btnChangeType").click();
-    await expect(page.locator(".change-type")).toBeVisible();
+    await expect(page.locator(".change-type:not(#baseSelectWrap)")).toBeVisible();
     await expect(page.locator(".uni-modal")).toContainText("Ankieta jest zamknięta");
     const option = page.locator(".change-type-option", { has: page.locator('input[value="prepared"]') });
     await option.locator('input[type="radio"]').check();

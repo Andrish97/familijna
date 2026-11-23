@@ -598,7 +598,9 @@ test.describe("games: audyt -- eksport do bazy", () => {
       expect(st.cats.map((c) => c.name)).toEqual([gameName]);
       expect(st.qs.filter((q) => q.category_id === st.cats[0].id)).toHaveLength(10);
 
-      await page.route("**/rest/v1/qb_questions*", (route) =>
+      // Folder i pytania zapisuje jeden endpoint (qb_import_folder, migracja 534,
+      // jedna transakcja) — awaria zapisu nie może zostawić folderu.
+      await page.route("**/rest/v1/rpc/qb_import_folder", (route) =>
         route.request().method() === "POST"
           ? route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ message: "e2e: symulowana awaria" }) })
           : route.continue());
@@ -606,7 +608,7 @@ test.describe("games: audyt -- eksport do bazy", () => {
         await exportOnce();
         await expect(page.locator("#exportBaseMsg")).not.toBeEmpty({ timeout: 30000 });
       } finally {
-        await page.unroute("**/rest/v1/qb_questions*");
+        await page.unroute("**/rest/v1/rpc/qb_import_folder");
       }
       st = await folders();
       expect(st.cats, "po błędzie nie może zostać folder 'nazwa (2)'").toHaveLength(1);

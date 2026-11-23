@@ -71,8 +71,8 @@ test('ikony stanu: zapis potwierdza wynik bazy, a Powiel rusza kartkami tylko po
     });
     ids.push(id);
     const saveGate = new Promise(resolve => releaseSave = resolve);
-    await page.route('**/rest/v1/games**', async route => {
-      if (route.request().method() === 'PATCH') await saveGate;
+    await page.route('**/rest/v1/rpc/game_settings_save', async route => {
+      if (route.request().method() === 'POST') await saveGate;
       return route.continue();
     });
     await page.goto('/games/settings/?id=' + id + '&lang=pl&ret=' + encodeURIComponent('/games/?lang=pl'));

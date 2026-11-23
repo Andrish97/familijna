@@ -72,7 +72,7 @@ const switchTab = (page, cat) => page.locator(`.gs-sidebar-item[data-cat="${cat}
 
 async function saveAndWait(page) {
   const [res] = await Promise.all([
-    page.waitForResponse((r) => r.url().includes("/rest/v1/games") && r.request().method() === "PATCH", { timeout: 15_000 }),
+    page.waitForResponse((r) => r.url().includes("/rest/v1/rpc/game_settings_save") && r.request().method() === "POST", { timeout: 15_000 }),
     page.locator("#btnSaveAll").click(),
   ]);
   expect(res.ok(), `zapis (status ${res.status()})`).toBe(true);

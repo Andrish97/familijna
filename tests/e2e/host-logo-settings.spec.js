@@ -92,7 +92,7 @@ test("logo Hosta: zapis w Ustawieniach gry i podgląd zapisanego wariantu w Cont
     await page.locator("#gsLivePreviewWrap").screenshot({ path: testInfo.outputPath("shot-host-logo-game-settings.png") });
 
     // Zapis przyciskiem „Zapisz” (#btnSaveAll).
-    const saveWait = page.waitForResponse(response => response.url().includes("/rest/v1/games") && response.request().method() === "PATCH");
+    const saveWait = page.waitForResponse(response => response.url().includes("/rest/v1/rpc/game_settings_save") && response.request().method() === "POST");
     await page.locator("#btnSaveAll").click();
     const saveResponse = await saveWait;
     expect(saveResponse.ok()).toBeTruthy();

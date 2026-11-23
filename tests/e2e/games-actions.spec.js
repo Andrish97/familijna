@@ -486,7 +486,7 @@ test.describe("Zmień typ", () => {
       await expect(modal(page)).toContainText("Zmienia się ta sama gra (to nie kopia) i wraca do szkicu.");
       await page.locator(".change-type-option", { has: page.locator('input[value="poll_points"]') }).click();
       await modalCancel(page).click();
-      await expect(page.locator(".change-type")).toHaveCount(0);
+      await expect(page.locator(".change-type:not(#baseSelectWrap)")).toHaveCount(0);
       expect(await gamesByName(page, name)).toMatchObject([{ id, type: "prepared" }]);
 
       // Zmień

@@ -108,7 +108,8 @@ async function switchTab(page, cat) {
 async function waitForGamesSave(page, action = async () => {}) {
   const [response] = await Promise.all([
     page.waitForResponse(
-      (res) => res.url().includes("/rest/v1/games") && res.request().method() === "PATCH",
+      // zapis przez endpoint game_settings_save (migracja 534)
+      (res) => res.url().includes("/rest/v1/rpc/game_settings_save") && res.request().method() === "POST",
       { timeout: 10000 }
     ),
     action(),
