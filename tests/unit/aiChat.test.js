@@ -244,3 +244,10 @@ test("historia do pokazania: wiadomości, narzędzia, bez wyników narzędzi; cz
   assert.deepEqual(chat.displayItems("gemini", gemini), [{ role: "user", text: "x" }, { role: "tool", tool: "get_game" }, { role: "assistant", text: "ok" }]);
   assert.equal(chat.awaitingReply("gemini", gemini), false);
 });
+
+test("CSP stron aplikacji dopuszcza adresy wszystkich dostawców AI", async () => {
+  const { AI_PROVIDER_HOSTS } = await import("../../cloudflare/maintenance-worker/src/lib/core/security-headers.js");
+  for (const [id, p] of Object.entries(providers.PROVIDERS)) {
+    assert.ok(AI_PROVIDER_HOSTS.split(" ").includes(new URL(p.base).origin), `${id}: ${p.base}`);
+  }
+});

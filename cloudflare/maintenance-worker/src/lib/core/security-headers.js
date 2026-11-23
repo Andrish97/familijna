@@ -22,6 +22,12 @@ const PASSTHROUGH_HOSTS = new Set([
 const APP_HOSTS = new Set(["familijna.app", "www.familijna.app", "admin.familijna.app"]);
 const CSP_BASELINE = ["frame-ancestors 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'"];
 const CAPTCHA_HOSTS = "https://challenges.cloudflare.com https://js.hcaptcha.com https://hcaptcha.com https://*.hcaptcha.com";
+// E30: czat AI na kluczu użytkownika — zapytania z przeglądarki prosto do
+// dostawcy (web/shared/js/ai/providers.js, PROVIDERS; ta sama lista).
+export const AI_PROVIDER_HOSTS = [
+  "https://api.anthropic.com", "https://api.openai.com", "https://generativelanguage.googleapis.com",
+  "https://api.deepseek.com", "https://api.mistral.ai", "https://api.x.ai", "https://openrouter.ai",
+].join(" ");
 // E24 R12: strony aplikacji bez 'unsafe-inline'/'unsafe-eval' i bez CDN —
 // skrypty z własnej domeny, captcha, Web Analytics oraz stałe skrypty wbudowane
 // po hashu (scripts/csp-hashes.mjs, zapadka unit/cspHashes.test.js).
@@ -29,7 +35,7 @@ const CSP_SOURCE_POLICY = [
   `script-src 'self' ${INLINE_SCRIPT_HASHES.join(" ")} ${CAPTCHA_HOSTS} https://static.cloudflareinsights.com`,
   // blob: — własne dźwięki gry (IndexedDB → URL.createObjectURL) wczytuje
   // fetch() w shared/js/core/sfx.js; adresy blob: tworzy wyłącznie sama strona.
-  `connect-src 'self' blob: https://api.familijna.app wss://api.familijna.app https://cloudflareinsights.com ${CAPTCHA_HOSTS}`,
+  `connect-src 'self' blob: https://api.familijna.app wss://api.familijna.app https://cloudflareinsights.com ${CAPTCHA_HOSTS} ${AI_PROVIDER_HOSTS}`,
   `frame-src 'self' ${CAPTCHA_HOSTS}`,
 ];
 // Panel admina (osobny Worker; tu tylko na wypadek trasy przez ten Worker):
