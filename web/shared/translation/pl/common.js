@@ -304,6 +304,19 @@ const pl = {
       autoNote: "Wiadomość automatyczna — prosimy nie odpowiadać.",
     },
   },
+  aiChat: {
+    errors: {
+      offline: "Brak połączenia z dostawcą AI — sprawdź internet.",
+      badKey: "Dostawca odrzucił klucz. Sprawdź go w Ustawieniach konta.",
+      noFunds: "Na koncie u dostawcy brak środków albo wyczerpany limit.",
+      rateLimit: "Za dużo zapytań naraz. Spróbuj za chwilę.",
+      noTools: "Ten model nie obsługuje narzędzi. Wybierz inny model.",
+      noModel: "Ten model jest niedostępny u dostawcy. Wybierz inny model.",
+      overloaded: "Dostawca jest przeciążony albo ma awarię. Spróbuj za chwilę.",
+      refused: "Model odmówił odpowiedzi na tę prośbę.",
+      other: "Dostawca AI odpowiedział błędem ({status}).",
+    },
+  },
 };
 
 export default pl;

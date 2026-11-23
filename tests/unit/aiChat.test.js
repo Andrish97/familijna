@@ -1,0 +1,186 @@
+// E30: pętla rozmowy czatu AI (web/shared/js/ai) z atrapą dostawcy —
+// trzy rodzaje API (Anthropic, Gemini, zgodne z OpenAI), narzędzia,
+// ponawianie, błędy i potwierdzenia przed akcjami nieodwracalnymi.
+import test from "node:test";
+import assert from "node:assert/strict";
+import { createRequire } from "node:module";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const require = createRequire(import.meta.url);
+const { build } = require("esbuild");
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+// Moduły przeglądarki podmienione na atrapy (Supabase, tłumaczenia, blokady).
+const STUBS = {
+  "translation.js": "export const t = (k, p) => p && p.status !== undefined ? `${k}:${p.status}` : k;",
+  "supabase.js": "export const sb = () => globalThis.__sb;",
+  "resource-lock.js": "export const getTabId = () => 'tab-test';",
+  "game-content.js": "export const applyGameContent = (...a) => globalThis.__apply(...a); export const createGameWithContent = (...a) => globalThis.__create(...a);",
+  "nav-map.js": "export const PAGES = { games: {}, editor: {} }; export const linkTo = (p, q) => `/${p}/?${new URLSearchParams(q)}`;",
+};
+
+async function load() {
+  const res = await build({
+    stdin: {
+      contents: "export * as providers from './web/shared/js/ai/providers.js'; export * as chat from './web/shared/js/ai/chat.js'; export * as tools from './web/shared/js/ai/tools.js';",
+      resolveDir: ROOT, loader: "js",
+    },
+    bundle: true, format: "esm", write: false, platform: "neutral",
+    plugins: [{
+      name: "stubs",
+      setup(b) {
+        b.onResolve({ filter: /\.js$/ }, (a) => {
+          const name = path.basename(a.path);
+          if (STUBS[name] && !a.path.includes("/ai/")) return { path: name, namespace: "stub" };
+          return null;
+        });
+        b.onLoad({ filter: /.*/, namespace: "stub" }, (a) => ({ contents: STUBS[a.path], loader: "js" }));
+      },
+    }],
+  });
+  return import(`data:text/javascript;base64,${Buffer.from(res.outputFiles[0].text).toString("base64")}`);
+}
+const mod = await load();
+const { providers, chat, tools } = mod;
+providers.timing.sleep = async () => {};
+
+// Odpowiedź SSE z listy zdarzeń.
+function sse(events) {
+  const body = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
+  return new Response(new TextEncoder().encode(body), { status: 200, headers: { "content-type": "text/event-stream" } });
+}
+function fakeFetch(responses) {
+  const calls = [];
+  globalThis.fetch = async (url, opts) => {
+    calls.push({ url, body: opts?.body ? JSON.parse(opts.body) : null, headers: opts?.headers });
+    const r = responses.shift();
+    if (!r) throw new Error("brak odpowiedzi atrapy");
+    return typeof r === "function" ? r() : r;
+  };
+  return calls;
+}
+const tool = { name: "list_games", description: "d", inputSchema: { type: "object", properties: {} } };
+
+test("Anthropic: narzędzie, wynik w historii, odpowiedź strumieniem", async () => {
+  const calls = fakeFetch([
+    sse([
+      { type: "content_block_start", index: 0, content_block: { type: "tool_use", id: "tu1", name: "list_games" } },
+      { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: "{\"a\":" } },
+      { type: "content_block_delta", index: 0, delta: { type: "input_json_delta", partial_json: "1}" } },
+      { type: "content_block_stop", index: 0 },
+      { type: "message_delta", delta: { stop_reason: "tool_use" } },
+    ]),
+    sse([
+      { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } },
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "Masz " } },
+      { type: "content_block_delta", index: 0, delta: { type: "text_delta", text: "2 gry." } },
+      { type: "message_delta", delta: { stop_reason: "end_turn" } },
+    ]),
+  ]);
+  const c = providers.createConversation({ provider: "anthropic", model: "m", key: "k", system: "s", tools: [tool] });
+  let streamed = "";
+  const ran = [];
+  const out = await providers.ask(c, "Ile mam gier?", { run: async (n, a) => { ran.push([n, a]); return { text: "{\"n\":2}" }; }, onText: (x) => { streamed += x; } });
+  assert.equal(out.text, "Masz 2 gry.");
+  assert.equal(streamed, "Masz 2 gry.");
+  assert.deepEqual(ran, [["list_games", { a: 1 }]]);
+  assert.equal(calls[0].headers["anthropic-dangerous-direct-browser-access"], "true");
+  assert.equal(calls[0].body.tools[0].input_schema.type, "object");
+  assert.deepEqual(c.history[2], { role: "user", content: [{ type: "tool_result", tool_use_id: "tu1", content: "{\"n\":2}" }] });
+});
+
+test("OpenAI: wywołanie narzędzia złożone z kawałków strumienia", async () => {
+  fakeFetch([
+    sse([
+      { choices: [{ delta: { tool_calls: [{ index: 0, id: "c1", function: { name: "list_", arguments: "{\"x\"" } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { name: "games", arguments: ":2}" } }] } }] },
+    ]),
+    sse([{ choices: [{ delta: { content: "Gotowe." } }] }]),
+  ]);
+  const c = providers.createConversation({ provider: "deepseek", model: "m", key: "k", system: "s", tools: [tool] });
+  const ran = [];
+  const out = await providers.ask(c, "x", { run: async (n, a) => { ran.push([n, a]); return { text: "ok" }; } });
+  assert.equal(out.text, "Gotowe.");
+  assert.deepEqual(ran, [["list_games", { x: 2 }]]);
+  assert.deepEqual(c.history[2], { role: "tool", tool_call_id: "c1", content: "ok" });
+});
+
+test("Gemini: functionCall i functionResponse, schemat bez nieobsługiwanych pól", async () => {
+  const calls = fakeFetch([
+    sse([{ candidates: [{ content: { parts: [{ functionCall: { name: "list_games", args: {} } }] } }] }]),
+    sse([{ candidates: [{ content: { parts: [{ text: "Jest " }] } }] }, { candidates: [{ content: { parts: [{ text: "dobrze." }] } }] }]),
+  ]);
+  const schemaTool = { ...tool, inputSchema: { type: "object", additionalProperties: false, properties: { n: { type: "integer", enum: [1, 2] } } } };
+  const c = providers.createConversation({ provider: "gemini", model: "g", key: "k", system: "s", tools: [schemaTool] });
+  const out = await providers.ask(c, "x", { run: async () => ({ text: "w" }) });
+  assert.equal(out.text, "Jest dobrze.");
+  const params = calls[0].body.tools[0].functionDeclarations[0].parameters;
+  assert.equal(params.additionalProperties, undefined);
+  assert.equal(params.properties.n.enum, undefined);
+  assert.deepEqual(c.history[2], { role: "user", parts: [{ functionResponse: { name: "list_games", response: { result: "w" } } }] });
+});
+
+test("błędy dostawcy: zły klucz bez ponawiania, przeciążenie ponawiane", async () => {
+  const calls = fakeFetch([new Response(JSON.stringify({ error: { message: "invalid x-api-key" } }), { status: 401 })]);
+  const c = providers.createConversation({ provider: "anthropic", model: "m", key: "k", system: "s", tools: [] });
+  await assert.rejects(providers.ask(c, "x", { run: async () => ({ text: "" }) }), (e) => e.code === "badKey" && e.message === "aiChat.errors.badKey:401");
+  assert.equal(calls.length, 1);
+
+  const calls2 = fakeFetch([
+    new Response("overloaded", { status: 529 }),
+    new Response("overloaded", { status: 529 }),
+    sse([{ choices: [{ delta: { content: "ok" } }] }]),
+  ]);
+  const c2 = providers.createConversation({ provider: "openai", model: "m", key: "k", system: "s", tools: [] });
+  assert.equal((await providers.ask(c2, "x", { run: async () => ({ text: "" }) })).text, "ok");
+  assert.equal(calls2.length, 3);
+
+  assert.equal(providers.errorCode(402, ""), "noFunds");
+  assert.equal(providers.errorCode(400, "model not found"), "noModel");
+  assert.equal(providers.errorCode(400, "tools are not supported"), "noTools");
+});
+
+test("zalecany model z listy dostawcy", () => {
+  assert.equal(providers.recommendedModel("anthropic", ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-sonnet-4-5"]), "claude-sonnet-5-5");
+  assert.equal(providers.recommendedModel("gemini", ["gemini-3-flash-lite", "gemini-3-flash", "gemini-3-flash-preview"]), "gemini-3-flash");
+});
+
+test("narzędzia: potwierdzenie przed nieodwracalnym, odmowa nie wykonuje, Control tylko odczyt", async () => {
+  const applied = [];
+  globalThis.__apply = async (...a) => { applied.push(a); return { ok: true }; };
+  const asked = [];
+  const ctx = (answer, pageId = "editor") => ({
+    lang: "pl", pageId, navigate() {}, changed() {},
+    confirm: async (q) => { asked.push(q); return answer; },
+  });
+  const add = { game_id: "g", operations: [{ op: "add_question", text: "Q" }] };
+  let r = await chat.runTool("edit_game", add, ctx(false));
+  assert.equal(r.error, false);
+  assert.equal(asked.length, 0, "dodanie pytania bez pytania o zgodę");
+
+  const del = { game_id: "g", operations: [{ op: "delete_question", question_id: "q" }] };
+  r = await chat.runTool("edit_game", del, ctx(false));
+  assert.deepEqual(JSON.parse(r.text), { error: "declined_by_user" });
+  assert.equal(asked.at(-1).kind, "irreversible");
+  assert.equal(applied.length, 1, "odmowa: nic nie wykonane");
+
+  r = await chat.runTool("edit_game", del, ctx(true));
+  assert.equal(applied.length, 2);
+
+  r = await chat.runTool("edit_game", add, ctx(true, "control"));
+  assert.deepEqual(JSON.parse(r.text), { error: "tool_not_available_here" });
+  const names = tools.toolsForPage("control").map((x) => x.name);
+  assert.ok(names.includes("manual_chapter") && !names.includes("create_game") && !names.includes("open_page"));
+
+  globalThis.__apply = async () => { const e = new Error("locked"); e.code = "locked"; throw e; };
+  r = await chat.runTool("edit_game", add, ctx(true));
+  assert.equal(r.error, true);
+  assert.equal(JSON.parse(r.text).error, "locked");
+});
+
+test("prompt systemowy: język odpowiedzi i tryb Control", () => {
+  assert.match(chat.systemPrompt({ lang: "uk", pageId: "games" }), /reply in Ukrainian/);
+  assert.match(chat.systemPrompt({ lang: "pl", pageId: "control" }), /Do not change anything/);
+  assert.doesNotMatch(chat.systemPrompt({ lang: "pl", pageId: "games" }), /Do not change anything/);
+});

@@ -309,6 +309,19 @@ const en = {
       autoNote: "Automatic message — please do not reply.",
     },
   },
+  aiChat: {
+    errors: {
+      offline: "No connection to the AI provider — check your internet.",
+      badKey: "The provider rejected the key. Check it in Account settings.",
+      noFunds: "No funds left on the provider account, or the limit is used up.",
+      rateLimit: "Too many requests at once. Try again in a moment.",
+      noTools: "This model does not support tools. Choose another model.",
+      noModel: "This model is not available from the provider. Choose another model.",
+      overloaded: "The provider is overloaded or down. Try again in a moment.",
+      refused: "The model refused to answer this request.",
+      other: "The AI provider returned an error ({status}).",
+    },
+  },
 };
 
 export default en;
