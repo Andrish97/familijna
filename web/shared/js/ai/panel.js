@@ -15,7 +15,7 @@ import { t, getUiLang } from "../../translation/translation.js";
 import { icon } from "../core/icons.js";
 import { confirmModal } from "../core/modal.js";
 import { linkTo } from "../core/nav-map.js";
-import { activeKey } from "./keys.js";
+import { activeKey, keyStatus } from "./keys.js";
 import { startConversation, sendMessage, continueReply, displayItems, awaitingReply } from "./chat.js";
 import { getChat, saveChat, listChats, deleteChat, chatTitle } from "./history.js";
 import { PROVIDERS } from "./providers.js";
@@ -157,8 +157,9 @@ export async function mountAiPanel({ pageId }) {
     if (key) return key;
     log.querySelector(".ai-empty")?.remove();
     log.querySelector(".ai-no-key")?.remove();
-    const go = el("a", "btn sm gold", { href: linkTo("account", { hash: "ai" }), text: t("aiChat.noKeyAction") });
-    addNotice(t("aiChat.noKey"), "info", go).classList.add("ai-no-key");
+    const locked = (await keyStatus().catch(() => "none")) === "locked";
+    const go = el("a", "btn sm gold", { href: linkTo("account", { hash: "ai" }), text: t(locked ? "aiChat.unlockAction" : "aiChat.noKeyAction") });
+    addNotice(t(locked ? "aiChat.locked" : "aiChat.noKey"), "info", go).classList.add("ai-no-key");
     return null;
   }
 

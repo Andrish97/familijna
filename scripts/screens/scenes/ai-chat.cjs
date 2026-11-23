@@ -11,3 +11,26 @@ const openPanel = async (view) => {
 module.exports = [
   { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], steps: [openPanel] },
 ];
+
+// Ustawienia konta → Asystent AI (web/account/js/account-ai.js): bez sejfu
+// (utworzenie) i po utworzeniu (pusta lista, dodawanie klucza).
+const ACCOUNT_SOURCES = ["web/account/", "web/shared/js/ai/vault.js", "web/shared/js/ai/keys.js"];
+const vaultDb = (db) => { db.rpc.ai_vault_get = { ok: true, vault: null }; db.rpc.ai_vault_save = { ok: true }; };
+const toSection = async (view) => {
+  await view.locator("#ai .inp").first().waitFor({ state: "visible", timeout: 8000 });
+  await view.locator("#ai").scrollIntoViewIfNeeded();
+  await view.waitForTimeout(300);
+};
+module.exports.push(
+  { id: "account-ai-create", category: "Czat AI", title: "Konto — Asystent AI, utworzenie sejfu kluczy", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb, steps: [toSection] },
+  { id: "account-ai-keys", category: "Czat AI", title: "Konto — Asystent AI, dodawanie klucza", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [toSection, async (view) => {
+      const p = view.locator("#ai input[type=password]");
+      await p.nth(0).fill("hasło-do-kluczy");
+      await p.nth(1).fill("hasło-do-kluczy");
+      await view.locator("#ai .btn.gold").click();
+      await view.locator("#ai .account-ai-add").waitFor({ state: "visible", timeout: 15000 });
+      await view.locator("#ai .account-ai-add").scrollIntoViewIfNeeded();
+      await view.waitForTimeout(300);
+    }] },
+);

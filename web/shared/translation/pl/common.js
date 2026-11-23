@@ -318,6 +318,8 @@ const pl = {
     stop: "Zatrzymaj",
     empty: "Zapytaj o działanie serwisu albo poproś o przygotowanie gry, ankiety czy bazy pytań.",
     noKey: "Asystent działa na Twoim kluczu dostawcy AI — płacisz u dostawcy za własne użycie.",
+    locked: "Klucze są w sejfie — podaj hasło do kluczy na tym urządzeniu.",
+    unlockAction: "Odblokuj klucze",
     noKeyAction: "Dodaj klucz",
     interrupted: "Odpowiedź została przerwana przejściem na inną stronę.",
     resume: "Dokończ odpowiedź",

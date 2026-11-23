@@ -163,3 +163,12 @@
   }
   .account-push-kinds { padding-left: 4px; }
 }
+
+@layer page {
+  /* Asystent AI (account-ai.js): wiersz klucza — wybór aktywnego, model, usuń. */
+  .account-ai-keys { gap: 6px; }
+  .account-ai-key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .account-ai-key-main { flex: 1 1 220px; min-width: 0; }
+  .account-ai-key .ui-select { flex: 0 1 220px; min-width: 0; }
+  .account-ai-add { gap: 8px; padding-top: 6px; border-top: 1px solid var(--line-faint); }
+}

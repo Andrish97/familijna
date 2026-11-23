@@ -323,6 +323,8 @@ const en = {
     stop: "Stop",
     empty: "Ask how the service works or ask me to prepare a game, a poll or a question base.",
     noKey: "The assistant runs on your own AI provider key — you pay the provider for your own use.",
+    locked: "Your keys are in the vault — enter the key password on this device.",
+    unlockAction: "Unlock keys",
     noKeyAction: "Add a key",
     interrupted: "The answer was interrupted by going to another page.",
     resume: "Finish the answer",
