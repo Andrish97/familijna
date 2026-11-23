@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict uvW9nvu4DhfJ381ZOMpWT31HOJ11h56WjijKSOu5AfLL6PQgtjx0zZnoXTbGGw6
+\restrict mGH9AzHrDQu24vWeg1dy2mlrzooVfylu2AxRgakeEJTXSkZyDu7IKKsw1Zscfkv
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -206,6 +206,26 @@ CREATE FUNCTION "public"."_account_is_registered"("p_uid" "uuid", "p_identity" "
    AND NOT (coalesce(p_identity->>'is_anonymous','false')='true'
      AND ((p_identity->>'email_confirmed_at') IS NULL
        OR public._norm_email(p_identity->>'email') IS NULL));
+$$;
+
+
+--
+-- Name: _ai_chat_uid(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_ai_chat_uid"() RETURNS "uuid"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'pg_temp'
+    AS $$
+declare
+  v_uid uuid := auth.uid();
+  v_identity jsonb;
+begin
+  if v_uid is null then return null; end if;
+  select to_jsonb(u) into v_identity from auth.users u where u.id = v_uid;
+  if not public._account_is_registered(v_uid, v_identity) then return null; end if;
+  return v_uid;
+end;
 $$;
 
 
@@ -5964,6 +5984,132 @@ CREATE FUNCTION "public"."agent_mail_window_counts"("p_from" timestamp with time
     (SELECT count(*) FROM q WHERE created_by IS NOT NULL AND status = 'failed'),
     (SELECT count(*) FROM q WHERE created_by IS NOT NULL AND status IN ('pending', 'sending')),
     (SELECT count(*) FROM q WHERE created_by IS NULL);
+$$;
+
+
+--
+-- Name: ai_chat_delete("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_chat_delete"("p_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  delete from public.ai_chats where id = p_id and user_id = v_uid;
+  return jsonb_build_object('ok', true, 'deleted', found);
+end;
+$$;
+
+
+--
+-- Name: ai_chat_get("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_chat_get"("p_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  c public.ai_chats;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  select * into c from public.ai_chats where id = p_id and user_id = v_uid;
+  if not found then
+    return jsonb_build_object('ok', false, 'error', 'not_found');
+  end if;
+  return jsonb_build_object('ok', true, 'id', c.id, 'title', c.title, 'provider', c.provider, 'model', c.model,
+                            'history', c.history, 'updated_at', c.updated_at);
+end;
+$$;
+
+
+--
+-- Name: ai_chat_list(integer); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_chat_list"("p_limit" integer DEFAULT 50) RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  return jsonb_build_object('ok', true, 'chats', coalesce((
+    select jsonb_agg(jsonb_build_object('id', c.id, 'title', c.title, 'provider', c.provider, 'model', c.model,
+                                        'updated_at', c.updated_at) order by c.updated_at desc)
+      from (select * from public.ai_chats where user_id = v_uid
+             order by updated_at desc limit least(greatest(coalesce(p_limit, 50), 1), 200)) c), '[]'::jsonb));
+end;
+$$;
+
+
+--
+-- Name: ai_chat_save("uuid", "text", "text", "text", "jsonb"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_chat_save"("p_id" "uuid", "p_title" "text", "p_provider" "text", "p_model" "text", "p_history" "jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  v_id uuid;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  if jsonb_typeof(p_history) is distinct from 'array' or coalesce(p_provider, '') !~ '^[a-z]{2,20}$' then
+    return jsonb_build_object('ok', false, 'error', 'invalid_payload');
+  end if;
+  if pg_column_size(p_history) > 2 * 1024 * 1024 then
+    return jsonb_build_object('ok', false, 'error', 'too_large');
+  end if;
+  if p_id is null then
+    insert into public.ai_chats (user_id, title, provider, model, history)
+    values (v_uid, left(btrim(coalesce(p_title, '')), 120), p_provider, left(coalesce(p_model, ''), 120), p_history)
+    returning id into v_id;
+  else
+    update public.ai_chats
+       set title = left(btrim(coalesce(p_title, '')), 120), provider = p_provider,
+           model = left(coalesce(p_model, ''), 120), history = p_history, updated_at = now()
+     where id = p_id and user_id = v_uid
+    returning id into v_id;
+    if v_id is null then
+      return jsonb_build_object('ok', false, 'error', 'not_found');
+    end if;
+  end if;
+  return jsonb_build_object('ok', true, 'id', v_id);
+end;
+$_$;
+
+
+--
+-- Name: ai_chats_cleanup(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_chats_cleanup"() RETURNS integer
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_n int;
+begin
+  delete from public.ai_chats where updated_at < now() - interval '30 days';
+  get diagnostics v_n = row_count;
+  return v_n;
+end;
 $$;
 
 
@@ -21093,6 +21239,26 @@ CREATE TABLE "public"."admin_demo_updates" (
 
 
 --
+-- Name: ai_chats; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."ai_chats" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "title" "text" DEFAULT ''::"text" NOT NULL,
+    "provider" "text" NOT NULL,
+    "model" "text" DEFAULT ''::"text" NOT NULL,
+    "history" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "ai_chats_history_check" CHECK (("jsonb_typeof"("history") = 'array'::"text")),
+    CONSTRAINT "ai_chats_model_check" CHECK (("char_length"("model") <= 120)),
+    CONSTRAINT "ai_chats_provider_check" CHECK (("provider" ~ '^[a-z]{2,20}$'::"text")),
+    CONSTRAINT "ai_chats_title_check" CHECK (("char_length"("title") <= 120))
+);
+
+
+--
 -- Name: answers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -23099,6 +23265,14 @@ ALTER TABLE ONLY "public"."admin_demo_updates"
 
 
 --
+-- Name: ai_chats ai_chats_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_chats"
+    ADD CONSTRAINT "ai_chats_pkey" PRIMARY KEY ("id");
+
+
+--
 -- Name: answers answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -24249,6 +24423,20 @@ ALTER TABLE ONLY "public"."user_market_library"
 --
 
 CREATE INDEX "admin_demo_targets_queued_idx" ON "public"."admin_demo_targets" USING "btree" ("kind", "resource_id") WHERE ("status" = 'queued'::"text");
+
+
+--
+-- Name: ai_chats_updated_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "ai_chats_updated_idx" ON "public"."ai_chats" USING "btree" ("updated_at");
+
+
+--
+-- Name: ai_chats_user_updated_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "ai_chats_user_updated_idx" ON "public"."ai_chats" USING "btree" ("user_id", "updated_at" DESC);
 
 
 --
@@ -26227,6 +26415,14 @@ ALTER TABLE ONLY "public"."admin_demo_targets"
 
 
 --
+-- Name: ai_chats ai_chats_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_chats"
+    ADD CONSTRAINT "ai_chats_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
 -- Name: answers answers_question_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -27463,6 +27659,12 @@ ALTER TABLE "public"."admin_demo_targets" ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE "public"."admin_demo_updates" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_chats; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."ai_chats" ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: answers; Type: ROW SECURITY; Schema: public; Owner: -
@@ -28851,5 +29053,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict uvW9nvu4DhfJ381ZOMpWT31HOJ11h56WjijKSOu5AfLL6PQgtjx0zZnoXTbGGw6
+\unrestrict mGH9AzHrDQu24vWeg1dy2mlrzooVfylu2AxRgakeEJTXSkZyDu7IKKsw1Zscfkv
 
