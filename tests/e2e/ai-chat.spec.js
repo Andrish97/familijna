@@ -14,6 +14,14 @@ const PASSWORD = "e2e-haslo-do-kluczy";
 
 test.beforeEach(async ({ context }) => {
   await serveBranchCode(context, { pages: ["account", "games"] });
+  // [e2e-diag] treść nieudanych odpowiedzi endpointów czatu (kod i komunikat błędu)
+  context.on("response", async (res) => {
+    if (!res.url().includes("/rest/v1/rpc/ai_") || res.ok()) return;
+    const body = await res.text().catch(() => "");
+    let info = body.slice(0, 300);
+    try { const j = JSON.parse(body); info = JSON.stringify({ code: j.code, message: j.message, hint: j.hint, details: j.details }); } catch { /* nie-JSON */ }
+    console.log(`[e2e-diag] ${res.status()} ${new URL(res.url()).pathname} ${info}`);
+  });
 });
 
 // Odpowiedź strumieniem SSE w formacie Anthropic Messages.
