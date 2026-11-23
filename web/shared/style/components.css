@@ -2942,6 +2942,11 @@
   /* .sheet-modal-top ma display: contents — margines dostają jego części. */
   :where(:root[data-sheet]) .modal--sheet.sheet-active .modal--media > .sheet-modal-top > :is(.sheet-modal-head, .sheet-modal-actions) { margin-inline: 16px; }
   :where(:root[data-sheet]) .modal--sheet.sheet-active .modal--media > .sheet-modal-body .sheet-fill:not([hidden]) { flex: 1 1 auto; }
+  /* Okno na całą wysokość (.modal--fill, np. czat AI): wypełnienie rośnie do
+     dołu zasłonki — lista się przewija, elementy pod nią (pole wpisywania)
+     stoją przy dolnej krawędzi. */
+  :where(:root[data-sheet]) .modal--sheet.sheet-active .modal--fill > .sheet-modal-body { flex: 1 1 auto; }
+  :where(:root[data-sheet]) .modal--sheet.sheet-active .modal--fill > .sheet-modal-body .sheet-fill:not([hidden]) { flex: 1 1 auto; }
   /* Lista z własnym przewijaniem w wyśrodkowanym oknie (.modal-scroll):
      w oknie od dołu bez limitu wysokości -- przewija się cała treść okna. */
   :where(:root[data-sheet]) .modal--sheet.sheet-active .sheet-modal-body .modal-scroll {
@@ -3103,35 +3108,14 @@
 }
 
 @layer components {
-  /* Czat AI (E30, shared/js/ai/panel.js): panel z prawej pod górnym paskiem,
-     bez tła — strona zostaje dostępna; na telefonie na całą szerokość.
-     .is-instant: otwarty panel po przejściu na inną stronę wraca bez
-     animacji (wygląda, jakby się nie zamykał). */
-  .ai-panel {
-    position: fixed;
-    z-index: var(--z-drawer);
-    top: var(--topbar-h, 64px);
-    right: 0;
-    bottom: 0;
-    box-sizing: border-box;
-    width: min(400px, 100vw);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 12px 12px calc(12px + var(--safe-bottom));
-    border: 1px solid var(--line);
-    border-right: 0;
-    border-radius: var(--r-lg) 0 0 var(--r-lg);
-    background: var(--surface-1);
-    box-shadow: var(--shadow-card);
-    transform: translateX(105%);
-    visibility: hidden;
-    transition: transform var(--dur-base) var(--ease-out), visibility var(--dur-base);
-  }
-  .ai-panel.is-open { transform: translateX(0); visibility: visible; }
-  .ai-panel.is-instant { transition: none; }
-  .ai-panel-head { display: flex; align-items: center; gap: 6px; }
-  .ai-panel-title { flex: 1 1 auto; min-width: 0; font-weight: 700; color: var(--accent); }
+  /* Czat AI (E30, shared/js/ai/panel.js): wspólne okno silnika
+     (.overlay.modal--sheet > .modal.ai-chat) — na komputerze wyśrodkowane,
+     na telefonie zasłonka od dołu. Lista wiadomości przewija się, pole
+     wpisywania zostaje na dole. .is-instant: otwarte okno wraca po przejściu
+     na inną stronę bez animacji wejścia. */
+  .modal.ai-chat { width: min(620px, 100%); height: min(80vh, 760px); display: flex; flex-direction: column; }
+  .ai-chat-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+  .ai-chat-actions { justify-content: flex-end; }
   .ai-chats { display: flex; flex-direction: column; gap: 4px; max-height: 40%; overflow-y: auto; }
   .ai-chat-row { display: flex; align-items: center; gap: 6px; border-radius: var(--r-sm); background: var(--surface-inset); padding: 2px 4px 2px 10px; }
   .ai-chat-open { flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -3143,24 +3127,11 @@
   .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .ai-form { display: flex; align-items: flex-end; gap: 6px; }
   .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
-  .ai-panel > .sheet-handle { display: none; }
-  /* Urządzenia z zasłonkami (data-sheet: telefon, dotyk): zasłonka od dołu
-     z paskiem do przeciągania jak okna silnika; przeciągnięcie w dół albo
-     stuknięcie w pasek zamyka (panel.js, --ai-drag). */
-  :where(:root[data-sheet]) .ai-panel {
-    top: auto;
-    left: 0;
-    width: auto;
-    height: calc(100dvh - var(--topbar-h, 64px));
-    padding-top: 30px;
-    border: 1px solid var(--line);
-    border-bottom: 0;
-    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
-    background: var(--surface-modal);
-    box-shadow: var(--shadow-sheet);
-    transform: translateY(105%);
-  }
-  :where(:root[data-sheet]) .ai-panel.is-open { transform: translateY(var(--ai-drag, 0px)); }
-  :where(:root[data-sheet]) .ai-panel.is-dragging { transition: none; }
-  :where(:root[data-sheet]) .ai-panel > .sheet-handle { display: grid; }
+}
+
+@layer states {
+  /* Czat AI: powrót otwartego okna po przejściu na inną stronę bez animacji
+     wejścia (także zasłonki od dołu — jej animacja jest w tej warstwie). */
+  .ai-chat-overlay.is-instant,
+  .ai-chat-overlay.is-instant > .modal { animation: none; }
 }

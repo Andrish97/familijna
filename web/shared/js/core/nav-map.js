@@ -134,6 +134,8 @@ export const PAGES = {
 // PAGES[id].dialogs. Jego dozwolone strony i stan URL nadal pochodzą z mapy.
 export const GLOBAL_DIALOGS = {
   contactModalOverlay: Object.keys(PAGES).filter((id) => id !== "home" && id !== "login"),
+  // Czat AI (E30, shared/js/ai/panel.js): strony, na których montuje go initPage.
+  aiChatOverlay: Object.keys(PAGES).filter((id) => !["home", "login", "privacy", "mailCenter", "connectDevice"].includes(id)),
 };
 
 export function dialogAllowed(pageId, dialogId) {

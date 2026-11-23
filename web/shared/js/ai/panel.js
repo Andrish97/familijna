@@ -1,19 +1,21 @@
-// E30: panel czatu AI na stronach aplikacji. Montuje go initPage dla konta
+// E30: czat AI na stronach aplikacji. Montuje go initPage dla konta
 // zarejestrowanego (goście: brak czatu — decyzja 5). Przycisk w górnym pasku
-// (obok Wskazówek), panel z prawej na komputerze, na całą szerokość na
-// telefonie. Panel nie zasłania pracy na komputerze (bez tła).
+// (obok Wskazówek) otwiera wspólne okno silnika (.overlay.modal--sheet,
+// openDialog/closeDialog z core/modal-sheet.js; na telefonie zasłonka od
+// dołu z paskiem, ?dialog=aiChatOverlay w historii, Wstecz zamyka) — decyzja
+// użytkownika 2026-11-23: „ma używać tego samego modala co wszystko”.
 //
-// Ciągłość między stronami: stan panelu (otwarty, rozmowa, szkic) w
-// sessionStorage; otwarty panel wraca od razu, bez animacji — wygląda,
-// jakby się nie zamykał. Historia rozmowy jest na koncie (history.js).
-// Odpowiedź przerwana przejściem na inną stronę: historia zapisana po
-// wiadomości użytkownika, po wczytaniu przycisk „Dokończ odpowiedź”.
-// Przejście na inną stronę na prośbę czatu (open_page) następuje po
-// zakończeniu odpowiedzi; zmiana danych pokazanych na stronie — po
-// odpowiedzi strona wczytuje się ponownie (panel zostaje otwarty).
+// Ciągłość między stronami: stan (otwarte okno, rozmowa, szkic) w
+// sessionStorage; otwarte okno wraca po przejściu na inną stronę bez
+// animacji. Historia rozmowy jest na koncie (history.js). Odpowiedź
+// przerwana przejściem: historia zapisana po wiadomości użytkownika, po
+// wczytaniu przycisk „Dokończ odpowiedź”. Przejście na inną stronę na prośbę
+// czatu (open_page) — po zakończeniu odpowiedzi; zmiana danych pokazanych na
+// stronie — po odpowiedzi strona wczytuje się ponownie (okno zostaje otwarte).
 import { t, getUiLang } from "../../translation/translation.js";
 import { icon } from "../core/icons.js";
 import { confirmModal } from "../core/modal.js";
+import { openDialog, closeDialog } from "../core/modal-sheet.js";
 import { linkTo } from "../core/nav-map.js";
 import { activeKey, keyStatus } from "./keys.js";
 import { startConversation, sendMessage, continueReply, displayItems, awaitingReply } from "./chat.js";
@@ -21,6 +23,7 @@ import { getChat, saveChat, listChats, deleteChat, chatTitle } from "./history.j
 import { PROVIDERS } from "./providers.js";
 
 const STORE = "familijna:ai-panel";
+export const AI_DIALOG_ID = "aiChatOverlay";
 // Strony, których dane czat może zmienić — po zmianie wczytują się ponownie.
 const RELOAD_ON_CHANGE = new Set(["games", "editor", "gameSettings", "polls", "bases", "baseExplorer", "logoEditor", "friends", "subscribers", "tasks"]);
 
@@ -38,7 +41,6 @@ function el(tag, className, attrs = {}) {
   if (className) n.className = className;
   for (const [k, v] of Object.entries(attrs)) {
     if (k === "text") n.textContent = v;
-    else if (k === "html") n.innerHTML = v;
     else n.setAttribute(k, v);
   }
   return n;
@@ -56,31 +58,38 @@ const toolLabel = (name) => {
 };
 
 /**
- * Panel czatu dla strony pageId. Wołany raz przez initPage.
+ * Czat dla strony pageId. Wołany raz przez initPage.
  * @param {{ pageId: string }} opts
  */
 export async function mountAiPanel({ pageId }) {
-  if (document.getElementById("aiPanel")) return;
+  if (document.getElementById(AI_DIALOG_ID)) return;
   const slot = document.querySelector(".topbar-section-3");
   if (!slot) return;
 
   const toggle = iconButton("chat", t("aiChat.open"), "ai-toggle");
   toggle.id = "btnAiChat";
-  toggle.setAttribute("aria-controls", "aiPanel");
+  toggle.setAttribute("aria-controls", AI_DIALOG_ID);
   toggle.setAttribute("aria-expanded", "false");
   slot.insertBefore(toggle, slot.firstChild);
 
-  const panel = el("aside", "ai-panel", { id: "aiPanel", "aria-label": t("aiChat.title") });
-  const head = el("div", "ai-panel-head");
-  const title = el("div", "ai-panel-title", { text: t("aiChat.title") });
+  const overlay = el("div", "overlay modal--sheet ai-chat-overlay", { id: AI_DIALOG_ID });
+  overlay.hidden = true;
+  const panel = el("div", "modal uni-modal modal--fill ai-chat", { role: "dialog", "aria-modal": "true", "aria-labelledby": "aiChatTitle" });
+  const head = el("div", "mHead");
+  const title = el("div", "mTitle", { id: "aiChatTitle", text: t("aiChat.title") });
   const btnHistory = iconButton("folder-open", t("aiChat.history"));
   const btnNew = iconButton("plus", t("aiChat.newChat"));
-  const btnClose = iconButton("close", t("aiChat.close"));
-  head.append(title, btnHistory, btnNew, btnClose);
+  const btnClose = el("button", "btn sm", { type: "button", "aria-label": t("aiChat.close") });
+  btnClose.innerHTML = icon("close");
+  head.append(title, btnClose);
+  // Akcje okna: na komputerze pod nagłówkiem, na telefonie obok tytułu (silnik).
+  const actions = el("div", "modal-actions ai-chat-actions");
+  actions.append(btnHistory, btnNew);
 
-  const log = el("div", "ai-log", { role: "log", "aria-live": "polite" });
-  const chats = el("div", "ai-chats");
+  const body = el("div", "uni-body sheet-fill ai-chat-body");
+  const chats = el("div", "ai-chats sheet-scroll");
   chats.hidden = true;
+  const log = el("div", "ai-log sheet-scroll", { role: "log", "aria-live": "polite" });
 
   const form = el("form", "ai-form");
   const input = el("textarea", "inp ai-input", { rows: "2", placeholder: t("aiChat.placeholder"), "aria-label": t("aiChat.placeholder") });
@@ -90,36 +99,10 @@ export async function mountAiPanel({ pageId }) {
   btnStop.hidden = true;
   form.append(input, btnSend, btnStop);
 
-  // Pasek zasłonki (telefon, dotyk — CSS pokazuje go tylko przy data-sheet):
-  // przeciągnięcie w dół albo stuknięcie zamyka, jak w oknach silnika.
-  const handle = el("button", "sheet-handle", { type: "button", "aria-label": t("aiChat.close") });
-  let dragY = null, dragLast = 0, dragMoved = false;
-  const setDrag = (px) => panel.style.setProperty("--ai-drag", `${Math.max(0, px)}px`);
-  handle.addEventListener("pointerdown", (e) => {
-    dragY = e.clientY; dragLast = e.clientY; dragMoved = false;
-    handle.setPointerCapture?.(e.pointerId);
-    panel.classList.add("is-dragging");
-  });
-  handle.addEventListener("pointermove", (e) => {
-    if (dragY === null) return;
-    if (Math.abs(e.clientY - dragY) > 4) dragMoved = true;
-    dragLast = e.clientY;
-    setDrag(e.clientY - dragY);
-  });
-  const dragEnd = () => {
-    if (dragY === null) return;
-    const dy = dragLast - dragY;
-    dragY = null;
-    panel.classList.remove("is-dragging");
-    setDrag(0);
-    if (!dragMoved || dy > Math.min(160, panel.offsetHeight * 0.25)) setOpen(false);
-  };
-  handle.addEventListener("pointerup", dragEnd);
-  handle.addEventListener("pointercancel", dragEnd);
-
-  panel.append(handle, head, chats, log, form);
-  document.body.append(panel);
-
+  body.append(chats, log, form);
+  panel.append(head, actions, body);
+  overlay.append(panel);
+  document.body.append(overlay);
   let state = readState();
   let conversation = null;
   let chatId = state.chatId || null;
@@ -130,14 +113,22 @@ export async function mountAiPanel({ pageId }) {
 
   const lang = getUiLang?.() || "pl";
 
+  // Otwarcie i zamknięcie wspólnym oknem silnika. instant — powrót otwartego
+  // okna po przejściu na inną stronę (bez animacji wejścia, adres bez nowego
+  // wpisu w historii).
   function setOpen(open, { instant = false } = {}) {
-    panel.classList.toggle("is-instant", instant);
-    panel.classList.toggle("is-open", open);
+    const isOpen = !overlay.hidden;
     toggle.setAttribute("aria-expanded", String(open));
-    document.documentElement.classList.toggle("ai-panel-open", open);
     state = writeState({ open });
-    if (open && !instant) input.focus();
-    if (instant) requestAnimationFrame(() => panel.classList.remove("is-instant"));
+    if (open && !isOpen) {
+      overlay.classList.toggle("is-instant", instant);
+      openDialog(overlay, { onClose: () => setOpen(false), restore: instant });
+      if (instant) requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.remove("is-instant")));
+      else input.focus();
+      requestAnimationFrame(scrollEnd);
+    } else if (!open && isOpen) {
+      closeDialog(overlay);
+    }
   }
 
   function scrollEnd() { log.scrollTop = log.scrollHeight; }
@@ -176,7 +167,7 @@ export async function mountAiPanel({ pageId }) {
     btnSend.hidden = on;
     btnStop.hidden = !on;
     input.disabled = on;
-    panel.classList.toggle("is-busy", on);
+    overlay.classList.toggle("is-busy", on);
   }
 
   async function ensureKey() {
@@ -311,7 +302,7 @@ export async function mountAiPanel({ pageId }) {
     }
   }
 
-  toggle.addEventListener("click", () => setOpen(!panel.classList.contains("is-open")));
+  toggle.addEventListener("click", () => setOpen(overlay.hidden));
   btnClose.addEventListener("click", () => setOpen(false));
   btnHistory.addEventListener("click", () => { void showChats(); });
   btnNew.addEventListener("click", async () => {
@@ -335,8 +326,8 @@ export async function mountAiPanel({ pageId }) {
     writeState({ draft: "" });
     void runTurn(text);
   });
-  panel.addEventListener("keydown", (e) => { if (e.key === "Escape" && !busy) setOpen(false); });
 
-  if (state.open) setOpen(true, { instant: true });
+  const urlOpen = new URLSearchParams(location.search).get("dialog") === AI_DIALOG_ID;
+  if (state.open || urlOpen) setOpen(true, { instant: true });
   await loadConversation();
 }
