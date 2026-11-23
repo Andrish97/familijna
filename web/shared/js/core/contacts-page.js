@@ -10,6 +10,7 @@ import { confirmModal, alertModal } from "./modal.js";
 import { shareSectionEl } from "./share-sections.js";
 import { createCooldownTicker } from "./cooldown.js";
 import { sendInviteMail } from "./invite-mail.js";
+import { createContactInvite, sendContactInviteMail } from "./contact-invite.js";
 import { goLinkToken } from "./notify-mail.js";
 import { initI18n, t } from "../../translation/translation.js";
 import "./contact-modal.js";
@@ -185,17 +186,12 @@ export async function initContactsPage(pageId) {
     const button = document.getElementById("btnInvite");
     button.disabled = true;
     try {
-      const data = await call(friends ? "friends_invite" : "subscribers_invite", friends ? { p_handle: input.value } : { p_email: input.value });
-      let mail = null;
-      if (friends && data.mail_allowed) mail = { token: data.token, actionKey: "friend:invite" };
-      if (!friends && !data.already) {
-        const resent = await call("polls_hub_subscriber_resend", { p_id: data.id });
-        if (resent?.mail_allowed) mail = { token: goLinkToken(resent.link, "s") };
-      }
+      const kind = friends ? "friend" : "subscriber";
+      const { data, mail } = await createContactInvite(kind, input.value);
       await refresh();
       let mailSkipped = false;
       if (mail?.token) {
-        try { mailSkipped = !await sendInviteMail({ ...mail, kind: friends ? "friend" : "subscriber" }); }
+        try { mailSkipped = !await sendContactInviteMail(kind, mail); }
         catch (error) { console.warn("[contacts] mail:", error); toast(t("contacts.mailFailed"), { kind: "error" }); return; }
       }
       input.value = "";

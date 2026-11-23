@@ -17,13 +17,15 @@ const STUBS = {
   "supabase.js": "export const sb = () => globalThis.__sb;",
   "resource-lock.js": "export const getTabId = () => 'tab-test';",
   "game-content.js": "export const applyGameContent = (...a) => globalThis.__apply(...a); export const createGameWithContent = (...a) => globalThis.__create(...a);",
+  "poll-mail.js": "export const sendPollInviteMails = async () => ({ total: 0, sent: 0, failed: 0, skipped: 0 });",
+  "contact-invite.js": "export const createContactInvite = async () => ({ data: {}, mail: null }); export const sendContactInviteMail = async () => false;",
   "nav-map.js": "export const PAGES = { games: {}, editor: {} }; export const linkTo = (p, q) => `/${p}/?${new URLSearchParams(q)}`;",
 };
 
 async function load() {
   const res = await build({
     stdin: {
-      contents: "export * as providers from './web/shared/js/ai/providers.js'; export * as chat from './web/shared/js/ai/chat.js'; export * as tools from './web/shared/js/ai/tools.js';",
+      contents: "export * as providers from './web/shared/js/ai/providers.js'; export * as chat from './web/shared/js/ai/chat.js'; export * as tools from './web/shared/js/ai/tools/index.js';",
       resolveDir: ROOT, loader: "js",
     },
     bundle: true, format: "esm", write: false, platform: "neutral",
@@ -32,7 +34,7 @@ async function load() {
       setup(b) {
         b.onResolve({ filter: /\.js$/ }, (a) => {
           const name = path.basename(a.path);
-          if (STUBS[name] && !a.path.includes("/ai/")) return { path: name, namespace: "stub" };
+          if (STUBS[name] && !a.path.startsWith("./tools")) return { path: name, namespace: "stub" };
           return null;
         });
         b.onLoad({ filter: /.*/, namespace: "stub" }, (a) => ({ contents: STUBS[a.path], loader: "js" }));
@@ -171,7 +173,8 @@ test("narzędzia: potwierdzenie przed nieodwracalnym, odmowa nie wykonuje, Contr
   r = await chat.runTool("edit_game", add, ctx(true, "control"));
   assert.deepEqual(JSON.parse(r.text), { error: "tool_not_available_here" });
   const names = tools.toolsForPage("control").map((x) => x.name);
-  assert.ok(names.includes("manual_chapter") && !names.includes("create_game") && !names.includes("open_page"));
+  assert.ok(names.includes("manual_chapter") && names.includes("get_poll"));
+  for (const n of ["create_game", "open_page", "open_poll", "send_poll_invites", "invite_contact", "add_base_questions"]) assert.ok(!names.includes(n), n);
 
   globalThis.__apply = async () => { const e = new Error("locked"); e.code = "locked"; throw e; };
   r = await chat.runTool("edit_game", add, ctx(true));
@@ -183,4 +186,20 @@ test("prompt systemowy: język odpowiedzi i tryb Control", () => {
   assert.match(chat.systemPrompt({ lang: "uk", pageId: "games" }), /reply in Ukrainian/);
   assert.match(chat.systemPrompt({ lang: "pl", pageId: "control" }), /Do not change anything/);
   assert.doesNotMatch(chat.systemPrompt({ lang: "pl", pageId: "games" }), /Do not change anything/);
+});
+
+test("katalog: unikalne nazwy, schemat obiektu, potwierdzenia wysyłki i nieodwracalnych", () => {
+  const names = tools.TOOLS.map((x) => x.name);
+  assert.equal(new Set(names).size, names.length);
+  for (const x of tools.TOOLS) {
+    assert.match(x.name, /^[a-z_]{3,40}$/, x.name);
+    assert.equal(x.inputSchema.type, "object", x.name);
+    assert.ok(x.description.length > 20, x.name);
+  }
+  const kind = (n, a = {}) => tools.toolByName(n).confirm?.(a) ?? null;
+  for (const n of ["send_poll_invites", "invite_contact"]) assert.equal(kind(n), "send", n);
+  for (const n of ["delete_game", "abort_poll", "tally_poll"]) assert.equal(kind(n), "irreversible", n);
+  assert.equal(kind("edit_game", { operations: [{ op: "set_answers" }] }), "irreversible");
+  assert.equal(kind("edit_game", { operations: [{ op: "rename" }], reset_poll_results: true }), "irreversible");
+  for (const n of ["create_game", "open_poll", "stop_poll", "delete_base_items", "add_base_questions"]) assert.equal(kind(n), null, n);
 });

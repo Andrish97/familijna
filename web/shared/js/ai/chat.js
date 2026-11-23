@@ -2,7 +2,7 @@
 // strony i ich wykonywanie z potwierdzeniem (wysyłka do innych osób, zmiany
 // nieodwracalne — decyzja 11). Bez interfejsu: panel czatu podaje ctx.
 import { createConversation, ask } from "./providers.js";
-import { toolsForPage, toolByName } from "./tools.js";
+import { toolsForPage, toolByName } from "./tools/index.js";
 
 const LANG_NAMES = { pl: "Polish", en: "English", uk: "Ukrainian" };
 const RESULT_MAX = 20000;
