@@ -256,3 +256,37 @@ What stays:
 
 If you want to keep your materials, before deleting export to files your games (→ 6.7),
 logos (→ 8.5) and question bases (→ 9.1).
+
+## 5.10 AI assistant
+
+The assistant answers questions about the service and does things for you: it
+creates and edits games, adds questions to bases, starts and tallies polls and
+sends invitations. Open it with the speech-bubble button in the top bar, next to
+Help. The window stays open when you go to another page. Conversations are saved
+in your account; those unused for 30 days are removed. Guest accounts do not have
+the assistant.
+
+The assistant runs on your own AI service key (e.g. Anthropic, OpenAI, Google
+Gemini) — you pay the provider directly for your use.
+
+Add a key in *Account settings*, in the “AI assistant” section:
+
+1. Set a key password and choose [Create key vault]. Your browser encrypts the
+   keys with this password — nobody else can read them. You enter the password
+   once on each device.
+2. Choose the provider, enter the key and choose [Add key]. You see the key only
+   while entering it.
+
+You can add several keys — the selected one is used. Next to a key you choose the model.
+
+![AI assistant in Account settings](zrzut:account-ai-keys)
+![Assistant window without a key](zrzut:ai-chat-no-key)
+
+> Note: a lost key password cannot be recovered — [Forgot the password?] deletes the vault and you add the keys again.
+
+Before the assistant sends something to other people (invitations, a poll) or does
+something that cannot be undone (deleting a game, tallying a poll), it asks for your
+consent in a dialog. During a game it changes nothing — it only advises, e.g. how
+to connect devices.
+
+> Tip: when you ask the assistant to work on games, bases or contacts, their content goes to the selected provider.

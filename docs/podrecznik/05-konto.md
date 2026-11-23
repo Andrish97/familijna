@@ -257,3 +257,35 @@ Zostają:
 
 Jeśli chcesz zachować swoje materiały, przed usunięciem wyeksportuj do plików gry (→ 6.7),
 logo (→ 8.5) i bazy pytań (→ 9.1).
+
+## 5.10 Asystent AI
+
+Asystent odpowiada na pytania o serwis i wykonuje czynności za Ciebie: tworzy
+i poprawia gry, dodaje pytania do baz, uruchamia i podlicza ankiety, wysyła
+zaproszenia. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
+zostaje otwarte, gdy przechodzisz na inną stronę. Rozmowy są zapisane na koncie;
+te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
+
+Asystent działa na Twoim kluczu do usługi sztucznej inteligencji (np. Anthropic,
+OpenAI, Google Gemini) — za użycie płacisz bezpośrednio jej dostawcy.
+
+Klucz dodajesz w *Ustawieniach konta*, w sekcji „Asystent AI”:
+
+1. Ustal hasło do kluczy i wybierz [Utwórz sejf kluczy]. Klucze szyfruje Twoja
+   przeglądarka tym hasłem — nikt poza Tobą ich nie odczyta. Na każdym urządzeniu
+   podajesz hasło raz.
+2. Wybierz dostawcę, wpisz klucz i wybierz [Dodaj klucz]. Klucz widzisz tylko
+   przy wpisywaniu.
+
+Możesz dodać kilka kluczy — używany jest zaznaczony. Przy kluczu wybierasz model.
+
+![Asystent AI w Ustawieniach konta](zrzut:account-ai-keys)
+![Okno asystenta bez klucza](zrzut:ai-chat-no-key)
+
+> Uwaga: zgubionego hasła do kluczy nie da się odzyskać — [Nie pamiętasz hasła?] usuwa sejf, a klucze dodajesz od nowa.
+
+Zanim asystent wyśle coś innym osobom (zaproszenia, ankietę) albo zrobi coś,
+czego nie da się cofnąć (usunięcie gry, podliczenie ankiety), pyta o zgodę w oknie.
+Podczas rozgrywki niczego nie zmienia — tylko podpowiada, np. jak podłączyć urządzenia.
+
+> Wskazówka: gdy prosisz asystenta o pracę na grach, bazach czy kontaktach, ich treść trafia do wybranego dostawcy.
