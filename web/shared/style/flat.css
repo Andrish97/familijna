@@ -3344,6 +3344,52 @@
   /* Wideo podtrzymujące ekran (keep-alive.js): niewidoczne, 1×1 px. */
   .keep-alive-video { position: fixed; top: 0; left: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
+
+
+  /* Czat AI (E30, shared/js/ai/panel.js): panel z prawej pod górnym paskiem,
+     bez tła — strona zostaje dostępna; na telefonie na całą szerokość.
+     .is-instant: otwarty panel po przejściu na inną stronę wraca bez
+     animacji (wygląda, jakby się nie zamykał). */
+  .ai-panel {
+    position: fixed;
+    z-index: var(--z-drawer);
+    top: var(--topbar-h, 64px);
+    right: 0;
+    bottom: 0;
+    box-sizing: border-box;
+    width: min(400px, 100vw);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 12px calc(12px + var(--safe-bottom));
+    border: 1px solid var(--line);
+    border-right: 0;
+    border-radius: var(--r-lg) 0 0 var(--r-lg);
+    background: var(--surface-1);
+    box-shadow: var(--shadow-card);
+    transform: translateX(105%);
+    visibility: hidden;
+    transition: transform var(--dur-base) var(--ease-out), visibility var(--dur-base);
+  }
+  .ai-panel.is-open { transform: translateX(0); visibility: visible; }
+  .ai-panel.is-instant { transition: none; }
+  .ai-panel-head { display: flex; align-items: center; gap: 6px; }
+  .ai-panel-title { flex: 1 1 auto; min-width: 0; font-weight: 700; color: var(--accent); }
+  .ai-chats { display: flex; flex-direction: column; gap: 4px; max-height: 40%; overflow-y: auto; }
+  .ai-chat-row { display: flex; align-items: center; gap: 6px; border-radius: var(--r-sm); background: var(--surface-inset); padding: 2px 4px 2px 10px; }
+  .ai-chat-open { flex: 1 1 auto; min-width: 0; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ai-log { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+  .ai-msg { padding: 8px 10px; border-radius: var(--r-md); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text-soft); }
+  .ai-msg--user { align-self: flex-end; max-width: 85%; background: var(--g-10); border: 1px solid var(--g-35); color: var(--text); }
+  .ai-msg--assistant { align-self: stretch; background: var(--surface-inset); }
+  .ai-msg--tool { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: .85em; color: var(--text-faint); }
+  .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .ai-form { display: flex; align-items: flex-end; gap: 6px; }
+  .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
+  @media (max-width: 600px) {
+    .ai-panel { width: 100vw; border-radius: var(--r-lg) var(--r-lg) 0 0; border-right: 1px solid var(--line); }
+  }
+
 /* ── layout.css ── */
 /* Silnik stylów E23 — szkielet strony z listą (page--list) i paski akcji
    (familijna-server/docs/silnik-stylow-projekt.md §5). Dawniej games.css — „drugi,

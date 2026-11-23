@@ -291,8 +291,18 @@ function pushResults(c, results) {
  * onText(fragment) — tekst odpowiedzi na bieżąco; onStep({ text, calls }) — postęp.
  * signal — AbortSignal (przerwanie przez użytkownika albo przejście na inną stronę).
  */
-export async function ask(c, text, { run, onText = () => {}, onStep = () => {}, signal = null, maxSteps = 25 } = {}) {
+export function ask(c, text, opts = {}) {
   c.history.push(userMessage(c.kind, text));
+  opts.onUserMessage?.(c);
+  return resume(c, opts);
+}
+
+/**
+ * Dalszy ciąg rozmowy bez nowej wiadomości — po odpowiedzi przerwanej
+ * przejściem na inną stronę (historia kończy się wiadomością użytkownika
+ * albo wynikami narzędzi). Opcje jak w ask.
+ */
+export async function resume(c, { run, onText = () => {}, onStep = () => {}, signal = null, maxSteps = 25 } = {}) {
   let last = "";
   for (let i = 0; i < maxSteps; i += 1) {
     if (signal?.aborted) return { text: last, stopped: true };

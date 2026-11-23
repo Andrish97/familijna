@@ -230,6 +230,9 @@ export async function initEntryPage(id, { ready, route } = {}) {
   }
 }
 
+// Strony bez czatu AI: wejście, logowanie, centrum maili, podłączanie urządzenia.
+const NO_AI_PANEL = new Set(["login", "privacy", "mailCenter", "connectDevice"]);
+
 export async function initPage(id, opts = {}) {
   let finishLayout;
   holdPageLayout(new Promise((resolve) => { finishLayout = resolve; }));
@@ -279,6 +282,12 @@ async function initializePage(id, opts, finishLayout) {
         .then(({ initNavContactBadges }) => initNavContactBadges(targets))
         .catch((error) => console.warn("[nav] contact badge refresh failed", error));
     }
+  }
+  // E30: czat AI na kluczu użytkownika — konto zarejestrowane, strony aplikacji.
+  if (user && !isGuestUser(user) && !NO_AI_PANEL.has(id)) {
+    void import("../ai/panel.js")
+      .then(({ mountAiPanel }) => mountAiPanel({ pageId: id }))
+      .catch((error) => console.warn("[ai] panel failed", error));
   }
   if (!opts.deferTopbarReady) document.querySelector(".topbar")?.classList.add("topbar-ready");
 

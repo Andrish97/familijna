@@ -90,6 +90,9 @@ export const ICONS = Object.freeze({
   "envelope-out": "/assets/icons/communication/envelope-out.svg",
   megaphone: "/assets/icons/communication/megaphone.svg",
   reply: "/assets/icons/communication/reply.svg",
+  // Czat AI (E30): dymek z plusem — przycisk w górnym pasku; wysłanie wiadomości.
+  chat: "/assets/icons/communication/chat.svg",
+  send: "/assets/icons/communication/send.svg",
   bell: "/assets/icons/communication/bell.svg",
   coffee: "/assets/icons/communication/coffee.svg",
 

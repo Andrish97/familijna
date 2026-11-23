@@ -203,3 +203,44 @@ test("katalog: unikalne nazwy, schemat obiektu, potwierdzenia wysyłki i nieodwr
   assert.equal(kind("edit_game", { operations: [{ op: "rename" }], reset_poll_results: true }), "irreversible");
   for (const n of ["create_game", "open_poll", "stop_poll", "delete_base_items", "add_base_questions"]) assert.equal(kind(n), null, n);
 });
+
+test("każde narzędzie ma nazwę dla użytkownika w trzech językach", async () => {
+  const { loadDict } = await import("./helpers/i18n.js");
+  for (const lang of ["pl", "en", "uk"]) {
+    const dict = await loadDict(lang);
+    for (const x of tools.TOOLS) assert.ok(dict.aiChat?.tools?.[x.name], `${lang}: aiChat.tools.${x.name}`);
+  }
+});
+
+test("historia do pokazania: wiadomości, narzędzia, bez wyników narzędzi; czekanie na odpowiedź", () => {
+  const anthropic = [
+    { role: "user", content: "Zrób grę" },
+    { role: "assistant", content: [{ type: "text", text: "Robię." }, { type: "tool_use", id: "1", name: "create_game", input: {} }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "1", content: "{}" }] },
+    { role: "assistant", content: [{ type: "text", text: "Gotowe." }] },
+  ];
+  assert.deepEqual(chat.displayItems("anthropic", anthropic), [
+    { role: "user", text: "Zrób grę" }, { role: "tool", tool: "create_game" },
+    { role: "assistant", text: "Robię." }, { role: "assistant", text: "Gotowe." },
+  ]);
+  assert.equal(chat.awaitingReply("anthropic", anthropic), false);
+  assert.equal(chat.awaitingReply("anthropic", anthropic.slice(0, 3)), true);
+  assert.equal(chat.awaitingReply("anthropic", anthropic.slice(0, 1)), true);
+
+  const openai = [
+    { role: "user", content: "x" },
+    { role: "assistant", content: "", tool_calls: [{ id: "c", function: { name: "list_games", arguments: "{}" } }] },
+    { role: "tool", tool_call_id: "c", content: "{}" },
+  ];
+  assert.deepEqual(chat.displayItems("openai", openai), [{ role: "user", text: "x" }, { role: "tool", tool: "list_games" }]);
+  assert.equal(chat.awaitingReply("openai", openai), true);
+
+  const gemini = [
+    { role: "user", parts: [{ text: "x" }] },
+    { role: "model", parts: [{ functionCall: { name: "get_game", args: {} } }] },
+    { role: "user", parts: [{ functionResponse: { name: "get_game", response: {} } }] },
+    { role: "model", parts: [{ text: "ok" }] },
+  ];
+  assert.deepEqual(chat.displayItems("gemini", gemini), [{ role: "user", text: "x" }, { role: "tool", tool: "get_game" }, { role: "assistant", text: "ok" }]);
+  assert.equal(chat.awaitingReply("gemini", gemini), false);
+});
