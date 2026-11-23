@@ -17,7 +17,8 @@ import {
   buildAnswerRow, buildAddAnswerTile,
 } from "../../../shared/js/core/question-form.js";
 import { guardResourceLock, showBlockingOverlay } from "../../../shared/js/core/resource-lock.js";
-import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js";
+import { ROW_GONE } from "../../../shared/js/core/db-guard.js";
+import { applyGameContent } from "../../../shared/js/core/game-content.js";
 import { initI18n, t } from "../../../shared/translation/translation.js";
 import { backHref, backLabel } from "../../../shared/js/core/nav-map.js";
 import "../../../shared/js/core/contact-modal.js";
@@ -136,7 +137,7 @@ async function loadGame(gameId) {
 }
 
 async function saveGameName(gameId, name) {
-  await updateChecked("games", { id: gameId }, { name });
+  await applyGameContent(gameId, [{ op: "rename", name }]);
 }
 
 // Pytania razem z liczbą odpowiedzi i sumą punktów -- jedno zapytanie
@@ -166,13 +167,10 @@ async function listAnswers(questionId) {
 }
 
 async function createQuestion(gameId, ord) {
-  const { data, error } = await sb()
-    .from("questions")
-    .insert({ game_id: gameId, ord, text: MSG.questionDefault(ord) })
-    .select("id,ord,text")
-    .single();
-  if (error) throw error;
-  return { ...data, answers: [] };
+  const text = MSG.questionDefault(ord);
+  const res = await applyGameContent(gameId, [{ op: "add_question", text, position: ord }]);
+  const r = res.results[0];
+  return { id: r.question_id, ord: r.position, text, answers: [] };
 }
 
 // RPC z migracji 276: usunięcie + przenumerowanie w jednej transakcji.
@@ -191,24 +189,15 @@ async function renumberQuestionsRpc(gameId) {
   if (error) throw error;
 }
 
-async function createAnswer(questionId, ord) {
-  const { data, error } = await sb()
-    .from("answers")
-    .insert({ question_id: questionId, ord, text: MSG.answerDefault(ord), fixed_points: 0 })
-    .select("id,ord,text,fixed_points")
-    .single();
-  if (error) throw error;
-  return data;
+// Baza wstawia odpowiedź na pierwsze wolne miejsce -- to samo, co nextAnswerOrd.
+async function createAnswer(gameId, questionId, ord) {
+  const text = MSG.answerDefault(ord);
+  const res = await applyGameContent(gameId, [{ op: "add_answer", question_id: questionId, text, points: 0 }]);
+  return { id: res.results[0].answer_id, ord, text, fixed_points: 0 };
 }
 
-async function deleteAnswer(aId) {
-  const { data, error } = await sb().from("answers").delete().eq("id", aId).select("id");
-  if (error) throw error;
-  if (!data?.length) {
-    const e = new Error("answer gone");
-    e.code = ROW_GONE;
-    throw e;
-  }
+async function deleteAnswer(gameId, aId) {
+  await applyGameContent(gameId, [{ op: "delete_answer", answer_id: aId }]);
 }
 
 // RPC z migracji 276: wyczyszczenie gry i wgranie pytań w jednej
@@ -685,7 +674,7 @@ async function boot() {
     const text = normQuestionText(raw) || MSG.questionDefault(q.ord);
     try {
       if (text !== q.text) {
-        await updateChecked("questions", { id: qId }, { text });
+        await applyGameContent(gameId, [{ op: "update_question", question_id: qId, text }]);
         q.text = text;
         updateCard(q);
       }
@@ -745,7 +734,7 @@ async function boot() {
     const ord = nextAnswerOrd(answers);
     if (!ord) return showError(MSG.answerLimitReached());
     try {
-      const a = await createAnswer(qId, ord);
+      const a = await createAnswer(gameId, qId, ord);
       if (activeQId !== qId) return;
       answers = [...answers, a].sort((x, y) => x.ord - y.ord);
       refreshActiveStats();
@@ -765,7 +754,7 @@ async function boot() {
     const ok = await confirmModal({ text: MSG.deleteAnswerConfirm() });
     if (!ok) return;
     try {
-      await deleteAnswer(aId);
+      await deleteAnswer(gameId, aId);
     } catch (e) {
       console.error(e);
       if (e?.code !== ROW_GONE) return showError(ruleBlocked(e) || MSG.deleteAnswerError());
@@ -810,7 +799,7 @@ async function boot() {
       const text = normAnswerText(iText.value) || MSG.answerDefault(a.ord);
       try {
         if (text !== a.text) {
-          await updateChecked("answers", { id: a.id }, { text });
+          await applyGameContent(gameId, [{ op: "update_answer", answer_id: a.id, text }]);
           a.text = text;
         }
         if (final && document.activeElement !== iText && iText.value !== text) iText.value = text;
@@ -838,7 +827,7 @@ async function boot() {
         if (iPts.value !== String(val)) iPts.value = String(val);
         if (val === Number(a.fixed_points)) return;
         try {
-          await updateChecked("answers", { id: a.id }, { fixed_points: val });
+          await applyGameContent(gameId, [{ op: "update_answer", answer_id: a.id, points: val }]);
           a.fixed_points = val;
           refreshActiveStats();
         } catch (e) {

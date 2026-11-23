@@ -25,7 +25,8 @@ import {
   uploadGameSound, deleteGameSound, deleteAllGameSounds,
 } from "../../../shared/js/core/sfx-cloud.js";
 import { guardResourceLocks } from "../../../shared/js/core/resource-lock.js";
-import { updateChecked, ROW_GONE } from "../../../shared/js/core/db-guard.js";
+import { ROW_GONE } from "../../../shared/js/core/db-guard.js";
+import { saveGameSettings } from "../../../shared/js/core/game-content.js";
 import { icon } from "../../../shared/js/core/icons.js";
 import { blockingScreen, setBlockingIcon, setBlockingOpen } from "../../../shared/js/core/blocking-screen.js";
 import { isPhoneScreen } from "../../../shared/js/core/device-guard.js";
@@ -288,8 +289,8 @@ async function saveAll() {
       // wczytaliśmy (albo co sami ostatnio zapisaliśmy) — inaczej dwie karty
       // otwarte na tych samych ustawieniach mogłyby bezpowrotnie skasować
       // nawzajem swoje zmiany. 0 dopasowanych wierszy = ktoś inny zapisał
-      // w międzyczasie (albo gra zniknęła) → updateChecked rzuca ROW_GONE.
-      await updateChecked("games", { id: gameId, settings: lastSavedSettingsRaw }, { settings: payload });
+      // w międzyczasie → 'conflict', gra zniknęła → ROW_GONE (migracja 534).
+      await saveGameSettings(gameId, lastSavedSettingsRaw, payload);
       lastSavedSettingsRaw = payload;
       if (changeSeq === seq) isDirty = false;
       ok = true;
@@ -306,8 +307,8 @@ async function saveAll() {
       }
     } catch (e) {
       console.error("[game-settings] save error:", e);
-      if (e?.code === ROW_GONE) {
-        // Ktoś zapisał te ustawienia w międzyczasie: nie nadpisujemy.
+      if (e?.code === ROW_GONE || e?.code === "conflict") {
+        // Ktoś zapisał te ustawienia w międzyczasie (albo gra zniknęła): nie nadpisujemy.
         stopped = true;
         setSaveState("conflict");
         toast(t("gameSettings.saveConflict"), { kind: "error" });

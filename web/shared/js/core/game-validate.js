@@ -106,6 +106,9 @@ export function gameRuleErrorMessage(err) {
   if (m.includes("game_content_locked:poll_stopped")) return t("gameValidate.pollStoppedNoEdit");
   if (m.includes("game_content_locked:market")) return t("gameValidate.marketNoEdit");
   if (m.includes("game_content_locked:control_active")) return t("gameValidate.controlActive");
+  // endpointy treści (migracja 534): kod reguły edycji z game_rules_compute
+  const blocked = m.match(/\bedit_blocked:(pollOpenNoEdit|pollStoppedNoEdit|marketNoEdit|controlActive)\b/);
+  if (blocked) return t(`gameValidate.${blocked[1]}`);
   // walidacja zapisu tekstów (migracja 404): oba edytory pytań
   const bad = m.match(/content_invalid:(\w+)(?::(.*))?/);
   if (bad) return t(`gameValidate.${bad[1]}`, { chars: (bad[2] || "").trim() });

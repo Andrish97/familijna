@@ -117,7 +117,6 @@ const en = {
       progress: {
         start: "Exporting…",
         step: "Preparing…",
-        folder: "Creating folder…",
         questions: "Exporting questions…",
         saved: "Export saved.",
         savedCount: "Saved {done}/{total}.",

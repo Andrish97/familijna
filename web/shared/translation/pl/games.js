@@ -117,7 +117,6 @@ const pl = {
       progress: {
         start: "Eksportuję…",
         step: "Przygotowuję…",
-        folder: "Tworzę folder…",
         questions: "Eksportuję pytania…",
         saved: "Eksport zapisany.",
         savedCount: "Zapisano {done}/{total}.",

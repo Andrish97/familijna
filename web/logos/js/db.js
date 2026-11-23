@@ -48,9 +48,18 @@ export async function fetchLogo(id) {
   return data;
 }
 
+// Nowe logo przez endpoint (migracja 534): pula logo trzymana przez inną
+// kartę -> 'locked'; nazwa zajęta -> kod 23505 jak dotąd (isUniqueViolation).
 export async function createLogo(row) {
-  const { data, error } = await sb().from("user_logos").insert(row).select("id").single();
+  const { data, error } = await sb().rpc("logo_create", {
+    p_name: row.name, p_type: row.type, p_payload: row.payload, p_tab_id: getTabId(),
+  });
   if (error) throw error;
+  if (!data?.ok) {
+    const e = new Error(data?.error || "create_failed");
+    e.code = data?.error === "name_taken" ? "23505" : data?.error;
+    throw e;
+  }
   return data.id;
 }
 

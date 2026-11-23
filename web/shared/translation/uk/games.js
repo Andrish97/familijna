@@ -117,7 +117,6 @@ const uk = {
       progress: {
         start: "Експортую…",
         step: "Готую…",
-        folder: "Створюю папку…",
         questions: "Експортую питання…",
         saved: "Експорт збережено.",
         savedCount: "Збережено {done}/{total}.",

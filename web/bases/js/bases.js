@@ -379,17 +379,10 @@ async function refreshBases() {
 
 /* ================= DB: CRUD baz ================= */
 async function createBase(name) {
-  const { data, error } = await sb()
-    .from("question_bases")
-    .insert({
-      owner_id: currentUser.id,
-      name: safeName(name),
-    }, { defaultToNull: false })
-    .select("id,name,owner_id,created_at,updated_at")
-    .single();
-
+  const { data, error } = await sb().rpc("base_create", { p_name: safeName(name) });
   if (error) throw error;
-  return data;
+  if (!data?.ok) throw new Error(data?.error || "create_failed");
+  return { id: data.id, name: data.name, owner_id: data.owner_id, created_at: data.created_at, updated_at: data.updated_at };
 }
 
 /** Komunikat, gdy base:B nie da się zająć wyłącznie (familijna-server/docs/blokady-zasobow.md, sekcja 6). */

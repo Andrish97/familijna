@@ -42,6 +42,7 @@ import {
   editGate,
 } from "../../shared/js/core/game-validate.js";
 import { isResourceBusy, acquireResourceLock, getTabId } from "../../shared/js/core/resource-lock.js";
+import { createGameWithContent } from "../../shared/js/core/game-content.js";
 import { icon, iconText } from "../../shared/js/core/icons.js";
 import { initListSearch } from "../../shared/js/core/list-search.js";
 import { gameStateKey, SORT_LIST } from "../../shared/js/core/list-filter.js";
@@ -106,7 +107,6 @@ const MSG = {
   importErrorLabel: () => t("games.import.progress.errorLabel"),
   importFailed: () => t("games.import.progress.failed"),
   importDbFailed: () => t("games.import.dbFailed"),
-  exportBaseFolderStep: () => t("games.exportBase.progress.folder"),
   exportBaseQuestionsStep: () => t("games.exportBase.progress.questions"),
 };
 
@@ -500,34 +500,6 @@ function getSelectedBaseId() {
   return baseSelectWrap?.querySelector('input[name="exportBase"]:checked')?.value || null;
 }
 
-async function pickUniqueRootFolderName(baseId, desiredName) {
-  const base = String(desiredName || MSG.gameFallback()).trim() || MSG.gameFallback();
-  const base80 = base.slice(0, 80);
-
-  // pobierz nazwy root-folderów z tej bazy
-  const { data, error } = await sb()
-    .from("qb_categories")
-    .select("name")
-    .eq("base_id", baseId)
-    .is("parent_id", null);
-
-  if (error) throw error;
-
-  const used = new Set((data || []).map(r => String(r.name || "").trim()));
-
-  if (!used.has(base80)) return base80;
-
-  // Dodawaj (2), (3)... pilnując limitu 80 znaków
-  for (let n = 2; n < 1000; n++) {
-    const suffix = ` (${n})`;
-    const candidate = base80.slice(0, Math.max(1, 80 - suffix.length)) + suffix;
-    if (!used.has(candidate)) return candidate;
-  }
-
-  // awaryjnie (nie powinno się zdarzyć)
-  return (base80.slice(0, 70) + " (999)").slice(0, 80);
-}
-
 async function exportSelectedGameToBase(baseId, onProgress) {
   if (!selectedId) return;
 
@@ -539,92 +511,30 @@ async function exportSelectedGameToBase(baseId, onProgress) {
     }
   });
 
-  const gameNameRaw = String(obj?.game?.name || MSG.gameFallback()).trim() || MSG.gameFallback();
-  const gameName = await pickUniqueRootFolderName(baseId, gameNameRaw);
-
-  // 2) Utwórz folder w root o nazwie gry
-  // Ustal ord = max(root.ord)+1 (opcjonalnie, ale stabilnie)
-
-  const { data: lastRoot, error: eLast } = await sb()
-    .from("qb_categories")
-    .select("ord")
-    .eq("base_id", baseId)
-    .is("parent_id", null)
-    .order("ord", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (eLast) throw eLast;
-
-  const nextOrd = (Number(lastRoot?.ord) || 0) + 1;
-
-  if (typeof onProgress === "function") {
-    onProgress({ step: MSG.exportBaseFolderStep(), i: 0, n: 1, msg: "" });
-  }
-
-  const { data: folder, error: eCat } = await sb()
-    .from("qb_categories")
-    .insert(
-      { base_id: baseId, parent_id: null, name: gameName.slice(0, 80), ord: nextOrd },
-      { defaultToNull: false }
-    )
-    .select("id")
-    .single();
-  if (eCat) throw eCat;
-
-  try {
-    await insertExportedQuestions(baseId, folder.id, obj, onProgress);
-  } catch (e) {
-    // Bez tego błąd w połowie zostawiał w bazie folder z częścią pytań (albo
-    // pusty), a ponowna próba tworzyła obok "Nazwa (2)". qb_questions ma
-    // category_id ON DELETE SET NULL, więc pytania trzeba usunąć jawnie.
-    try {
-      await sb().from("qb_questions").delete().eq("category_id", folder.id);
-      await sb().from("qb_categories").delete().eq("id", folder.id);
-    } catch (cleanupErr) {
-      console.warn("[games] export-to-base cleanup failed:", cleanupErr);
-    }
-    throw e;
-  }
-}
-
-async function insertExportedQuestions(baseId, folderId, obj, onProgress) {
-  // 3) Zapisz pytania do tego folderu
-  const qs = Array.isArray(obj?.questions) ? obj.questions : [];
-  const rows = qs.map((q, i) => ({
-    base_id: baseId,
-    category_id: folderId,
-    ord: i + 1,
-    payload: {
-      text: q?.text || "",
-      answers: Array.isArray(q?.answers) ? q.answers.map((a) => ({
-        text: a?.text || "",
-        fixed_points: Number(a?.fixed_points) || 0,
-      })) : [],
-    },
+  const gameName = String(obj?.game?.name || MSG.gameFallback()).trim() || MSG.gameFallback();
+  const questions = (Array.isArray(obj?.questions) ? obj.questions : []).map((q) => ({
+    text: q?.text || "",
+    answers: Array.isArray(q?.answers) ? q.answers.map((a) => ({
+      text: a?.text || "",
+      fixed_points: Number(a?.fixed_points) || 0,
+    })) : [],
   }));
 
-  if (rows.length) {
-    const nQ = rows.length;
-    const CHUNK = 200;
-
-    if (typeof onProgress === "function") {
-      onProgress({ step: MSG.exportBaseQuestionsStep(), i: 0, n: nQ, msg: "" });
-    }
-
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const part = rows.slice(i, i + CHUNK);
-      const { error: eQ } = await sb().from("qb_questions").insert(part, { defaultToNull: false });
-      if (eQ) throw eQ;
-
-      if (typeof onProgress === "function") {
-        onProgress({
-          step: MSG.exportBaseQuestionsStep(),
-          i: Math.min(i + part.length, nQ),
-          n: nQ,
-          msg: t("games.exportBase.progress.savedCount", { done: Math.min(i + part.length, nQ), total: nQ }),
-        });
-      }
-    }
+  // Folder w katalogu głównym bazy (nazwa zajęta -> „Nazwa (2)”) i pytania
+  // w jednej transakcji (migracja 534) -- błąd nie zostawia niepełnego folderu.
+  if (typeof onProgress === "function") {
+    onProgress({ step: MSG.exportBaseQuestionsStep(), i: 0, n: questions.length, msg: "" });
+  }
+  const { data, error } = await sb().rpc("qb_import_folder", { p_base_id: baseId, p_name: gameName, p_questions: questions });
+  if (error) throw error;
+  if (!data?.ok) throw new Error(data?.error || "export_failed");
+  if (typeof onProgress === "function") {
+    onProgress({
+      step: MSG.exportBaseQuestionsStep(),
+      i: questions.length,
+      n: questions.length,
+      msg: t("games.exportBase.progress.savedCount", { done: questions.length, total: questions.length }),
+    });
   }
 }
 
@@ -738,21 +648,8 @@ function defaultNameForUiType(uiType) {
 }
 
 async function createGame(uiType, name) {
-  const { data, error } = await sb()
-    .from("games")
-    .insert(
-      {
-        name: name || defaultNameForUiType(uiType),
-        owner_id: currentUser.id,
-        type: uiType,
-        status: STATUS.DRAFT,
-      },
-      { defaultToNull: false }
-    )
-    .select("id,name,type,status")
-    .single();
-  if (error) throw error;
-  return data;
+  const res = await createGameWithContent(uiType, name || defaultNameForUiType(uiType));
+  return { id: res.id, name: res.name, type: res.type, status: res.status };
 }
 
 async function deleteGame(game) {
