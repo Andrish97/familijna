@@ -114,7 +114,7 @@ test("narzędzia czatu: gry, ustawienia, bazy, logo, ankiety, Rynek, wskazywanie
     expect((await ok(page, "get_base", { base_id: base.id })).questions).toHaveLength(6);
     await ok(page, "delete_base_items", { base_id: base.id, question_ids: [b.questions[1].id] });
     const trash = await ok(page, "base_trash", { base_id: base.id, action: "list" });
-    const trashIds = (trash.items || trash.trash || []).map((x) => x.id);
+    const trashIds = trash.items.map((x) => x.id);
     expect(trashIds.length, JSON.stringify(trash).slice(0, 300)).toBeGreaterThan(0);
     await ok(page, "base_trash", { base_id: base.id, action: "restore", trash_ids: trashIds });
     expect((await ok(page, "get_base", { base_id: base.id })).questions).toHaveLength(6);
@@ -184,16 +184,22 @@ test("narzędzia czatu: znajomi, kopia gry, udostępnienie bazy — dwa konta", 
   let gameId = null;
   let baseId = null;
   try {
-    // zaproszenie do znajomych i przyjęcie
-    const inv = await ok(a, "invite_contact", { kind: "friend", value: friend.username });
-    expect(inv.ok).toBe(true);
-    const rows = await ok(b, "list_contacts", { kind: "friends" });
-    const incoming = (Array.isArray(rows) ? rows : rows.rows || []).find((r) => r.direction === "incoming" && r.status === "pending");
-    expect(incoming, JSON.stringify(rows).slice(0, 400)).toBeTruthy();
-    await ok(b, "manage_contact", { kind: "friends", id: incoming.id, action: "accept" });
-    const aRows = await ok(a, "list_contacts", { kind: "friends" });
-    const fr = (Array.isArray(aRows) ? aRows : aRows.rows || []).find((r) => r.status === "accepted");
-    expect(fr?.user_id, JSON.stringify(aRows).slice(0, 400)).toBeTruthy();
+    // znajomość: zaproszenie i przyjęcie — albo odtworzenie po wcześniejszym
+    // przebiegu (usunięcie znajomego blokuje nowe zaproszenie na 30 dni)
+    const rowsOf = async (page) => { const r = await ok(page, "list_contacts", { kind: "friends" }); return Array.isArray(r) ? r : r.rows || []; };
+    const about = (rows, name) => rows.find((r) => r.label === name);
+    let mine = about(await rowsOf(a), friend.username);
+    let theirs = about(await rowsOf(b), owner.username);
+    if (theirs?.status === "declined") await ok(b, "manage_contact", { kind: "friends", id: theirs.id, action: "undo_reject" });
+    if (mine?.status === "declined") await ok(a, "manage_contact", { kind: "friends", id: mine.id, action: "undo_reject" });
+    mine = about(await rowsOf(a), friend.username);
+    if (!mine) expect((await ok(a, "invite_contact", { kind: "friend", value: friend.username })).ok).toBe(true);
+    theirs = about(await rowsOf(b), owner.username);
+    if (theirs?.status === "pending" && theirs.direction === "incoming") await ok(b, "manage_contact", { kind: "friends", id: theirs.id, action: "accept" });
+    mine = about(await rowsOf(a), friend.username);
+    if (mine?.status === "pending" && mine.direction === "incoming") await ok(a, "manage_contact", { kind: "friends", id: mine.id, action: "accept" });
+    const fr = about(await rowsOf(a), friend.username);
+    expect(fr, JSON.stringify(await rowsOf(a)).slice(0, 400)).toMatchObject({ status: "active", direction: "friend" });
 
     // kopia gry: wysłanie (Worker /_api/resource-send) i przyjęcie
     gameId = (await ok(a, "create_game", { type: "prepared", name: `${STAMP} do wysłania`, questions: questions(10) })).id;
@@ -228,7 +234,7 @@ test("narzędzia czatu: znajomi, kopia gry, udostępnienie bazy — dwa konta", 
       const list = Array.isArray(rows.value) ? rows.value : rows.value?.rows || [];
       for (const r of list) {
         if (![owner.username, friend.username].includes(r.label) && ![owner.username, friend.username].includes(r.username)) continue;
-        await tool(page, "manage_contact", { kind: "friends", id: r.id, action: r.status === "accepted" ? "remove" : r.direction === "incoming" ? "reject" : "cancel" });
+        await tool(page, "manage_contact", { kind: "friends", id: r.id, action: r.status === "active" ? "remove" : r.direction === "incoming" ? "reject" : "cancel" });
       }
     }
     await ctxA.close();

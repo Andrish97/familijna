@@ -10,13 +10,13 @@ const newRequestId = () => globalThis.crypto.randomUUID();
 export default [
   {
     name: "send_copy",
-    description: "Send a copy of the user's game or logo to friends (button “Send”). Each friend gets the copy to accept within 5 days (and an e-mail when allowed); the original stays unchanged. Friends' user_id: list_contacts kind=friends (status accepted). Some items cannot be sent (e.g. demo files) — the error says why.",
+    description: "Send a copy of the user's game or logo to friends (button “Send”). Each friend gets the copy to accept within 5 days (and an e-mail when allowed); the original stays unchanged. Friends' user_id: list_contacts kind=friends (status active). Some items cannot be sent (e.g. demo files) — the error says why.",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["game", "logo"] },
         source_id: { ...uuid, description: "Game id (list_games) or logo id (list_logos)." },
-        friend_user_ids: { ...uuidList, description: "user_id of accepted friends." },
+        friend_user_ids: { ...uuidList, description: "user_id of friends (status active)." },
       },
       required: ["kind", "source_id", "friend_user_ids"],
     },

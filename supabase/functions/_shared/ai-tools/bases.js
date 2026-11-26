@@ -203,7 +203,14 @@ export default [
     },
     confirm: ({ action }) => (action === "purge" ? "irreversible" : null),
     async run({ base_id, action, trash_ids }, ctx) {
-      if (action === "list") return rpc(ctx, "qb_trash_list", { p_base_id: base_id });
+      if (action === "list") {
+        const rows = await rpc(ctx, "qb_trash_list", { p_base_id: base_id });
+        return {
+          items: (Array.isArray(rows) ? rows : rows?.items || []).map((x) => ({
+            id: x.id, kind: x.kind, label: x.label, deleted_at: x.deleted_at, expires_at: x.expires_at, questions: x.n_questions, folders: x.n_folders,
+          })),
+        };
+      }
       const res = action === "restore"
         ? await rpc(ctx, "qb_trash_restore", { p_base_id: base_id, p_trash_ids: trash_ids || [] })
         : await rpc(ctx, "qb_trash_purge", { p_base_id: base_id, p_trash_ids: trash_ids?.length ? trash_ids : null });
