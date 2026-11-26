@@ -1859,6 +1859,12 @@
     text-align: left;
   }
   .topbar-mobile-group { display: contents; }
+  /* Telefon: motyw i język w menu ☰ — jeden rząd na górze (decyzja 2026-11-26). */
+  .topbar-mobile-prefs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .topbar-mobile-prefs:empty { display: none; }
+  .topbar-mobile-prefs > * { min-width: 0; }
+  .topbar-mobile-prefs .btn { width: 100%; display: flex; align-items: center; justify-content: flex-start; gap: 8px; }
+  .topbar-mobile-prefs .btn[data-menu-label]::after { content: attr(data-menu-label); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .topbar-mobile-sep {
     height: 1px;
     background: var(--line-faint);

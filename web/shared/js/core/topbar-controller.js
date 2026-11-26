@@ -498,13 +498,18 @@ function initTopbarController() {
   // Układ telefonu: data-compact (core/device-attrs.js), ten sam atrybut co CSS.
   const useMediaMobileMode = () => isCompactLayout() && !hasOverflowNav;
   const section2Placeholder = document.createComment('topbar-section-2-restore');
+  // Telefon (decyzja 2026-11-26): motyw i język w menu ☰ — w pasku zostają
+  // czat, Wskazówki i ☰. Przyciski wracają do section-3 poza układem telefonu.
+  const prefsPlaceholder = document.createComment('topbar-prefs-restore');
+  const PREFS = ':scope > .theme-switcher, :scope > .lang-switcher';
+  const prefsInBar = () => [...section3.querySelectorAll(PREFS)];
   const section4Placeholder = document.createComment('topbar-section-4-restore');
   const tabsPlaceholder = document.createComment('topbar-tabs-restore');
   const simpleTabs = document.querySelector('.simple-tabs');
   const menuContentSelector =
     'button, a, [role="button"], [role="tab"], .btn, .user-btn, .lang-switcher, .theme-switcher, .top-status';
 
-  let overlay, panel, mount, tabGroup, group2, group4, sep, toggleBtn, toggleBadge, badgeObserver;
+  let overlay, panel, mount, tabGroup, groupPrefs, sepPrefs, group2, group4, sep, toggleBtn, toggleBadge, badgeObserver;
   let isMobileMounted = false;
   let navRequiresMobile = false;
 
@@ -544,7 +549,7 @@ function initTopbarController() {
   const hasMenuContent = () => {
     const hasTabs = !!simpleTabs?.querySelector('.tab, button, [role="tab"]');
     const sel = 'button, a, .btn, [role="button"], [role="tab"], .user-btn, .lang-switcher, .theme-switcher, .top-status';
-    return hasTabs ||
+    return hasTabs || (isCompactLayout() && prefsInBar().length > 0) ||
       [...section2.querySelectorAll(sel)].some(isVisible) ||
       [...section4.querySelectorAll(sel)].some(isVisible);
   };
@@ -566,6 +571,30 @@ function initTopbarController() {
     if (!sep) return;
     const visible = (root) => !!root && [...root.querySelectorAll(menuContentSelector)].some((el) => !isHiddenWithin(el, mount));
     sep.hidden = !((tabGroup?.childElementCount || 0) > 0 || visible(group2)) || !visible(group4);
+    if (sepPrefs) sepPrefs.hidden = !groupPrefs?.childElementCount
+      || !((tabGroup?.childElementCount || 0) > 0 || visible(group2) || visible(group4));
+  };
+
+  // W menu przyciski mają podpis jak inne pozycje (CSS: ::after z data-menu-label).
+  const labelPrefs = () => {
+    groupPrefs?.querySelector('.theme-btn')?.setAttribute('data-menu-label', t('common.themeLabel'));
+    groupPrefs?.querySelector('.lang-btn')?.setAttribute('data-menu-label', t('common.languageLabel'));
+  };
+  window.addEventListener('i18n:lang', () => labelPrefs());
+
+  // Motyw i język: do menu ☰ na telefonie, z powrotem do paska poza nim.
+  const syncPrefs = () => {
+    if (!isMobileMounted || !groupPrefs) return;
+    if (isCompactLayout()) {
+      const items = prefsInBar();
+      if (items.length && !prefsPlaceholder.parentNode) section3.insertBefore(prefsPlaceholder, items[0]);
+      for (const el of items) groupPrefs.appendChild(el);
+      labelPrefs();
+    } else {
+      while (groupPrefs.firstChild) section3.insertBefore(groupPrefs.firstChild, prefsPlaceholder.parentNode ? prefsPlaceholder : toggleBtn);
+      prefsPlaceholder.remove();
+    }
+    syncSep();
   };
 
   const open = () => {
@@ -606,6 +635,12 @@ function initTopbarController() {
     group4 = document.createElement('div');
     group4.className = 'topbar-mobile-group topbar-mobile-group-4';
 
+    groupPrefs = document.createElement('div');
+    groupPrefs.className = 'topbar-mobile-prefs';
+    sepPrefs = document.createElement('div');
+    sepPrefs.className = 'topbar-mobile-sep';
+    mount.append(groupPrefs, sepPrefs);
+
     if (simpleTabs?.parentNode) {
       simpleTabs.parentNode.insertBefore(tabsPlaceholder, simpleTabs);
       tabGroup.appendChild(simpleTabs);
@@ -640,10 +675,12 @@ function initTopbarController() {
     sep = document.createElement('div');
     sep.className = 'topbar-mobile-sep';
     mount.append(group2, sep, group4);
+    syncPrefs();
 
     const visibleItems = (root) => [...root.querySelectorAll(menuContentSelector)].filter(isVisible);
     syncSep();
     const hasAnything =
+      (groupPrefs?.childElementCount || 0) > 0 ||
       (tabGroup?.childElementCount || 0) > 0 ||
       visibleItems(group2).length > 0 ||
       visibleItems(group4).length > 0;
@@ -701,6 +738,8 @@ function initTopbarController() {
     _accountState?.collapse();
     _mobileActive = false;
 
+    while (groupPrefs?.firstChild) section3.insertBefore(groupPrefs.firstChild, prefsPlaceholder.parentNode ? prefsPlaceholder : null);
+    prefsPlaceholder.remove();
     while (group2?.firstChild) section2.insertBefore(group2.firstChild, section2Placeholder);
     while (group4?.firstChild) section4.insertBefore(group4.firstChild, section4Placeholder);
 
@@ -720,16 +759,20 @@ function initTopbarController() {
 
     try { badgeObserver?.disconnect(); } catch {}
     badgeObserver = toggleBadge = null;
-    overlay = panel = mount = tabGroup = group2 = group4 = sep = toggleBtn = null;
+    overlay = panel = mount = tabGroup = groupPrefs = sepPrefs = group2 = group4 = sep = toggleBtn = null;
 
     // Przelicz overflow po przywróceniu section-2
     _overflowState?.collapseAll();
   };
 
+  const hasPrefs = () => prefsInBar().length > 0 || (groupPrefs?.childElementCount || 0) > 0;
   const syncMode = () => {
-    if (useMediaMobileMode() || navRequiresMobile) mountMobile();
+    if (useMediaMobileMode() || navRequiresMobile || (isCompactLayout() && hasPrefs())) { mountMobile(); syncPrefs(); }
     else unmountMobile();
   };
+  // Motyw i język dokładane po starcie paska (theme-switcher, translation.js).
+  new MutationObserver(() => { if (prefsInBar().length && isCompactLayout()) syncMode(); })
+    .observe(section3, { childList: true });
 
   window.addEventListener('topbar:mobile-required', (event) => {
     navRequiresMobile = !!event.detail?.required;
