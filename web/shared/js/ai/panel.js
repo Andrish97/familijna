@@ -76,7 +76,9 @@ export async function mountAiPanel({ pageId }) {
   const slot = document.querySelector(".topbar-section-3");
   if (!slot) return;
 
-  const toggle = iconButton("chat", t("aiChat.open"), "ai-toggle");
+  // rozmiar jak inne przyciski paska (Wskazówki, ☰) — bez „sm”
+  const toggle = el("button", "btn ai-toggle", { type: "button", "aria-label": t("aiChat.open"), title: t("aiChat.open") });
+  toggle.innerHTML = icon("chat");
   toggle.id = "btnAiChat";
   toggle.setAttribute("aria-controls", AI_DIALOG_ID);
   toggle.setAttribute("aria-expanded", "false");
