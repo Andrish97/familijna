@@ -27,6 +27,10 @@ const CAPTCHA_HOSTS = "https://challenges.cloudflare.com https://js.hcaptcha.com
 export const AI_PROVIDER_HOSTS = [
   "https://api.anthropic.com", "https://api.openai.com", "https://generativelanguage.googleapis.com",
   "https://api.deepseek.com", "https://api.mistral.ai", "https://api.x.ai", "https://openrouter.ai",
+  "https://api.groq.com", "https://api.cerebras.ai", "https://router.huggingface.co", "https://api.together.xyz",
+  "https://api.fireworks.ai", "https://api.deepinfra.com", "https://api.studio.nebius.com", "https://api.novita.ai",
+  "https://api.moonshot.ai", "https://dashscope-intl.aliyuncs.com", "https://api.cohere.ai", "https://api.llama.com",
+  "https://router.requesty.ai", "https://ai-gateway.vercel.sh",
 ].join(" ");
 // E24 R12: strony aplikacji bez 'unsafe-inline'/'unsafe-eval' i bez CDN —
 // skrypty z własnej domeny, captcha, Web Analytics oraz stałe skrypty wbudowane

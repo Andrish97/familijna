@@ -2,7 +2,7 @@
 // js/ai-dostawcy.js). Zapytania idą prosto z przeglądarki do dostawcy —
 // nie przez serwery Familijnej. Trzy rodzaje API: Anthropic Messages,
 // Google Gemini generateContent i API zgodne z OpenAI (Chat Completions:
-// OpenAI, DeepSeek, Mistral, xAI, OpenRouter). Narzędzia (katalog w
+// OpenAI, DeepSeek, Mistral, xAI, OpenRouter, Groq i inni). Narzędzia (katalog w
 // tools/) każdy dostawca dostaje w swoim formacie.
 // Rozmowa trzyma historię w formacie swojego dostawcy — zmiana dostawcy
 // zaczyna nową rozmowę.
@@ -25,6 +25,22 @@ export const PROVIDERS = {
   mistral: { label: "Mistral", kind: "openai", base: "https://api.mistral.ai/v1", keyUrl: "https://console.mistral.ai/api-keys" },
   xai: { label: "xAI (Grok)", kind: "openai", base: "https://api.x.ai/v1", keyUrl: "https://console.x.ai" },
   openrouter: { label: "OpenRouter", kind: "openai", base: "https://openrouter.ai/api/v1", keyUrl: "https://openrouter.ai/keys" },
+  // Decyzja 34: dostawcy zgodni z OpenAI, którzy przyjmują zapytania ze strony
+  // (CORS sprawdzony: tests/e2e/ai-providers-cors.spec.js).
+  groq: { label: "Groq", kind: "openai", base: "https://api.groq.com/openai/v1", keyUrl: "https://console.groq.com/keys" },
+  cerebras: { label: "Cerebras", kind: "openai", base: "https://api.cerebras.ai/v1", keyUrl: "https://cloud.cerebras.ai" },
+  huggingface: { label: "Hugging Face", kind: "openai", base: "https://router.huggingface.co/v1", keyUrl: "https://huggingface.co/settings/tokens" },
+  together: { label: "Together AI", kind: "openai", base: "https://api.together.xyz/v1", keyUrl: "https://api.together.ai/settings/api-keys" },
+  fireworks: { label: "Fireworks AI", kind: "openai", base: "https://api.fireworks.ai/inference/v1", keyUrl: "https://fireworks.ai/account/api-keys" },
+  deepinfra: { label: "DeepInfra", kind: "openai", base: "https://api.deepinfra.com/v1/openai", keyUrl: "https://deepinfra.com/dash/api_keys" },
+  nebius: { label: "Nebius AI Studio", kind: "openai", base: "https://api.studio.nebius.com/v1", keyUrl: "https://studio.nebius.com/settings/api-keys" },
+  novita: { label: "Novita AI", kind: "openai", base: "https://api.novita.ai/v3/openai", keyUrl: "https://novita.ai/settings/key-management" },
+  moonshot: { label: "Moonshot (Kimi)", kind: "openai", base: "https://api.moonshot.ai/v1", keyUrl: "https://platform.moonshot.ai/console/api-keys" },
+  qwen: { label: "Alibaba Qwen", kind: "openai", base: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1", keyUrl: "https://modelstudio.console.alibabacloud.com/" },
+  cohere: { label: "Cohere", kind: "openai", base: "https://api.cohere.ai/compatibility/v1", keyUrl: "https://dashboard.cohere.com/api-keys" },
+  llama: { label: "Meta Llama API", kind: "openai", base: "https://api.llama.com/compat/v1", keyUrl: "https://llama.developer.meta.com/api-keys" },
+  requesty: { label: "Requesty", kind: "openai", base: "https://router.requesty.ai/v1", keyUrl: "https://app.requesty.ai/api-keys" },
+  vercel: { label: "Vercel AI Gateway", kind: "openai", base: "https://ai-gateway.vercel.sh/v1", keyUrl: "https://vercel.com/dashboard/ai-gateway" },
 };
 
 const MAX_TOKENS = 8000;
@@ -132,8 +148,14 @@ export async function listModels(providerId, key) {
       .map((m) => m.name.replace(/^models\//, ""))
       .filter((m) => !/(image|imagen|tts|audio|live|lyria|banana|embedding|aqa)/i.test(m));
   }
-  const w = await requestJson(`${p.base}/models`, { headers: { authorization: `Bearer ${key}` } });
-  return (w?.data || []).map((m) => m.id).sort();
+  try {
+    const w = await requestJson(`${p.base}/models`, { headers: { authorization: `Bearer ${key}` } });
+    return (w?.data || []).map((m) => m.id).sort();
+  } catch (e) {
+    // dostawca bez listy modeli: klucz przyjęty, model zalecany z RECOMMENDED_FALLBACK
+    if (e instanceof ProviderError && e.status === 404 && RECOMMENDED_FALLBACK[providerId]) return [RECOMMENDED_FALLBACK[providerId]];
+    throw e;
+  }
 }
 
 // Zalecany model z listy dostawcy (szybki i rozsądny), po wzorcach nazw;
@@ -146,7 +168,23 @@ const RECOMMENDED = {
   mistral: [/mistral-medium-latest/, /medium/],
   xai: [/grok.*(fast|mini)/, /grok/],
   openrouter: [/^google\/gemini-[\d.]+-flash$/, /gemini.*flash(?!-lite)/],
+  groq: [/gpt-oss-120b/, /llama-3\.3-70b/],
+  cerebras: [/gpt-oss-120b/, /llama-3\.3-70b/, /qwen-3/],
+  huggingface: [/gpt-oss-120b/, /Llama-3\.3-70B/],
+  together: [/gpt-oss-120b/, /Llama-3\.3-70B-Instruct-Turbo/],
+  fireworks: [/gpt-oss-120b/, /llama-v3p3-70b/],
+  deepinfra: [/gpt-oss-120b/, /Llama-3\.3-70B/],
+  nebius: [/gpt-oss-120b/, /Llama-3\.3-70B/],
+  novita: [/gpt-oss-120b/, /llama-3\.3-70b/],
+  moonshot: [/kimi-k2/],
+  qwen: [/^qwen-plus$/, /qwen-plus/],
+  cohere: [/command-a/, /command-r/],
+  llama: [/Llama-4-Maverick/, /Llama-3\.3-70B/],
+  requesty: [/google\/gemini-[\d.]+-flash$/, /gemini.*flash/],
+  vercel: [/google\/gemini-[\d.]+-flash$/, /gemini.*flash/],
 };
+// Model, gdy dostawca nie zwraca listy modeli (404 na /models).
+const RECOMMENDED_FALLBACK = { cohere: "command-a-03-2025", qwen: "qwen-plus", llama: "Llama-4-Maverick-17B-128E-Instruct-FP8" };
 const version = (m) => { const v = String(m).match(/(\d+(?:\.\d+)?)/); return v ? parseFloat(v[1]) : 0; };
 const preview = (m) => /preview|exp|latest-|\d{4}-?\d{2}-?\d{2}|thinking|search|vision|audio|realtime|transcribe|codex|instruct/i.test(m) && !/-latest$/.test(m);
 export function recommendedModel(providerId, models = []) {
