@@ -231,7 +231,7 @@ export async function initEntryPage(id, { ready, route } = {}) {
 }
 
 // Strony bez czatu AI: wejście, logowanie, centrum maili, podłączanie urządzenia.
-const NO_AI_PANEL = new Set(["login", "privacy", "mailCenter", "connectDevice"]);
+const NO_AI_PANEL = new Set(["login", "privacy", "mailCenter", "connectDevice", "connectAi"]);
 
 export async function initPage(id, opts = {}) {
   let finishLayout;

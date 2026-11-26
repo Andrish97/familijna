@@ -1,5 +1,17 @@
 // Tłumaczenia PL — część „connect”.
 const pl = {
+  connectAi: {
+    pageTitle: "Familijna — połącz z asystentem AI",
+    title: "Połącz z asystentem AI",
+    wants: "{name} chce dostępu do Twojego konta Familijna",
+    what: "Asystent będzie mógł czytać i zmieniać Twoje gry, bazy pytań, logo, ankiety i kontakty — tak jak Ty na stronie. Zanim usunie coś albo wyśle innym osobom, zapyta Cię o zgodę w swojej aplikacji.",
+    revoke: "Dostęp odwołasz w Ustawieniach konta, w sekcji „Asystent AI”.",
+    returnTo: "Po decyzji wrócisz do: {host}",
+    allow: "Zezwól",
+    deny: "Odmów",
+    expired: "Ta prośba o dostęp wygasła albo została już rozpatrzona. Połącz łącznik jeszcze raz w aplikacji asystenta.",
+    needAccount: "Łącznik AI działa tylko na koncie zarejestrowanym.",
+  },
   connectDevice: {
     tv: {
       pageTitle: "Familijna — Podłącz wyświetlacz",

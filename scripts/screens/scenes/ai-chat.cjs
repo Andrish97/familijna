@@ -35,3 +35,11 @@ module.exports.push(
       await view.waitForTimeout(300);
     }] },
 );
+
+// Zgoda na dostęp łącznika AI (web/connect/ai/, decyzja 19): Claude chce dostępu do konta.
+module.exports.push({
+  id: "connect-ai-consent", category: "Czat AI", title: "Łącznik AI — zgoda na dostęp do konta",
+  path: "/connect/ai/?request=53700000-0000-4000-8000-000000000001", sources: ["web/connect/ai/"],
+  ready: "#aiConsent:not([hidden])", devices: ["desktop", "phone"],
+  db: (db) => { db.rpc.mcp_authorize_info = { ok: true, client_name: "Claude", redirect_host: "claude.ai" }; },
+});

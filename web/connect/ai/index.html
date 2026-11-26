@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta name="app-version" content="v2026-11-21T21173"/>
+
+
+  <meta charset="UTF-8"/>
+  <meta name="i18n-parts" content="connect resources">
+  <meta name="robots" content="noindex, nofollow"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-visual"/>
+  <script src="/shared/js/core/page-boot.js"></script>
+  <link rel="preconnect" href="https://api.familijna.app" crossorigin>
+  <title data-i18n="connectAi.pageTitle">Familijna — połącz z asystentem AI</title>
+
+  <link rel="icon" href="/favicon.ico"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/icon-apple-touch-180.png"/>
+  <link rel="manifest" href="/manifest.json"/>
+  <meta name="theme-color" content="#050914"/>
+  <link rel="stylesheet" href="/shared/css/blocking-overlay.css" />
+  <link rel="stylesheet" href="/shared/style/tokens.css"/>
+  <link rel="stylesheet" href="/shared/style/base.css"/>
+  <link rel="stylesheet" href="/shared/style/components.css"/>
+  <link rel="stylesheet" href="/shared/style/layout.css"/>
+  <link rel="stylesheet" href="/shared/style/utilities.css"/>
+  <link rel="stylesheet" href="/connect/ai/css/connect-ai.css"/>
+  <script type="module" src="/shared/js/core/device-attrs.js"></script>
+
+  <script>document.documentElement.classList.add('page-loading')</script>
+  <script src="/shared/vendor/supabase-js.js" defer></script>
+  <script src="/shared/js/core/security-warning.js" defer></script>
+  <script type="module" src="/connect/ai/js/connect-ai.js" defer></script>
+  <script type="module" src="/shared/js/core/topbar-controller.js" defer></script>
+
+</head>
+
+<body class="page-fit skel-body">
+  <header class="topbar topbar-layout-4">
+    <div class="topbar-section topbar-section-1">
+      <div class="brand">FAMILIJNA</div>
+      <button class="btn" id="btnBack" type="button" data-i18n-icon="arrow-left">Wstecz</button>
+    </div>
+    <div class="topbar-section topbar-section-2"></div>
+    <div class="topbar-section topbar-section-3">
+      <button class="btn" id="btnManual" type="button" data-i18n-aria-label="common.manualLabel" data-i18n-title="common.manualLabel" aria-label="Wskazówki" title="Wskazówki"><i class="ico" data-icon="help"></i></button>
+    </div>
+    <div class="topbar-section topbar-section-4">
+      <span class="who" id="who"></span>
+      <button class="btn" id="btnLogout" type="button" data-i18n="common.authEntry" data-i18n-icon="person">Zaloguj / Załóż konto</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="bar">
+      <div><div class="title" data-i18n="connectAi.title">Połącz z asystentem AI</div></div>
+    </div>
+
+    <section class="games-shell" data-skel-step>
+      <div class="card connect-ai-card">
+        <div class="stack" id="aiConsent" hidden>
+          <div class="section-title" id="aiConsentHead"></div>
+          <div class="section-hint" data-i18n="connectAi.what">Asystent będzie mógł czytać i zmieniać Twoje gry, bazy pytań, logo, ankiety i kontakty — tak jak Ty na stronie. Zanim usunie coś albo wyśle innym osobom, zapyta Cię o zgodę w swojej aplikacji.</div>
+          <div class="section-hint" data-i18n="connectAi.revoke">Dostęp odwołasz w Ustawieniach konta, w sekcji „Asystent AI”.</div>
+          <div class="hint" id="aiConsentReturn"></div>
+          <div class="cluster cluster--end">
+            <button class="btn" id="btnAiDeny" type="button" data-i18n="connectAi.deny">Odmów</button>
+            <button class="btn gold" id="btnAiAllow" type="button" data-i18n="connectAi.allow" data-i18n-icon="check">Zezwól</button>
+          </div>
+        </div>
+        <div class="callout callout--bad" id="aiConsentError" hidden></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer wrap">
+    <div data-i18n="common.footer.left">© 2026 Familijna — system do gry na żywo</div>
+    <button class="btn-contact-footer" type="button" data-contact-modal data-i18n="common.contactBtn">Kontakt</button>
+  </footer>
+
+  <script type="module" src="/shared/js/core/contact-modal.js"></script>
+</body>
+</html>
