@@ -190,8 +190,13 @@ async function step(c, onText, signal) {
     const res = await request(`${c.base}/messages`, {
       method: "POST", headers: anthropicHeaders(c.key), signal,
       body: JSON.stringify({
-        model: c.model, max_tokens: MAX_TOKENS, system: c.system, messages: c.history, stream: true,
-        tools: c.tools.map((x) => ({ name: x.name, description: x.description, input_schema: x.inputSchema })),
+        // cache_control: stały początek (narzędzia + prompt) liczony taniej przy kolejnych krokach (decyzja 28)
+        model: c.model, max_tokens: MAX_TOKENS, messages: c.history, stream: true,
+        system: [{ type: "text", text: c.system, cache_control: { type: "ephemeral" } }],
+        tools: c.tools.map((x, i, all) => ({
+          name: x.name, description: x.description, input_schema: x.inputSchema,
+          ...(i === all.length - 1 ? { cache_control: { type: "ephemeral" } } : {}),
+        })),
       }),
     });
     const blocks = [];

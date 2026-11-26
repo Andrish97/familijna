@@ -89,7 +89,7 @@ function place(ring, note, el) {
   }
 }
 
-function show(el, text, { onBack }) {
+function show(el, text, { onBack, onNext }) {
   clearPointer();
   const ring = document.createElement("div");
   ring.className = "ai-pointer";
@@ -112,16 +112,18 @@ function show(el, text, { onBack }) {
   back.type = "button";
   back.className = "btn sm";
   back.innerHTML = iconText("chat", t("aiChat.pointer.back"));
+  // [Zrobione — dalej]: prowadzenie krok po kroku — czat wraca i sprawdza
+  // stan, potem pokazuje następny krok (onNext). Bez onNext: [Rozumiem].
   const ok = document.createElement("button");
   ok.type = "button";
   ok.className = "btn sm gold";
-  ok.innerHTML = iconText("check", t("aiChat.pointer.ok"));
+  ok.innerHTML = onNext ? iconText("arrow-right", t("aiChat.pointer.next")) : iconText("check", t("aiChat.pointer.ok"));
   actions.append(back, ok);
   note.append(actions);
   document.body.append(ring, note);
   const onKey = (e) => { if (e.key === "Escape") clearPointer(); };
   document.addEventListener("keydown", onKey);
-  ok.addEventListener("click", clearPointer);
+  ok.addEventListener("click", () => { clearPointer(); onNext?.(); });
   back.addEventListener("click", () => { clearPointer(); onBack?.(); });
   el?.addEventListener("click", clearPointer, { once: true });
   const tall = el && el.getBoundingClientRect().height > window.innerHeight * 0.5;
@@ -132,7 +134,7 @@ function show(el, text, { onBack }) {
 }
 
 /** Wskazanie na bieżącej stronie. Zwraca wynik dla modelu. */
-export async function pointHere(pageId, { place: key, id, text }, { onBack } = {}) {
+export async function pointHere(pageId, { place: key, id, text }, { onBack, onNext } = {}) {
   const target = POINT_TARGETS[pageId]?.[key];
   if (!target) return { error: "unknown_place" };
   const clicks = pageId !== "control";
@@ -140,7 +142,7 @@ export async function pointHere(pageId, { place: key, id, text }, { onBack } = {
   if (clicks && target.select && id) selected = await selectTile(pageId, target.select, id);
   if (clicks) for (const sel of target.before || []) { clickIfThere(sel); await sleep(250); }
   const el = await waitFor(target.sel);
-  show(el, text, { onBack });
+  show(el, text, { onBack, onNext });
   return { ok: true, shown: !!el, ...(selected ? {} : { note: "item_not_found_on_page" }) };
 }
 

@@ -332,6 +332,8 @@ const pl = {
       cancel: "Nie",
     },
     pointer: {
+      next: "Zrobione — dalej",
+      doneMessage: "Zrobione. Co dalej?",
       ok: "Rozumiem",
       back: "Wróć do czatu",
       missing: "Nie widzę tego miejsca na stronie — może trzeba najpierw coś zaznaczyć albo przewinąć.",

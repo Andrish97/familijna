@@ -120,7 +120,7 @@ test("czat: klucz w sejfie, narzÄ™dzie, historia na koncie, okno wraca po przejÅ
     await expect(page.locator("#aiChatOverlay .ai-msg--assistant").last()).toHaveText(`Masz gier: ${own}.`, { timeout: 20000 });
     await expect(page.locator("#aiChatOverlay .ai-msg--tool")).toContainText("Lista gier");
     expect(requests[0].tools.some((x) => x.name === "list_games")).toBe(true);
-    expect(requests[0].system).toContain("Polish");
+    expect(JSON.stringify(requests[0].messages.at(-1).content)).toContain("language: Polish");
 
     // historia na koncie
     await expect.poll(async () => page.evaluate(async () => (await window.__sbClient.rpc("ai_chat_list", { p_limit: 5 })).data?.chats?.length), { timeout: 10000 }).toBe(1);

@@ -62,7 +62,7 @@ const { IDS } = require("../data/demo.cjs");
 const point = (pageId, place, text, id) => async (view) => {
   await view.evaluate(async ([p, k, t, i]) => {
     const m = await import("/shared/js/ai/pointer.js");
-    await m.pointHere(p, { place: k, text: t, id: i });
+    await m.pointHere(p, { place: k, text: t, id: i }, { onBack() {}, onNext() {} });
   }, [pageId, place, text, id || null]);
   await view.waitForTimeout(600);
 };

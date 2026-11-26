@@ -189,10 +189,13 @@ test("narzędzia: potwierdzenie przed nieodwracalnym, odmowa nie wykonuje, Contr
   assert.equal(JSON.parse(r.text).error, "locked");
 });
 
-test("prompt systemowy: język odpowiedzi i tryb Control", () => {
-  assert.match(chat.systemPrompt({ lang: "uk", pageId: "games" }), /reply in Ukrainian/);
-  assert.match(chat.systemPrompt({ lang: "pl", pageId: "control" }), /Do not change anything/);
-  assert.doesNotMatch(chat.systemPrompt({ lang: "pl", pageId: "games" }), /Do not change anything/);
+test("prompt: stały początek (cache), język i Control w linii kontekstu, historia bez niej", () => {
+  assert.equal(chat.systemPrompt(), chat.systemPrompt(), "bez zmiennych");
+  assert.doesNotMatch(chat.systemPrompt(), /Ukrainian|page: /);
+  assert.equal(chat.contextLine({ lang: "uk", pageId: "games" }), "<ctx>language: Ukrainian; page: games</ctx>");
+  assert.match(chat.contextLine({ lang: "pl", pageId: "control" }), /live_game/);
+  const history = [{ role: "user", content: `Ile mam gier?\n\n${chat.contextLine({ lang: "pl", pageId: "games" })}` }];
+  assert.deepEqual(chat.displayItems("anthropic", history), [{ role: "user", text: "Ile mam gier?" }]);
 });
 
 test("katalog: unikalne nazwy, schemat obiektu, potwierdzenia wysyłki i nieodwracalnych", () => {

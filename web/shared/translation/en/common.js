@@ -337,6 +337,8 @@ const en = {
       cancel: "No",
     },
     pointer: {
+      next: "Done — next",
+      doneMessage: "Done. What's next?",
       ok: "Got it",
       back: "Back to chat",
       missing: "I can’t see this place on the page — something may need to be selected or scrolled first.",

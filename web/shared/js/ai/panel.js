@@ -326,7 +326,7 @@ export async function mountAiPanel({ pageId }) {
       const point = pendingPoint;
       pendingPoint = null;
       setOpen(false);
-      await pointHere(pageId, point, { onBack: () => setOpen(true) });
+      await pointHere(pageId, point, pointActions);
       return;
     }
     if (pendingHref) {
@@ -392,8 +392,15 @@ export async function mountAiPanel({ pageId }) {
     void runTurn(text);
   });
 
+  // Dymek wskazania: „Wróć do czatu” otwiera okno; „Zrobione — dalej” otwiera
+  // je i wysyła wiadomość, żeby czat sprawdził krok i pokazał następny.
+  const pointActions = {
+    onBack: () => setOpen(true),
+    onNext: () => { setOpen(true); void runTurn(t("aiChat.pointer.doneMessage")); },
+  };
+
   const urlOpen = new URLSearchParams(location.search).get("dialog") === AI_DIALOG_ID;
   if (state.open || urlOpen) setOpen(true, { instant: true });
-  void runQueuedPoint(pageId, { onBack: () => setOpen(true) });
+  void runQueuedPoint(pageId, pointActions);
   await loadConversation();
 }
