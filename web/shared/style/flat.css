@@ -3370,6 +3370,9 @@
   .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .ai-form { display: flex; align-items: flex-end; gap: 6px; }
   .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
+  /* podgląd logo utworzonego przez czat (jak na tablicy) */
+  .ai-logo-preview { align-self: flex-start; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+  .ai-logo-preview canvas { width: min(300px, 100%); height: auto; border-radius: var(--r-sm); }
   /* Wskazanie miejsca na stronie (shared/js/ai/pointer.js, show_on_page):
      złota ramka wokół elementu i dymek z tekstem czatu. Położenie liczy JS
      (zmienne --ai-pt-*); ramka nie łapie kliknięć — element działa dalej. */

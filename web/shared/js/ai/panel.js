@@ -115,6 +115,7 @@ export async function mountAiPanel({ pageId }) {
   let abort = null;
   let pendingHref = null;
   let pendingPoint = null;
+  const newLogos = new Set();
   let changed = false;
 
   const lang = getUiLang?.() || "pl";
@@ -139,6 +140,28 @@ export async function mountAiPanel({ pageId }) {
   }
 
   function scrollEnd() { log.scrollTop = log.scrollHeight; }
+
+  // Podgląd logo utworzonego w tej odpowiedzi (draw_logo, create_text_logo) —
+  // tak jak na tablicy; usunięte logo (brak wiersza) pomijane.
+  async function showNewLogos() {
+    if (!newLogos.size) return;
+    const ids = [...newLogos];
+    newLogos.clear();
+    try {
+      const { data } = await ctx.db.from("user_logos").select("id,name,type,payload").in("id", ids);
+      if (!data?.length) return;
+      const { loadFont5x7, buildLogoPreviewCanvas } = await import("../core/logo-preview.js");
+      const glyphs = await loadFont5x7();
+      for (const logo of data) {
+        const fig = el("figure", "ai-logo-preview");
+        fig.append(buildLogoPreviewCanvas(logo, glyphs, 300, 140), el("figcaption", "hint", { text: logo.name }));
+        log.append(fig);
+      }
+      scrollEnd();
+    } catch (e) {
+      console.warn("[ai] logo preview", e);
+    }
+  }
 
   function addItem(item) {
     if (item.role === "tool") {
@@ -237,7 +260,10 @@ export async function mountAiPanel({ pageId }) {
       const href = ctx.navigateTo(page, NEEDS_ID.has(page) ? id : null);
       return href ? { ok: true, opening_page: href } : { error: "unknown_page" };
     },
-    changed() { changed = true; },
+    changed(c) {
+      changed = true;
+      if (c?.type === "logo" && c.id) newLogos.add(c.id);
+    },
     async confirm({ kind, tool }) {
       return confirmModal({
         title: t(kind === "send" ? "aiChat.confirm.sendTitle" : "aiChat.confirm.irreversibleTitle"),
@@ -263,6 +289,7 @@ export async function mountAiPanel({ pageId }) {
     pendingPoint = null;
     clearPointer();
     changed = false;
+    newLogos.clear();
     let live = null;
     const opts = {
       signal: abort.signal,
@@ -294,6 +321,7 @@ export async function mountAiPanel({ pageId }) {
       abort = null;
       await persist();
     }
+    await showNewLogos();
     if (pendingPoint) {
       const point = pendingPoint;
       pendingPoint = null;
