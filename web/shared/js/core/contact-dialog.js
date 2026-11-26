@@ -205,6 +205,17 @@ export async function openContactModal(opts = {}) {
     if (subjectField) subjectField.hidden = false;
   }
 
+  // Treść podana z zewnątrz (czat AI: zgłoszenie problemu) — do sprawdzenia
+  // i wysłania przez użytkownika; bez podanej treści pola zostają jak były.
+  if (typeof opts.subject === "string") {
+    const subjectInp = document.getElementById("cModalSubject");
+    if (subjectInp) subjectInp.value = opts.subject.slice(0, 120);
+  }
+  if (typeof opts.message === "string") {
+    const messageInp = document.getElementById("cModalMessage");
+    if (messageInp) messageInp.value = opts.message.slice(0, 4000);
+  }
+
   // Okno od dołu (telefon/tablet dotykowy) leży nad całą stroną, jak inne
   // rozbudowane okna -- zawsze w body, bez przejmowania przycisku wstecz
   // (wcześniej wstawiane do main z z-index:auto chowało pasek okna pod topbarem).

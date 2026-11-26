@@ -14,8 +14,9 @@ import polls from "./polls.js";
 import bases from "./bases.js";
 import contacts from "./contacts.js";
 import logos from "./logos.js";
+import support from "./support.js";
 
-export const TOOLS = [...knowledge, ...games, ...polls, ...bases, ...logos, ...contacts];
+export const TOOLS = [...knowledge, ...games, ...polls, ...bases, ...logos, ...contacts, ...support];
 
 const BY_NAME = new Map(TOOLS.map((x) => [x.name, x]));
 export const toolByName = (name) => BY_NAME.get(name) || null;

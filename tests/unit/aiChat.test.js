@@ -20,6 +20,7 @@ const STUBS = {
   "poll-mail.js": "export const sendPollInviteMails = async () => ({ total: 0, sent: 0, failed: 0, skipped: 0 });",
   "contact-invite.js": "export const createContactInvite = async () => ({ data: {}, mail: null }); export const sendContactInviteMail = async () => false;",
   "cache-bust.js": "export const v = async (u) => u;",
+  "contact-dialog.js": "export const openContactModal = async (o) => { globalThis.__contact = o; };",
   "nav-map.js": "export const PAGES = { games: {}, editor: {} }; export const linkTo = (p, q) => `/${p}/?${new URLSearchParams(q)}`;",
 };
 
@@ -251,4 +252,14 @@ test("CSP stron aplikacji dopuszcza adresy wszystkich dostawców AI", async () =
   for (const [id, p] of Object.entries(providers.PROVIDERS)) {
     assert.ok(AI_PROVIDER_HOSTS.split(" ").includes(new URL(p.base).origin), `${id}: ${p.base}`);
   }
+});
+
+test("zgłoszenie problemu: tylko wypełnia formularz Kontaktu, bez potwierdzenia, także w Control", async () => {
+  globalThis.__contact = null;
+  const ctx = { lang: "pl", pageId: "control", navigate() {}, changed() {}, confirm: async () => { throw new Error("bez pytania"); } };
+  const r = await chat.runTool("report_problem", { subject: "Nie działa przycisk", description: "Klikam i nic." }, ctx);
+  assert.equal(r.error, false);
+  assert.equal(JSON.parse(r.text).opened, "contact_form");
+  assert.equal(globalThis.__contact.subject, "Nie działa przycisk");
+  assert.match(globalThis.__contact.message, /^Klikam i nic\./);
 });

@@ -332,6 +332,7 @@ const uk = {
       cancel: "Ні",
     },
     tools: {
+      report_problem: "Повідомлення про проблему",
       list_logos: "Список логотипів",
       create_text_logo: "Новий текстовий логотип",
       delete_logo: "Видалення логотипа",

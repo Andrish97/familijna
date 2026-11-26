@@ -337,6 +337,7 @@ const en = {
       cancel: "No",
     },
     tools: {
+      report_problem: "Problem report",
       list_logos: "List of logos",
       create_text_logo: "New text logo",
       delete_logo: "Deleting a logo",

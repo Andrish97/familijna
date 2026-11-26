@@ -332,6 +332,7 @@ const pl = {
       cancel: "Nie",
     },
     tools: {
+      report_problem: "Zgłoszenie problemu",
       list_logos: "Lista logo",
       create_text_logo: "Nowe logo tekstowe",
       delete_logo: "Usunięcie logo",
