@@ -373,3 +373,34 @@ test("wskazywanie na stronie: miejsca z rejestru, id, Control, link na serwerze 
   const places = JSON.parse((await chat.runTool("list_page_places", { page: "polls" }, ctx("games"))).text);
   assert.ok(places.needs_id && places.places.some((p) => p.key === "qr"));
 });
+
+test("ustawienia gry: pytania finału i rund, dźwięki, motyw — reguły strony", async () => {
+  const { patchSettings } = await import("../../web/shared/js/ai/tools/game-settings.js");
+  const qs = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}`, ord: i + 1, text: `P${i}` }));
+  const known = { questions: qs, sounds: { reveal: ["classic.mp3", "retro.mp3"] }, themes: ["wings", "radar"] };
+  const five = ["q0", "q1", "q2", "q3", "q4"];
+
+  let r = patchSettings({ questions: { rounds: qs.slice(0, 8) } }, { final_questions: { mode: "pick", question_ids: five } }, known);
+  assert.deepEqual(r.settings.questions.final.map((q) => q.id), five);
+  assert.deepEqual(r.settings.questions.rounds.map((q) => q.id), ["q5", "q6", "q7"], "finał znika z rund");
+  assert.equal(r.settings.game.finalQuestionsMode, "pick");
+
+  assert.equal(patchSettings({}, { final_questions: { mode: "pick", question_ids: five.slice(0, 4) } }, known).error, "final_needs_5");
+  assert.equal(patchSettings({}, { final_questions: { mode: "pick", question_ids: [...five.slice(0, 4), "zzz"] } }, known).error, "unknown_question");
+
+  const back = patchSettings(r.settings, { has_final: false }, known);
+  assert.deepEqual(back.settings.questions.final, []);
+  assert.deepEqual(back.settings.questions.rounds.map((q) => q.id), ["q5", "q6", "q7", ...five], "bez finału pytania wracają do rund");
+  assert.equal(back.settings.game.finalQuestionsMode, "random");
+
+  assert.equal(patchSettings(r.settings, { round_questions: { mode: "pick", question_ids: ["q9", "q0"] } }, known).error, "question_in_final");
+  const rounds = patchSettings(r.settings, { round_questions: { mode: "pick", question_ids: ["q9", "q8", "q5"] } }, known);
+  assert.deepEqual(rounds.settings.questions.rounds.map((q) => q.id), ["q9", "q8", "q5"], "kolejność z wywołania");
+
+  const snd = patchSettings({}, { sounds: [{ sound: "reveal", variant: "retro.mp3", volume: 40 }] }, known);
+  assert.equal(snd.settings.sound.variants.reveal, "retro.mp3");
+  assert.equal(snd.settings.sound.volumes.reveal, 40);
+  assert.equal(patchSettings({}, { sounds: [{ sound: "reveal", variant: "x.mp3" }] }, known).error, "unknown_variant");
+  assert.equal(patchSettings({}, { theme: "neon" }, known).error, "unknown_theme");
+  assert.equal(patchSettings({}, { theme: "radar", host_logo: "pixel" }, known).settings.display.theme, "radar");
+});
