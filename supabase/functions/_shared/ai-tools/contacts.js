@@ -34,22 +34,33 @@ export default [
   },
   {
     name: "manage_contact",
-    description: "Act on a contact row (id from list_contacts). Friends: accept or reject an incoming invitation, cancel an outgoing one, remove a friend. Subscribers: remove.",
+    description: "Act on a contact row (id from list_contacts). Friends: accept or reject an incoming invitation, cancel an outgoing one, remove a friend, resend an outgoing invitation. Subscribers: remove, resend the invitation. Resending has a waiting time (resend_available_at).",
     inputSchema: {
       type: "object",
       properties: {
         kind: { type: "string", enum: ["friends", "subscribers"] },
         id: { type: "string", description: "Row id from list_contacts." },
-        action: { type: "string", enum: ["accept", "reject", "cancel", "remove"] },
+        action: { type: "string", enum: ["accept", "reject", "cancel", "remove", "resend"] },
       },
       required: ["kind", "id", "action"],
     },
-    confirm: ({ action }) => (action === "accept" ? null : "irreversible"),
+    confirm: ({ action }) => (action === "accept" ? null : action === "resend" ? "send" : "irreversible"),
     async run({ kind, id, action }, ctx) {
       const friends = kind === "friends";
-      if (!friends && action !== "remove") return { ok: false, error: "subscribers_support_only_remove" };
-      if (!["accept", "reject", "cancel", "remove"].includes(action)) return { ok: false, error: "invalid_action" };
-      const res = await rpc(ctx, friends ? `friends_${action}` : "polls_hub_subscriber_remove", { p_id: id });
+      if (!friends && !["remove", "resend"].includes(action)) return { ok: false, error: "subscribers_support_only_remove_and_resend" };
+      if (!["accept", "reject", "cancel", "remove", "resend"].includes(action)) return { ok: false, error: "invalid_action" };
+      const fn = friends ? `friends_${action}` : action === "resend" ? "polls_hub_subscriber_resend" : "polls_hub_subscriber_remove";
+      const res = await rpc(ctx, fn, { p_id: id });
+      if (action === "resend" && res?.ok !== false) {
+        // mail z linkiem /go/?f=… (znajomy) albo /go/?s=… (subskrybent), jak contacts-page.js
+        let token = "";
+        try { token = new URL(String(res?.link || ""), "https://x.invalid").searchParams.get(friends ? "f" : "s") || ""; } catch { token = ""; }
+        let mailSent = false;
+        if (token) {
+          try { mailSent = await ctx.sendNotificationMail(friends ? { action: "friend:resend", token } : { action: "poll:resend", token, reminder: true }); } catch { mailSent = false; }
+        }
+        return { ok: true, mail_sent: mailSent };
+      }
       if (res?.ok !== false) ctx.changed({ type: "contacts", id: kind });
       return res ?? { ok: true };
     },

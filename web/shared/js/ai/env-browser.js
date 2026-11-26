@@ -29,7 +29,8 @@ export async function browserToolEnv({ navigate }) {
       const load = loaders[lang]?.[id];
       return load ? (await load()).default : null;
     },
-    sendPollMails: (items) => sendPollInviteMails({ mailItems: items }),
+    site: location.origin,
+    sendPollMails: (items, { reminder = false } = {}) => sendPollInviteMails({ mailItems: items, reminder }),
     async inviteContact(kind, value) {
       const { data: res, mail } = await createContactInvite(kind, value);
       const mailSent = mail ? await sendContactInviteMail(kind, mail) : false;

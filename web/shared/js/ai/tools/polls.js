@@ -124,4 +124,44 @@ export default [
       return { ok: true, status: "ready" };
     },
   },
+  {
+    name: "get_poll_link",
+    description: "Public link of a poll anyone can open to vote (also shown as a QR code on the poll page). Works while the poll is open.",
+    inputSchema: gameArg,
+    readOnly: true,
+    async run({ game_id }, ctx) {
+      const g = await pollGame(ctx, game_id);
+      if (!g) return { error: "not_found" };
+      if (!g.share_key_poll) return { error: "no_link" };
+      const url = new URL("/go/", ctx.site || "https://www.familijna.app");
+      url.searchParams.set("p", "anon");
+      url.searchParams.set("id", g.id);
+      url.searchParams.set("key", g.share_key_poll);
+      url.searchParams.set("lang", ctx.lang);
+      return { link: url.toString(), status: g.status, qr: "The poll page shows the QR code (show_on_page polls qr)." };
+    },
+  },
+  {
+    name: "remind_poll_invite",
+    description: "Send a reminder to a person invited to the poll who has not voted yet (invitation id from get_poll). Reminders have a limit and a waiting time.",
+    inputSchema: { type: "object", properties: { game_id: uuid, invitation_id: uuid }, required: ["game_id", "invitation_id"] },
+    confirm: () => "send",
+    async run({ game_id, invitation_id }, ctx) {
+      const data = await rpc(ctx, "poll_share_remind", { p_game_id: game_id, p_task_id: invitation_id });
+      if (!data?.ok) return { ok: false, error: data?.err || "failed", cooldown_until: data?.cooldown_until };
+      if (data.mail_allowed === false) return { ok: true, mail: "disabled_by_recipient" };
+      return { ok: true, mail: await ctx.sendPollMails(data.mail, { reminder: true }) };
+    },
+  },
+  {
+    name: "remove_poll_invite",
+    description: "Remove a person from the poll's recipients (invitation id from get_poll); their vote, if any, is removed too.",
+    inputSchema: { type: "object", properties: { game_id: uuid, invitation_id: uuid }, required: ["game_id", "invitation_id"] },
+    confirm: () => "irreversible",
+    async run({ game_id, invitation_id }, ctx) {
+      const data = await rpc(ctx, "poll_share_remove", { p_game_id: game_id, p_task_id: invitation_id });
+      ctx.changed({ type: "game", id: game_id });
+      return data?.ok === false ? { ok: false, error: data.err } : { ok: true };
+    },
+  },
 ];

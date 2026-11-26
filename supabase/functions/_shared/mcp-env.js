@@ -81,7 +81,7 @@ export function serverToolEnv({ db, jwt, userId, tokenId, lang, site, supabaseUr
       try { return await res.json(); } catch { return { ok: false, error: `http_${res.status}` }; }
     },
     // Jak shared/js/core/poll-mail.js: maile zaproszeń do ankiety i oznaczenie wysłanych.
-    async sendPollMails(mailItems) {
+    async sendPollMails(mailItems, { reminder = false } = {}) {
       const list = (Array.isArray(mailItems) ? mailItems : [])
         .map((item) => ({ token: String(item?.token || goLinkToken(item?.link, "t", site)).toLowerCase(), taskId: item?.task_id || null }))
         .filter((item) => item.token);
@@ -90,7 +90,7 @@ export function serverToolEnv({ db, jwt, userId, tokenId, lang, site, supabaseUr
       let sent = 0, failed = 0, skipped = 0;
       const sentTasks = [];
       try {
-        const out = await sendMails(list.map((i) => ({ action: "poll:share", token: i.token, reminder: false })));
+        const out = await sendMails(list.map((i) => ({ action: "poll:share", token: i.token, reminder: !!reminder })));
         for (const r of Array.isArray(out?.results) ? out.results : []) {
           if (r?.ok && r?.queued) { sent += 1; const tid = taskByToken.get(String(r.token || "").toLowerCase()); if (tid) sentTasks.push(tid); }
           else if (r?.skipped) skipped += 1;

@@ -336,7 +336,7 @@ test("kopie, udostępnianie baz i kontakty: te same drogi co przyciski, maile, p
   assert.equal(r.bases[1].task_id, "t1");
 
   r = await run("manage_contact", { kind: "subscribers", id: "s", action: "reject" });
-  assert.equal(r.error, "subscribers_support_only_remove");
+  assert.equal(r.error, "subscribers_support_only_remove_and_resend");
   const before = asked.length;
   await run("manage_contact", { kind: "friends", id: "f", action: "accept" });
   assert.equal(asked.length, before, "przyjęcie zaproszenia bez okna");
@@ -403,4 +403,57 @@ test("ustawienia gry: pytania finału i rund, dźwięki, motyw — reguły stron
   assert.equal(patchSettings({}, { sounds: [{ sound: "reveal", variant: "x.mp3" }] }, known).error, "unknown_variant");
   assert.equal(patchSettings({}, { theme: "neon" }, known).error, "unknown_theme");
   assert.equal(patchSettings({}, { theme: "radar", host_logo: "pixel" }, known).settings.display.theme, "radar");
+});
+
+test("pozostałe czynności stron: bazy, ankiety, zmiana typu, Zadania, Rynek, ponowne zaproszenie", async () => {
+  const { COPY_LABEL } = await import("../../web/shared/js/ai/tools/bases.js");
+  for (const l of ["pl", "en", "uk"]) {
+    const tr = (await import(`../../web/shared/translation/${l}/baseExplorer.js`)).default;
+    assert.equal(COPY_LABEL[l], tr.baseExplorer.defaults.copy, `kopia (${l})`);
+  }
+  const calls = [];
+  const mails = [];
+  const replies = {
+    qb_base_content: { categories: [{ id: "f1", parent_id: null }, { id: "f2", parent_id: "f1" }], questions: [
+      { id: "a", category_id: "f2", payload: { text: "Q1", answers: [{ text: "X", fixed_points: 50 }] } },
+      { id: "b", category_id: null, payload: { text: "Q2", answers: [] } }] },
+    game_create: { ok: true, id: "g9" },
+    game_validate: { change_type: { ok: true, needsReset: true } },
+    poll_share_remind: { ok: true, mail: [{ token: "t1" }] },
+    friends_resend: { ok: true, link: "https://www.familijna.app/go/?f=tok-f" },
+    tasks_list: [{ kind: "poll", id: "k1", title: "Ankieta", token: "tt", poll_type: "poll_points" }, { kind: "device", id: "d" }],
+    market_public_catalog: [{ id: "m1", title: "Wesele", description: "gra weselna", lang: "pl" }, { id: "m2", title: "Party", lang: "en" }],
+  };
+  const db = {
+    rpc: async (fn, args) => { calls.push([fn, args]); return { data: replies[fn] ?? { ok: true }, error: null }; },
+    from: () => { const q = { select: () => q, eq: () => q, order: () => q, then: (ok) => Promise.resolve({ data: [{ id: "g1", name: "G", type: "poll_text", status: "poll_open", share_key_poll: "KEY" }], error: null }).then(ok) }; return q; },
+  };
+  const ctx = {
+    lang: "pl", pageId: "games", db, userId: "u", tabId: "tab", site: "https://www.familijna.app", changed() {}, confirm: async () => true,
+    sendPollMails: async (items, opts) => { mails.push(["poll", items, opts]); return { sent: 1 }; },
+    sendNotificationMail: async (item) => { mails.push(["note", item]); return true; },
+  };
+  const run = async (name, args) => JSON.parse((await chat.runTool(name, args, ctx)).text);
+
+  let r = await run("create_game_from_base", { base_id: "b", name: "Nowa", type: "prepared", folder_ids: ["f1"] });
+  assert.equal(r.questions, 1, "pytania z podfolderu");
+  assert.deepEqual(calls.at(-1)[1].p_questions, [{ text: "Q1", answers: [{ text: "X", points: 50 }] }]);
+
+  await run("change_game_type", { game_id: "g", type: "poll_points", keep_results: true });
+  assert.deepEqual(calls.at(-1), ["game_change_type", { p_game_id: "g", p_type: "poll_points", p_reset: true, p_keep: true }]);
+
+  r = await run("get_poll_link", { game_id: "g1" });
+  assert.equal(r.link, "https://www.familijna.app/go/?p=anon&id=g1&key=KEY&lang=pl");
+  await run("remind_poll_invite", { game_id: "g1", invitation_id: "t" });
+  assert.deepEqual(mails.at(-1), ["poll", [{ token: "t1" }], { reminder: true }]);
+
+  r = await run("manage_contact", { kind: "friends", id: "f", action: "resend" });
+  assert.equal(r.mail_sent, true);
+  assert.deepEqual(mails.at(-1), ["note", { action: "friend:resend", token: "tok-f" }]);
+
+  r = await run("list_tasks", {});
+  assert.equal(r.tasks.length, 1);
+  assert.equal(r.tasks[0].vote_link, "https://www.familijna.app/polls/vote/points/?t=tt&lang=pl");
+  r = await run("search_market", { query: "weselna" });
+  assert.deepEqual(r.games.map((g) => g.market_id), ["m1"]);
 });

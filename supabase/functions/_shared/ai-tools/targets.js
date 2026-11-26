@@ -104,6 +104,10 @@ export const POINT_TARGETS = {
   marketplace: {
     search: { sel: "#btnSearchFocus", about: "Search the Market" },
     my_sent: { sel: "#btnMySent", about: "My submissions to the Market" },
+    submit: { sel: "#btnSubmitNew", before: ["#btnMySent"], about: "Submit one of my games to the Market" },
+  },
+  tasks: {
+    list: { sel: "main", about: "Polls to fill in from other people" },
   },
   account: {
     ai_keys: { sel: "#ai", about: "AI assistant keys" },
@@ -134,7 +138,7 @@ export const PAGE_PATHS = {
   games: "/games/", editor: "/games/editor/", gameSettings: "/games/settings/", polls: "/polls/",
   logoEditor: "/logos/", logoDraw: "/logos/editor/draw/", logoImage: "/logos/editor/image/",
   bases: "/bases/", baseExplorer: "/bases/explorer/", friends: "/friends/", subscribers: "/subscribers/",
-  marketplace: "/marketplace/", account: "/account/", control: "/control/",
+  marketplace: "/marketplace/", account: "/account/", control: "/control/", tasks: "/tasks/",
 };
 // Strony pokazujące jedną rzecz — potrzebują id (gra, baza, logo).
 export const NEEDS_ID = new Set(["editor", "gameSettings", "polls", "baseExplorer", "logoDraw", "logoImage"]);

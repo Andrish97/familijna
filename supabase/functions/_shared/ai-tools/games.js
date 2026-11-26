@@ -100,6 +100,25 @@ export default [
     },
   },
   {
+    name: "change_game_type",
+    description: "Change the type of a game (prepared, poll_text, poll_points) keeping its questions; the result is a draft of the new type. If the game had a closed poll, its votes are deleted; keep_results keeps answers/points when the new type can use them.",
+    inputSchema: {
+      type: "object",
+      properties: { game_id: uuid, type: { type: "string", enum: ["prepared", "poll_text", "poll_points"] }, keep_results: { type: "boolean" } },
+      required: ["game_id", "type"],
+    },
+    confirm: () => "irreversible",
+    async run({ game_id, type, keep_results = false }, ctx) {
+      const rules = await rpc(ctx, "game_validate", { p_game_id: game_id });
+      const info = rules?.change_type;
+      if (!info?.ok) return { ok: false, error: "not_allowed", reason: info?.reason || null };
+      const closed = !!info.needsReset;
+      const res = await rpc(ctx, "game_change_type", { p_game_id: game_id, p_type: type, p_reset: closed, p_keep: closed && !!keep_results });
+      if (res?.ok) ctx.changed({ type: "game", id: game_id });
+      return res;
+    },
+  },
+  {
     name: "copy_game_to_base",
     description: "Copy a game's questions into a question base as a new folder named after the game.",
     inputSchema: { type: "object", properties: { game_id: uuid, base_id: uuid }, required: ["game_id", "base_id"] },
