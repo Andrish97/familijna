@@ -1,7 +1,4 @@
 // Narzędzia czatu AI: gry (odczyt, tworzenie, treść, usuwanie, kopia do bazy).
-import { sb } from "../../core/supabase.js";
-import { getTabId } from "../../core/resource-lock.js";
-import { applyGameContent, createGameWithContent } from "../../core/game-content.js";
 import { uuid, noArgs, rpc, rows, questionSchema } from "./common.js";
 
 const DESTRUCTIVE_OPS = new Set(["delete_question", "delete_answer", "set_answers"]);
@@ -12,8 +9,8 @@ export default [
     description: "List the user's games: id, name, type (prepared = points set by hand; poll_text = text poll; poll_points = poll with given answers), status (draft, poll_open, poll_stopped, ready).",
     inputSchema: noArgs,
     readOnly: true,
-    async run() {
-      return { games: await rows(sb().from("games").select("id,name,type,status,updated_at").neq("type", "market").order("updated_at", { ascending: false })) };
+    async run(_args, ctx) {
+      return { games: await rows(ctx.db.from("games").select("id,name,type,status,updated_at").neq("type", "market").order("updated_at", { ascending: false })) };
     },
   },
   {
@@ -21,11 +18,11 @@ export default [
     description: "Read one game: questions with ids, answers with ids and points, and what is still missing before it can be played or a poll can be started.",
     inputSchema: { type: "object", properties: { game_id: uuid }, required: ["game_id"] },
     readOnly: true,
-    async run({ game_id }) {
-      const [game] = await rows(sb().from("games").select("id,name,type,status").eq("id", game_id));
+    async run({ game_id }, ctx) {
+      const [game] = await rows(ctx.db.from("games").select("id,name,type,status").eq("id", game_id));
       if (!game) return { error: "not_found" };
-      const questions = await rows(sb().from("questions").select("id,ord,text,answers(id,ord,text,fixed_points)").eq("game_id", game_id).order("ord"));
-      const rules = await rpc("game_validate", { p_game_id: game_id });
+      const questions = await rows(ctx.db.from("questions").select("id,ord,text,answers(id,ord,text,fixed_points)").eq("game_id", game_id).order("ord"));
+      const rules = await rpc(ctx, "game_validate", { p_game_id: game_id });
       return {
         game,
         questions: questions.map((q) => ({
@@ -49,8 +46,8 @@ export default [
       required: ["type", "name"],
     },
     async run({ type, name, questions }, ctx) {
-      const res = await createGameWithContent(type, name, Array.isArray(questions) ? questions : null);
-      ctx.changed({ type: "game", id: res.id });
+      const res = await rpc(ctx, "game_create", { p_type: type, p_name: name, p_questions: Array.isArray(questions) ? questions : null });
+      if (res?.ok) ctx.changed({ type: "game", id: res.id });
       return res;
     },
   },
@@ -71,8 +68,8 @@ export default [
       return (Array.isArray(operations) ? operations : []).some((o) => DESTRUCTIVE_OPS.has(o?.op)) ? "irreversible" : null;
     },
     async run({ game_id, operations, reset_poll_results }, ctx) {
-      const res = await applyGameContent(game_id, operations, { reset: !!reset_poll_results });
-      ctx.changed({ type: "game", id: game_id });
+      const res = await rpc(ctx, "game_content_apply", { p_game_id: game_id, p_ops: operations, p_tab_id: ctx.tabId, p_reset: !!reset_poll_results });
+      if (res?.ok) ctx.changed({ type: "game", id: game_id });
       return res;
     },
   },
@@ -82,7 +79,7 @@ export default [
     inputSchema: { type: "object", properties: { game_id: uuid }, required: ["game_id"] },
     confirm: () => "irreversible",
     async run({ game_id }, ctx) {
-      const res = await rpc("delete_resource_checked", { p_resource_type: "game", p_resource_id: game_id, p_tab_id: getTabId() });
+      const res = await rpc(ctx, "delete_resource_checked", { p_resource_type: "game", p_resource_id: game_id, p_tab_id: ctx.tabId });
       if (res?.ok) ctx.changed({ type: "game", id: game_id });
       return res;
     },
@@ -96,7 +93,7 @@ export default [
       required: ["kind", "id", "name"],
     },
     async run({ kind, id, name }, ctx) {
-      const res = await rpc("rename_resource_checked", { p_resource_type: kind, p_resource_id: id, p_name: name, p_tab_id: getTabId() });
+      const res = await rpc(ctx, "rename_resource_checked", { p_resource_type: kind, p_resource_id: id, p_name: name, p_tab_id: ctx.tabId });
       if (res?.ok !== false) ctx.changed({ type: kind, id });
       return res;
     },
@@ -106,14 +103,14 @@ export default [
     description: "Copy a game's questions into a question base as a new folder named after the game.",
     inputSchema: { type: "object", properties: { game_id: uuid, base_id: uuid }, required: ["game_id", "base_id"] },
     async run({ game_id, base_id }, ctx) {
-      const [game] = await rows(sb().from("games").select("id,name").eq("id", game_id));
+      const [game] = await rows(ctx.db.from("games").select("id,name").eq("id", game_id));
       if (!game) return { error: "not_found" };
-      const qs = await rows(sb().from("questions").select("ord,text,answers(ord,text,fixed_points)").eq("game_id", game_id).order("ord"));
+      const qs = await rows(ctx.db.from("questions").select("ord,text,answers(ord,text,fixed_points)").eq("game_id", game_id).order("ord"));
       const questions = qs.map((q) => ({
         text: q.text,
         answers: [...(q.answers || [])].sort((a, b) => a.ord - b.ord).map((a) => ({ text: a.text, fixed_points: a.fixed_points })),
       }));
-      const res = await rpc("qb_import_folder", { p_base_id: base_id, p_name: game.name, p_questions: questions });
+      const res = await rpc(ctx, "qb_import_folder", { p_base_id: base_id, p_name: game.name, p_questions: questions });
       if (res?.ok) ctx.changed({ type: "base", id: base_id });
       return res;
     },

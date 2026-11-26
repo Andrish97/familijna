@@ -1,13 +1,12 @@
 // Wspólne pomocnicze dla narzędzi czatu AI (E30).
-import { sb } from "../../core/supabase.js";
 
 export const uuid = { type: "string", description: "UUID" };
 export const uuidList = { type: "array", items: { type: "string" }, description: "UUIDs" };
 export const noArgs = { type: "object", properties: {} };
 
-/** RPC; błąd PostgREST jako wyjątek z komunikatem. */
-export async function rpc(fn, args) {
-  const { data, error } = await sb().rpc(fn, args);
+/** RPC przez połączenie z ctx.db (przeglądarka albo serwer MCP); błąd jako wyjątek. */
+export async function rpc(ctx, fn, args) {
+  const { data, error } = await ctx.db.rpc(fn, args);
   if (error) throw new Error(error.message || "rpc_failed");
   return data;
 }

@@ -1,20 +1,15 @@
 // Narzędzia czatu AI: logo (lista, logo tekstowe, usuwanie). Logo tekstowe
 // składa ta sama funkcja co edytor (logos/js/text.js, czcionka 3×10 —
 // 30 × 10 znaków tablicy); zapis przez endpoint logo_create (migracja 534).
-import { sb } from "../../core/supabase.js";
-import { getTabId } from "../../core/resource-lock.js";
-import { v as versioned } from "../../core/cache-bust.js";
 import { compileText } from "../../core/logo-text.js";
 import { uuid, noArgs, rpc, rows } from "./common.js";
 
 const FONT_3x10_URL = "/shared/fonts/display/font_3x10.json";
 let fontP = null;
-const font3x10 = () => {
+// Czcionka z plików strony: ctx.loadJson (przeglądarka: wersjonowany adres; serwer MCP: adres strony).
+const font3x10 = (ctx) => {
   if (!fontP) {
-    fontP = versioned(FONT_3x10_URL).then((url) => fetch(url)).then((r) => {
-      if (!r.ok) throw new Error(`font_3x10: HTTP ${r.status}`);
-      return r.json();
-    });
+    fontP = ctx.loadJson(FONT_3x10_URL);
     fontP.catch(() => { fontP = null; });
   }
   return fontP;
@@ -26,8 +21,8 @@ export default [
     description: "List the user's logos (id, name, type: GLYPH_30x10 = text logo, PIX_150x70 = drawing or image).",
     inputSchema: noArgs,
     readOnly: true,
-    async run() {
-      return { logos: await rows(sb().from("user_logos").select("id,name,type,updated_at").order("updated_at", { ascending: false })) };
+    async run(_args, ctx) {
+      return { logos: await rows(ctx.db.from("user_logos").select("id,name,type,updated_at").order("updated_at", { ascending: false })) };
     },
   },
   {
@@ -39,11 +34,11 @@ export default [
       required: ["name", "text"],
     },
     async run({ name, text }, ctx) {
-      const compiled = compileText(String(text || ""), await font3x10());
+      const compiled = compileText(String(text || ""), await font3x10(ctx));
       if (compiled.invalid.length) return { ok: false, error: "invalid_chars", chars: compiled.invalid };
       if (!compiled.fit) return { ok: false, error: "too_wide", used_columns: compiled.usedW, max_columns: 30 };
-      const res = await rpc("logo_create", {
-        p_name: name, p_type: "GLYPH_30x10", p_tab_id: getTabId(),
+      const res = await rpc(ctx, "logo_create", {
+        p_name: name, p_type: "GLYPH_30x10", p_tab_id: ctx.tabId,
         p_payload: { layers: [{ color: "main", rows: compiled.rows }], source: { mode: "TEXT", text: String(text) } },
       });
       if (res?.ok) ctx.changed({ type: "logo", id: res.id });
@@ -56,7 +51,7 @@ export default [
     inputSchema: { type: "object", properties: { logo_id: uuid }, required: ["logo_id"] },
     confirm: () => "irreversible",
     async run({ logo_id }, ctx) {
-      const res = await rpc("delete_resource_checked", { p_resource_type: "logo", p_resource_id: logo_id, p_tab_id: getTabId() });
+      const res = await rpc(ctx, "delete_resource_checked", { p_resource_type: "logo", p_resource_id: logo_id, p_tab_id: ctx.tabId });
       if (res?.ok) ctx.changed({ type: "logo", id: logo_id });
       return res;
     },

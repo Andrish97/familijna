@@ -16,10 +16,10 @@ export default [
       required: ["subject", "description"],
     },
     readOnly: true,
-    async run({ subject, description }) {
-      const { openContactModal } = await import("../../core/contact-dialog.js");
-      const where = typeof location !== "undefined" ? location.pathname : "";
-      await openContactModal({
+    where: "browser",
+    async run({ subject, description }, ctx) {
+      const where = ctx.pagePath || "";
+      await ctx.openContactForm({
         subject: String(subject || "").slice(0, 120),
         message: `${String(description || "").slice(0, 3000)}${where ? `\n\n— ${where}` : ""}`,
       });

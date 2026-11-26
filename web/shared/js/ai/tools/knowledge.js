@@ -1,5 +1,4 @@
 // Narzędzia czatu AI: Wskazówki (podręcznik) i przejście na inną stronę.
-import { linkTo, PAGES } from "../../core/nav-map.js";
 import { noArgs } from "./common.js";
 
 const MANUAL_LANGS = new Set(["pl", "en", "uk"]);
@@ -25,7 +24,7 @@ export default [
     inputSchema: noArgs,
     readOnly: true,
     async run(_args, ctx) {
-      const meta = (await import(`../../../../manual/content/meta/${manualLang(ctx.lang)}.js`)).default;
+      const meta = await ctx.manualMeta(manualLang(ctx.lang));
       return { chapters: meta.chapters.map((c) => ({ id: c.id, title: c.title, sections: c.sections.map((s) => s.title) })) };
     },
   },
@@ -35,15 +34,15 @@ export default [
     inputSchema: { type: "object", properties: { chapter: { type: "string", description: "Chapter id from manual_contents." } }, required: ["chapter"] },
     readOnly: true,
     async run({ chapter }, ctx) {
-      const loaders = (await import("../../../../manual/content/chapter-loaders.js")).default;
-      const load = loaders[manualLang(ctx.lang)]?.[String(chapter)];
-      if (!load) return { error: "unknown_chapter" };
-      return { chapter: String(chapter), text: stripHtml((await load()).default) };
+      const html = await ctx.manualChapter(manualLang(ctx.lang), String(chapter));
+      if (html == null) return { error: "unknown_chapter" };
+      return { chapter: String(chapter), text: stripHtml(html) };
     },
   },
   {
     name: "open_page",
     description: "Take the user to a page of the service (e.g. the editor of a game). The chat stays open after the page changes.",
+    where: "browser",
     inputSchema: {
       type: "object",
       properties: {
@@ -53,10 +52,9 @@ export default [
       required: ["page"],
     },
     run({ page, id }, ctx) {
-      if (!PAGE_TARGETS.includes(page) || !PAGES[page]) return { error: "unknown_page" };
-      const href = linkTo(page, id ? { id } : {});
-      ctx.navigate(href);
-      return { ok: true, href };
+      if (!PAGE_TARGETS.includes(page)) return { error: "unknown_page" };
+      const href = ctx.navigateTo(page, id || null);
+      return href ? { ok: true, href } : { error: "unknown_page" };
     },
   },
 ];

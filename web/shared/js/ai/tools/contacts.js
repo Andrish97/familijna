@@ -1,6 +1,5 @@
 // Narzędzia czatu AI: znajomi i subskrybenci (lista, zaproszenie).
 import { rpc } from "./common.js";
-import { createContactInvite, sendContactInviteMail } from "../../core/contact-invite.js";
 
 export default [
   {
@@ -8,8 +7,8 @@ export default [
     description: "List the user's friends (accounts) or subscribers (e-mail addresses that get polls).",
     inputSchema: { type: "object", properties: { kind: { type: "string", enum: ["friends", "subscribers"] } }, required: ["kind"] },
     readOnly: true,
-    async run({ kind }) {
-      return rpc("contacts_list", { p_kind: kind });
+    async run({ kind }, ctx) {
+      return rpc(ctx, "contacts_list", { p_kind: kind });
     },
   },
   {
@@ -23,11 +22,9 @@ export default [
     confirm: () => "send",
     async run({ kind, value }, ctx) {
       try {
-        const { data, mail } = await createContactInvite(kind, value);
-        let mailSent = false;
-        if (mail) mailSent = await sendContactInviteMail(kind, mail);
+        const res = await ctx.inviteContact(kind, value);
         ctx.changed({ type: "contacts", id: kind });
-        return { ok: true, already: !!data?.already, mail_sent: mailSent };
+        return { ok: true, already: !!res?.already, mail_sent: !!res?.mailSent };
       } catch (e) {
         return { ok: false, error: e?.result?.err || e?.result?.error || e?.message || String(e) };
       }

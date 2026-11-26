@@ -152,10 +152,11 @@ test("zalecany model z listy dostawcy", () => {
 
 test("narzędzia: potwierdzenie przed nieodwracalnym, odmowa nie wykonuje, Control tylko odczyt", async () => {
   const applied = [];
-  globalThis.__apply = async (...a) => { applied.push(a); return { ok: true }; };
+  let reply = { ok: true };
+  const db = { rpc: async (fn, args) => { applied.push([fn, args]); return { data: reply, error: null }; } };
   const asked = [];
   const ctx = (answer, pageId = "editor") => ({
-    lang: "pl", pageId, navigate() {}, changed() {},
+    lang: "pl", pageId, db, tabId: "tab-test", changed() {},
     confirm: async (q) => { asked.push(q); return answer; },
   });
   const add = { game_id: "g", operations: [{ op: "add_question", text: "Q" }] };
@@ -171,14 +172,18 @@ test("narzędzia: potwierdzenie przed nieodwracalnym, odmowa nie wykonuje, Contr
 
   r = await chat.runTool("edit_game", del, ctx(true));
   assert.equal(applied.length, 2);
+  assert.equal(applied[1][0], "game_content_apply");
+  assert.equal(applied[1][1].p_tab_id, "tab-test");
 
   r = await chat.runTool("edit_game", add, ctx(true, "control"));
   assert.deepEqual(JSON.parse(r.text), { error: "tool_not_available_here" });
   const names = tools.toolsForPage("control").map((x) => x.name);
   assert.ok(names.includes("manual_chapter") && names.includes("get_poll"));
   for (const n of ["create_game", "open_page", "open_poll", "send_poll_invites", "invite_contact", "add_base_questions"]) assert.ok(!names.includes(n), n);
+  const server = tools.toolsForPage(null, { server: true }).map((x) => x.name);
+  assert.ok(server.includes("edit_game") && !server.includes("open_page") && !server.includes("report_problem"), "MCP bez narzędzi przeglądarki");
 
-  globalThis.__apply = async () => { const e = new Error("locked"); e.code = "locked"; throw e; };
+  reply = { ok: false, error: "locked", blocker_context: "editor" };
   r = await chat.runTool("edit_game", add, ctx(true));
   assert.equal(r.error, true);
   assert.equal(JSON.parse(r.text).error, "locked");
@@ -255,11 +260,15 @@ test("CSP stron aplikacji dopuszcza adresy wszystkich dostawców AI", async () =
 });
 
 test("zgłoszenie problemu: tylko wypełnia formularz Kontaktu, bez potwierdzenia, także w Control", async () => {
-  globalThis.__contact = null;
-  const ctx = { lang: "pl", pageId: "control", navigate() {}, changed() {}, confirm: async () => { throw new Error("bez pytania"); } };
+  let opened = null;
+  const ctx = {
+    lang: "pl", pageId: "control", pagePath: "/control/", changed() {},
+    confirm: async () => { throw new Error("bez pytania"); },
+    openContactForm: async (o) => { opened = o; },
+  };
   const r = await chat.runTool("report_problem", { subject: "Nie działa przycisk", description: "Klikam i nic." }, ctx);
   assert.equal(r.error, false);
   assert.equal(JSON.parse(r.text).opened, "contact_form");
-  assert.equal(globalThis.__contact.subject, "Nie działa przycisk");
-  assert.match(globalThis.__contact.message, /^Klikam i nic\./);
+  assert.equal(opened.subject, "Nie działa przycisk");
+  assert.match(opened.message, /^Klikam i nic\.\n\n— \/control\/$/);
 });

@@ -21,6 +21,7 @@ import { activeKey, keyStatus } from "./keys.js";
 import { startConversation, sendMessage, continueReply, displayItems, awaitingReply } from "./chat.js";
 import { getChat, saveChat, listChats, deleteChat, chatTitle } from "./history.js";
 import { PROVIDERS } from "./providers.js";
+import { browserToolEnv } from "./env-browser.js";
 
 const STORE = "familijna:ai-panel";
 export const AI_DIALOG_ID = "aiChatOverlay";
@@ -238,6 +239,8 @@ export async function mountAiPanel({ pageId }) {
     if (!conversation && !(await ensureKey())) return;
     if (!conversation) await loadConversation();
     if (!conversation) return;
+    // środowisko narzędzi (baza, karta, maile…) — raz na stronę
+    if (!ctx.db) Object.assign(ctx, await browserToolEnv({ navigate: (href) => ctx.navigate(href) }));
     log.querySelector(".ai-empty")?.remove();
     setBusy(true);
     abort = new AbortController();
