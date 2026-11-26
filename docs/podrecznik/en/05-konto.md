@@ -261,8 +261,10 @@ logos (→ 8.5) and question bases (→ 9.1).
 
 The assistant answers questions about the service and does things for you: it
 creates and edits games, changes their settings, organises and shares question
-bases, creates text logos, starts and tallies polls, sends invitations and copies
-to friends, and accepts received copies. Open it with the speech-bubble button in the top bar, next to
+bases, draws logos from a description, starts and tallies polls, sends invitations
+and copies to friends, and accepts received copies. What it cannot do itself (e.g.
+uploading a file or connecting a device) it shows you: it opens the right page and
+highlights the place with a short instruction. Open it with the speech-bubble button in the top bar, next to
 Help. The window stays open when you go to another page. Conversations are saved
 in your account; those unused for 30 days are removed. Guest accounts do not have
 the assistant.

@@ -21,6 +21,8 @@ const INSTRUCTIONS = [
   "Familijna: games based on survey answers (prepared games, text polls, point polls), question bases, logos, friends and subscribers.",
   "Read ids with list_* / get_* tools before changing anything. Answer questions about the service from manual_contents and manual_chapter.",
   "Deleting, tallying or aborting polls and sending invitations cannot be undone or reach other people — ask the user first.",
+  "Things the tools cannot do (uploading files, own sounds, drawing by hand, connecting devices, the live game in Control): show_on_page gives the link to the right page and says where the place is.",
+  "Picture logos: draw_logo (150×70 dot board, preview_only first); text logos: create_text_logo.",
   "Game rules: ≥ 10 questions to play or start a poll; prepared and poll_points games: 3–6 answers per question; prepared: points ≥ 4 each, sum ≤ 100; answer text ≤ 17 characters, question ≤ 100.",
 ].join("\n");
 

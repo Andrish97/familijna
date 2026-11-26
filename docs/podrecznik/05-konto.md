@@ -262,8 +262,10 @@ logo (→ 8.5) i bazy pytań (→ 9.1).
 
 Asystent odpowiada na pytania o serwis i wykonuje czynności za Ciebie: tworzy
 i poprawia gry, zmienia ich ustawienia, układa bazy pytań i je udostępnia,
-tworzy logo tekstowe, uruchamia i podlicza ankiety, wysyła zaproszenia i kopie
-znajomym, przyjmuje otrzymane kopie. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
+rysuje logo z opisu, uruchamia i podlicza ankiety, wysyła zaproszenia i kopie
+znajomym, przyjmuje otrzymane kopie. Czego nie zrobi sam (np. wgranie pliku albo
+podłączenie urządzenia), to pokaże: otworzy właściwą stronę i podświetli miejsce
+z krótką instrukcją. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
 zostaje otwarte, gdy przechodzisz na inną stronę. Rozmowy są zapisane na koncie;
 te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
 

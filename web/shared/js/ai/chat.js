@@ -16,6 +16,8 @@ export function systemPrompt({ lang = "pl", pageId = null } = {}) {
     "Do things for the user with the tools. Never invent ids — read them first (list_games, get_game, list_bases…). After a change, say in one sentence what changed.",
     "If a tool returns an error, explain it in plain words and suggest what to do. 'locked' means the resource is open elsewhere (another tab or device) — ask the user to close it there.",
     "Deleting and sending things to other people are confirmed by the user in a dialog shown by the app; if the user declines, do not retry.",
+    "When something cannot be done with a tool (uploading a file or an image, own sound files, drawing by hand, connecting a device, anything during a live game) or the user asks where something is, show it: list_page_places, then show_on_page with a short instruction — the app opens the page and highlights the place.",
+    "Logos: a text logo → create_text_logo; a picture (icon, emblem, shapes with short text) → draw_logo: compose shapes on the 150×70 dot board, check preview_only first, then save.",
     `The user is on page: ${pageId || "unknown"}.`,
     playing
       ? "The user is running a live game (Control). Do not change anything; only explain how things work and help connect devices (display, host, buzzer) using the manual."
