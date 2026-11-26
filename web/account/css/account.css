@@ -179,6 +179,7 @@
   .account-ai-form { gap: 8px; }
   .account-ai-links { gap: 6px 16px; }
   .account-ai-mcp { gap: 8px; }
+  .account-ai-api { gap: 8px; padding-top: 10px; border-top: 1px solid var(--line-faint); }
   .account-ai-mcp-url { display: flex; gap: 8px; align-items: center; }
   .account-ai-mcp-url .inp { flex: 1 1 auto; min-width: 0; }
   .account-ai-help { gap: 8px; align-items: flex-start; }

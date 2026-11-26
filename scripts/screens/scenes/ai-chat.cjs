@@ -12,7 +12,9 @@ const vaultDb = (db) => {
   db.rpc.ai_quota_status = { ok: true, visible: true, enabled: true, daily: 20, used: 3, remaining: 17, reset_at: "2026-11-27T00:00:00+01:00" };
   db.rpc.ai_vault_get = { ok: true, vault: null };
   db.rpc.ai_vault_save = { ok: true };
-  db.rpc.mcp_tokens_mine = { ok: true, tokens: [{ id: "53700000-0000-4000-8000-0000000000f1", client_name: "Claude", created_at: "2026-11-20T10:00:00Z", last_used_at: "2026-11-25T18:30:00Z", expires_at: "2027-02-18T10:00:00Z" }] };
+  db.rpc.mcp_tokens_mine = { ok: true, tokens: [{ id: "53700000-0000-4000-8000-0000000000f1", client_name: "Claude", created_at: "2026-11-20T10:00:00Z", last_used_at: "2026-11-25T18:30:00Z", expires_at: "2027-02-18T10:00:00Z", kind: "oauth" },
+    { id: "54100000-0000-4000-8000-0000000000f2", client_name: "Mój GPT", created_at: "2026-11-24T09:00:00Z", last_used_at: "2026-11-26T08:10:00Z", expires_at: null, kind: "api_key" }] };
+  db.rpc.mcp_api_key_create = { ok: true, id: "54100000-0000-4000-8000-0000000000f3", token: `fam_key_${"3f9a".repeat(16)}`, name: "Automatyzacja" };
 };
 
 module.exports = [
@@ -90,6 +92,18 @@ module.exports.push(
     path: "/account/?ai=53700000-0000-4000-8000-000000000001", sources: ACCOUNT_SOURCES,
     ready: ".overlay:not([hidden]) .modal", devices: ["desktop", "phone"],
     db: (db) => { vaultDb(db); db.rpc.mcp_authorize_info = { ok: true, client_name: "Claude", redirect_host: "claude.ai" }; },
+  },
+  {
+    id: "account-ai-apikey", category: "Czat AI", title: "Konto — nowy klucz API pokazany raz (do skopiowania)",
+    path: "/account/", sources: ACCOUNT_SOURCES, ready: "#aiConnect:not([hidden]) .account-ai-api-create", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [async (view) => {
+      await view.locator(".account-ai-api-create").click();
+      const m = view.locator(".uni-modal").last();
+      await m.locator("input").fill("Automatyzacja");
+      await m.locator(".uni-foot .btn.gold").click();
+      await view.locator(".uni-modal .account-ai-mcp-url").waitFor({ state: "visible", timeout: 10000 });
+      await view.waitForTimeout(400);
+    }],
   },
   {
     id: "account-ai-full", category: "Czat AI", title: "Konto — cała strona z Asystentem AI i łącznikiem", fullPage: true,

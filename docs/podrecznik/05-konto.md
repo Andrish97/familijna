@@ -313,3 +313,12 @@ Adres łącznika i kroki są w sekcji „Asystent AI” w *Ustawieniach konta*:
 ![Zgoda na dostęp łącznika](zrzut:account-ai-consent)
 
 Połączone aplikacje widzisz w tej samej sekcji; [Odłącz] odbiera im dostęp do konta.
+
+Aplikacja nie umie się zalogować do łącznika albo chcesz korzystać ze zwykłego API
+(np. własny GPT z akcjami, automatyzacja, skrypt)? Wybierz [Utwórz klucz API], nadaj
+mu nazwę i skopiuj klucz — widać go tylko raz. Aplikacja podaje go w nagłówku
+`Authorization: Bearer …`. Opis API (OpenAPI) ma adres podany w tej samej sekcji.
+Klucz daje taki sam dostęp jak Twoje konto — traktuj go jak hasło; [Usuń] przy kluczu
+od razu go wyłącza. Możesz mieć do 10 kluczy.
+
+![Nowy klucz API](zrzut:account-ai-apikey)

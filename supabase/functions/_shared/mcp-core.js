@@ -9,6 +9,8 @@
 //   POST /mcp/oauth/register                       — rejestracja klienta (DCR)
 //   GET  /mcp/oauth/authorize                      — PKCE S256 → okno zgody w Ustawieniach konta (przez /login/?next=account)
 //   POST /mcp/oauth/token                          — kod → token fam_mcp_…
+//   GET  /mcp/api/openapi.json                     — opis zwykłego API HTTP (OpenAPI 3.1, decyzja 35)
+//   GET  /mcp/api/tools, POST /mcp/api/call        — lista i wywołanie narzędzia (klucz API fam_key_… albo token łącznika)
 // Narzędzia: kopia katalogu czatu (./ai-tools, scripts/sync-ai-tools.mjs),
 // wołane klientem Supabase z krótkotrwałym JWT użytkownika — te same
 // endpointy i RLS co strona. Narzędzia przeglądarki (where: "browser") pominięte.
@@ -31,7 +33,7 @@ const json = (status, body, headers = {}) => new Response(JSON.stringify(body), 
 });
 const CORS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, content-type, mcp-protocol-version, mcp-session-id",
+  "access-control-allow-headers": "authorization, content-type, x-api-key, mcp-protocol-version, mcp-session-id",
   "access-control-allow-methods": "GET, POST, OPTIONS",
   "access-control-expose-headers": "www-authenticate, mcp-session-id",
 };
@@ -81,6 +83,67 @@ export function toolDescriptor(x) {
 function rpcResult(id, result) { return { jsonrpc: "2.0", id, result }; }
 function rpcError(id, code, message) { return { jsonrpc: "2.0", id: id ?? null, error: { code, message } }; }
 
+/** Wywołanie narzędzia serwera (wspólne dla MCP i API HTTP). null = brak narzędzia. */
+export async function callTool(name, args, ctx) {
+  const tool = toolByName(name);
+  if (!tool || tool.where === "browser") return null;
+  try {
+    return (await tool.run(args && typeof args === "object" ? args : {}, ctx)) ?? {};
+  } catch (e) {
+    return { ok: false, error: String(e?.message || e) };
+  }
+}
+
+/** Token z nagłówka: Authorization: Bearer (łącznik fam_mcp_… albo klucz API fam_key_…) lub X-API-Key. */
+export function requestToken(request) {
+  const re = /^(fam_(?:mcp|key)_[0-9a-f]{64})$/i;
+  const bearer = /^Bearer\s+(\S+)$/i.exec(request.headers.get("authorization") || "")?.[1] || "";
+  const key = request.headers.get("x-api-key") || "";
+  return re.exec(bearer)?.[1] || re.exec(key.trim())?.[1] || null;
+}
+
+/** Opis API HTTP (OpenAPI 3.1) — np. akcje własnego GPT, automatyzacje, skrypty. */
+export function openApiSpec(pub) {
+  return {
+    openapi: "3.1.0",
+    info: {
+      title: "Familijna",
+      version: SERVER_INFO.version,
+      description: `${INSTRUCTIONS}\nCall listTools first to see the tools and their input schemas, then callTool.`,
+    },
+    servers: [{ url: `${pub}/mcp/api` }],
+    components: {
+      securitySchemes: { apiKey: { type: "http", scheme: "bearer", description: "Familijna API key (fam_key_…) from Account settings." } },
+      schemas: {
+        Tool: { type: "object", properties: { name: { type: "string" }, description: { type: "string" }, inputSchema: { type: "object" }, annotations: { type: "object" } } },
+      },
+    },
+    security: [{ apiKey: [] }],
+    paths: {
+      "/tools": {
+        get: {
+          operationId: "listTools",
+          summary: "List Familijna tools with their input schemas.",
+          responses: { 200: { description: "Tools", content: { "application/json": { schema: { type: "object", properties: { tools: { type: "array", items: { $ref: "#/components/schemas/Tool" } } } } } } } },
+          "x-openai-isConsequential": false,
+        },
+      },
+      "/call": {
+        post: {
+          operationId: "callTool",
+          summary: "Call one Familijna tool by name with arguments matching its inputSchema.",
+          requestBody: {
+            required: true,
+            content: { "application/json": { schema: { type: "object", required: ["name"], properties: { name: { type: "string" }, arguments: { type: "object", additionalProperties: true } } } } },
+          },
+          responses: { 200: { description: "Tool result (JSON)", content: { "application/json": { schema: { type: "object", additionalProperties: true } } } } },
+          "x-openai-isConsequential": true,
+        },
+      },
+    },
+  };
+}
+
 /**
  * Jedna wiadomość JSON-RPC. session: { ctx } — ctx narzędzi użytkownika.
  * Zwraca odpowiedź albo null (powiadomienie).
@@ -101,18 +164,17 @@ export async function handleMessage(msg, session) {
   if (method === "ping") return rpcResult(id, {});
   if (method === "tools/list") return rpcResult(id, { tools: toolsForPage(null, { server: true }).map(toolDescriptor) });
   if (method === "tools/call") {
-    const tool = toolByName(params.name);
-    if (!tool || tool.where === "browser") return rpcError(id, ERR.PARAMS, `Unknown tool: ${params.name}`);
-    let result;
-    try {
-      result = await tool.run(params.arguments || {}, session.ctx);
-    } catch (e) {
-      result = { ok: false, error: String(e?.message || e) };
-    }
+    const result = await callTool(params.name, params.arguments, session.ctx);
+    if (result === null) return rpcError(id, ERR.PARAMS, `Unknown tool: ${params.name}`);
     const failed = !!result?.error || result?.ok === false;
     return rpcResult(id, { content: [{ type: "text", text: JSON.stringify(result ?? {}) }], isError: failed });
   }
   return rpcError(id, ERR.METHOD, `Method not found: ${method}`);
+}
+
+async function authUser(request, deps) {
+  const token = requestToken(request);
+  return token ? deps.tokenUser(token).catch(() => null) : null;
 }
 
 /**
@@ -167,9 +229,27 @@ export async function handleHttp(request, deps) {
     return json(200, { access_token: res.access_token, token_type: "Bearer", expires_in: res.expires_in, scope: "familijna" }, CORS);
   }
 
+  if (route === "/mcp/api/openapi.json" && request.method === "GET") return json(200, openApiSpec(deps.pub), CORS);
+  if (route === "/mcp/api/tools" || route === "/mcp/api/call") {
+    const apiUser = await authUser(request, deps);
+    if (!apiUser) return json(401, { error: "unauthorized", message: "Use a Familijna API key: Authorization: Bearer fam_key_… (Account settings)." }, CORS);
+    const ctx = await deps.userCtx({ userId: apiUser.user_id, tokenId: apiUser.token_id });
+    if (route === "/mcp/api/tools" && request.method === "GET") {
+      return json(200, { tools: toolsForPage(null, { server: true }).map(toolDescriptor) }, CORS);
+    }
+    if (route === "/mcp/api/call" && request.method === "POST") {
+      let body;
+      try { body = JSON.parse(await request.text()); } catch { return json(400, { error: "invalid_json" }, CORS); }
+      const result = await callTool(String(body?.name || ""), body?.arguments, ctx);
+      if (result === null) return json(404, { error: "unknown_tool", name: body?.name ?? null }, CORS);
+      return json(200, result, CORS);
+    }
+    return json(405, { error: "method_not_allowed" }, CORS);
+  }
+
   if (route !== "/mcp") return json(404, { error: "not_found" }, CORS);
   if (request.method === "GET" || request.method === "HEAD") {
-    return new Response("Familijna MCP server. Add it as a connector in Claude or ChatGPT: " + `${deps.pub}/mcp`, {
+    return new Response(`Familijna MCP server. Add it as a connector (MCP) in your AI app: ${deps.pub}/mcp\nHTTP API (OpenAPI): ${deps.pub}/mcp/api/openapi.json`, {
       status: 200, headers: { "content-type": "text/plain; charset=utf-8", ...CORS },
     });
   }
@@ -180,8 +260,7 @@ export async function handleHttp(request, deps) {
   });
   let body;
   try { body = JSON.parse(await request.text()); } catch { return json(400, rpcError(null, ERR.PARSE, "Parse error"), CORS); }
-  const token = /^Bearer\s+(fam_mcp_[0-9a-f]{64})$/i.exec(request.headers.get("authorization") || "")?.[1];
-  const user = token ? await deps.tokenUser(token).catch(() => null) : null;
+  const user = await authUser(request, deps);
   if (!user) return unauthorized(Array.isArray(body) ? null : body?.id);
 
   const session = { ctx: await deps.userCtx({ userId: user.user_id, tokenId: user.token_id }) };

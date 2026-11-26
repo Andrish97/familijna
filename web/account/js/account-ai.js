@@ -265,22 +265,71 @@ async function renderSource(known = null) {
 }
 
 const MCP_URL = "https://api.familijna.app/mcp";
+const OPENAPI_URL = "https://api.familijna.app/mcp/api/openapi.json";
+const API_KEY_ERRORS = { too_many_keys: "account.ai.apiKeys.tooMany", rate_limited: "account.ai.apiKeys.rateLimited", invalid_name: "account.ai.apiKeys.nameEmpty" };
 
-// Claude i ChatGPT (decyzja 19): adres łącznika i połączone aplikacje z odwołaniem dostępu.
+// Adres do skopiowania (pole tylko do odczytu + Kopiuj).
+function copyRow(value, labelKey) {
+  const row = el("div", "account-ai-mcp-url");
+  const input = el("input", "inp", { type: "text", readonly: "", value, "aria-label": t(labelKey) });
+  const copy = button("account.ai.mcp.copy", "btn sm", "copy");
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(value); toast(t("account.ai.mcp.copied")); }
+    catch { input.select(); }
+  });
+  row.append(input, copy);
+  return row;
+}
+
+// Wiersz tokenu: nazwa, daty, Odłącz/Usuń.
+function tokenRow(c, revokeKey) {
+  const item = el("div", "account-ai-key");
+  const used = c.last_used_at ? new Date(c.last_used_at).toLocaleDateString() : "—";
+  const text = el("div", "choice-text account-ai-key-main");
+  text.append(el("span", "choice-label", { text: c.client_name }), el("span", "hint", { text: t("account.ai.mcp.lastUsed", { date: used }) }));
+  const revoke = button(revokeKey, "btn sm danger");
+  revoke.addEventListener("click", async () => {
+    const ok = await confirmModal({
+      title: t(c.kind === "api_key" ? "account.ai.apiKeys.revokeTitle" : "account.ai.mcp.revokeTitle"),
+      text: t(c.kind === "api_key" ? "account.ai.apiKeys.revokeText" : "account.ai.mcp.revokeText", { name: c.client_name }),
+      okText: t(revokeKey), cancelText: t("account.ai.cancel"),
+    });
+    if (!ok) return;
+    await sb().rpc("mcp_token_revoke", { p_id: c.id });
+    await renderConnectors();
+  });
+  item.append(text, revoke);
+  return item;
+}
+
+// Nowy klucz API: nazwa w oknie, potem klucz pokazany raz (do skopiowania).
+async function createApiKey() {
+  const name = el("input", "inp", { type: "text", maxlength: "60", placeholder: t("account.ai.apiKeys.namePlaceholder"), "aria-label": t("account.ai.apiKeys.namePlaceholder") });
+  let token = "";
+  const ok = await confirmModal({
+    title: t("account.ai.apiKeys.createTitle"), text: t("account.ai.apiKeys.warning"), body: name, sheet: { fit: true },
+    okText: t("account.ai.apiKeys.create"), cancelText: t("account.ai.cancel"), initialFocus: name,
+    onOk: async () => {
+      const { data, error } = await sb().rpc("mcp_api_key_create", { p_name: name.value });
+      if (error || !data?.ok) return t(API_KEY_ERRORS[data?.error] || "account.ai.loadError");
+      token = data.token;
+      return null;
+    },
+  });
+  if (!ok || !token) return;
+  await alertModal({ title: t("account.ai.apiKeys.createdTitle"), text: t("account.ai.apiKeys.createdText"), body: copyRow(token, "account.ai.apiKeys.title"), okText: t("account.ai.apiKeys.done"), sheet: { fit: true } });
+  await renderConnectors();
+}
+
+// Familijna w innych aplikacjach AI (decyzje 19, 34, 35): łącznik MCP (OAuth),
+// klucze API (MCP bez logowania, API HTTP z opisem OpenAPI), połączone aplikacje.
 async function renderConnectors() {
   const box = document.getElementById("aiConnectorsBox");
   if (!box) return;
   box.textContent = "";
   document.getElementById("aiConnect").hidden = false;
-  const row = el("div", "account-ai-mcp-url");
-  const url = el("input", "inp", { type: "text", readonly: "", value: MCP_URL, "aria-label": t("account.ai.mcp.urlLabel") });
-  const copy = button("account.ai.mcp.copy", "btn sm", "copy");
-  copy.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText(MCP_URL); toast(t("account.ai.mcp.copied")); }
-    catch { url.select(); }
-  });
-  row.append(url, copy);
-  box.append(row);
+
+  box.append(el("div", "field-label", { text: t("account.ai.mcp.connectorTitle") }), copyRow(MCP_URL, "account.ai.mcp.urlLabel"));
   const steps = el("ol", "account-ai-steps");
   for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.mcp.${k}`) }));
   box.append(steps);
@@ -290,25 +339,22 @@ async function renderConnectors() {
     const { data } = await sb().rpc("mcp_tokens_mine");
     list = data?.ok ? data.tokens : [];
   } catch { list = []; }
-  if (!list.length) return;
+  const apps = list.filter((c) => c.kind !== "api_key");
+  const keys = list.filter((c) => c.kind === "api_key");
+
+  const api = el("div", "stack account-ai-api");
+  api.append(el("div", "field-label", { text: t("account.ai.apiKeys.title") }), el("div", "hint", { text: t("account.ai.apiKeys.hint") }));
+  for (const c of keys) api.append(tokenRow(c, "account.ai.apiKeys.revoke"));
+  const create = button("account.ai.apiKeys.create", "btn sm account-ai-api-create", "plus");
+  create.addEventListener("click", () => { void createApiKey(); });
+  const actions = el("div", "cluster cluster--end account-actions");
+  actions.append(create);
+  api.append(actions, el("div", "hint", { text: t("account.ai.apiKeys.openapi") }), copyRow(OPENAPI_URL, "account.ai.apiKeys.openapi"));
+  box.append(api);
+
+  if (!apps.length) return;
   box.append(el("div", "field-label", { text: t("account.ai.mcp.connected") }));
-  for (const c of list) {
-    const item = el("div", "account-ai-key");
-    const used = c.last_used_at ? new Date(c.last_used_at).toLocaleDateString() : "—";
-    item.append(el("span", "account-ai-key-main", { text: `${c.client_name} · ${t("account.ai.mcp.lastUsed", { date: used })}` }));
-    const revoke = button("account.ai.mcp.revoke", "btn sm danger");
-    revoke.addEventListener("click", async () => {
-      const ok = await confirmModal({
-        title: t("account.ai.mcp.revokeTitle"), text: t("account.ai.mcp.revokeText", { name: c.client_name }),
-        okText: t("account.ai.mcp.revoke"), cancelText: t("account.ai.cancel"),
-      });
-      if (!ok) return;
-      await sb().rpc("mcp_token_revoke", { p_id: c.id });
-      await renderConnectors();
-    });
-    item.append(revoke);
-    box.append(item);
-  }
+  for (const c of apps) box.append(tokenRow(c, "account.ai.mcp.revoke"));
 }
 
 // Zgoda na dostęp łącznika AI (decyzja 19/20): Claude albo ChatGPT kieruje przez

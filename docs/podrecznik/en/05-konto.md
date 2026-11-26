@@ -314,3 +314,12 @@ The connector address and steps are in the "AI assistant" section of *Account se
 ![Connector access consent](zrzut:account-ai-consent)
 
 Connected apps are listed in the same section; [Disconnect] takes away their access to your account.
+
+Your app can't sign in to the connector, or you want the plain API (e.g. your own GPT
+with actions, an automation, a script)? Choose [Create API key], name it and copy the
+key — it is shown only once. The app sends it in the `Authorization: Bearer …` header.
+The API description (OpenAPI) address is in the same section. A key gives the same
+access as your account — treat it like a password; [Delete] next to a key turns it off
+at once. You can have up to 10 keys.
+
+![New API key](zrzut:account-ai-apikey)

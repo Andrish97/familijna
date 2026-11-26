@@ -141,3 +141,30 @@ test("kopie z serwera MCP: Worker strony z JWT użytkownika, mail kopii przez se
   assert.equal(await env.sendNotificationMail({ action: "copy:send", token: "c" }), true);
   assert.deepEqual(sent[1][2], { lang: "en", items: [{ action: "copy:send", token: "c" }] });
 });
+
+test("klucz API (decyzja 35): MCP z fam_key_… i X-API-Key, API HTTP z opisem OpenAPI", async () => {
+  const KEY = `fam_key_${"b".repeat(64)}`;
+  const d = deps({ tokenUser: async (t) => (t === KEY ? { user_id: "u1", token_id: "k1" } : null) });
+  const get = (path, headers = {}) => new Request(`${PUB}${path}`, { method: "GET", headers });
+
+  const spec = await (await handleHttp(get("/mcp/api/openapi.json"), d)).json();
+  assert.equal(spec.openapi, "3.1.0");
+  assert.equal(spec.servers[0].url, `${PUB}/mcp/api`);
+  assert.equal(spec.paths["/call"].post["x-openai-isConsequential"], true);
+  assert.equal(spec.paths["/tools"].get.operationId, "listTools");
+
+  assert.equal((await handleHttp(get("/mcp/api/tools"), d)).status, 401);
+  assert.equal((await handleHttp(get("/mcp/api/tools", { authorization: `Bearer ${TOKEN}` }), d)).status, 401, "inny token nie działa");
+  const tools = await (await handleHttp(get("/mcp/api/tools", { authorization: `Bearer ${KEY}` }), d)).json();
+  assert.ok(tools.tools.some((x) => x.name === "list_games"));
+  assert.ok(!tools.tools.some((x) => x.name === "open_page"), "bez narzędzi przeglądarki");
+
+  const call = await handleHttp(post("/mcp/api/call", { name: "list_games", arguments: {} }, { "x-api-key": KEY }), d);
+  assert.equal(call.status, 200);
+  assert.equal((await call.json()).games[0].name, "Gra");
+  const unknown = await handleHttp(post("/mcp/api/call", { name: "open_page", arguments: {} }, { authorization: `Bearer ${KEY}` }), d);
+  assert.equal(unknown.status, 404);
+
+  const init = await (await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 1, method: "initialize", params: {} }, { authorization: `Bearer ${KEY}` }), d)).json();
+  assert.equal(init.result.serverInfo.name, "familijna");
+});
