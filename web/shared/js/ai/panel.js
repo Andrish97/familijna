@@ -22,6 +22,8 @@ import { startConversation, sendMessage, continueReply, displayItems, awaitingRe
 import { getChat, saveChat, listChats, deleteChat, chatTitle } from "./history.js";
 import { PROVIDERS } from "./providers.js";
 import { browserToolEnv } from "./env-browser.js";
+import { pointHere, queuePoint, runQueuedPoint, clearPointer } from "./pointer.js";
+import { NEEDS_ID } from "./tools/targets.js";
 
 const STORE = "familijna:ai-panel";
 export const AI_DIALOG_ID = "aiChatOverlay";
@@ -112,6 +114,7 @@ export async function mountAiPanel({ pageId }) {
   let busy = false;
   let abort = null;
   let pendingHref = null;
+  let pendingPoint = null;
   let changed = false;
 
   const lang = getUiLang?.() || "pl";
@@ -222,6 +225,18 @@ export async function mountAiPanel({ pageId }) {
     lang,
     pageId,
     navigate(href) { pendingHref = href; },
+    // Wskazanie miejsca (show_on_page) — po zakończeniu odpowiedzi: okno czatu
+    // się zamyka, żeby było widać stronę; „Wróć do czatu” otwiera je z powrotem.
+    pointAt({ page, place, id, text }) {
+      const sameItem = !NEEDS_ID.has(page) || new URLSearchParams(location.search).get("id") === id;
+      if (page === pageId && sameItem) {
+        pendingPoint = { place, id, text };
+        return { ok: true, will_show: true };
+      }
+      queuePoint({ page, place, id, text });
+      const href = ctx.navigateTo(page, NEEDS_ID.has(page) ? id : null);
+      return href ? { ok: true, opening_page: href } : { error: "unknown_page" };
+    },
     changed() { changed = true; },
     async confirm({ kind, tool }) {
       return confirmModal({
@@ -245,6 +260,8 @@ export async function mountAiPanel({ pageId }) {
     setBusy(true);
     abort = new AbortController();
     pendingHref = null;
+    pendingPoint = null;
+    clearPointer();
     changed = false;
     let live = null;
     const opts = {
@@ -277,7 +294,21 @@ export async function mountAiPanel({ pageId }) {
       abort = null;
       await persist();
     }
-    if (pendingHref) { location.assign(pendingHref); return; }
+    if (pendingPoint) {
+      const point = pendingPoint;
+      pendingPoint = null;
+      setOpen(false);
+      await pointHere(pageId, point, { onBack: () => setOpen(true) });
+      return;
+    }
+    if (pendingHref) {
+      // przejście po wskazanie: okno czatu zamknięte, wskazanie po wczytaniu strony
+      let pointing = false;
+      try { pointing = !!sessionStorage.getItem("familijna:ai-point"); } catch { pointing = false; }
+      if (pointing) state = writeState({ open: false });
+      location.assign(pendingHref);
+      return;
+    }
     if (changed && RELOAD_ON_CHANGE.has(pageId)) location.reload();
   }
 
@@ -335,5 +366,6 @@ export async function mountAiPanel({ pageId }) {
 
   const urlOpen = new URLSearchParams(location.search).get("dialog") === AI_DIALOG_ID;
   if (state.open || urlOpen) setOpen(true, { instant: true });
+  void runQueuedPoint(pageId, { onBack: () => setOpen(true) });
   await loadConversation();
 }

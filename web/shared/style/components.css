@@ -3127,6 +3127,24 @@
   .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .ai-form { display: flex; align-items: flex-end; gap: 6px; }
   .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
+  /* Wskazanie miejsca na stronie (shared/js/ai/pointer.js, show_on_page):
+     złota ramka wokół elementu i dymek z tekstem czatu. Położenie liczy JS
+     (zmienne --ai-pt-*); ramka nie łapie kliknięć — element działa dalej. */
+  .ai-pointer {
+    position: fixed; top: var(--ai-pt-top, 0); left: var(--ai-pt-left, 0);
+    width: var(--ai-pt-w, 0); height: var(--ai-pt-h, 0);
+    border: 2px solid var(--accent); border-radius: var(--r-md);
+    box-shadow: 0 0 0 4px var(--g-35), var(--shadow-lift);
+    pointer-events: none; z-index: var(--z-top);
+  }
+  .ai-pointer-note {
+    position: fixed; top: var(--ai-pt-top, 0); left: var(--ai-pt-left, 0);
+    width: min(340px, calc(100vw - 16px)); z-index: var(--z-top);
+    display: flex; flex-direction: column; gap: 8px; padding: 12px;
+    border: 1px solid var(--g-35); box-shadow: var(--shadow-popover);
+  }
+  .ai-pointer-note p { margin: 0; line-height: 1.45; }
+  .ai-pointer-note .modal-actions { justify-content: flex-end; }
 }
 
 @layer states {

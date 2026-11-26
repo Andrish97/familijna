@@ -14,7 +14,8 @@
 //   changed({ type, id }), confirm(...), loadJson(path), manualMeta(lang),
 //   manualChapter(lang, id), sendPollMails(items), inviteContact(kind, value),
 //   sendNotificationMail({ action, token, reminder? }), resourceAction("send"|"duplicate", body),
-//   tylko przeglądarka: navigateTo(page, id), openContactForm({ subject, message }), pagePath }.
+//   tylko przeglądarka: navigateTo(page, id), openContactForm({ subject, message }), pagePath,
+//   pointAt({ page, place, id, text }) — wskazanie (panel); serwer: site — link zamiast wskazania }.
 import knowledge from "./knowledge.js";
 import games from "./games.js";
 import gameSettings from "./game-settings.js";
@@ -25,8 +26,9 @@ import logos from "./logos.js";
 import copies from "./copies.js";
 import sharing from "./sharing.js";
 import support from "./support.js";
+import guide from "./guide.js";
 
-export const TOOLS = [...knowledge, ...games, ...gameSettings, ...polls, ...bases, ...sharing, ...logos, ...copies, ...contacts, ...support];
+export const TOOLS = [...knowledge, ...guide, ...games, ...gameSettings, ...polls, ...bases, ...sharing, ...logos, ...copies, ...contacts, ...support];
 
 const BY_NAME = new Map(TOOLS.map((x) => [x.name, x]));
 export const toolByName = (name) => BY_NAME.get(name) || null;

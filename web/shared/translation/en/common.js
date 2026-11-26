@@ -336,6 +336,11 @@ const en = {
       ok: "Do it",
       cancel: "No",
     },
+    pointer: {
+      ok: "Got it",
+      back: "Back to chat",
+      missing: "I can’t see this place on the page — something may need to be selected or scrolled first.",
+    },
     tools: {
       report_problem: "Problem report",
       list_logos: "List of logos",
@@ -346,6 +351,8 @@ const en = {
       open_page: "Going to a page",
       list_games: "List of games",
       get_game: "Reading a game",
+      list_page_places: "Places on a page",
+      show_on_page: "Showing on the page",
       send_copy: "Sending a copy to friends",
       duplicate: "Duplicating",
       list_received_copies: "Received copies",

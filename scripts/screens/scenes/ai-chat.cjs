@@ -55,3 +55,22 @@ module.exports.push(
     db: (db) => { vaultDb(db); db.rpc.ai_vault_get = { ok: true, vault: null }; },
   },
 );
+
+// Wskazanie miejsca na stronie (show_on_page, shared/js/ai/pointer.js): czat
+// zaznacza grę i podświetla „Ustawienia” z dymkiem; Ustawienia gry — sekcja Dźwięk.
+const { IDS } = require("../data/demo.cjs");
+const point = (pageId, place, text, id) => async (view) => {
+  await view.evaluate(async ([p, k, t, i]) => {
+    const m = await import("/shared/js/ai/pointer.js");
+    await m.pointHere(p, { place: k, text: t, id: i });
+  }, [pageId, place, text, id || null]);
+  await view.waitForTimeout(600);
+};
+module.exports.push(
+  { id: "ai-point-games", category: "Czat AI", title: "Czat wskazuje: Ustawienia zaznaczonej gry", path: "/games/", sources: [...SOURCES, "web/games/"],
+    ready: "#grid .card", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [point("games", "settings", "Tu otworzysz ustawienia tej gry — kolory, logo i dźwięki.", IDS.game)] },
+  { id: "ai-point-sound", category: "Czat AI", title: "Czat wskazuje: sekcja Dźwięk w Ustawieniach gry", path: `/games/settings/?id=${IDS.game}`, sources: [...SOURCES, "web/games/settings/"],
+    ready: "#gsContentInner > *", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [point("gameSettings", "sound", "Własny dźwięk ustawisz tutaj: przy wybranym dźwięku wybierz własny plik.", IDS.game)] },
+);

@@ -348,3 +348,28 @@ test("kopie, udostępnianie baz i kontakty: te same drogi co przyciski, maile, p
   assert.equal(asked.at(-1), "irreversible");
   assert.deepEqual(calls.at(-1), ["resource_copy_decide", { p_offer: "o", p_decision: "decline" }]);
 });
+
+test("wskazywanie na stronie: miejsca z rejestru, id, Control, link na serwerze MCP", async () => {
+  const { POINT_TARGETS } = await import("../../web/shared/js/ai/tools/targets.js");
+  for (const [page, places] of Object.entries(POINT_TARGETS)) {
+    for (const [key, p] of Object.entries(places)) {
+      assert.ok(p.sel && p.about, `${page}.${key}`);
+      if (page === "control") assert.ok(!p.before && !p.select, "Control: bez kliknięć");
+    }
+  }
+  const points = [];
+  const ctx = (pageId, extra = {}) => ({ lang: "pl", pageId, changed() {}, confirm: async () => true, pointAt: async (p) => { points.push(p); return { ok: true }; }, ...extra });
+  const run = async (args, c) => JSON.parse((await chat.runTool("show_on_page", args, c)).text);
+
+  assert.equal((await run({ page: "games", place: "nope", text: "x" }, ctx("games"))).error, "unknown_place");
+  assert.equal((await run({ page: "games", place: "settings", text: "x" }, ctx("games"))).error, "id_required");
+  assert.equal((await run({ page: "games", place: "settings", id: "g1", text: "x" }, ctx("control"))).error, "game_in_progress");
+  assert.equal((await run({ page: "control", place: "mute", text: "x" }, ctx("games"))).error, "control_not_open");
+  await run({ page: "gameSettings", place: "sound", id: "g1", text: "Tu" }, ctx("games"));
+  assert.deepEqual(points.at(-1), { page: "gameSettings", place: "sound", id: "g1", text: "Tu" });
+
+  const server = await run({ page: "gameSettings", place: "sound", id: "g1", text: "Tu" }, ctx(null, { pointAt: undefined, site: "https://www.familijna.app" }));
+  assert.equal(server.link, "https://www.familijna.app/games/settings/?id=g1");
+  const places = JSON.parse((await chat.runTool("list_page_places", { page: "polls" }, ctx("games"))).text);
+  assert.ok(places.needs_id && places.places.some((p) => p.key === "qr"));
+});

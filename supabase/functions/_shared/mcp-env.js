@@ -50,6 +50,7 @@ export function serverToolEnv({ db, jwt, userId, tokenId, lang, site, supabaseUr
     userId,
     tabId: `mcp:${tokenId}`,
     lang,
+    site,
     pageId: null,
     changed() {},
     confirm: async () => true,

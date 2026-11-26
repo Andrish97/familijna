@@ -331,6 +331,11 @@ const pl = {
       ok: "Wykonaj",
       cancel: "Nie",
     },
+    pointer: {
+      ok: "Rozumiem",
+      back: "Wróć do czatu",
+      missing: "Nie widzę tego miejsca na stronie — może trzeba najpierw coś zaznaczyć albo przewinąć.",
+    },
     tools: {
       report_problem: "Zgłoszenie problemu",
       list_logos: "Lista logo",
@@ -341,6 +346,8 @@ const pl = {
       open_page: "Przejście na stronę",
       list_games: "Lista gier",
       get_game: "Odczyt gry",
+      list_page_places: "Miejsca na stronie",
+      show_on_page: "Wskazanie na stronie",
       send_copy: "Wysłanie kopii znajomym",
       duplicate: "Duplikowanie",
       list_received_copies: "Otrzymane kopie",
