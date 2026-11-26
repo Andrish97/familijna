@@ -28,7 +28,8 @@ async function signJwt(claims: Record<string, unknown>): Promise<string> {
   return `${head}.${body}.${b64url(sig)}`;
 }
 
-async function rpc(client: ReturnType<typeof createClient>, fn: string, args: Record<string, unknown>) {
+// deno-lint-ignore no-explicit-any
+async function rpc(client: any, fn: string, args: Record<string, unknown>): Promise<any> {
   const { data, error } = await client.rpc(fn, args);
   if (error) throw new Error(error.message);
   return data;
@@ -50,7 +51,8 @@ Deno.serve((request: Request) => handleHttp(request, {
       global: { headers: { Authorization: `Bearer ${jwt}` } },
     });
     const { data } = await service.auth.admin.getUserById(userId);
-    const lang = ["pl", "en", "uk"].includes(data?.user?.user_metadata?.language) ? data.user.user_metadata.language : "pl";
+    const asked = String(data?.user?.user_metadata?.language || "");
+    const lang = ["pl", "en", "uk"].includes(asked) ? asked : "pl";
     return serverToolEnv({ db, jwt, userId, tokenId, lang, site: SITE, supabaseUrl: SUPABASE_URL });
   },
 }));
