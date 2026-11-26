@@ -269,8 +269,12 @@ Help. The window stays open when you go to another page. Conversations are saved
 in your account; those unused for 30 days are removed. Guest accounts do not have
 the assistant.
 
-The assistant runs on your own AI service key (e.g. Anthropic, OpenAI, Google
-Gemini) — you pay the provider directly for your use.
+The assistant works right away: the **Familijna assistant** has a daily message
+limit (the chat window shows “… left today”, the limit comes back at midnight). For
+more, add your own AI service key (e.g. Anthropic, OpenAI, Google Gemini) and choose
+“My key” in *Account settings* — then you pay the provider directly, without the
+Familijna limit. Conversations with the Familijna assistant are processed by Google
+(Gemini API on a paid plan).
 
 Add a key in *Account settings*, in the “AI assistant” section:
 

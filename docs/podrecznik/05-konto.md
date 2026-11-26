@@ -269,8 +269,12 @@ z krótką instrukcją. Otwiera go przycisk z dymkiem w górnym pasku, obok Wska
 zostaje otwarte, gdy przechodzisz na inną stronę. Rozmowy są zapisane na koncie;
 te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
 
-Asystent działa na Twoim kluczu do usługi sztucznej inteligencji (np. Anthropic,
-OpenAI, Google Gemini) — za użycie płacisz bezpośrednio jej dostawcy.
+Asystent działa od razu: **asystent Familijnej** ma dzienny limit wiadomości
+(licznik „zostało … na dziś” widać w oknie czatu, limit wraca o północy). Jeśli
+chcesz więcej, dodaj własny klucz do usługi sztucznej inteligencji (np. Anthropic,
+OpenAI, Google Gemini) i w *Ustawieniach konta* wybierz „Mój klucz” — wtedy za użycie
+płacisz bezpośrednio dostawcy, bez limitu Familijnej. Rozmowy z asystentem Familijnej
+przetwarza Google (Gemini API w planie płatnym).
 
 Klucz dodajesz w *Ustawieniach konta*, w sekcji „Asystent AI”:
 

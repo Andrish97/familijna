@@ -62,6 +62,7 @@ const en = {
         <li>Groq (AI-based duplicate detection for community games)</li>
         <li>DeepSeek (AI-based duplicate detection for community games)</li>
         <li>Hugging Face (AI-based game similarity check)</li>
+        <li>Google (Gemini API, paid plan – the Familijna AI assistant: conversation content and data the assistant works with; not used to improve Google's services)</li>
       </ul>
       <p class="m-p">
         These providers access your data only to the extent necessary to deliver their technical services.

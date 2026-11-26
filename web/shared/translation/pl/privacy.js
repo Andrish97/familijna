@@ -62,6 +62,7 @@ const pl = {
         <li>Groq (analiza powtarzalności gier społeczności – AI)</li>
         <li>DeepSeek (analiza powtarzalności gier społeczności – AI)</li>
         <li>Hugging Face (porównywanie podobieństwa gier – AI)</li>
+        <li>Google (Gemini API, plan płatny – asystent AI Familijnej: treść rozmów i dane, o które prosi asystent; bez używania ich do ulepszania usług Google)</li>
       </ul>
       <p class="m-p">Podmioty te przetwarzają dane wyłącznie w zakresie technicznym.</p>
 

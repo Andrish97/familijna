@@ -9,13 +9,19 @@ const openPanel = async (view) => {
 };
 
 const vaultDb = (db) => {
+  db.rpc.ai_quota_status = { ok: true, enabled: true, daily: 20, used: 3, remaining: 17, reset_at: "2026-11-27T00:00:00+01:00" };
   db.rpc.ai_vault_get = { ok: true, vault: null };
   db.rpc.ai_vault_save = { ok: true };
   db.rpc.mcp_tokens_mine = { ok: true, tokens: [{ id: "53700000-0000-4000-8000-0000000000f1", client_name: "Claude", created_at: "2026-11-20T10:00:00Z", last_used_at: "2026-11-25T18:30:00Z", expires_at: "2027-02-18T10:00:00Z" }] };
 };
 
 module.exports = [
-  { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: vaultDb, steps: [openPanel] },
+  // asystent Familijnej wyłączony i brak własnego klucza — przycisk do ustawień
+  { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"],
+    db: (db) => { vaultDb(db); db.rpc.ai_quota_status = { ok: true, enabled: false }; }, steps: [openPanel] },
+  // asystent Familijnej: licznik wiadomości na dziś
+  { id: "ai-chat-builtin", category: "Czat AI", title: "Czat AI — asystent Familijnej z dziennym limitem", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"],
+    db: vaultDb, steps: [openPanel] },
 ];
 
 // Ustawienia konta → Asystent AI (web/account/js/account-ai.js): bez sejfu
