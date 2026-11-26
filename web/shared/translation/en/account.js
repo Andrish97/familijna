@@ -2,6 +2,14 @@
 const en = {
   account: {
     ai: {
+      source: {
+        title: "Which assistant answers",
+        builtin: "Familijna assistant",
+        builtinHint: "No key needed: {daily} messages a day ({remaining} left today). Conversations are processed by Google Gemini on a paid plan — not used to improve Google's services.",
+        own: "My key",
+        ownHint: "The active key from the list below — no Familijna daily limit; you pay your provider.",
+        saved: "Choice saved on this device.",
+      },
       mcp: {
         title: "Claude and ChatGPT (no key)",
         hint: "Have a Claude or ChatGPT account? Add Familijna as a connector in their app — the assistant then runs on your subscription, without a key.",
@@ -36,7 +44,7 @@ const en = {
         open: "Open Google AI Studio",
       },
       title: "AI assistant",
-      hint: "The assistant runs on your own AI provider key — you pay the provider for your own use. Your browser encrypts the keys with a key password before they reach your account.",
+      hint: "The assistant works right away (the Familijna assistant with a daily limit) or on your own AI provider key — then you pay your provider. Your browser encrypts keys with the key password before they reach your account.",
       createHint: "Set a key password (at least 8 characters). Only you know it — without it nobody can read the keys, not even the administrator. You enter it once on this device.",
       password: "Key password",
       passwordRepeat: "Repeat the key password",

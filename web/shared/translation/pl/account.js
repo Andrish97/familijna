@@ -2,6 +2,14 @@
 const pl = {
   account: {
     ai: {
+      source: {
+        title: "Który asystent odpowiada",
+        builtin: "Asystent Familijnej",
+        builtinHint: "Bez klucza: {daily} wiadomości dziennie (dziś zostało {remaining}). Rozmowy przetwarza Google Gemini w planie płatnym — bez używania ich do ulepszania usług Google.",
+        own: "Mój klucz",
+        ownHint: "Aktywny klucz z listy niżej — bez dziennego limitu Familijnej; płacisz u swojego dostawcy.",
+        saved: "Wybór zapisany na tym urządzeniu.",
+      },
       mcp: {
         title: "Claude i ChatGPT (bez klucza)",
         hint: "Masz konto Claude albo ChatGPT? Dodaj Familijnę jako łącznik w ich aplikacji — asystent działa wtedy na Twoim abonamencie, bez klucza.",
@@ -36,7 +44,7 @@ const pl = {
         open: "Otwórz Google AI Studio",
       },
       title: "Asystent AI",
-      hint: "Asystent działa na Twoim kluczu dostawcy AI — płacisz u dostawcy za własne użycie. Klucze szyfruje Twoja przeglądarka hasłem do kluczy, zanim trafią na konto.",
+      hint: "Asystent działa od razu (asystent Familijnej z dziennym limitem) albo na Twoim kluczu dostawcy AI — wtedy płacisz u dostawcy. Klucze szyfruje Twoja przeglądarka hasłem do kluczy, zanim trafią na konto.",
       createHint: "Ustal hasło do kluczy (co najmniej 8 znaków). Znasz je tylko Ty — bez niego nikt nie odczyta kluczy, także administrator. Na tym urządzeniu podajesz je raz.",
       password: "Hasło do kluczy",
       passwordRepeat: "Powtórz hasło do kluczy",

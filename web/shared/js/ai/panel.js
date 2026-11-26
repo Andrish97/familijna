@@ -80,6 +80,9 @@ export async function mountAiPanel({ pageId }) {
   const panel = el("div", "modal modal--fill ai-chat", { role: "dialog", "aria-modal": "true", "aria-labelledby": "aiChatTitle" });
   const head = el("div", "mHead");
   const title = el("div", "mTitle", { id: "aiChatTitle", text: t("aiChat.title") });
+  // asystent Familijnej: ile wiadomości zostało dziś (decyzja 26)
+  const quotaLine = el("div", "hint ai-quota");
+  quotaLine.hidden = true;
   const btnHistory = iconButton("folder-open", t("aiChat.history"));
   const btnNew = iconButton("plus", t("aiChat.newChat"));
   const btnClose = el("button", "btn sm", { type: "button", "aria-label": t("aiChat.close") });
@@ -103,7 +106,7 @@ export async function mountAiPanel({ pageId }) {
   form.append(input, btnSend, btnStop);
 
   body.append(chats, log, form);
-  panel.append(head, actions, body);
+  panel.append(head, quotaLine, actions, body);
   overlay.append(panel);
   // Okno trafia do strony dopiero przy pierwszym otwarciu — zamknięte nie
   // dokłada do strony drugiego okna (.overlay/.modal) obok jej własnych.
@@ -200,6 +203,13 @@ export async function mountAiPanel({ pageId }) {
     overlay.classList.toggle("is-busy", on);
   }
 
+  function showQuota(q) {
+    if (!q || !Number.isFinite(Number(q.daily)) || !Number(q.daily)) { quotaLine.hidden = true; return; }
+    if (conversation) conversation.quotaDaily = Number(q.daily);
+    quotaLine.textContent = t("aiChat.quota", { remaining: Number(q.remaining ?? 0), daily: Number(q.daily) });
+    quotaLine.hidden = false;
+  }
+
   async function ensureKey() {
     const key = await activeKey().catch(() => null);
     if (key) return key;
@@ -225,6 +235,8 @@ export async function mountAiPanel({ pageId }) {
       writeState({ chatId });
     }
     conversation = startConversation({ provider: key.provider, model: key.model, key: key.key, lang, pageId, history });
+    conversation.onQuota = showQuota;
+    showQuota(key.quota || null);
     render();
     if (awaitingReply(PROVIDERS[key.provider]?.kind, history)) {
       const again = el("button", "btn sm", { type: "button", text: t("aiChat.resume") });
@@ -315,7 +327,15 @@ export async function mountAiPanel({ pageId }) {
         await continueReply(conversation, ctx, opts);
       }
     } catch (e) {
-      if (e?.name !== "AbortError") addNotice(e?.message || String(e), "bad");
+      if (e?.name !== "AbortError") {
+        const note = addNotice(e?.message || String(e), "bad");
+        // limit asystenta Familijnej: własny klucz albo prośba o większy limit
+        if (["dailyLimit", "globalLimit", "builtinOff"].includes(e?.code)) {
+          const own = el("a", "btn sm gold", { href: linkTo("account", { hash: "ai" }), text: t("aiChat.addOwnKey") });
+          note.append(own);
+          if (e.code === "dailyLimit") showQuota({ remaining: 0, daily: conversation?.quotaDaily || 0 });
+        }
+      }
     } finally {
       setBusy(false);
       abort = null;

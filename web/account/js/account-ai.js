@@ -8,7 +8,7 @@ import { toast } from "../../shared/js/core/toast.js";
 import { icon } from "../../shared/js/core/icons.js";
 import { initUiSelect } from "../../shared/js/core/ui-select.js";
 import { sb } from "../../shared/js/core/supabase.js";
-import { getVault } from "../../shared/js/ai/keys.js";
+import { getVault, getSource, setSource, builtinStatus } from "../../shared/js/ai/keys.js";
 import { PROVIDERS, listModels, ProviderError } from "../../shared/js/ai/providers.js";
 
 const ERRORS = {
@@ -52,6 +52,7 @@ export async function initAiKeysUi() {
   if (!section || !box) return;
   section.hidden = false;
   if (location.hash === "#ai") requestAnimationFrame(() => section.scrollIntoView({ block: "start" }));
+  void renderSource();
   const vault = await getVault();
 
   async function render() {
@@ -201,6 +202,33 @@ export async function initAiKeysUi() {
 
   await render();
   void renderConnectors();
+}
+
+// Źródło czatu (decyzja 25): asystent Familijnej (domyślnie, z limitem
+// dziennym) albo własny klucz z sejfu niżej. Wybór zapamiętuje przeglądarka.
+async function renderSource() {
+  const box = document.getElementById("aiSourceBox");
+  if (!box) return;
+  const status = await builtinStatus().catch(() => ({ enabled: false }));
+  box.textContent = "";
+  box.hidden = !status.enabled;
+  if (!status.enabled) return;
+  const current = getSource();
+  const option = (value, label, hint) => {
+    const row = el("label", "choice");
+    const radio = el("input", "", { type: "radio", name: "aiSource", value });
+    radio.checked = current === value;
+    radio.addEventListener("change", () => { setSource(value); toast(t("account.ai.source.saved")); });
+    const text = el("div", "choice-text");
+    text.append(el("span", "choice-label", { text: label }), el("span", "hint", { text: hint }));
+    row.append(radio, text);
+    return row;
+  };
+  box.append(
+    el("div", "field-label", { text: t("account.ai.source.title") }),
+    option("builtin", t("account.ai.source.builtin"), t("account.ai.source.builtinHint", { daily: status.daily, remaining: status.remaining })),
+    option("own", t("account.ai.source.own"), t("account.ai.source.ownHint")),
+  );
 }
 
 const MCP_URL = "https://api.familijna.app/mcp";

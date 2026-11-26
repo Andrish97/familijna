@@ -2,7 +2,7 @@
 // Klucze dodaje się w Ustawieniach konta (decyzja 1): kilka, jeden aktywny.
 import { sb } from "../core/supabase.js";
 import { createVault } from "./vault.js";
-import { listModels, recommendedModel } from "./providers.js";
+import { listModels, recommendedModel, BUILTIN_MODEL } from "./providers.js";
 
 async function rpc(fn, args = {}) {
   const { data, error } = await sb().rpc(fn, args);
@@ -39,8 +39,38 @@ export async function keyStatus() {
   return s === "open" && vault.active() ? "ready" : "none";
 }
 
-/** Aktywny klucz { provider, model, key } albo null. Bez modelu — zalecany z listy dostawcy. */
+// Źródło czatu (decyzja 25): „builtin” — asystent Familijnej (domyślnie),
+// „own” — aktywny klucz z sejfu. Wybór per przeglądarka.
+const SOURCE = "familijna:ai-source";
+export function getSource() {
+  try { return localStorage.getItem(SOURCE) === "own" ? "own" : "builtin"; } catch { return "builtin"; }
+}
+export function setSource(source) {
+  try { localStorage.setItem(SOURCE, source === "own" ? "own" : "builtin"); } catch { /* bez pamięci */ }
+}
+
+/** Stan asystenta Familijnej: { enabled, daily, used, remaining, reset_at }. */
+export async function builtinStatus() {
+  const { data, error } = await sb().rpc("ai_quota_status");
+  if (error || !data?.ok) return { enabled: false };
+  return data;
+}
+const userToken = async () => (await sb().auth.getSession()).data?.session?.access_token || "";
+
+/**
+ * Aktywne źródło { provider, model, key, quota? } albo null: asystent Familijnej,
+ * gdy włączony i wybrany (albo gdy nie ma własnego klucza), inaczej klucz z sejfu.
+ */
 export async function activeKey() {
+  const own = await ownKey().catch(() => null);
+  if (getSource() === "own" && own) return own;
+  const status = await builtinStatus().catch(() => ({ enabled: false }));
+  if (status.enabled) return { provider: "familijna", model: BUILTIN_MODEL, key: userToken, quota: status };
+  return own;
+}
+
+/** Aktywny klucz z sejfu { provider, model, key } albo null. Bez modelu — zalecany z listy dostawcy. */
+export async function ownKey() {
   const vault = await getVault();
   if (await vault.status() !== "open") return null;
   const item = vault.active();

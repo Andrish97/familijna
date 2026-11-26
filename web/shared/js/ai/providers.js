@@ -7,9 +7,17 @@
 // Rozmowa trzyma historię w formacie swojego dostawcy — zmiana dostawcy
 // zaczyna nową rozmowę.
 // Adresy dostawców muszą być w connect-src CSP (Worker, security-headers.js).
+import { geminiSchema } from "./tools/gemini-schema.js";
+// Adres API jak core/supabase.js SUPABASE_URL (zgodność: unit/aiBuiltin.test.js) —
+// bez importu, bo supabase.js wymaga okna przeglądarki.
+const API_ORIGIN = "https://api.familijna.app";
 import { t } from "../../translation/translation.js";
 
+// familijna — wbudowany asystent (decyzje 25–30): Gemini przez funkcję Edge
+// ai-chat na kluczu serwera, z limitami; key = funkcja zwracająca JWT użytkownika.
+export const BUILTIN_MODEL = "gemini-2.5-flash-lite";
 export const PROVIDERS = {
+  familijna: { label: "Asystent Familijnej", kind: "gemini", base: `${API_ORIGIN}/functions/v1/ai-chat`, builtin: true },
   anthropic: { label: "Anthropic (Claude)", kind: "anthropic", base: "https://api.anthropic.com/v1", keyUrl: "https://console.anthropic.com/settings/keys" },
   openai: { label: "OpenAI (ChatGPT)", kind: "openai", base: "https://api.openai.com/v1", keyUrl: "https://platform.openai.com/api-keys" },
   gemini: { label: "Google Gemini", kind: "gemini", base: "https://generativelanguage.googleapis.com/v1beta", keyUrl: "https://aistudio.google.com/apikey" },
@@ -34,6 +42,9 @@ export class ProviderError extends Error {
 }
 
 export function errorCode(status, detail = "") {
+  // limity asystenta Familijnej (funkcja ai-chat, migracja 538)
+  const limit = /familijna_limit:(daily_limit|minute_limit|step_limit|global_limit|disabled|not_registered)/.exec(detail);
+  if (limit) return { daily_limit: "dailyLimit", minute_limit: "minuteLimit", step_limit: "stepLimit", global_limit: "globalLimit", disabled: "builtinOff", not_registered: "builtinOff" }[limit[1]];
   if (status === -1) return "refused";
   if (status === 0) return "offline";
   if (status === 401 || status === 403) return "badKey";
@@ -64,7 +75,8 @@ async function request(url, options) {
     try { data = text ? JSON.parse(text) : null; } catch { /* odpowiedź nie-JSON */ }
     const detail = data?.error?.message || data?.message || text.slice(0, 300) || res.statusText;
     const noFunds = res.status === 402 || /insufficient|credit|balance|billing|quota/i.test(detail);
-    if (RETRY_STATUS.has(res.status) && !noFunds && attempt < RETRY_MS.length) {
+    const limited = /familijna_limit:/.test(detail);
+    if (RETRY_STATUS.has(res.status) && !noFunds && !limited && attempt < RETRY_MS.length) {
       const after = Number(res.headers?.get?.("retry-after"));
       await timing.sleep(Number.isFinite(after) && after > 0 ? Math.min(after * 1000, 10000) : RETRY_MS[attempt]);
       continue;
@@ -148,25 +160,7 @@ export function recommendedModel(providerId, models = []) {
 }
 
 // Schemat narzędzia dla Gemini: tylko pola, które Gemini przyjmuje.
-export function geminiSchema(s) {
-  if (!s || typeof s !== "object") return s;
-  if (Array.isArray(s)) return s.map(geminiSchema);
-  const out = {};
-  for (const [k, v] of Object.entries(s)) {
-    if (["type", "description", "enum", "required", "nullable", "format"].includes(k)) out[k] = v;
-    else if (k === "properties") out.properties = Object.fromEntries(Object.entries(v || {}).map(([n, x]) => [n, geminiSchema(x)]));
-    else if (k === "items") out.items = geminiSchema(v);
-  }
-  if (Array.isArray(out.type)) out.type = out.type.find((x) => x !== "null") || "string";
-  if (out.format && !["enum", "date-time"].includes(out.format)) delete out.format;
-  if (out.type === "object" && !out.properties) out.properties = {};
-  // Gemini przyjmuje „enum” tylko przy tekście — lista liczb idzie do opisu.
-  if (out.enum && (out.type !== "string" || out.enum.some((x) => typeof x !== "string"))) {
-    out.description = `${out.description ? `${out.description} ` : ""}(${out.enum.join(" | ")})`;
-    delete out.enum;
-  }
-  return out;
-}
+export { geminiSchema };
 
 /**
  * Nowa rozmowa. tools: [{ name, description, inputSchema }].
@@ -175,7 +169,7 @@ export function geminiSchema(s) {
 export function createConversation({ provider, model, key, system, tools, history = [] }) {
   const p = PROVIDERS[provider];
   if (!p) throw new Error(`unknown provider: ${provider}`);
-  return { provider, kind: p.kind, base: p.base, key, model, system, tools, history };
+  return { provider, kind: p.kind, base: p.base, builtin: !!p.builtin, key, model, system, tools, history, page: null, onQuota: null };
 }
 
 export function userMessage(kind, text) {
@@ -227,13 +221,25 @@ async function step(c, onText, signal) {
     };
   }
   if (c.kind === "gemini") {
-    const res = await request(`${c.base}/models/${encodeURIComponent(c.model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(c.key)}`, {
-      method: "POST", headers: { "content-type": "application/json" }, signal,
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: c.system }] }, contents: c.history,
-        tools: [{ functionDeclarations: c.tools.map((x) => ({ name: x.name, description: x.description, parameters: geminiSchema(x.inputSchema) })) }],
-      }),
-    });
+    // wbudowany asystent: tylko rozmowa i strona — prompt i narzędzia dokłada serwer
+    const res = c.builtin
+      ? await request(c.base, {
+        method: "POST", signal,
+        headers: { "content-type": "application/json", authorization: `Bearer ${await c.key()}` },
+        body: JSON.stringify({ contents: c.history, page: c.page }),
+      })
+      : await request(`${c.base}/models/${encodeURIComponent(c.model)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(c.key)}`, {
+        method: "POST", headers: { "content-type": "application/json" }, signal,
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: c.system }] }, contents: c.history,
+          tools: [{ functionDeclarations: c.tools.map((x) => ({ name: x.name, description: x.description, parameters: geminiSchema(x.inputSchema) })) }],
+        }),
+      });
+    if (c.builtin) {
+      const remaining = Number(res.headers?.get?.("x-ai-remaining"));
+      const daily = Number(res.headers?.get?.("x-ai-daily"));
+      if (Number.isFinite(remaining) && Number.isFinite(daily)) c.onQuota?.({ remaining, daily });
+    }
     const parts = [];
     for await (const z of sseEvents(res)) {
       for (const p of z?.candidates?.[0]?.content?.parts || []) {
