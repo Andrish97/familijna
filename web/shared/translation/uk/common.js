@@ -349,6 +349,8 @@ const uk = {
       open_page: "Перехід на сторінку",
       list_games: "Список ігор",
       get_game: "Читання гри",
+      search_manual: "Пошук у підказках",
+      manual_section: "Читання підказок",
       submit_market_game: "Надсилання гри до спільноти",
       set_username: "Зміна імені користувача",
       copy_history: "Історія надсилань",

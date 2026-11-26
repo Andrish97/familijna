@@ -349,6 +349,8 @@ const pl = {
       open_page: "Przejście na stronę",
       list_games: "Lista gier",
       get_game: "Odczyt gry",
+      search_manual: "Szukanie we Wskazówkach",
+      manual_section: "Czytanie Wskazówek",
       submit_market_game: "Zgłoszenie gry do Społeczności",
       set_username: "Zmiana nazwy użytkownika",
       copy_history: "Historia wysyłek",

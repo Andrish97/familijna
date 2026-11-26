@@ -532,3 +532,23 @@ test("zmiana nazwy użytkownika i zgłoszenie gry do Społeczności — endpoint
   const args = calls.at(-1)[1];
   assert.equal(args.p_payload.questions.length, 1, "paczka jak strona (gameExportSnapshot)");
 });
+
+test("Wskazówki: wyszukiwanie zwraca właściwy podrozdział, czytanie jednego podrozdziału", async () => {
+  const k = await import("../../web/shared/js/ai/tools/knowledge.js");
+  const meta = (await import("../../web/manual/content/meta/pl.js")).default;
+  const ctx = {
+    lang: "pl", pageId: "games", changed() {}, confirm: async () => true,
+    manualMeta: async () => meta,
+    manualChapter: async (_l, id) => (await import(`../../web/manual/content/chapters/pl/${id}.js`)).default,
+  };
+  const run = async (name, args) => JSON.parse((await chat.runTool(name, args, ctx)).text);
+  const cases = { "jak podłączyć telewizor": "17.1", "zmiana hasła": "5.6", "własny dźwięk": "16.4", "jak wysłać grę znajomemu": "11.2", "logo z obrazu": "8.4", "asystent claude łącznik": "5.10.1" };
+  for (const [q, want] of Object.entries(cases)) {
+    const r = await run("search_manual", { query: q });
+    assert.ok(r.results.slice(0, 3).some((x) => x.section === want), `${q} → ${r.results.map((x) => x.section)}`);
+  }
+  const s = await run("manual_section", { section: "17.1" });
+  assert.match(s.text, /Wyświetlacz/);
+  assert.ok(s.text.length < 12000, "jeden podrozdział, nie cały rozdział");
+  assert.equal((await run("manual_section", { section: "99.9" })).error, "unknown_section");
+});
