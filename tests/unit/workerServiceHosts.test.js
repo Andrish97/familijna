@@ -35,3 +35,22 @@ test("Worker nie przepuszcza leads.familijna.app do serwera", async (t) => {
   await worker.fetch(new Request("https://leads.familijna.app/search", { method: "OPTIONS" }), env, {}).catch(() => null);
   assert.ok(!seen.includes("leads.familijna.app"), seen.join(","));
 });
+
+// E30 (decyzja 19): łącznik MCP — /mcp i opisy OAuth do funkcji Edge `mcp`.
+test("Worker kieruje /mcp i /.well-known/oauth-* na api.familijna.app do funkcji mcp", async (t) => {
+  const originalFetch = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (request) => { const u = new URL(request.url); seen.push(`${u.host}${u.pathname}${u.search}`); return new Response("ok"); };
+  t.after(() => { globalThis.fetch = originalFetch; });
+  for (const path of ["/mcp", "/mcp/oauth/token", "/mcp/oauth/authorize?client_id=c", "/.well-known/oauth-protected-resource/mcp", "/.well-known/oauth-authorization-server", "/auth/v1/health"]) {
+    await worker.fetch(new Request(`https://api.familijna.app${path}`), {}, {});
+  }
+  assert.deepEqual(seen, [
+    "api.familijna.app/functions/v1/mcp",
+    "api.familijna.app/functions/v1/mcp/oauth/token",
+    "api.familijna.app/functions/v1/mcp/oauth/authorize?client_id=c",
+    "api.familijna.app/functions/v1/mcp/.well-known/oauth-protected-resource/mcp",
+    "api.familijna.app/functions/v1/mcp/.well-known/oauth-authorization-server",
+    "api.familijna.app/auth/v1/health",
+  ]);
+});

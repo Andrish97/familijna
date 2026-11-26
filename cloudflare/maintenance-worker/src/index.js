@@ -124,6 +124,15 @@ async function handleFetch(request, env, ctx) {
     if ((host === "api.familijna.app" || host === "api.familiada.online") && url.pathname === "/_ping") {
       return new Response(null, { status: 204, headers: { "Access-Control-Allow-Origin": "*", "Cache-Control": "no-store" } });
     }
+    // E30 (decyzja 19): łącznik MCP Familijnej — https://api.familijna.app/mcp
+    // i opisy logowania OAuth w katalogu głównym domeny → funkcja Edge `mcp`
+    // (jak w Makietce). Adres dla Claude/ChatGPT bez /functions/v1.
+    if (host === "api.familijna.app" && (url.pathname === "/mcp" || url.pathname.startsWith("/mcp/")
+        || url.pathname.startsWith("/.well-known/oauth-") || url.pathname === "/.well-known/openid-configuration")) {
+      const target = new URL(url);
+      target.pathname = url.pathname.startsWith("/mcp") ? `/functions/v1${url.pathname}` : `/functions/v1/mcp${url.pathname}`;
+      return fetch(new Request(target, request));
+    }
     // NIE dodawaj tu cf.resolveOverride wskazującego z powrotem na ten sam
     // `host` — to nie jest "wymuszenie użycia rekordu DNS", tylko każe
     // temu subrequestowi z Workera ponownie wejść w edge Cloudflare dla
