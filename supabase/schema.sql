@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict GCJbnhH4ehFJXobYUszi1zn0tqxie8GZcbyPCF9nIMniX9GMw4an7tU3DsjNEKP
+\restrict NBkxe7RHytrCKVzdbKksipBDIoRQxhrLH714FLYaQyFtszMXjzaWbUUxK9Na77x
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -210,6 +210,18 @@ $$;
 
 
 --
+-- Name: _ai_audience_ok("text", "uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_ai_audience_ok"("p_audience" "text", "p_user" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT p_audience = 'all' OR (p_audience = 'test' AND public.is_test_user(p_user))
+$$;
+
+
+--
 -- Name: _ai_chat_uid(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -224,8 +236,45 @@ begin
   if v_uid is null then return null; end if;
   select to_jsonb(u) into v_identity from auth.users u where u.id = v_uid;
   if not public._account_is_registered(v_uid, v_identity) then return null; end if;
+  if not public._ai_visible(v_uid) then return null; end if;
   return v_uid;
 end;
+$$;
+
+
+--
+-- Name: _ai_reset_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_ai_reset_at"() RETURNS timestamp with time zone
+    LANGUAGE "sql" STABLE
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT ((public._ai_today() + 1)::timestamp AT TIME ZONE 'Europe/Warsaw')
+$$;
+
+
+--
+-- Name: _ai_today(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_ai_today"() RETURNS "date"
+    LANGUAGE "sql" STABLE
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT (clock_timestamp() AT TIME ZONE 'Europe/Warsaw')::date
+$$;
+
+
+--
+-- Name: _ai_visible("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_ai_visible"("p_user" "uuid") RETURNS boolean
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  SELECT coalesce((SELECT public._ai_audience_ok(l.chat_audience, p_user) FROM public.ai_limits l WHERE l.id = 1), false)
 $$;
 
 
@@ -3492,6 +3541,53 @@ $$;
 
 
 --
+-- Name: _mcp_hash("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_mcp_hash"("p" "text") RETURNS "text"
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'public'
+    AS $$ select encode(sha256(convert_to(coalesce(p, ''), 'UTF8')), 'hex') $$;
+
+
+--
+-- Name: _mcp_redirect_ok("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_mcp_redirect_ok"("p" "text") RETURNS boolean
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'public'
+    AS $_$
+  select char_length(coalesce(p, '')) <= 500
+     and (p ~ '^https://[^/?#\s]+(/[^#\s]*)?$' or p ~ '^http://(localhost|127\.0\.0\.1)(:[0-9]{1,5})?(/[^#\s]*)?$')
+$_$;
+
+
+--
+-- Name: _mcp_s256("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_mcp_s256"("p" "text") RETURNS "text"
+    LANGUAGE "sql" IMMUTABLE
+    SET "search_path" TO 'public'
+    AS $$
+  select translate(rtrim(encode(sha256(convert_to(coalesce(p, ''), 'UTF8')), 'base64'), '='), '+/', '-_')
+$$;
+
+
+--
+-- Name: _mcp_secret(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."_mcp_secret"() RETURNS "text"
+    LANGUAGE "sql"
+    SET "search_path" TO 'public'
+    AS $$
+  select replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
+$$;
+
+
+--
 -- Name: _norm_email("text"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5685,6 +5781,51 @@ END $$;
 
 
 --
+-- Name: account_set_username("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."account_set_username"("p_username" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'pg_temp'
+    AS $_$
+declare
+  v_uid uuid := auth.uid();
+  v_identity jsonb;
+  v_name text := btrim(coalesce(p_username, ''));
+  v_old text;
+  r record;
+begin
+  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'not_registered'); end if;
+  select to_jsonb(u) into v_identity from auth.users u where u.id = v_uid;
+  if not public._account_is_registered(v_uid, v_identity) then
+    return jsonb_build_object('ok', false, 'error', 'not_registered');
+  end if;
+  if v_name !~ '^[a-zA-Z0-9_.-]{3,20}$' or lower(v_name) like 'guest\_%' then
+    return jsonb_build_object('ok', false, 'error', 'invalid');
+  end if;
+  if public.reserved_username_reason(v_name) is not null then
+    return jsonb_build_object('ok', false, 'error', 'reserved');
+  end if;
+  select username into v_old from public.profiles where id = v_uid for update;
+  if v_old = v_name then return jsonb_build_object('ok', true, 'username', v_name, 'unchanged', true); end if;
+  if exists (select 1 from public.profiles where lower(username) = lower(v_name) and id <> v_uid) then
+    return jsonb_build_object('ok', false, 'error', 'taken');
+  end if;
+  select * into r from public.cooldown_reserve('account:username', 3600);
+  if not r.ok then
+    return jsonb_build_object('ok', false, 'error', 'cooldown', 'next_allowed_at', r.next_allowed_at);
+  end if;
+  update public.profiles set username = v_name where id = v_uid;
+  update auth.users set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('username', v_name)
+   where id = v_uid;
+  return jsonb_build_object('ok', true, 'username', v_name);
+exception when unique_violation then
+  return jsonb_build_object('ok', false, 'error', 'taken');
+end;
+$_$;
+
+
+--
 -- Name: acquire_edit_lock("text", "uuid", "text", "text"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -5833,6 +5974,47 @@ BEGIN
   END;
   RETURN jsonb_build_object('ok', true, 'count', v_n);
 END;
+$$;
+
+
+--
+-- Name: admin_ai_limits_get(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."admin_ai_limits_get"() RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  SELECT jsonb_build_object(
+    'limits', (SELECT to_jsonb(l) - 'id' FROM public.ai_limits l WHERE id = 1),
+    'usage', coalesce((SELECT jsonb_agg(jsonb_build_object('day', d.day, 'users', d.users, 'messages', d.messages, 'steps', d.steps) ORDER BY d.day DESC)
+      FROM (SELECT day, count(*) AS users, sum(messages) AS messages, sum(steps) AS steps
+              FROM public.ai_usage WHERE day > public._ai_today() - 14 GROUP BY day) d), '[]'::jsonb)
+  )
+$$;
+
+
+--
+-- Name: admin_ai_limits_set("jsonb"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."admin_ai_limits_set"("p_patch" "jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  update public.ai_limits set
+    chat_audience = coalesce(nullif(btrim(p_patch->>'chat_audience'), ''), chat_audience),
+    builtin_audience = coalesce(nullif(btrim(p_patch->>'builtin_audience'), ''), builtin_audience),
+    model = coalesce(nullif(btrim(p_patch->>'model'), ''), model),
+    daily_messages = coalesce((p_patch->>'daily_messages')::integer, daily_messages),
+    per_minute = coalesce((p_patch->>'per_minute')::integer, per_minute),
+    max_steps = coalesce((p_patch->>'max_steps')::integer, max_steps),
+    global_daily_messages = coalesce((p_patch->>'global_daily_messages')::integer, global_daily_messages),
+    updated_at = now()
+  where id = 1;
+  return public.admin_ai_limits_get();
+end;
 $$;
 
 
@@ -6110,6 +6292,108 @@ begin
   get diagnostics v_n = row_count;
   return v_n;
 end;
+$$;
+
+
+--
+-- Name: ai_quota_status(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_quota_status"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'pg_temp'
+    AS $$
+declare
+  l public.ai_limits;
+  v_uid uuid := public._ai_chat_uid();
+  v_used integer;
+begin
+  select * into l from public.ai_limits where id = 1;
+  -- visible: czy pokazać czat (przycisk, sekcja w koncie); enabled: klucz Familijnej
+  if v_uid is null then return jsonb_build_object('ok', true, 'visible', false, 'enabled', false); end if;
+  select messages into v_used from public.ai_usage where user_id = v_uid and day = public._ai_today();
+  return jsonb_build_object('ok', true, 'visible', true,
+    'enabled', public._ai_audience_ok(l.builtin_audience, v_uid),
+    'daily', l.daily_messages,
+    'used', coalesce(v_used, 0), 'remaining', greatest(l.daily_messages - coalesce(v_used, 0), 0),
+    'reset_at', public._ai_reset_at());
+end;
+$$;
+
+
+--
+-- Name: ai_quota_take("uuid", boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_quota_take"("p_user" "uuid", "p_new_message" boolean) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'pg_temp'
+    AS $$
+declare
+  l public.ai_limits;
+  v_identity jsonb;
+  v_day date := public._ai_today();
+  u public.ai_usage;
+  v_recent integer;
+  v_global integer;
+begin
+  select * into l from public.ai_limits where id = 1;
+  if not found or not public._ai_visible(p_user) or not public._ai_audience_ok(l.builtin_audience, p_user) then
+    return jsonb_build_object('ok', false, 'error', 'disabled');
+  end if;
+  select to_jsonb(x) into v_identity from auth.users x where x.id = p_user;
+  if v_identity is null or not public._account_is_registered(p_user, v_identity) then
+    return jsonb_build_object('ok', false, 'error', 'not_registered');
+  end if;
+
+  -- jeden wiersz na użytkownika i dzień, zablokowany do końca transakcji
+  insert into public.ai_usage (user_id, day) values (p_user, v_day) on conflict do nothing;
+  select * into u from public.ai_usage where user_id = p_user and day = v_day for update;
+
+  if p_new_message then
+    if u.messages >= l.daily_messages then
+      return jsonb_build_object('ok', false, 'error', 'daily_limit', 'daily', l.daily_messages, 'used', u.messages, 'reset_at', public._ai_reset_at());
+    end if;
+    select count(*) into v_recent from public.ai_usage_events
+     where user_id = p_user and at > clock_timestamp() - interval '1 minute';
+    if v_recent >= l.per_minute then
+      return jsonb_build_object('ok', false, 'error', 'minute_limit', 'per_minute', l.per_minute);
+    end if;
+    select coalesce(sum(messages), 0) into v_global from public.ai_usage where day = v_day;
+    if v_global >= l.global_daily_messages then
+      return jsonb_build_object('ok', false, 'error', 'global_limit');
+    end if;
+    update public.ai_usage set messages = messages + 1, steps = steps + 1, steps_in_message = 1
+     where user_id = p_user and day = v_day returning * into u;
+    insert into public.ai_usage_events (user_id) values (p_user);
+  else
+    if u.messages = 0 then
+      -- krok bez wiadomości tego dnia (np. dokończenie po północy) liczy się jak wiadomość
+      return public.ai_quota_take(p_user, true);
+    end if;
+    if u.steps_in_message >= l.max_steps then
+      return jsonb_build_object('ok', false, 'error', 'step_limit', 'max_steps', l.max_steps);
+    end if;
+    update public.ai_usage set steps = steps + 1, steps_in_message = steps_in_message + 1
+     where user_id = p_user and day = v_day returning * into u;
+  end if;
+
+  return jsonb_build_object('ok', true, 'model', l.model, 'daily', l.daily_messages,
+    'remaining', greatest(l.daily_messages - u.messages, 0), 'reset_at', public._ai_reset_at());
+end;
+$$;
+
+
+--
+-- Name: ai_usage_cleanup(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_usage_cleanup"() RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  DELETE FROM public.ai_usage_events WHERE at < clock_timestamp() - interval '1 day';
+  DELETE FROM public.ai_usage WHERE day < public._ai_today() - 60;
 $$;
 
 
@@ -15909,6 +16193,226 @@ $$;
 
 
 --
+-- Name: mcp_authorize_begin("uuid", "text", "text", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_authorize_begin"("p_client" "uuid", "p_redirect_uri" "text", "p_challenge" "text", "p_state" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $_$
+declare
+  c public.mcp_clients;
+  v_id uuid;
+begin
+  select * into c from public.mcp_clients where id = p_client;
+  if not found then return jsonb_build_object('ok', false, 'error', 'invalid_client'); end if;
+  if not (p_redirect_uri = any (c.redirect_uris)) then return jsonb_build_object('ok', false, 'error', 'invalid_redirect_uri'); end if;
+  if coalesce(p_challenge, '') !~ '^[A-Za-z0-9_-]{43,128}$' then return jsonb_build_object('ok', false, 'error', 'invalid_request'); end if;
+  insert into public.mcp_auth_requests (client_id, redirect_uri, code_challenge, state)
+  values (c.id, p_redirect_uri, p_challenge, left(p_state, 500)) returning id into v_id;
+  return jsonb_build_object('ok', true, 'request_id', v_id);
+end;
+$_$;
+
+
+--
+-- Name: mcp_authorize_decide("uuid", boolean); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_authorize_decide"("p_request" "uuid", "p_allow" boolean) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  q public.mcp_auth_requests;
+  v_code text;
+  v_sep text;
+  v_state text;
+begin
+  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
+  select * into q from public.mcp_auth_requests where id = p_request for update;
+  if not found or q.decided_at is not null or q.created_at < now() - interval '15 minutes' then
+    return jsonb_build_object('ok', false, 'error', 'expired');
+  end if;
+  v_sep := case when position('?' in q.redirect_uri) > 0 then '&' else '?' end;
+  v_state := case when q.state is null then '' else '&state=' || replace(replace(replace(q.state, '%', '%25'), '&', '%26'), '#', '%23') end;
+  if not coalesce(p_allow, false) then
+    update public.mcp_auth_requests set decided_at = now() where id = q.id;
+    return jsonb_build_object('ok', true, 'redirect', q.redirect_uri || v_sep || 'error=access_denied' || v_state);
+  end if;
+  v_code := public._mcp_secret();
+  update public.mcp_auth_requests set decided_at = now(), user_id = v_uid, code_hash = public._mcp_hash(v_code) where id = q.id;
+  return jsonb_build_object('ok', true, 'redirect', q.redirect_uri || v_sep || 'code=' || v_code || v_state);
+end;
+$$;
+
+
+--
+-- Name: mcp_authorize_info("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_authorize_info"("p_request" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  r record;
+begin
+  if public._ai_chat_uid() is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
+  select q.id, q.redirect_uri, q.decided_at, q.created_at, c.name into r
+    from public.mcp_auth_requests q join public.mcp_clients c on c.id = q.client_id where q.id = p_request;
+  if not found or r.decided_at is not null or r.created_at < now() - interval '15 minutes' then
+    return jsonb_build_object('ok', false, 'error', 'expired');
+  end if;
+  return jsonb_build_object('ok', true, 'client_name', r.name,
+    'redirect_host', substring(r.redirect_uri from '^[a-z]+://([^/?#]+)'));
+end;
+$$;
+
+
+--
+-- Name: mcp_cleanup(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_cleanup"() RETURNS "void"
+    LANGUAGE "sql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  delete from public.mcp_auth_requests where created_at < now() - interval '1 day';
+  delete from public.mcp_tokens where coalesce(revoked_at, expires_at) < now() - interval '30 days';
+  delete from public.mcp_clients c where coalesce(c.last_used_at, c.created_at) < now() - interval '30 days'
+    and not exists (select 1 from public.mcp_tokens t where t.client_id = c.id);
+$$;
+
+
+--
+-- Name: mcp_client_register("text", "text"[]); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_client_register"("p_name" "text", "p_redirect_uris" "text"[]) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_id uuid;
+  v_name text := left(btrim(coalesce(p_name, '')), 100);
+  u text;
+begin
+  if v_name = '' then v_name := 'MCP'; end if;
+  if p_redirect_uris is null or cardinality(p_redirect_uris) not between 1 and 5 then
+    return jsonb_build_object('ok', false, 'error', 'invalid_redirect_uri');
+  end if;
+  foreach u in array p_redirect_uris loop
+    if not public._mcp_redirect_ok(u) then
+      return jsonb_build_object('ok', false, 'error', 'invalid_redirect_uri');
+    end if;
+  end loop;
+  insert into public.mcp_clients (name, redirect_uris) values (v_name, p_redirect_uris) returning id into v_id;
+  return jsonb_build_object('ok', true, 'client_id', v_id, 'client_name', v_name);
+end;
+$$;
+
+
+--
+-- Name: mcp_token_exchange("text", "text", "uuid", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_token_exchange"("p_code" "text", "p_verifier" "text", "p_client" "uuid", "p_redirect_uri" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  q public.mcp_auth_requests;
+  v_token text;
+  v_name text;
+begin
+  select * into q from public.mcp_auth_requests where code_hash = public._mcp_hash(p_code) for update;
+  if not found or q.used_at is not null or q.decided_at < now() - interval '5 minutes'
+     or q.client_id is distinct from p_client or q.redirect_uri is distinct from p_redirect_uri
+     or q.user_id is null or public._mcp_s256(p_verifier) <> q.code_challenge then
+    return jsonb_build_object('ok', false, 'error', 'invalid_grant');
+  end if;
+  update public.mcp_auth_requests set used_at = now() where id = q.id;
+  select name into v_name from public.mcp_clients where id = q.client_id;
+  update public.mcp_clients set last_used_at = now() where id = q.client_id;
+  v_token := 'fam_mcp_' || public._mcp_secret();
+  insert into public.mcp_tokens (user_id, client_id, client_name, token_hash, expires_at)
+  values (q.user_id, q.client_id, coalesce(v_name, 'MCP'), public._mcp_hash(v_token), now() + interval '90 days');
+  return jsonb_build_object('ok', true, 'access_token', v_token, 'token_type', 'Bearer', 'expires_in', 90 * 24 * 3600);
+end;
+$$;
+
+
+--
+-- Name: mcp_token_revoke("uuid"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_token_revoke"("p_id" "uuid") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
+  update public.mcp_tokens set revoked_at = now() where id = p_id and user_id = v_uid and revoked_at is null;
+  return jsonb_build_object('ok', true, 'revoked', found);
+end;
+$$;
+
+
+--
+-- Name: mcp_token_user("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_token_user"("p_token" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'auth', 'pg_temp'
+    AS $$
+declare
+  t public.mcp_tokens;
+  v_identity jsonb;
+begin
+  select * into t from public.mcp_tokens where token_hash = public._mcp_hash(p_token);
+  if not found or t.revoked_at is not null or t.expires_at < now() then
+    return jsonb_build_object('ok', false, 'error', 'invalid_token');
+  end if;
+  select to_jsonb(u) into v_identity from auth.users u where u.id = t.user_id;
+  -- _ai_visible z migracji 538 (czat widoczny dla konta — etap próbny: konta testowe)
+  if not public._account_is_registered(t.user_id, v_identity) or not public._ai_visible(t.user_id) then
+    return jsonb_build_object('ok', false, 'error', 'invalid_token');
+  end if;
+  if t.last_used_at is null or t.last_used_at < now() - interval '5 minutes' then
+    update public.mcp_tokens set last_used_at = now() where id = t.id;
+  end if;
+  return jsonb_build_object('ok', true, 'user_id', t.user_id, 'token_id', t.id, 'email', v_identity->>'email');
+end;
+$$;
+
+
+--
+-- Name: mcp_tokens_mine(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_tokens_mine"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
+  return jsonb_build_object('ok', true, 'tokens', coalesce((
+    select jsonb_agg(jsonb_build_object('id', t.id, 'client_name', t.client_name, 'created_at', t.created_at,
+                                        'last_used_at', t.last_used_at, 'expires_at', t.expires_at) order by t.created_at desc)
+      from public.mcp_tokens t
+     where t.user_id = v_uid and t.revoked_at is null and t.expires_at > now()), '[]'::jsonb));
+end;
+$$;
+
+
+--
 -- Name: mk_run_active(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -21352,6 +21856,53 @@ CREATE TABLE "public"."ai_key_vaults" (
 
 
 --
+-- Name: ai_limits; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."ai_limits" (
+    "id" smallint DEFAULT 1 NOT NULL,
+    "chat_audience" "text" DEFAULT 'test'::"text" NOT NULL,
+    "builtin_audience" "text" DEFAULT 'off'::"text" NOT NULL,
+    "model" "text" DEFAULT 'gemini-2.5-flash-lite'::"text" NOT NULL,
+    "daily_messages" integer DEFAULT 20 NOT NULL,
+    "per_minute" integer DEFAULT 6 NOT NULL,
+    "max_steps" integer DEFAULT 8 NOT NULL,
+    "global_daily_messages" integer DEFAULT 5000 NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "ai_limits_builtin_audience_check" CHECK (("builtin_audience" = ANY (ARRAY['off'::"text", 'test'::"text", 'all'::"text"]))),
+    CONSTRAINT "ai_limits_chat_audience_check" CHECK (("chat_audience" = ANY (ARRAY['off'::"text", 'test'::"text", 'all'::"text"]))),
+    CONSTRAINT "ai_limits_daily_messages_check" CHECK ((("daily_messages" >= 0) AND ("daily_messages" <= 1000))),
+    CONSTRAINT "ai_limits_global_daily_messages_check" CHECK ((("global_daily_messages" >= 0) AND ("global_daily_messages" <= 1000000))),
+    CONSTRAINT "ai_limits_id_check" CHECK (("id" = 1)),
+    CONSTRAINT "ai_limits_max_steps_check" CHECK ((("max_steps" >= 1) AND ("max_steps" <= 40))),
+    CONSTRAINT "ai_limits_per_minute_check" CHECK ((("per_minute" >= 1) AND ("per_minute" <= 120)))
+);
+
+
+--
+-- Name: ai_usage; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."ai_usage" (
+    "user_id" "uuid" NOT NULL,
+    "day" "date" NOT NULL,
+    "messages" integer DEFAULT 0 NOT NULL,
+    "steps" integer DEFAULT 0 NOT NULL,
+    "steps_in_message" integer DEFAULT 0 NOT NULL
+);
+
+
+--
+-- Name: ai_usage_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."ai_usage_events" (
+    "user_id" "uuid" NOT NULL,
+    "at" timestamp with time zone DEFAULT "clock_timestamp"() NOT NULL
+);
+
+
+--
 -- Name: answers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -22358,6 +22909,58 @@ CREATE TABLE "public"."marketing_search_queries_log" (
     "status" "text" DEFAULT 'completed'::"text",
     "created_at" timestamp with time zone DEFAULT "now"(),
     "urls_added" integer DEFAULT 0
+);
+
+
+--
+-- Name: mcp_auth_requests; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."mcp_auth_requests" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "client_id" "uuid" NOT NULL,
+    "redirect_uri" "text" NOT NULL,
+    "code_challenge" "text" NOT NULL,
+    "state" "text",
+    "user_id" "uuid",
+    "code_hash" "text",
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "decided_at" timestamp with time zone,
+    "used_at" timestamp with time zone,
+    CONSTRAINT "mcp_auth_requests_code_challenge_check" CHECK (("code_challenge" ~ '^[A-Za-z0-9_-]{43,128}$'::"text")),
+    CONSTRAINT "mcp_auth_requests_state_check" CHECK (("char_length"("state") <= 500))
+);
+
+
+--
+-- Name: mcp_clients; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."mcp_clients" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" "text" NOT NULL,
+    "redirect_uris" "text"[] NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "last_used_at" timestamp with time zone,
+    CONSTRAINT "mcp_clients_name_check" CHECK ((("char_length"("name") >= 1) AND ("char_length"("name") <= 100))),
+    CONSTRAINT "mcp_clients_redirect_uris_check" CHECK ((("cardinality"("redirect_uris") >= 1) AND ("cardinality"("redirect_uris") <= 5)))
+);
+
+
+--
+-- Name: mcp_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."mcp_tokens" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "client_id" "uuid",
+    "client_name" "text" NOT NULL,
+    "token_hash" "text" NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "expires_at" timestamp with time zone NOT NULL,
+    "last_used_at" timestamp with time zone,
+    "revoked_at" timestamp with time zone
 );
 
 
@@ -23374,6 +23977,22 @@ ALTER TABLE ONLY "public"."ai_key_vaults"
 
 
 --
+-- Name: ai_limits ai_limits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_limits"
+    ADD CONSTRAINT "ai_limits_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: ai_usage ai_usage_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_usage"
+    ADD CONSTRAINT "ai_usage_pkey" PRIMARY KEY ("user_id", "day");
+
+
+--
 -- Name: answers answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -23933,6 +24552,46 @@ ALTER TABLE ONLY "public"."marketing_search_queries_log"
 
 ALTER TABLE ONLY "public"."marketing_verified_contacts"
     ADD CONSTRAINT "marketing_verified_contacts_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: mcp_auth_requests mcp_auth_requests_code_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_auth_requests"
+    ADD CONSTRAINT "mcp_auth_requests_code_hash_key" UNIQUE ("code_hash");
+
+
+--
+-- Name: mcp_auth_requests mcp_auth_requests_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_auth_requests"
+    ADD CONSTRAINT "mcp_auth_requests_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: mcp_clients mcp_clients_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_clients"
+    ADD CONSTRAINT "mcp_clients_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: mcp_tokens mcp_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_tokens"
+    ADD CONSTRAINT "mcp_tokens_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: mcp_tokens mcp_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_tokens"
+    ADD CONSTRAINT "mcp_tokens_token_hash_key" UNIQUE ("token_hash");
 
 
 --
@@ -24541,6 +25200,20 @@ CREATE INDEX "ai_chats_user_updated_idx" ON "public"."ai_chats" USING "btree" ("
 
 
 --
+-- Name: ai_usage_day_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "ai_usage_day_idx" ON "public"."ai_usage" USING "btree" ("day");
+
+
+--
+-- Name: ai_usage_events_user_at_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "ai_usage_events_user_at_idx" ON "public"."ai_usage_events" USING "btree" ("user_id", "at");
+
+
+--
 -- Name: base_share_tasks_base_id_idx; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -25119,6 +25792,13 @@ CREATE UNIQUE INDEX "marketing_categories_name_key" ON "public"."marketing_categ
 --
 
 CREATE UNIQUE INDEX "marketing_runs_one_active" ON "public"."marketing_runs" USING "btree" ((true)) WHERE ("status" = ANY (ARRAY['running'::"text", 'paused'::"text", 'cancel_requested'::"text"]));
+
+
+--
+-- Name: mcp_tokens_user_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "mcp_tokens_user_idx" ON "public"."mcp_tokens" USING "btree" ("user_id");
 
 
 --
@@ -26532,6 +27212,22 @@ ALTER TABLE ONLY "public"."ai_key_vaults"
 
 
 --
+-- Name: ai_usage_events ai_usage_events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_usage_events"
+    ADD CONSTRAINT "ai_usage_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: ai_usage ai_usage_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_usage"
+    ADD CONSTRAINT "ai_usage_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
 -- Name: answers answers_question_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -27056,6 +27752,38 @@ ALTER TABLE ONLY "public"."marketing_candidates"
 
 ALTER TABLE ONLY "public"."marketing_verified_contacts"
     ADD CONSTRAINT "marketing_verified_contacts_category_id_fkey" FOREIGN KEY ("category_id") REFERENCES "public"."marketing_categories"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: mcp_auth_requests mcp_auth_requests_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_auth_requests"
+    ADD CONSTRAINT "mcp_auth_requests_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."mcp_clients"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: mcp_auth_requests mcp_auth_requests_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_auth_requests"
+    ADD CONSTRAINT "mcp_auth_requests_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
+-- Name: mcp_tokens mcp_tokens_client_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_tokens"
+    ADD CONSTRAINT "mcp_tokens_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."mcp_clients"("id") ON DELETE SET NULL;
+
+
+--
+-- Name: mcp_tokens mcp_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."mcp_tokens"
+    ADD CONSTRAINT "mcp_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
 
 
 --
@@ -27782,6 +28510,24 @@ ALTER TABLE "public"."ai_chats" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."ai_key_vaults" ENABLE ROW LEVEL SECURITY;
 
 --
+-- Name: ai_limits; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."ai_limits" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_usage; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."ai_usage" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_usage_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."ai_usage_events" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: answers; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -28283,6 +29029,24 @@ ALTER TABLE "public"."marketing_search_queries_log" ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE "public"."marketing_verified_contacts" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: mcp_auth_requests; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."mcp_auth_requests" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: mcp_clients; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."mcp_clients" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: mcp_tokens; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."mcp_tokens" ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: message_attachments; Type: ROW SECURITY; Schema: public; Owner: -
@@ -29168,5 +29932,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict GCJbnhH4ehFJXobYUszi1zn0tqxie8GZcbyPCF9nIMniX9GMw4an7tU3DsjNEKP
+\unrestrict NBkxe7RHytrCKVzdbKksipBDIoRQxhrLH714FLYaQyFtszMXjzaWbUUxK9Na77x
 
