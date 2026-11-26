@@ -93,8 +93,14 @@ export async function handleChat(request, deps) {
     upstream = await deps.fetchImpl(url, init);
   }
   if (!upstream.ok) {
-    const detail = (await upstream.text().catch(() => "")).slice(0, 300);
-    return json(upstream.status === 429 ? 503 : upstream.status >= 500 ? 503 : 502, { error: { code: 503, message: `overloaded: ${detail}` } });
+    // Komunikat Google (bez klucza). Nigdy 502/504: Cloudflare podmienia je na
+    // własną stronę błędu bez CORS — przeglądarka widzi wtedy tylko „CORS”.
+    const raw = await upstream.text().catch(() => "");
+    let detail = raw.slice(0, 300);
+    try { detail = JSON.parse(raw)?.error?.message?.slice(0, 300) || detail; } catch { /* tekst */ }
+    console.error(`[ai-chat] gemini ${upstream.status}: ${detail}`);
+    const status = upstream.status === 429 || upstream.status >= 500 ? 503 : 500;
+    return json(status, { error: { code: status, message: `${status === 503 ? "overloaded" : `upstream_${upstream.status}`}: ${detail}` } });
   }
   return new Response(upstream.body, {
     status: 200,

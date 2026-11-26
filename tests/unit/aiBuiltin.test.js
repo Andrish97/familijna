@@ -102,3 +102,15 @@ test("przeglądarka: kody limitów bez ponawiania, dostawca familijna wysyła ty
     globalThis.fetch = realFetch;
   }
 });
+
+test("błąd Google 4xx: 500 z komunikatem i CORS — nigdy 502/504 (Cloudflare podmienia je bez CORS)", async () => {
+  const d = deps({ fetchImpl: async () => new Response(JSON.stringify({ error: { message: "Invalid JSON payload received." } }), { status: 400 }) });
+  const res = await handleChat(post({ contents: [user("a")] }), d);
+  assert.equal(res.status, 500);
+  assert.equal(res.headers.get("access-control-allow-origin"), "*");
+  assert.match((await res.json()).error.message, /^upstream_400: Invalid JSON payload/);
+  for (const s of [400, 401, 403, 404, 429, 500, 502, 503, 504]) {
+    const r = await handleChat(post({ contents: [user("a")] }), deps({ fetchImpl: async () => new Response("x", { status: s }) }));
+    assert.ok(![502, 504].includes(r.status), `Google ${s} → ${r.status}`);
+  }
+});
