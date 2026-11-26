@@ -148,7 +148,7 @@ test("czat: usunięcie gry wymaga potwierdzenia; odmowa nic nie usuwa", async ({
     await openChat(page);
     await page.locator("#aiChatOverlay .ai-input").fill("Usuń tę grę");
     await page.keyboard.press("Enter");
-    const confirm = page.locator(".overlay:not([hidden]) .modal", { hasText: "Usunięcie gry" });
+    const confirm = page.locator(".overlay:not([hidden]) .modal:not(.ai-chat)", { hasText: "Usunięcie gry" });
     await expect(confirm).toBeVisible({ timeout: 20000 });
     await confirm.getByRole("button", { name: "Nie" }).click();
     await expect(page.locator("#aiChatOverlay .ai-msg--assistant").last()).toHaveText("Nie usunąłem gry.", { timeout: 20000 });

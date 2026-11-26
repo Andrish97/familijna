@@ -74,7 +74,7 @@ export async function mountAiPanel({ pageId }) {
 
   const overlay = el("div", "overlay modal--sheet ai-chat-overlay", { id: AI_DIALOG_ID });
   overlay.hidden = true;
-  const panel = el("div", "modal uni-modal modal--fill ai-chat", { role: "dialog", "aria-modal": "true", "aria-labelledby": "aiChatTitle" });
+  const panel = el("div", "modal modal--fill ai-chat", { role: "dialog", "aria-modal": "true", "aria-labelledby": "aiChatTitle" });
   const head = el("div", "mHead");
   const title = el("div", "mTitle", { id: "aiChatTitle", text: t("aiChat.title") });
   const btnHistory = iconButton("folder-open", t("aiChat.history"));
@@ -102,7 +102,9 @@ export async function mountAiPanel({ pageId }) {
   body.append(chats, log, form);
   panel.append(head, actions, body);
   overlay.append(panel);
-  document.body.append(overlay);
+  // Okno trafia do strony dopiero przy pierwszym otwarciu — zamknięte nie
+  // dokłada do strony drugiego okna (.overlay/.modal) obok jej własnych.
+  const attach = () => { if (!overlay.isConnected) document.body.append(overlay); };
   let state = readState();
   let conversation = null;
   let chatId = state.chatId || null;
@@ -122,6 +124,7 @@ export async function mountAiPanel({ pageId }) {
     state = writeState({ open });
     if (open && !isOpen) {
       overlay.classList.toggle("is-instant", instant);
+      attach();
       openDialog(overlay, { onClose: () => setOpen(false), restore: instant });
       if (instant) requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.remove("is-instant")));
       else input.focus();
