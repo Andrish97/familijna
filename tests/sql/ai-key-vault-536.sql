@@ -3,6 +3,10 @@
 -- psql ... -d fam -f tests/sql/ai-key-vault-536.sql
 \set ON_ERROR_STOP 1
 begin;
+-- od migracji 538 czat widzą tylko konta wg ai_limits.chat_audience — tu wszyscy
+do $$ begin
+  if to_regclass('public.ai_limits') is not null then update public.ai_limits set chat_audience = 'all' where id = 1; end if;
+end $$;
 insert into auth.users(id,email,email_confirmed_at) values
   ('53600000-0000-4000-8000-0000000000aa','a536@x.pl',now()),
   ('53600000-0000-4000-8000-0000000000bb','b536@x.pl',now()),
