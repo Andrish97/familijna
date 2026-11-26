@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict MAI4T5Do1F5AS77dcZIgLCbBpOOdML9QpSf5K6FPkksB21fAdmYl9GhggMMbDAq
+\restrict sHdwpNKDceeW1tXJN8qhVILKncRMPmAJl9OcqZF1Ns30C5uczYzBpIQedp5edwH
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -21863,7 +21863,7 @@ CREATE TABLE "public"."ai_limits" (
     "id" smallint DEFAULT 1 NOT NULL,
     "chat_audience" "text" DEFAULT 'test'::"text" NOT NULL,
     "builtin_audience" "text" DEFAULT 'off'::"text" NOT NULL,
-    "model" "text" DEFAULT 'gemini-2.5-flash-lite'::"text" NOT NULL,
+    "model" "text" DEFAULT 'gemini-3.5-flash-lite'::"text" NOT NULL,
     "daily_messages" integer DEFAULT 20 NOT NULL,
     "per_minute" integer DEFAULT 6 NOT NULL,
     "max_steps" integer DEFAULT 8 NOT NULL,
@@ -29932,5 +29932,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict MAI4T5Do1F5AS77dcZIgLCbBpOOdML9QpSf5K6FPkksB21fAdmYl9GhggMMbDAq
+\unrestrict sHdwpNKDceeW1tXJN8qhVILKncRMPmAJl9OcqZF1Ns30C5uczYzBpIQedp5edwH
 
