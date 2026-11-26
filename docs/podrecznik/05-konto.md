@@ -261,8 +261,9 @@ logo (→ 8.5) i bazy pytań (→ 9.1).
 ## 5.10 Asystent AI
 
 Asystent odpowiada na pytania o serwis i wykonuje czynności za Ciebie: tworzy
-i poprawia gry, dodaje pytania do baz, uruchamia i podlicza ankiety, wysyła
-zaproszenia. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
+i poprawia gry, zmienia ich ustawienia, układa bazy pytań i je udostępnia,
+tworzy logo tekstowe, uruchamia i podlicza ankiety, wysyła zaproszenia i kopie
+znajomym, przyjmuje otrzymane kopie. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
 zostaje otwarte, gdy przechodzisz na inną stronę. Rozmowy są zapisane na koncie;
 te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
 
