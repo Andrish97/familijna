@@ -16,13 +16,14 @@
 //   tylko przeglądarka: navigateTo(page, id), openContactForm({ subject, message }), pagePath }.
 import knowledge from "./knowledge.js";
 import games from "./games.js";
+import gameSettings from "./game-settings.js";
 import polls from "./polls.js";
 import bases from "./bases.js";
 import contacts from "./contacts.js";
 import logos from "./logos.js";
 import support from "./support.js";
 
-export const TOOLS = [...knowledge, ...games, ...polls, ...bases, ...logos, ...contacts, ...support];
+export const TOOLS = [...knowledge, ...games, ...gameSettings, ...polls, ...bases, ...logos, ...contacts, ...support];
 
 const BY_NAME = new Map(TOOLS.map((x) => [x.name, x]));
 export const toolByName = (name) => BY_NAME.get(name) || null;

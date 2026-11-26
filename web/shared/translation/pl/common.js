@@ -341,6 +341,8 @@ const pl = {
       open_page: "Przejście na stronę",
       list_games: "Lista gier",
       get_game: "Odczyt gry",
+      get_game_settings: "Odczyt ustawień gry",
+      update_game_settings: "Zmiana ustawień gry",
       create_game: "Nowa gra",
       edit_game: "Zmiana treści gry",
       delete_game: "Usunięcie gry",

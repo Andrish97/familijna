@@ -341,6 +341,8 @@ const uk = {
       open_page: "Перехід на сторінку",
       list_games: "Список ігор",
       get_game: "Читання гри",
+      get_game_settings: "Читання налаштувань гри",
+      update_game_settings: "Зміна налаштувань гри",
       create_game: "Нова гра",
       edit_game: "Зміна вмісту гри",
       delete_game: "Видалення гри",

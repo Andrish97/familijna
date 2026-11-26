@@ -272,3 +272,27 @@ test("zgłoszenie problemu: tylko wypełnia formularz Kontaktu, bez potwierdzeni
   assert.equal(opened.subject, "Nie działa przycisk");
   assert.match(opened.message, /^Klikam i nic\.\n\n— \/control\/$/);
 });
+
+test("ustawienia gry: te same granice co strona, zmiany tylko w podanych polach, błędne wartości odrzucone", async () => {
+  const { SETTINGS_LIMITS, patchSettings } = await import("../../web/shared/js/ai/tools/game-settings.js");
+  const { ADVANCED_LIMITS } = await import("../../web/games/settings/js/advanced-limits.js");
+  const { LONG_MAX_INPUT } = await import("../../web/shared/js/display/long-text.js");
+  for (const key of Object.keys(ADVANCED_LIMITS)) assert.deepEqual(SETTINGS_LIMITS[key], ADVANCED_LIMITS[key], key);
+  assert.equal(SETTINGS_LIMITS.teamName, LONG_MAX_INPUT);
+
+  const saved = { teams: { teamA: "Red" }, questions: { rounds: ["q1"] }, sound: { volumes: { a: 5 } } };
+  const ok = patchSettings(saved, { team_b_name: " Blue ", colors: { team_a: "#f80" }, end_screen: "points", main_prize_amount: 1000, round_multipliers: [1, 2] });
+  assert.equal(ok.settings.teams.teamA, "Red");
+  assert.equal(ok.settings.teams.teamB, "Blue");
+  assert.equal(ok.settings.display.colors.A, "#FF8800");
+  assert.equal(ok.settings.game.advanced.endScreenMode, "points");
+  assert.deepEqual(ok.settings.game.advanced.roundMultipliers, [1, 2]);
+  assert.deepEqual(ok.settings.questions, saved.questions, "wybór pytań bez zmian");
+  assert.deepEqual(saved.teams, { teamA: "Red" }, "zapisany obiekt nietknięty");
+
+  assert.equal(patchSettings({}, { final_target: 481 }).error, "out_of_range");
+  assert.equal(patchSettings({}, { colors: { dots: "zielony" } }).error, "invalid_color");
+  assert.equal(patchSettings({}, { end_screen: "fireworks" }).error, "invalid_value");
+  assert.equal(patchSettings({}, { team_a_name: "x".repeat(49) }).error, "too_long");
+  assert.equal(patchSettings({}, { round_multipliers: [] }).error, "out_of_range");
+});

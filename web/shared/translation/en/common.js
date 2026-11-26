@@ -346,6 +346,8 @@ const en = {
       open_page: "Going to a page",
       list_games: "List of games",
       get_game: "Reading a game",
+      get_game_settings: "Reading game settings",
+      update_game_settings: "Changing game settings",
       create_game: "New game",
       edit_game: "Changing game content",
       delete_game: "Deleting a game",
