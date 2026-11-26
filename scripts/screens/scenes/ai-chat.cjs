@@ -80,3 +80,31 @@ module.exports.push(
     ready: "#gsContentInner > *", devices: ["desktop", "phone"], db: vaultDb,
     steps: [point("gameSettings", "sound", "Własny dźwięk ustawisz tutaj: przy wybranym dźwięku wybierz własny plik.", IDS.game)] },
 );
+
+// Okno czatu: rozmowa z narzędziem (asystent Familijnej) i widok historii rozmów.
+const CHAT_ID = "53500000-0000-4000-8000-00000000c001";
+const historyDb = (db) => {
+  vaultDb(db);
+  db.rpc.ai_chat_list = { ok: true, chats: [
+    { id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-26T18:20:00Z" },
+    { id: "53500000-0000-4000-8000-00000000c002", title: "Logo z sercem na wesele", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-25T20:05:00Z" },
+    { id: "53500000-0000-4000-8000-00000000c003", title: "Jak podłączyć telewizor?", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-24T17:40:00Z" },
+  ] };
+  db.rpc.ai_chat_get = { ok: true, id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-2.5-flash-lite", history: [
+    { role: "user", parts: [{ text: "Ile mam gier gotowych do gry?\n\n<ctx>language: Polish; page: games</ctx>" }] },
+    { role: "model", parts: [{ functionCall: { name: "list_games", args: {} } }] },
+    { role: "user", parts: [{ functionResponse: { name: "list_games", response: { games: [] } } }] },
+    { role: "model", parts: [{ text: "Masz 8 gier, z czego 6 jest gotowych do gry: Rodzinny pojedynek, Pytania na rodzinny wieczór, Wakacyjna gra rodzinna, Wigilia firmowa 2026, Sylwester 2026 i Rodzinny wieczór gier. „Urodziny dziadka” potrzebuje jeszcze 4 pytań." }] },
+  ] };
+};
+const withChat = async (view) => {
+  await view.evaluate((id) => { sessionStorage.setItem("familijna:ai-panel", JSON.stringify({ open: true, chatId: id })); }, CHAT_ID);
+  await view.reload();
+  await view.locator("#aiChatOverlay:not([hidden]) .ai-msg--assistant").waitFor({ timeout: 8000 });
+  await view.waitForTimeout(400);
+};
+module.exports.push(
+  { id: "ai-chat-conversation", category: "Czat AI", title: "Czat AI — rozmowa z narzędziem", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: historyDb, steps: [withChat] },
+  { id: "ai-chat-history", category: "Czat AI", title: "Czat AI — historia rozmów", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: historyDb,
+    steps: [withChat, async (view) => { await view.locator(".ai-btn-history").click(); await view.locator(".ai-chat-row").first().waitFor(); await view.waitForTimeout(300); }] },
+);

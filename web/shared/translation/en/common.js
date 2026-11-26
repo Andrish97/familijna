@@ -328,6 +328,15 @@ const en = {
     noKeyAction: "Add a key",
     interrupted: "The answer was interrupted by going to another page.",
     resume: "Finish the answer",
+    historyTitle: "Your conversations",
+    backToChat: "Back to the conversation",
+    examplesTitle: "For example",
+    examples: {
+      game: "Prepare a holiday game with 10 questions",
+      tv: "How do I connect a TV as the display?",
+      logo: "Draw a logo with a heart and the word FAMILY",
+      poll: "How do I make a poll and invite friends?",
+    },
     confirm: {
       sendTitle: "Send?",
       sendText: "The assistant wants to do: {action}. Other people will get a message.",

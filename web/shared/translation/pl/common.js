@@ -323,6 +323,15 @@ const pl = {
     noKeyAction: "Dodaj klucz",
     interrupted: "Odpowiedź została przerwana przejściem na inną stronę.",
     resume: "Dokończ odpowiedź",
+    historyTitle: "Twoje rozmowy",
+    backToChat: "Wróć do rozmowy",
+    examplesTitle: "Na przykład",
+    examples: {
+      game: "Przygotuj grę o wakacjach z 10 pytaniami",
+      tv: "Jak podłączyć telewizor jako wyświetlacz?",
+      logo: "Narysuj logo z sercem i napisem RODZINA",
+      poll: "Jak zrobić ankietę i zaprosić znajomych?",
+    },
     confirm: {
       sendTitle: "Wysłać?",
       sendText: "Asystent chce wykonać: {action}. Inne osoby dostaną wiadomość.",

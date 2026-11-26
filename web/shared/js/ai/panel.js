@@ -13,7 +13,7 @@
 // czatu (open_page) — po zakończeniu odpowiedzi; zmiana danych pokazanych na
 // stronie — po odpowiedzi strona wczytuje się ponownie (okno zostaje otwarte).
 import { t, getUiLang } from "../../translation/translation.js";
-import { icon } from "../core/icons.js";
+import { icon, iconText } from "../core/icons.js";
 import { confirmModal } from "../core/modal.js";
 import { openDialog, closeDialog } from "../core/modal-sheet.js";
 import { linkTo } from "../core/nav-map.js";
@@ -47,6 +47,13 @@ function el(tag, className, attrs = {}) {
     else n.setAttribute(k, v);
   }
   return n;
+}
+
+// Przycisk z ikoną i podpisem (czytelne działanie, decyzja użytkownika 2026-11-26).
+function textButton(name, label, extra = "") {
+  const b = el("button", `btn sm ${extra}`.trim(), { type: "button" });
+  b.innerHTML = iconText(name, label);
+  return b;
 }
 
 function iconButton(name, label, extra = "") {
@@ -87,8 +94,9 @@ export async function mountAiPanel({ pageId }) {
   const ownKeyLink = el("a", "link ai-quota-own", { href: linkTo("account", { hash: "ai" }), text: t("aiChat.ownKeyHint") });
   quotaLine.append(quotaText, " ", ownKeyLink);
   quotaLine.hidden = true;
-  const btnHistory = iconButton("folder-open", t("aiChat.history"));
-  const btnNew = iconButton("plus", t("aiChat.newChat"));
+  const btnHistory = textButton("folder-open", t("aiChat.history"), "ai-btn-history");
+  btnHistory.setAttribute("aria-pressed", "false");
+  const btnNew = textButton("plus", t("aiChat.newChat"));
   const btnClose = el("button", "btn sm", { type: "button", "aria-label": t("aiChat.close") });
   btnClose.innerHTML = icon("close");
   head.append(title, btnClose);
@@ -97,8 +105,14 @@ export async function mountAiPanel({ pageId }) {
   actions.append(btnHistory, btnNew);
 
   const body = el("div", "uni-body sheet-fill ai-chat-body");
+  // Historia rozmów: osobny widok zamiast rozmowy (nagłówek, powrót, lista).
   const chats = el("div", "ai-chats sheet-scroll");
   chats.hidden = true;
+  const chatsHead = el("div", "ai-chats-head");
+  const btnBackToChat = textButton("arrow-left", t("aiChat.backToChat"));
+  chatsHead.append(el("div", "field-label", { text: t("aiChat.historyTitle") }), btnBackToChat);
+  const chatsList = el("div", "ai-chats-list");
+  chats.append(chatsHead, chatsList);
   const log = el("div", "ai-log sheet-scroll", { role: "log", "aria-live": "polite" });
 
   const form = el("form", "ai-form");
@@ -109,8 +123,8 @@ export async function mountAiPanel({ pageId }) {
   btnStop.hidden = true;
   form.append(input, btnSend, btnStop);
 
-  body.append(chats, log, form);
-  panel.append(head, quotaLine, actions, body);
+  body.append(chats, log, form, quotaLine);
+  panel.append(head, actions, body);
   overlay.append(panel);
   // Okno trafia do strony dopiero przy pierwszym otwarciu — zamknięte nie
   // dokłada do strony drugiego okna (.overlay/.modal) obok jej własnych.
@@ -195,8 +209,23 @@ export async function mountAiPanel({ pageId }) {
   function render() {
     log.textContent = "";
     if (conversation) for (const item of displayItems(conversation.kind, conversation.history)) addItem(item);
-    if (!log.childElementCount) log.append(el("div", "hint ai-empty", { text: t("aiChat.empty") }));
+    if (!log.childElementCount) log.append(emptyState());
     scrollEnd();
+  }
+
+  // Puste okno: co asystent umie + przykłady do kliknięcia (wysyłają polecenie).
+  function emptyState() {
+    const box = el("div", "ai-empty");
+    box.append(el("p", "", { text: t("aiChat.empty") }), el("div", "field-label", { text: t("aiChat.examplesTitle") }));
+    const list = el("div", "ai-examples");
+    for (const key of ["game", "tv", "logo", "poll"]) {
+      const text = t(`aiChat.examples.${key}`);
+      const b = el("button", "btn sm ai-example", { type: "button", text });
+      b.addEventListener("click", () => { if (!busy) void runTurn(text); });
+      list.append(b);
+    }
+    box.append(list);
+    return box;
   }
 
   function setBusy(on) {
@@ -364,42 +393,58 @@ export async function mountAiPanel({ pageId }) {
     if (changed && RELOAD_ON_CHANGE.has(pageId)) location.reload();
   }
 
+  // Widok historii: lista zamiast rozmowy; „Wróć do rozmowy” albo wybór rozmowy wraca.
+  function setChatsView(on) {
+    chats.hidden = !on;
+    log.hidden = on;
+    form.hidden = on;
+    quotaLine.classList.toggle("is-off", on);
+    btnHistory.setAttribute("aria-pressed", String(on));
+    btnHistory.classList.toggle("is-active", on);
+  }
+
   async function showChats() {
-    chats.hidden = !chats.hidden;
-    if (chats.hidden) return;
-    chats.textContent = "";
+    if (!chats.hidden) { setChatsView(false); return; }
+    setChatsView(true);
+    chatsList.textContent = "";
     let list = [];
     try { list = await listChats(); } catch { /* bez listy */ }
-    if (!list.length) { chats.append(el("div", "hint", { text: t("aiChat.historyEmpty") })); return; }
+    if (!list.length) { chatsList.append(el("div", "hint", { text: t("aiChat.historyEmpty") })); return; }
+    const date = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" });
     for (const c of list) {
-      const row = el("div", "ai-chat-row");
-      const open = el("button", "btn-plain ai-chat-open", { type: "button", text: c.title || t("aiChat.untitled") });
+      const row = el("div", `ai-chat-row${c.id === chatId ? " is-current" : ""}`);
+      const open = el("button", "btn-plain ai-chat-open", { type: "button" });
+      open.append(el("span", "ai-chat-title", { text: c.title || t("aiChat.untitled") }));
+      if (c.updated_at) open.append(el("span", "hint", { text: date.format(new Date(c.updated_at)) }));
       const del = iconButton("trash", t("aiChat.deleteChat"));
       open.addEventListener("click", async () => {
         chatId = c.id;
         writeState({ chatId });
-        chats.hidden = true;
+        setChatsView(false);
         await loadConversation();
       });
       del.addEventListener("click", async () => {
         await deleteChat(c.id).catch(() => {});
         if (chatId === c.id) { chatId = null; writeState({ chatId }); await loadConversation(); }
         row.remove();
+        if (!chatsList.childElementCount) chatsList.append(el("div", "hint", { text: t("aiChat.historyEmpty") }));
       });
       row.append(open, del);
-      chats.append(row);
+      chatsList.append(row);
     }
   }
 
   toggle.addEventListener("click", () => setOpen(overlay.hidden));
   btnClose.addEventListener("click", () => setOpen(false));
   btnHistory.addEventListener("click", () => { void showChats(); });
+  btnBackToChat.addEventListener("click", () => setChatsView(false));
   btnNew.addEventListener("click", async () => {
     if (busy) return;
     chatId = null;
     writeState({ chatId });
-    chats.hidden = true;
+    setChatsView(false);
     await loadConversation();
+    input.focus();
   });
   btnStop.addEventListener("click", () => abort?.abort());
   input.value = state.draft || "";
