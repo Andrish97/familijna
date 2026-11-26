@@ -271,8 +271,9 @@ the assistant.
 
 The assistant works right away: the **Familijna assistant** has a daily message
 limit (the chat window shows “… left today”, the limit comes back at midnight). For
-more, add your own AI service key (e.g. Anthropic, OpenAI, Google Gemini) and choose
-“My key” in *Account settings* — then you pay the provider directly, without the
+more, add your own AI service key (e.g. Anthropic, OpenAI, Google Gemini) — from then on
+the chat uses it (“My key” is selected in *Account settings*, where you can also switch
+back to the Familijna assistant). You then pay the provider directly, without the
 Familijna limit. Conversations with the Familijna assistant are processed by Google
 (Gemini API on a paid plan).
 

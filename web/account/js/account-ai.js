@@ -172,7 +172,8 @@ export async function initAiKeysUi() {
   function renderAdd() {
     const form = el("div", "stack account-ai-add");
     form.append(el("div", "field-label", { text: t("account.ai.addTitle") }));
-    const ids = Object.keys(PROVIDERS);
+    // bez asystenta Familijnej — to nie dostawca własnego klucza
+    const ids = Object.keys(PROVIDERS).filter((id) => !PROVIDERS[id].builtin);
     let provider = ids[0];
     const link = el("a", "link", { target: "_blank", rel: "noopener noreferrer", text: t("account.ai.getKey") });
     const setLink = () => { link.href = PROVIDERS[provider].keyUrl; };
@@ -190,6 +191,9 @@ export async function initAiKeysUi() {
         // sprawdzenie klucza u dostawcy (lista modeli) — zły klucz nie trafia do sejfu
         await listModels(provider, value);
         await vault.add({ label: label.value, provider, key: value });
+        // dodany klucz = chęć korzystania z niego: źródło czatu „własny klucz”
+        setSource("own");
+        void renderSource();
         key.value = "";
         toast(t("account.ai.added"));
         await render();

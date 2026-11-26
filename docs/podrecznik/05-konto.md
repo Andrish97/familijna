@@ -272,8 +272,9 @@ te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
 Asystent działa od razu: **asystent Familijnej** ma dzienny limit wiadomości
 (licznik „zostało … na dziś” widać w oknie czatu, limit wraca o północy). Jeśli
 chcesz więcej, dodaj własny klucz do usługi sztucznej inteligencji (np. Anthropic,
-OpenAI, Google Gemini) i w *Ustawieniach konta* wybierz „Mój klucz” — wtedy za użycie
-płacisz bezpośrednio dostawcy, bez limitu Familijnej. Rozmowy z asystentem Familijnej
+OpenAI, Google Gemini) — od tej chwili czat korzysta z niego (w *Ustawieniach konta* zaznaczone jest „Mój klucz”;
+tam też wracasz do asystenta Familijnej). Za użycie płacisz wtedy bezpośrednio
+dostawcy, bez limitu Familijnej. Rozmowy z asystentem Familijnej
 przetwarza Google (Gemini API w planie płatnym).
 
 Klucz dodajesz w *Ustawieniach konta*, w sekcji „Asystent AI”:
