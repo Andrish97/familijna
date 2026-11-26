@@ -132,7 +132,8 @@ export async function initAiKeysUi() {
       list.append(row);
       void fillModels(k, model.api);
     }
-    box.append(list, renderAdd());
+    if (!keys.length) box.append(list, renderFreeKeyHelp(), renderAdd());
+    else box.append(list, renderAdd());
     const lock = button("account.ai.lock", "btn sm", "eye-off");
     lock.addEventListener("click", async () => { await vault.lock(); await render(); });
     const actions = el("div", "cluster cluster--end account-actions");
@@ -151,6 +152,17 @@ export async function initAiKeysUi() {
     } catch { /* lista modeli niedostępna — zostaje „automatycznie” */ }
   }
   const vaultItem = (id) => vault.item(id);
+
+  // Instrukcja dla osób bez klucza (decyzja 18): darmowy klucz Google Gemini.
+  function renderFreeKeyHelp() {
+    const box = el("div", "callout callout--info stack account-ai-help");
+    box.append(el("div", "field-label", { text: t("account.ai.freeKey.title") }));
+    const steps = el("ol", "account-ai-steps");
+    for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.freeKey.${k}`) }));
+    const open = el("a", "btn sm", { href: PROVIDERS.gemini.keyUrl, target: "_blank", rel: "noopener noreferrer", text: t("account.ai.freeKey.open") });
+    box.append(steps, el("div", "section-hint", { text: t("account.ai.freeKey.note") }), open);
+    return box;
+  }
 
   function renderAdd() {
     const form = el("div", "stack account-ai-add");

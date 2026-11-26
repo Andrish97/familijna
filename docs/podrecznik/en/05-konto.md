@@ -278,6 +278,7 @@ Add a key in *Account settings*, in the “AI assistant” section:
    while entering it.
 
 You can add several keys — the selected one is used. Next to a key you choose the model.
+If you have no key, the section shows step by step how to get a free Google Gemini key.
 
 ![AI assistant in Account settings](zrzut:account-ai-keys)
 ![Assistant window without a key](zrzut:ai-chat-no-key)

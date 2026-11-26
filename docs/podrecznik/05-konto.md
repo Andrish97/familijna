@@ -278,6 +278,7 @@ Klucz dodajesz w *Ustawieniach konta*, w sekcji „Asystent AI”:
    przy wpisywaniu.
 
 Możesz dodać kilka kluczy — używany jest zaznaczony. Przy kluczu wybierasz model.
+Jeśli nie masz klucza, sekcja pokazuje krok po kroku, jak założyć darmowy klucz Google Gemini.
 
 ![Asystent AI w Ustawieniach konta](zrzut:account-ai-keys)
 ![Okno asystenta bez klucza](zrzut:ai-chat-no-key)

@@ -170,5 +170,7 @@
   .account-ai-key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .account-ai-key-main { flex: 1 1 220px; min-width: 0; }
   .account-ai-key .ui-select { flex: 0 1 220px; min-width: 0; }
+  .account-ai-help { gap: 8px; align-items: flex-start; }
+  .account-ai-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; }
   .account-ai-add { gap: 8px; padding-top: 6px; border-top: 1px solid var(--line-faint); }
 }

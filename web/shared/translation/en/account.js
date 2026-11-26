@@ -2,6 +2,14 @@
 const en = {
   account: {
     ai: {
+      freeKey: {
+        title: "No key? A free Google Gemini key",
+        step1: "Open Google AI Studio and sign in with your Google account.",
+        step2: "Choose “Create API key” and copy the key.",
+        step3: "Below, choose the provider “Google Gemini”, paste the key and choose [Add key].",
+        note: "The free plan has a daily request limit; Google may use conversation content to improve its services.",
+        open: "Open Google AI Studio",
+      },
       title: "AI assistant",
       hint: "The assistant runs on your own AI provider key — you pay the provider for your own use. Your browser encrypts the keys with a key password before they reach your account.",
       createHint: "Set a key password (at least 8 characters). Only you know it — without it nobody can read the keys, not even the administrator. You enter it once on this device.",

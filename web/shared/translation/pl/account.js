@@ -2,6 +2,14 @@
 const pl = {
   account: {
     ai: {
+      freeKey: {
+        title: "Nie masz klucza? Darmowy klucz Google Gemini",
+        step1: "Otwórz Google AI Studio i zaloguj się kontem Google.",
+        step2: "Wybierz „Create API key” (Utwórz klucz API) i skopiuj klucz.",
+        step3: "Poniżej wybierz dostawcę „Google Gemini”, wklej klucz i wybierz [Dodaj klucz].",
+        note: "Darmowy plan ma dzienny limit zapytań; Google może w nim wykorzystywać treść rozmów do ulepszania swoich usług.",
+        open: "Otwórz Google AI Studio",
+      },
       title: "Asystent AI",
       hint: "Asystent działa na Twoim kluczu dostawcy AI — płacisz u dostawcy za własne użycie. Klucze szyfruje Twoja przeglądarka hasłem do kluczy, zanim trafią na konto.",
       createHint: "Ustal hasło do kluczy (co najmniej 8 znaków). Znasz je tylko Ty — bez niego nikt nie odczyta kluczy, także administrator. Na tym urządzeniu podajesz je raz.",
