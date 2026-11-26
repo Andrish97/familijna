@@ -165,15 +165,22 @@
 }
 
 @layer page {
-  /* Asystent AI (account-ai.js): wiersz klucza — wybór aktywnego, model, usuń. */
+  /* Asystent AI (account-ai.js): zwarta lista kluczy — wybór aktywnego,
+     nazwa i dostawca w dwóch liniach, model i usuwanie jako ikony. */
   .account-ai-keys { gap: 6px; }
-  .account-ai-key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .account-ai-key-main { flex: 1 1 220px; min-width: 0; }
-  .account-ai-key .ui-select { flex: 0 1 220px; min-width: 0; }
+  .account-ai-key {
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 6px 6px 10px; border-radius: var(--r-md);
+    background: var(--surface-inset);
+  }
+  .account-ai-key-main { flex: 1 1 auto; min-width: 0; }
+  .account-ai-key-main .choice-text { min-width: 0; }
+  .account-ai-key-main .hint { overflow-wrap: anywhere; }
+  .account-ai-form { gap: 8px; }
+  .account-ai-links { gap: 6px 16px; }
   .account-ai-mcp { gap: 8px; }
   .account-ai-mcp-url { display: flex; gap: 8px; align-items: center; }
   .account-ai-mcp-url .inp { flex: 1 1 auto; min-width: 0; }
   .account-ai-help { gap: 8px; align-items: flex-start; }
   .account-ai-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 13px; }
-  .account-ai-add { gap: 8px; padding-top: 6px; border-top: 1px solid var(--line-faint); }
 }

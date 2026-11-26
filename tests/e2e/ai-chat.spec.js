@@ -88,10 +88,12 @@ async function addKey(page) {
   await pass.nth(0).fill(PASSWORD);
   await pass.nth(1).fill(PASSWORD);
   await section.locator(".btn.gold").click();
-  const add = section.locator(".account-ai-add");
+  await section.locator(".account-ai-add-open").click();
+  const add = page.locator(".uni-modal").filter({ has: page.locator(".account-ai-add") });
   await expect(add).toBeVisible({ timeout: 20000 });
   await add.locator("input[type=password]").fill("sk-ant-e2e-test-0000");
-  await add.locator(".btn.gold").click();
+  await add.locator(".uni-foot .btn.gold").click();
+  await expect(add).toBeHidden({ timeout: 20000 });
   await expect(section.locator(".account-ai-key")).toContainText("••••0000", { timeout: 20000 });
 }
 

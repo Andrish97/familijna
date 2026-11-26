@@ -105,73 +105,81 @@ export async function initAiKeysUi() {
     box.append(p, actions);
   }
 
+  // Lista kluczy (zwarte wiersze) i przyciski; dodawanie i model — w oknach.
   function renderKeys() {
     const { keys, active } = vault.list();
     const list = el("div", "stack account-ai-keys");
     if (!keys.length) list.append(el("div", "hint", { text: t("account.ai.empty") }));
     for (const k of keys) {
+      const provider = PROVIDERS[k.provider]?.label || k.provider;
       const row = el("div", "account-ai-key");
       const choice = el("label", "choice account-ai-key-main");
-      const radio = el("input", "", { type: "radio", name: "aiActiveKey", value: k.id });
+      const radio = el("input", "", { type: "radio", name: "aiActiveKey", value: k.id, "aria-label": k.label || provider });
       radio.checked = k.id === active;
-      const name = el("span", "", { text: `${k.label || PROVIDERS[k.provider]?.label || k.provider} · ${PROVIDERS[k.provider]?.label || k.provider} · ••••${k.last4}` });
-      choice.append(radio, name);
       radio.addEventListener("change", async () => {
         try { await vault.setActive(k.id); toast(t("account.ai.activeSaved")); } catch (e) { showError(e); }
       });
-      const auto = { value: "", label: t("account.ai.modelAuto") };
-      const model = uiSelect([auto, ...(k.model ? [{ value: k.model, label: k.model }] : [])], k.model || "", async (value) => {
-        try { await vault.setModel(k.id, value); toast(t("account.ai.modelSaved")); } catch (e) { showError(e); }
-      }, "account.ai.model");
-      const del = el("button", "btn sm icon", { type: "button", "aria-label": t("account.ai.remove"), title: t("account.ai.remove") });
-      del.innerHTML = icon("trash");
+      const text = el("div", "choice-text");
+      text.append(
+        el("span", "choice-label", { text: k.label || provider }),
+        el("span", "hint", { text: [provider, `••••${k.last4}`, k.model || t("account.ai.modelAuto")].join(" · ") }),
+      );
+      choice.append(radio, text);
+      const model = iconButton("settings", "account.ai.modelChange");
+      model.addEventListener("click", () => openModel(k));
+      const del = iconButton("trash", "account.ai.remove");
       del.addEventListener("click", async () => {
         const ok = await confirmModal({
-          title: t("account.ai.removeTitle"), text: t("account.ai.removeText", { name: k.label || k.provider }),
+          title: t("account.ai.removeTitle"), text: t("account.ai.removeText", { name: k.label || provider }),
           okText: t("account.ai.remove"), cancelText: t("account.ai.cancel"),
         });
         if (!ok) return;
         try { await vault.remove(k.id); await render(); } catch (e) { showError(e); }
       });
-      row.append(choice, model.root, del);
+      row.append(choice, model, del);
       list.append(row);
-      void fillModels(k, model.api);
     }
-    if (!keys.length) box.append(list, renderFreeKeyHelp(), renderAdd());
-    else box.append(list, renderAdd());
     const lock = button("account.ai.lock", "btn sm", "eye-off");
     lock.addEventListener("click", async () => { await vault.lock(); await render(); });
-    const actions = el("div", "cluster cluster--end account-actions");
-    actions.append(lock);
-    box.append(actions);
+    const add = button("account.ai.add", "btn sm gold account-ai-add-open", "plus");
+    add.addEventListener("click", () => openAdd(!keys.length));
+    const actions = el("div", "cluster account-actions account-actions--split");
+    actions.append(lock, add);
+    box.append(list, actions);
   }
 
-  // Modele z listy dostawcy (klucz z sejfu tej karty; bez błędu dla użytkownika).
-  async function fillModels(k, api) {
-    const item = vaultItem(k.id);
-    if (!item || !api) return;
-    try {
-      const models = await listModels(item.provider, item.key);
-      api.setOptions([{ value: "", label: t("account.ai.modelAuto") }, ...models.map((m) => ({ value: m, label: m }))]);
-      api.setValue(item.model || "", { silent: true });
-    } catch { /* lista modeli niedostępna — zostaje „automatycznie” */ }
-  }
-  const vaultItem = (id) => vault.item(id);
+  const iconButton = (name, labelKey) => {
+    const b = el("button", "btn sm icon", { type: "button", "aria-label": t(labelKey), title: t(labelKey) });
+    b.innerHTML = icon(name);
+    return b;
+  };
 
-  // Instrukcja dla osób bez klucza (decyzja 18): darmowy klucz Google Gemini.
-  function renderFreeKeyHelp() {
-    const box = el("div", "callout callout--info stack account-ai-help");
-    box.append(el("div", "field-label", { text: t("account.ai.freeKey.title") }));
-    const steps = el("ol", "account-ai-steps");
-    for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.freeKey.${k}`) }));
-    const open = el("a", "btn sm", { href: PROVIDERS.gemini.keyUrl, target: "_blank", rel: "noopener noreferrer", text: t("account.ai.freeKey.open") });
-    box.append(steps, el("div", "section-hint", { text: t("account.ai.freeKey.note") }), open);
-    return box;
+  // Model klucza: lista modeli z konta dostawcy (klucz z sejfu, bez błędu dla użytkownika).
+  async function openModel(k) {
+    let value = k.model || "";
+    const select = uiSelect([{ value: "", label: t("account.ai.modelAuto") }, ...(k.model ? [{ value: k.model, label: k.model }] : [])], value, (v) => { value = v; }, "account.ai.model");
+    const body = el("div", "stack account-ai-form");
+    body.append(select.root);
+    const item = vault.item(k.id);
+    if (item) {
+      listModels(item.provider, item.key).then((models) => {
+        select.api.setOptions([{ value: "", label: t("account.ai.modelAuto") }, ...models.map((m) => ({ value: m, label: m }))]);
+        select.api.setValue(value, { silent: true });
+      }).catch(() => { /* lista modeli niedostępna — zostaje „zalecany” */ });
+    }
+    const ok = await confirmModal({
+      title: t("account.ai.modelTitle", { name: k.label || PROVIDERS[k.provider]?.label || k.provider }),
+      text: "", body, okText: t("account.ai.save"), cancelText: t("account.ai.cancel"),
+      onOk: async () => {
+        try { await vault.setModel(k.id, value); return null; } catch (e) { return t(ERRORS[e?.code] || "") || e?.message || String(e); }
+      },
+    });
+    if (ok) { toast(t("account.ai.modelSaved")); await render(); }
   }
 
-  function renderAdd() {
-    const form = el("div", "stack account-ai-add");
-    form.append(el("div", "field-label", { text: t("account.ai.addTitle") }));
+  // Dodanie klucza w oknie. Bez kluczy — od razu instrukcja darmowego klucza (decyzja 18).
+  async function openAdd(showHelp) {
+    const form = el("div", "stack account-ai-form account-ai-add");
     // bez asystenta Familijnej — to nie dostawca własnego klucza
     const ids = Object.keys(PROVIDERS).filter((id) => !PROVIDERS[id].builtin);
     let provider = ids[0];
@@ -181,30 +189,48 @@ export async function initAiKeysUi() {
     setLink();
     const label = el("input", "inp", { type: "text", maxlength: "60", placeholder: t("account.ai.labelPlaceholder"), "aria-label": t("account.ai.labelPlaceholder") });
     const key = el("input", "inp", { type: "password", autocomplete: "off", spellcheck: "false", placeholder: t("account.ai.keyPlaceholder"), "aria-label": t("account.ai.keyPlaceholder") });
-    const hint = el("div", "section-hint", { text: t("account.ai.keyHint") });
-    const add = button("account.ai.add", "btn sm gold", "plus");
-    add.addEventListener("click", async () => {
-      const value = key.value.trim();
-      if (!value) return toast(t("account.ai.keyEmpty"), { kind: "error" });
-      add.disabled = true;
-      try {
-        // sprawdzenie klucza u dostawcy (lista modeli) — zły klucz nie trafia do sejfu
-        await listModels(provider, value);
-        await vault.add({ label: label.value, provider, key: value });
-        // dodany klucz = chęć korzystania z niego: źródło czatu „własny klucz”
-        setSource("own");
-        void renderSource();
-        key.value = "";
-        toast(t("account.ai.added"));
-        await render();
-      } catch (e) {
-        toast(e instanceof ProviderError ? e.message : (t(ERRORS[e?.code] || "") || e?.message || String(e)), { kind: "error" });
-      } finally { add.disabled = false; }
+    const help = freeKeyHelp(() => { provider = "gemini"; prov.api.setValue("gemini", { silent: true }); setLink(); key.focus(); });
+    help.hidden = !showHelp;
+    const noKey = el("button", "link", { type: "button", text: t("account.ai.noKey") });
+    noKey.hidden = showHelp;
+    noKey.addEventListener("click", () => { help.hidden = false; noKey.hidden = true; });
+    const links = el("div", "cluster account-ai-links");
+    links.append(link, noKey);
+    form.append(prov.root, label, key, links, help);
+    const ok = await confirmModal({
+      title: t("account.ai.addTitle"), text: t("account.ai.keyHint"), body: form, sheet: { fit: true },
+      okText: t("account.ai.add"), cancelText: t("account.ai.cancel"), initialFocus: key,
+      onOk: async () => {
+        const value = key.value.trim();
+        if (!value) return t("account.ai.keyEmpty");
+        try {
+          // sprawdzenie klucza u dostawcy (lista modeli) — zły klucz nie trafia do sejfu
+          await listModels(provider, value);
+          await vault.add({ label: label.value, provider, key: value });
+          return null;
+        } catch (e) {
+          return e instanceof ProviderError ? e.message : (t(ERRORS[e?.code] || "") || e?.message || String(e));
+        }
+      },
     });
-    const actions = el("div", "cluster account-actions account-actions--split");
-    actions.append(link, add);
-    form.append(prov.root, label, key, hint, actions);
-    return form;
+    if (!ok) return;
+    // dodany klucz = chęć korzystania z niego: źródło czatu „własny klucz”
+    setSource("own");
+    void renderSource();
+    toast(t("account.ai.added"));
+    await render();
+  }
+
+  // Instrukcja dla osób bez klucza (decyzja 18): darmowy klucz Google Gemini.
+  function freeKeyHelp(useGemini) {
+    const help = el("div", "callout callout--info stack account-ai-help");
+    help.append(el("div", "field-label", { text: t("account.ai.freeKey.title") }));
+    const steps = el("ol", "account-ai-steps");
+    for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.freeKey.${k}`) }));
+    const open = el("a", "btn sm", { href: PROVIDERS.gemini.keyUrl, target: "_blank", rel: "noopener noreferrer", text: t("account.ai.freeKey.open") });
+    open.addEventListener("click", useGemini);
+    help.append(steps, el("div", "hint", { text: t("account.ai.freeKey.note") }), open);
+    return help;
   }
 
   await render();

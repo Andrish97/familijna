@@ -34,15 +34,51 @@ const toSection = async (view) => {
 };
 module.exports.push(
   { id: "account-ai-create", category: "Czat AI", title: "Konto — Asystent AI, utworzenie sejfu kluczy", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb, steps: [toSection] },
-  { id: "account-ai-keys", category: "Czat AI", title: "Konto — Asystent AI, dodawanie klucza", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb,
+  { id: "account-ai-keys", category: "Czat AI", title: "Konto — Asystent AI, pusta lista kluczy", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb,
     steps: [toSection, async (view) => {
       const p = view.locator("#ai input[type=password]");
       await p.nth(0).fill("hasło-do-kluczy");
       await p.nth(1).fill("hasło-do-kluczy");
       await view.locator("#ai .btn.gold").click();
-      await view.locator("#ai .account-ai-add").waitFor({ state: "visible", timeout: 15000 });
-      await view.locator("#ai .account-ai-add").scrollIntoViewIfNeeded();
+      await view.locator("#ai .account-ai-add-open").waitFor({ state: "visible", timeout: 15000 });
+      await view.locator("#ai").scrollIntoViewIfNeeded();
       await view.waitForTimeout(300);
+    }] },
+  { id: "account-ai-add", category: "Czat AI", title: "Konto — okno dodawania klucza (z instrukcją darmowego klucza)", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [toSection, async (view) => {
+      const p = view.locator("#ai input[type=password]");
+      await p.nth(0).fill("hasło-do-kluczy");
+      await p.nth(1).fill("hasło-do-kluczy");
+      await view.locator("#ai .btn.gold").click();
+      await view.locator("#ai .account-ai-add-open").click();
+      await view.locator(".uni-modal .account-ai-add").waitFor({ state: "visible", timeout: 15000 });
+      await view.waitForTimeout(400);
+    }] },
+  { id: "account-ai-list", category: "Czat AI", title: "Konto — lista kluczy (dwa klucze, aktywny zaznaczony)", path: "/account/#ai", sources: ACCOUNT_SOURCES, ready: "#ai:not([hidden])", devices: ["desktop", "phone"], db: vaultDb,
+    steps: [toSection, async (view) => {
+      // lista modeli u dostawcy (sprawdzenie klucza) — atrapa, bez sieci
+      await view.route("https://api.anthropic.com/v1/models**", (r) => r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify({ data: [{ id: "claude-sonnet-4-5" }] }) }));
+      await view.route("https://generativelanguage.googleapis.com/**", (r) => r.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify({ models: [{ name: "models/gemini-2.5-flash", supportedGenerationMethods: ["generateContent"] }] }) }));
+      const p = view.locator("#ai input[type=password]");
+      await p.nth(0).fill("hasło-do-kluczy");
+      await p.nth(1).fill("hasło-do-kluczy");
+      await view.locator("#ai .btn.gold").click();
+      const addKey = async (label, key, provider) => {
+        await view.locator("#ai .account-ai-add-open").click();
+        const m = view.locator(".uni-modal").filter({ has: view.locator(".account-ai-add") });
+        if (provider) {
+          await m.locator(".ui-select-btn").click();
+          await view.locator(`.ui-select-menu [data-value="${provider}"]`).click();
+        }
+        await m.locator("input[type=text]").fill(label);
+        await m.locator("input[type=password]").fill(key);
+        await m.locator(".uni-foot .btn.gold").click();
+        await m.waitFor({ state: "hidden", timeout: 15000 });
+      };
+      await addKey("Praca", "sk-ant-zrzut-4821");
+      await addKey("Darmowy", "AIza-zrzut-7710", "gemini");
+      await view.locator("#ai .account-ai-key").nth(1).waitFor({ state: "visible", timeout: 15000 });
+      await view.waitForTimeout(800);
     }] },
 );
 
