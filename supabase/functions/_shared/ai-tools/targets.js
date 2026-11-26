@@ -34,6 +34,7 @@ export const POINT_TARGETS = {
     install: { sel: "#btnInstall", about: "Install Familijna on the device (shown when the browser allows it)" },
     language: { sel: ".lang-btn", about: "Language of the service (flag button in the top bar)" },
     appearance: { sel: ".theme-btn", about: "Appearance: automatic, light or dark" },
+    coffee: { sel: ".btn-support-footer", about: "Buy a coffee (voluntary support, in the footer next to Contact; payment on buycoffee.to)" },
     menu_more: { sel: "#btnMore", about: "Menu “More”: logos, bases, friends, subscribers, tasks, Market, connect a device" },
   },
   editor: {

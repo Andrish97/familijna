@@ -514,3 +514,21 @@ test("braki ze spisu: import z tekstu, zmiana logo, ponowna ankieta, reset ustaw
   await run("restore_demo", {});
   assert.deepEqual(calls.at(-1), ["restore_my_demo", { p_lang: "pl" }]);
 });
+
+test("zmiana nazwy użytkownika i zgłoszenie gry do Społeczności — endpointy", async () => {
+  const calls = [];
+  const db = {
+    rpc: async (fn, args) => { calls.push([fn, args]); return { data: fn === "market_submit_game" ? [{ ok: true, market_id: "m9" }] : { ok: true, username: args.p_username }, error: null }; },
+    from: (name) => { const q = { select: () => q, eq: () => q, order: () => q, then: (ok) => Promise.resolve({ data: name === "games" ? [{ id: "g", name: "Gra", type: "prepared", status: "ready" }] : [{ id: "q1", ord: 1, text: "P?", answers: [{ ord: 1, text: "A", fixed_points: 50 }] }], error: null }).then(ok) }; return q; },
+  };
+  const asked = [];
+  const ctx = { lang: "pl", pageId: "account", db, tabId: "t", changed() {}, confirm: async (q) => { asked.push(q.kind); return true; } };
+  const run = async (name, args) => JSON.parse((await chat.runTool(name, args, ctx)).text);
+  await run("set_username", { username: "nowa.nazwa" });
+  assert.deepEqual(calls.at(-1), ["account_set_username", { p_username: "nowa.nazwa" }]);
+  const r = await run("submit_market_game", { game_id: "g", title: "Tytuł", lang: "pl" });
+  assert.deepEqual(r, { ok: true, market_id: "m9", status: "pending" });
+  assert.equal(asked.at(-1), "irreversible");
+  const args = calls.at(-1)[1];
+  assert.equal(args.p_payload.questions.length, 1, "paczka jak strona (gameExportSnapshot)");
+});

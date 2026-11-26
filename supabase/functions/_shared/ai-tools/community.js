@@ -1,9 +1,10 @@
 // Wygenerowane przez scripts/sync-ai-tools.mjs z web/shared/js/ai/tools — nie edytować.
 // Narzędzia czatu AI: Zadania (ankiety do wypełnienia od innych) i Rynek
-// (Gry Społeczności): wyszukiwanie, szczegóły, biblioteka, ocena, wycofanie
-// zgłoszenia. Te same RPC co strony Zadania i Rynek. Zgłoszenie gry na Rynek
-// składa paczkę gry w przeglądarce — czat wskazuje je (show_on_page marketplace).
-import { uuid, noArgs, rpc } from "./common.js";
+// (Gry Społeczności): wyszukiwanie, szczegóły, biblioteka, ocena, zgłoszenie
+// gry (paczka jak strona: core/game-transfer-format.js → market_submit_game),
+// wycofanie. Te same RPC co strony Zadania i Rynek.
+import { uuid, noArgs, rpc, rows } from "./common.js";
+import { gameExportSnapshot } from "./game-transfer-format.js";
 
 const list = (data) => (Array.isArray(data) ? data : []);
 const one = (data) => (Array.isArray(data) ? data[0] : data);
@@ -112,6 +113,31 @@ export default [
     confirm: () => "irreversible",
     async run({ market_id }, ctx) {
       return one(await rpc(ctx, "market_withdraw", { p_market_game_id: market_id }));
+    },
+  },
+  {
+    name: "submit_market_game",
+    description: "Submit one of the user's games to Community Games. The game must be ready to play (prepared game, or a game with a closed poll), not demo and not from the Market. The submission is a snapshot that cannot be edited; it is checked before publishing. Title max 120, description max 500 characters.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        game_id: uuid,
+        title: { type: "string" },
+        description: { type: "string" },
+        lang: { type: "string", enum: ["pl", "en", "uk"], description: "Language of the game." },
+      },
+      required: ["game_id", "title", "lang"],
+    },
+    confirm: () => "irreversible",
+    async run({ game_id, title, description = "", lang }, ctx) {
+      const [game] = await rows(ctx.db.from("games").select("id,name,type,status").eq("id", game_id));
+      if (!game) return { ok: false, error: "not_found" };
+      const questions = await rows(ctx.db.from("questions").select("id,ord,text,answers(ord,text,fixed_points)").eq("game_id", game_id).order("ord"));
+      const payload = gameExportSnapshot(game, questions, game.name);
+      const res = one(await rpc(ctx, "market_submit_game", {
+        p_game_id: game_id, p_title: String(title).trim().slice(0, 120), p_description: String(description).trim().slice(0, 500), p_lang: lang, p_payload: payload,
+      }));
+      return res?.ok ? { ok: true, market_id: res.market_id, status: "pending" } : { ok: false, error: res?.err || "failed" };
     },
   },
 ];

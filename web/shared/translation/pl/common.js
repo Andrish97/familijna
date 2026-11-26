@@ -349,6 +349,8 @@ const pl = {
       open_page: "Przejście na stronę",
       list_games: "Lista gier",
       get_game: "Odczyt gry",
+      submit_market_game: "Zgłoszenie gry do Społeczności",
+      set_username: "Zmiana nazwy użytkownika",
       copy_history: "Historia wysyłek",
       import_questions_text: "Import pytań z tekstu",
       reopen_poll: "Ponowne uruchomienie ankiety",

@@ -709,36 +709,27 @@ async function loadProfile(user) {
   startEmailStateWatcher();
 }
 
+// Zmiana nazwy przez endpoint account_set_username (migracja 539) — ta sama
+// droga co czat AI: format, zarezerwowane, zajętość i limit 1/h w jednej transakcji.
 async function handleUsernameSave() {
-  let reserved = false;
   try {
     const username = validateUsername(usernameInput.value || "");
-    const { data: userData, error: userError } = await sb().auth.getUser();
-    if (userError || !userData?.user) throw new Error(t("auth.errNoSession"));
     await ensureUsernameAvailable(username);
-
-    await reserveCooldownOrThrow(CD.username);
-    reserved = true;
-
-    const { error } = await sb()
-      .from("profiles")
-      .update({ username })
-      .eq("id", userData.user.id);
+    const { data, error } = await sb().rpc("account_set_username", { p_username: username });
     if (error) throw error;
-
-    const { error: metaErr } = await sb().auth.updateUser({ data: { username } });
-    if (metaErr) throw metaErr;
-
+    if (!data?.ok) {
+      if (data?.error === "cooldown") {
+        await loadCooldownsFromServer();
+        throw new Error(t("account.errCooldown", { time: formatRemaining(getRemainingMs(CD.username)) }));
+      }
+      throw new Error(t(data?.error === "taken" || data?.error === "reserved" ? "auth.errUsernameTaken" : data?.error === "not_registered" ? "auth.errNoSession" : "auth.usernameChars"));
+    }
+    // nazwa w metadanych sesji — odświeżenie tokenu
+    await sb().auth.refreshSession().catch(() => {});
     setStatus(t("account.statusUsernameSaved"));
     await loadCooldownsFromServer();
   } catch (e) {
     console.error(e);
-    if (reserved) {
-      try {
-        await cooldownRelease(CD.username, 60);
-        await loadCooldownsFromServer();
-      } catch {}
-    }
     setErr(niceAuthError(e));
   }
 }

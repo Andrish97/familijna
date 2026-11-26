@@ -1,4 +1,5 @@
 // Narzędzia czatu AI: ustawienia konta, które AI może zmienić na polecenie
+// (nazwa użytkownika — endpoint account_set_username, migracja 539)
 // (spis czat-ai-czynnosci.md, rozdział 5). Hasła, e-mail, usunięcie konta,
 // klucze AI i ocena — nigdy przez AI (tylko wskazanie: show_on_page account).
 import { rpc } from "./common.js";
@@ -23,6 +24,14 @@ export default [
       await rpc(ctx, "restore_my_demo", { p_lang: ctx.lang });
       ctx.changed({ type: "game", id: "demo" });
       return { ok: true };
+    },
+  },
+  {
+    name: "set_username",
+    description: "Change the user's user name (3–20 characters: letters, digits, _ . -; unique; some names are reserved). Possible once per hour. Friends and subscribers see it.",
+    inputSchema: { type: "object", properties: { username: { type: "string" } }, required: ["username"] },
+    async run({ username }, ctx) {
+      return rpc(ctx, "account_set_username", { p_username: username });
     },
   },
 ];

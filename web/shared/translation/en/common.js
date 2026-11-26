@@ -354,6 +354,8 @@ const en = {
       open_page: "Going to a page",
       list_games: "List of games",
       get_game: "Reading a game",
+      submit_market_game: "Submitting a game to the Community",
+      set_username: "Changing the user name",
       copy_history: "Send history",
       import_questions_text: "Importing questions from text",
       reopen_poll: "Restarting the poll",
