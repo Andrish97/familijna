@@ -340,6 +340,7 @@ const uk = {
       report_problem: "Повідомлення про проблему",
       list_logos: "Список логотипів",
       create_text_logo: "Новий текстовий логотип",
+      draw_logo: "Намальований логотип",
       delete_logo: "Видалення логотипа",
       manual_contents: "Зміст підказок",
       manual_chapter: "Читання підказок",

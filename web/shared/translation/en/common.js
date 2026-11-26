@@ -345,6 +345,7 @@ const en = {
       report_problem: "Problem report",
       list_logos: "List of logos",
       create_text_logo: "New text logo",
+      draw_logo: "Drawn logo",
       delete_logo: "Deleting a logo",
       manual_contents: "Help contents",
       manual_chapter: "Reading help",

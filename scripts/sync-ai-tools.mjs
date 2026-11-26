@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // E30 (decyzja 19): kopia katalogu narzędzi czatu dla serwera MCP (funkcja Edge
-// `mcp`). Źródło: web/shared/js/ai/tools/*.js + web/shared/js/core/logo-text.js;
+// `mcp`). Źródło: web/shared/js/ai/tools/*.js + moduły wspólne SHARED (core);
 // cel: supabase/functions/_shared/ai-tools/ (nie edytować ręcznie).
 // Użycie: node scripts/sync-ai-tools.mjs        — zapis
 //         node scripts/sync-ai-tools.mjs --check — tylko sprawdzenie (kod 1 przy różnicy)
@@ -11,6 +11,8 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "web/shared/js/ai/tools");
 const OUT = path.join(ROOT, "supabase/functions/_shared/ai-tools");
+// Moduły web/shared/js/core, które narzędzia mogą importować (bez DOM).
+const SHARED = ["logo-text.js", "logo-draw.js"];
 const HEADER = "// Wygenerowane przez scripts/sync-ai-tools.mjs z web/shared/js/ai/tools — nie edytować.\n";
 
 export function expectedFiles() {
@@ -18,11 +20,11 @@ export function expectedFiles() {
   for (const name of fs.readdirSync(SRC).filter((f) => f.endsWith(".js")).sort()) {
     const src = fs.readFileSync(path.join(SRC, name), "utf8");
     const bad = [...src.matchAll(/from\s+["']([^"']+)["']|import\(\s*["']([^"']+)["']/g)]
-      .map((m) => m[1] || m[2]).filter((p) => !p.startsWith("./") && p !== "../../core/logo-text.js");
+      .map((m) => m[1] || m[2]).filter((p) => !p.startsWith("./") && !SHARED.some((n) => p === `../../core/${n}`));
     if (bad.length) throw new Error(`${name}: narzędzia nie mogą importować modułów przeglądarki: ${bad.join(", ")}`);
-    files.set(name, HEADER + src.replaceAll("../../core/logo-text.js", "./logo-text.js"));
+    files.set(name, HEADER + SHARED.reduce((acc, n) => acc.replaceAll(`../../core/${n}`, `./${n}`), src));
   }
-  files.set("logo-text.js", HEADER + fs.readFileSync(path.join(ROOT, "web/shared/js/core/logo-text.js"), "utf8"));
+  for (const n of SHARED) files.set(n, HEADER + fs.readFileSync(path.join(ROOT, "web/shared/js/core", n), "utf8"));
   return files;
 }
 

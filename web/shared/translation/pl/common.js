@@ -340,6 +340,7 @@ const pl = {
       report_problem: "Zgłoszenie problemu",
       list_logos: "Lista logo",
       create_text_logo: "Nowe logo tekstowe",
+      draw_logo: "Logo z rysunku",
       delete_logo: "Usunięcie logo",
       manual_contents: "Spis Wskazówek",
       manual_chapter: "Czytanie Wskazówek",
