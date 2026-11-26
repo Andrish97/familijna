@@ -296,3 +296,55 @@ test("ustawienia gry: te same granice co strona, zmiany tylko w podanych polach,
   assert.equal(patchSettings({}, { team_a_name: "x".repeat(49) }).error, "too_long");
   assert.equal(patchSettings({}, { round_multipliers: [] }).error, "out_of_range");
 });
+
+test("kopie, udostępnianie baz i kontakty: te same drogi co przyciski, maile, potwierdzenia", async () => {
+  const calls = [];
+  const mails = [];
+  const actions = [];
+  const replies = {
+    base_share_to_friend: [{ ok: true, mail_link: "https://www.familijna.app/go/?b=tok-b" }],
+    base_share_by_user: [{ ok: false, err: "not_found" }],
+    list_shared_bases_ext: [{ id: "s1", name: "Wspólna", owner_username: "ala", shared_role: null, proposed: true, proposed_role: "viewer", task_id: "t1" }],
+  };
+  const db = {
+    rpc: async (fn, args) => { calls.push([fn, args]); return { data: replies[fn] ?? { ok: true }, error: null }; },
+    from: () => { const q = { select: () => q, eq: () => q, order: () => q, then: (ok) => Promise.resolve({ data: [{ id: "b1", name: "Moja", owner_id: "u1" }], error: null }).then(ok) }; return q; },
+  };
+  const asked = [];
+  const ctx = {
+    lang: "pl", pageId: "games", db, userId: "u1", tabId: "tab", changed() {},
+    confirm: async (q) => { asked.push(q.kind); return true; },
+    sendNotificationMail: async (item) => { mails.push(item); return true; },
+    resourceAction: async (action, body) => { actions.push([action, body]); return { ok: true, mail_allowed: true, go_token: "tok-c" }; },
+  };
+  const run = async (name, args) => JSON.parse((await chat.runTool(name, args, ctx)).text);
+
+  let r = await run("send_copy", { kind: "game", source_id: "g1", friend_user_ids: ["f1", "f1", "f2"] });
+  assert.equal(r.results.length, 2, "bez powtórzeń odbiorców");
+  assert.equal(actions[0][0], "send");
+  assert.equal(actions[0][1].language, "pl");
+  assert.ok(actions[0][1].request_id && actions[0][1].request_id !== actions[1][1].request_id);
+  assert.deepEqual(mails[0], { action: "copy:send", token: "tok-c" });
+  assert.equal(asked.at(-1), "send");
+
+  r = await run("share_base", { base_id: "b1", role: "viewer", friend_user_ids: ["f1"], user_lookup: "kto@example.com" });
+  assert.deepEqual(r.results.map((x) => x.ok), [false, true]);
+  assert.deepEqual(mails.at(-1), { action: "base:share", token: "tok-b" });
+
+  r = await run("list_bases", {});
+  assert.deepEqual(r.bases.map((b) => [b.id, b.owned, b.proposed]), [["b1", true, undefined], ["s1", false, true]]);
+  assert.equal(r.bases[1].task_id, "t1");
+
+  r = await run("manage_contact", { kind: "subscribers", id: "s", action: "reject" });
+  assert.equal(r.error, "subscribers_support_only_remove");
+  const before = asked.length;
+  await run("manage_contact", { kind: "friends", id: "f", action: "accept" });
+  assert.equal(asked.length, before, "przyjęcie zaproszenia bez okna");
+  await run("manage_contact", { kind: "friends", id: "f", action: "remove" });
+  assert.equal(asked.at(-1), "irreversible");
+  assert.deepEqual(calls.at(-1), ["friends_remove", { p_id: "f" }]);
+
+  await run("answer_received_copy", { offer_id: "o", decision: "decline" });
+  assert.equal(asked.at(-1), "irreversible");
+  assert.deepEqual(calls.at(-1), ["resource_copy_decide", { p_offer: "o", p_decision: "decline" }]);
+});

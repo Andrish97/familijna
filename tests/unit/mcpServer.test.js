@@ -129,3 +129,15 @@ test("Wskazówki z plików strony i maile zaproszeń do ankiety", async () => {
   assert.deepEqual(sent[0][1].items, [{ action: "poll:share", token: "abc", reminder: false }]);
   assert.deepEqual(db.calls.at(-1), ["polls_hub_tasks_mark_emailed", { p_task_ids: ["task1"] }]);
 });
+
+test("kopie z serwera MCP: Worker strony z JWT użytkownika, mail kopii przez send-mail", async () => {
+  const sent = [];
+  const env = serverToolEnv({
+    db: fakeDb(), jwt: "jwt", userId: "u1", tokenId: "t1", lang: "en", site: SITE, supabaseUrl: "https://api.x",
+    fetchImpl: async (url, opts) => { sent.push([url, opts.headers.authorization, JSON.parse(opts.body)]); return new Response(JSON.stringify({ ok: true, results: [{ queued: true }] })); },
+  });
+  await env.resourceAction("send", { kind: "game", source_id: "g" });
+  assert.deepEqual(sent[0], [`${SITE}/_api/resource-send`, "Bearer jwt", { kind: "game", source_id: "g" }]);
+  assert.equal(await env.sendNotificationMail({ action: "copy:send", token: "c" }), true);
+  assert.deepEqual(sent[1][2], { lang: "en", items: [{ action: "copy:send", token: "c" }] });
+});

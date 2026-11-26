@@ -20,13 +20,22 @@ const payloadOf = (q, old = {}) => ({
 export default [
   {
     name: "list_bases",
-    description: "List question bases the user owns or that are shared with them (id, name, owned).",
+    description: "List question bases: the user's own (owned = true) and shared with them (owner name, role editor/viewer). Proposals to share waiting for the user's answer have proposed = true and a task_id (answer_base_share).",
     inputSchema: noArgs,
     readOnly: true,
     async run(_args, ctx) {
       const uid = ctx.userId;
-      const list = await rows(ctx.db.from("question_bases").select("id,name,owner_id,updated_at").order("updated_at", { ascending: false }));
-      return { bases: list.map((b) => ({ id: b.id, name: b.name, owned: b.owner_id === uid })) };
+      const own = await rows(ctx.db.from("question_bases").select("id,name,owner_id,updated_at").eq("owner_id", uid).order("updated_at", { ascending: false }));
+      const shared = await rpc(ctx, "list_shared_bases_ext", {});
+      return {
+        bases: [
+          ...own.map((b) => ({ id: b.id, name: b.name, owned: true })),
+          ...(Array.isArray(shared) ? shared : []).map((b) => ({
+            id: b.id, name: b.name, owned: false, owner: b.owner_username || null,
+            role: b.proposed ? b.proposed_role : b.shared_role, proposed: !!b.proposed, task_id: b.proposed ? b.task_id : undefined,
+          })),
+        ],
+      };
     },
   },
   {

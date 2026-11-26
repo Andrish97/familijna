@@ -66,6 +66,19 @@ export function serverToolEnv({ db, jwt, userId, tokenId, lang, site, supabaseUr
       const text = await getText(`/manual/content/chapters/${l}/${id}.js`);
       return text == null ? null : parseExportDefault(text);
     },
+    async sendNotificationMail(item) {
+      const out = await sendMails([item]);
+      return out?.results?.[0]?.queued === true;
+    },
+    // Kopie zasobów przez Workera strony (/_api/resource-send|duplicate), JWT użytkownika.
+    async resourceAction(action, body) {
+      const res = await fetchImpl(`${site}/_api/resource-${action}`, {
+        method: "POST",
+        headers: { authorization: `Bearer ${jwt}`, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      try { return await res.json(); } catch { return { ok: false, error: `http_${res.status}` }; }
+    },
     // Jak shared/js/core/poll-mail.js: maile zaproszeń do ankiety i oznaczenie wysłanych.
     async sendPollMails(mailItems) {
       const list = (Array.isArray(mailItems) ? mailItems : [])

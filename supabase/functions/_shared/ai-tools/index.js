@@ -14,6 +14,7 @@
 // ctx: { db (klient Supabase użytkownika), userId, tabId, lang, pageId,
 //   changed({ type, id }), confirm(...), loadJson(path), manualMeta(lang),
 //   manualChapter(lang, id), sendPollMails(items), inviteContact(kind, value),
+//   sendNotificationMail({ action, token, reminder? }), resourceAction("send"|"duplicate", body),
 //   tylko przeglądarka: navigateTo(page, id), openContactForm({ subject, message }), pagePath }.
 import knowledge from "./knowledge.js";
 import games from "./games.js";
@@ -22,9 +23,11 @@ import polls from "./polls.js";
 import bases from "./bases.js";
 import contacts from "./contacts.js";
 import logos from "./logos.js";
+import copies from "./copies.js";
+import sharing from "./sharing.js";
 import support from "./support.js";
 
-export const TOOLS = [...knowledge, ...games, ...gameSettings, ...polls, ...bases, ...logos, ...contacts, ...support];
+export const TOOLS = [...knowledge, ...games, ...gameSettings, ...polls, ...bases, ...sharing, ...logos, ...copies, ...contacts, ...support];
 
 const BY_NAME = new Map(TOOLS.map((x) => [x.name, x]));
 export const toolByName = (name) => BY_NAME.get(name) || null;
