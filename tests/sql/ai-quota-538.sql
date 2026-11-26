@@ -19,19 +19,22 @@ update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::json
 do $$
 declare r jsonb; a uuid := '53800000-0000-4000-8000-0000000000aa'; g uuid := '53800000-0000-4000-8000-0000000000cc';
 begin
-  -- domyślnie wyłączone
-  r := public.ai_quota_take(a, true);
-  if r->>'error' <> 'disabled' then raise exception 'disabled: %', r; end if;
-  -- tylko konta testowe: zwykłe konto dalej bez asystenta
-  perform public.admin_ai_limits_set('{"audience": "test"}');
+  -- domyślnie: czat tylko dla kont testowych, klucz Familijnej wyłączony
+  if public._ai_visible(a) then raise exception 'zwykłe konto widzi czat przed udostępnieniem'; end if;
+  if not public._ai_visible('53800000-0000-4000-8000-0000000000dd') then raise exception 'konto testowe nie widzi czatu'; end if;
+  r := public.ai_quota_take('53800000-0000-4000-8000-0000000000dd', true);
+  if r->>'error' <> 'disabled' then raise exception 'klucz Familijnej domyślnie wyłączony: %', r; end if;
+  -- klucz Familijnej tylko dla kont testowych: zwykłe konto dalej bez niego
+  perform public.admin_ai_limits_set('{"builtin_audience": "test"}');
   if public.ai_quota_take(a, true)->>'error' <> 'disabled' then raise exception 'test-only: zwykłe konto'; end if;
   if not public.is_test_user('53800000-0000-4000-8000-0000000000dd') then raise exception 'konto e2e. nie jest testowe?'; end if;
   r := public.ai_quota_take('53800000-0000-4000-8000-0000000000dd', true);
   if r->>'error' = 'disabled' then raise exception 'test-only: konto testowe bez dostępu: %', r; end if;
-  r := public.admin_ai_limits_set('{"audience": "all", "daily_messages": 2, "per_minute": 5, "max_steps": 2}');
-  if r->'limits'->>'audience' <> 'all' or (r->'limits'->>'daily_messages')::int <> 2 then raise exception 'set: %', r; end if;
+  r := public.admin_ai_limits_set('{"chat_audience": "all", "builtin_audience": "all", "daily_messages": 2, "per_minute": 5, "max_steps": 2}');
+  if r->'limits'->>'builtin_audience' <> 'all' or (r->'limits'->>'daily_messages')::int <> 2 then raise exception 'set: %', r; end if;
+  if not public._ai_visible(a) then raise exception 'po udostępnieniu zwykłe konto widzi czat'; end if;
   begin
-    perform public.admin_ai_limits_set('{"audience": "everyone"}');
+    perform public.admin_ai_limits_set('{"chat_audience": "everyone"}');
     raise exception 'audience check';
   exception when check_violation then null;
   end;
@@ -76,17 +79,30 @@ declare r jsonb;
 begin
   perform set_config('request.jwt.claim.sub', '53800000-0000-4000-8000-0000000000aa', true);
   r := public.ai_quota_status();
-  if not (r->>'enabled')::boolean or (r->>'used')::int <> 2 then raise exception 'status: %', r; end if;
+  if not (r->>'visible')::boolean or not (r->>'enabled')::boolean or (r->>'used')::int <> 2 then raise exception 'status: %', r; end if;
   begin
     perform public.ai_quota_take('53800000-0000-4000-8000-0000000000aa', true);
     raise exception 'authenticated nie może wołać ai_quota_take';
   exception when insufficient_privilege then null;
   end;
   begin
-    perform public.admin_ai_limits_set('{"audience": "off"}');
+    perform public.admin_ai_limits_set('{"chat_audience": "off"}');
     raise exception 'authenticated nie może zmieniać limitów';
   exception when insufficient_privilege then null;
   end;
+end $$;
+reset role;
+-- czat ukryty dla zwykłych kont: historia rozmów (535) też niedostępna
+update public.ai_limits set chat_audience = 'test' where id = 1;
+set local role authenticated;
+do $$
+declare r jsonb;
+begin
+  perform set_config('request.jwt.claim.sub', '53800000-0000-4000-8000-0000000000aa', true);
+  r := public.ai_quota_status();
+  if (r->>'visible')::boolean then raise exception 'ukryty: %', r; end if;
+  r := public.ai_chat_save(null, 'x', 'familijna', 'm', '[]');
+  if (r->>'ok')::boolean then raise exception 'historia dla ukrytego czatu: %', r; end if;
 end $$;
 rollback;
 \echo ai-quota-538 OK

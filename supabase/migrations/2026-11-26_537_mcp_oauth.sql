@@ -199,7 +199,8 @@ begin
     return jsonb_build_object('ok', false, 'error', 'invalid_token');
   end if;
   select to_jsonb(u) into v_identity from auth.users u where u.id = t.user_id;
-  if not public._account_is_registered(t.user_id, v_identity) then
+  -- _ai_visible z migracji 538 (czat widoczny dla konta — etap próbny: konta testowe)
+  if not public._account_is_registered(t.user_id, v_identity) or not public._ai_visible(t.user_id) then
     return jsonb_build_object('ok', false, 'error', 'invalid_token');
   end if;
   if t.last_used_at is null or t.last_used_at < now() - interval '5 minutes' then

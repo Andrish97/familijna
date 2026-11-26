@@ -50,9 +50,12 @@ export async function initAiKeysUi() {
   const section = document.getElementById("ai");
   const box = document.getElementById("aiVaultBox");
   if (!section || !box) return;
+  // etap próbny: sekcje AI tylko dla kont, które widzą czat (ai_limits.chat_audience)
+  const status = await builtinStatus().catch(() => ({ visible: false }));
+  if (!status.visible) return;
   section.hidden = false;
   if (location.hash === "#ai") requestAnimationFrame(() => section.scrollIntoView({ block: "start" }));
-  void renderSource();
+  void renderSource(status);
   const vault = await getVault();
 
   async function render() {
@@ -206,10 +209,10 @@ export async function initAiKeysUi() {
 
 // Źródło czatu (decyzja 25): asystent Familijnej (domyślnie, z limitem
 // dziennym) albo własny klucz z sejfu niżej. Wybór zapamiętuje przeglądarka.
-async function renderSource() {
+async function renderSource(known = null) {
   const box = document.getElementById("aiSourceBox");
   if (!box) return;
-  const status = await builtinStatus().catch(() => ({ enabled: false }));
+  const status = known || await builtinStatus().catch(() => ({ enabled: false }));
   box.textContent = "";
   box.hidden = !status.enabled;
   if (!status.enabled) return;

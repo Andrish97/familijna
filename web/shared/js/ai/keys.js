@@ -49,11 +49,26 @@ export function setSource(source) {
   try { localStorage.setItem(SOURCE, source === "own" ? "own" : "builtin"); } catch { /* bez pamięci */ }
 }
 
-/** Stan asystenta Familijnej: { enabled, daily, used, remaining, reset_at }. */
+/**
+ * Stan czatu dla konta: { visible (czy pokazać czat — etap próbny: konta
+ * testowe), enabled (klucz Familijnej), daily, used, remaining, reset_at }.
+ */
 export async function builtinStatus() {
   const { data, error } = await sb().rpc("ai_quota_status");
-  if (error || !data?.ok) return { enabled: false };
+  if (error || !data?.ok) return { visible: false, enabled: false };
   return data;
+}
+
+// Czy pokazać czat: pamięć karty na 5 minut (bez zapytania na każdej stronie).
+const ACCESS = "familijna:ai-access";
+export async function aiVisible(userId) {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(ACCESS) || "null");
+    if (saved && saved.user === userId && Date.now() - saved.at < 5 * 60 * 1000) return !!saved.visible;
+  } catch { /* bez pamięci */ }
+  const status = await builtinStatus().catch(() => ({ visible: false }));
+  try { sessionStorage.setItem(ACCESS, JSON.stringify({ user: userId, at: Date.now(), visible: !!status.visible })); } catch { /* bez pamięci */ }
+  return !!status.visible;
 }
 const userToken = async () => (await sb().auth.getSession()).data?.session?.access_token || "";
 

@@ -284,9 +284,11 @@ async function initializePage(id, opts, finishLayout) {
     }
   }
   // E30: czat AI na kluczu użytkownika — konto zarejestrowane, strony aplikacji.
+  // Czat tylko dla kont, które go widzą (ai_limits.chat_audience — etap próbny: konta testowe).
   if (user && !isGuestUser(user) && !NO_AI_PANEL.has(id)) {
-    void import("../ai/panel.js")
-      .then(({ mountAiPanel }) => mountAiPanel({ pageId: id }))
+    void import("../ai/keys.js")
+      .then(({ aiVisible }) => aiVisible(user.id))
+      .then((visible) => (visible ? import("../ai/panel.js").then(({ mountAiPanel }) => mountAiPanel({ pageId: id })) : null))
       .catch((error) => console.warn("[ai] panel failed", error));
   }
   if (!opts.deferTopbarReady) document.querySelector(".topbar")?.classList.add("topbar-ready");

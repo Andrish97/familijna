@@ -4,15 +4,20 @@
 -- serwisu. Liczy funkcja Edge ai-chat (service_role) przez ai_quota_take;
 -- użytkownik widzi swój stan przez ai_quota_status; panel admina zmienia
 -- ustawienia przez admin_ai_limits_get/set. Doba w strefie Europe/Warsaw.
--- Dostępność (audience): off — wyłączony; test — tylko konta testowe
--- (is_test_user: próba na produkcji z prawdziwym Gemini przed udostępnieniem);
--- all — wszystkie konta zarejestrowane.
+-- Dwa ustawienia dostępności (off / test / all; test = tylko konta testowe,
+-- is_test_user — próba na produkcji przed udostępnieniem wszystkim):
+--   chat_audience    — kto w ogóle widzi czat AI (przycisk, sekcja w koncie,
+--                      historia, sejf kluczy, łącznik MCP); domyślnie test;
+--   builtin_audience — kto może używać klucza Familijnej (Gemini); domyślnie off.
+-- Widoczność pilnuje _ai_chat_uid (535, tu rozszerzona) — na serwerze, nie
+-- tylko przez ukrycie przycisku.
 
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.ai_limits (
   id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  audience text NOT NULL DEFAULT 'off' CHECK (audience IN ('off', 'test', 'all')),
+  chat_audience text NOT NULL DEFAULT 'test' CHECK (chat_audience IN ('off', 'test', 'all')),
+  builtin_audience text NOT NULL DEFAULT 'off' CHECK (builtin_audience IN ('off', 'test', 'all')),
   model text NOT NULL DEFAULT 'gemini-2.5-flash-lite',
   daily_messages integer NOT NULL DEFAULT 20 CHECK (daily_messages BETWEEN 0 AND 1000),
   per_minute integer NOT NULL DEFAULT 6 CHECK (per_minute BETWEEN 1 AND 120),
@@ -22,6 +27,37 @@ CREATE TABLE IF NOT EXISTS public.ai_limits (
 );
 INSERT INTO public.ai_limits (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 ALTER TABLE public.ai_limits ENABLE ROW LEVEL SECURITY;
+
+-- Czy dostępność obejmuje konto: all — każde, test — tylko testowe.
+CREATE OR REPLACE FUNCTION public._ai_audience_ok(p_audience text, p_user uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public', 'pg_temp' AS $$
+  SELECT p_audience = 'all' OR (p_audience = 'test' AND public.is_test_user(p_user))
+$$;
+REVOKE ALL ON FUNCTION public._ai_audience_ok(text, uuid) FROM PUBLIC, anon, authenticated;
+
+-- Czy konto widzi czat AI (chat_audience).
+CREATE OR REPLACE FUNCTION public._ai_visible(p_user uuid) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public', 'pg_temp' AS $$
+  SELECT coalesce((SELECT public._ai_audience_ok(l.chat_audience, p_user) FROM public.ai_limits l WHERE l.id = 1), false)
+$$;
+REVOKE ALL ON FUNCTION public._ai_visible(uuid) FROM PUBLIC, anon, authenticated;
+
+-- Konto zarejestrowane, które widzi czat — historia (535), sejf kluczy (536)
+-- i łącznik MCP (537) działają tylko dla niego.
+CREATE OR REPLACE FUNCTION public._ai_chat_uid() RETURNS uuid
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path TO 'public', 'auth', 'pg_temp' AS $$
+declare
+  v_uid uuid := auth.uid();
+  v_identity jsonb;
+begin
+  if v_uid is null then return null; end if;
+  select to_jsonb(u) into v_identity from auth.users u where u.id = v_uid;
+  if not public._account_is_registered(v_uid, v_identity) then return null; end if;
+  if not public._ai_visible(v_uid) then return null; end if;
+  return v_uid;
+end;
+$$;
+REVOKE ALL ON FUNCTION public._ai_chat_uid() FROM PUBLIC, anon, authenticated;
 
 -- Wiadomości i kroki na dzień; zdarzenia z ostatnich minut — do limitu na minutę.
 CREATE TABLE IF NOT EXISTS public.ai_usage (
@@ -74,7 +110,7 @@ declare
   v_global integer;
 begin
   select * into l from public.ai_limits where id = 1;
-  if not found or l.audience = 'off' or (l.audience = 'test' and not public.is_test_user(p_user)) then
+  if not found or not public._ai_visible(p_user) or not public._ai_audience_ok(l.builtin_audience, p_user) then
     return jsonb_build_object('ok', false, 'error', 'disabled');
   end if;
   select to_jsonb(x) into v_identity from auth.users x where x.id = p_user;
@@ -131,10 +167,11 @@ declare
   v_used integer;
 begin
   select * into l from public.ai_limits where id = 1;
-  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'not_registered'); end if;
+  -- visible: czy pokazać czat (przycisk, sekcja w koncie); enabled: klucz Familijnej
+  if v_uid is null then return jsonb_build_object('ok', true, 'visible', false, 'enabled', false); end if;
   select messages into v_used from public.ai_usage where user_id = v_uid and day = public._ai_today();
-  return jsonb_build_object('ok', true,
-    'enabled', l.audience = 'all' or (l.audience = 'test' and public.is_test_user(v_uid)),
+  return jsonb_build_object('ok', true, 'visible', true,
+    'enabled', public._ai_audience_ok(l.builtin_audience, v_uid),
     'daily', l.daily_messages,
     'used', coalesce(v_used, 0), 'remaining', greatest(l.daily_messages - coalesce(v_used, 0), 0),
     'reset_at', public._ai_reset_at());
@@ -162,7 +199,8 @@ RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
   update public.ai_limits set
-    audience = coalesce(nullif(btrim(p_patch->>'audience'), ''), audience),
+    chat_audience = coalesce(nullif(btrim(p_patch->>'chat_audience'), ''), chat_audience),
+    builtin_audience = coalesce(nullif(btrim(p_patch->>'builtin_audience'), ''), builtin_audience),
     model = coalesce(nullif(btrim(p_patch->>'model'), ''), model),
     daily_messages = coalesce((p_patch->>'daily_messages')::integer, daily_messages),
     per_minute = coalesce((p_patch->>'per_minute')::integer, per_minute),
