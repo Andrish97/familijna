@@ -30,6 +30,9 @@ export const POINT_TARGETS = {
     export_to_base: { sel: "#btnExportBase", select: "game", about: "Copy the selected game's questions to a question base" },
     send_copy: { sel: "#btnSendCopy", select: "game", about: "Send a copy of the selected game to friends" },
     connect_device: { sel: "#btnConnectDevice", before: MORE, about: "Connect a device (display, host tablet, buzzer) with a code" },
+    install: { sel: "#btnInstall", about: "Install Familijna on the device (shown when the browser allows it)" },
+    language: { sel: ".lang-btn", about: "Language of the service (flag button in the top bar)" },
+    appearance: { sel: ".theme-btn", about: "Appearance: automatic, light or dark" },
     menu_more: { sel: "#btnMore", about: "Menu “More”: logos, bases, friends, subscribers, tasks, Market, connect a device" },
   },
   editor: {
@@ -109,6 +112,11 @@ export const POINT_TARGETS = {
     list: { sel: "main", about: "Polls to fill in from other people" },
   },
   account: {
+    username: { sel: "#usernameSection", about: "Change the user name (once per hour)" },
+    email: { sel: "#emailSection", about: "Change the e-mail address (confirmation link to the new address)" },
+    delete_account: { sel: "#deleteSection", about: "Delete the account and all data (cannot be undone)" },
+    rating: { sel: "#ratingSection", about: "The user's rating of the service" },
+    demo: { sel: "#demoSection", about: "Restore demo materials" },
     ai_keys: { sel: "#ai", about: "AI assistant keys" },
     ai_connect: { sel: "#aiConnect", about: "Claude and ChatGPT connector" },
     notifications: { sel: "#emailNotifSection", about: "Notifications" },
@@ -120,6 +128,9 @@ export const POINT_TARGETS = {
     device_buzzer: { sel: '[data-device="buzzer"]', about: "Buzzer phone: code, QR, share" },
     device_status: { sel: "#dotDisplayRow", about: "Connection status of devices (top bar)" },
     mute: { sel: "#btnMute", about: "Mute sounds" },
+    no_host_tablet: { sel: '[data-device="host"] .device-row-opt', about: "Option: play without the host tablet" },
+    physical_buzzer: { sel: '[data-device="buzzer"] .device-row-opt', about: "Option: physical buzzers instead of the phone" },
+    test_mode: { sel: ".control-test-choice", about: "Test mode: all screens in one window for a rehearsal" },
     start_over: { sel: "#btnStartOver", about: "Start the game over" },
   },
 };

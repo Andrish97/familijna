@@ -262,4 +262,14 @@ export default [
       return { ...res, questions: questions.length };
     },
   },
+  {
+    name: "reorder_base_folders",
+    description: "Set the order of folders inside one parent folder of a base (parent_id omitted = top level): give all its folder ids in the new order.",
+    inputSchema: { type: "object", properties: { base_id: uuid, parent_id: uuid, folder_ids: uuidList }, required: ["base_id", "folder_ids"] },
+    async run({ base_id, parent_id, folder_ids }, ctx) {
+      const res = await rpc(ctx, "qb_reorder_folders", { p_base_id: base_id, p_parent_id: parent_id || null, p_ordered_ids: folder_ids });
+      ctx.changed({ type: "base", id: base_id });
+      return res ?? { ok: true };
+    },
+  },
 ];

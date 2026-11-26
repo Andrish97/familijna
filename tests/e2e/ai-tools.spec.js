@@ -135,12 +135,25 @@ test("narzędzia czatu: gry, ustawienia, bazy, logo, ankiety, Rynek, wskazywanie
     const logos = (await ok(page, "list_logos", {})).logos.filter((l) => l.name.startsWith(STAMP));
     expect(logos.map((l) => l.type).sort()).toEqual(["GLYPH_30x10", "PIX_150x70"]);
     await ok(page, "update_game_settings", { game_id: game.id, logo_id: drawn.id });
+    const replaced = await ok(page, "create_text_logo", { name: `${STAMP} tekst`, text: "FAM", replace_logo_id: textLogo.id });
+    expect(replaced).toMatchObject({ ok: true, replaced: true });
+
+    // import pytań z tekstu (zastępuje treść), reset ustawień, powiadomienia e-mail
+    await ok(page, "import_questions_text", { game_id: game.id, text: `@${STAMP} import\n# Pierwsze?\nA / 40\nB / 30\nC / 20\n# Drugie?\n1. X / 50\n2. Y / 30\n3. Z / 10` });
+    g = await ok(page, "get_game", { game_id: game.id });
+    expect(g.questions.map((q) => q.text)).toEqual(["Pierwsze?", "Drugie?"]);
+    expect(g.questions[0].answers.map((a) => a.points)).toEqual([40, 30, 20]);
+    await ok(page, "reset_game_settings", { game_id: game.id });
+    expect((await ok(page, "get_game_settings", { game_id: game.id })).settings.team_a_name).toBe("");
+    await ok(page, "set_email_notifications", { enabled: false });
+    await ok(page, "set_email_notifications", { enabled: true });
 
     // ankieta tekstowa: start, link, pauza, wznowienie, przerwanie
     const poll = await ok(page, "create_game", { type: "poll_text", name: `${STAMP} ankieta`, questions: questions(10, false) });
     created.games.push(poll.id);
     await ok(page, "open_poll", { game_id: poll.id });
     const link = await ok(page, "get_poll_link", { game_id: poll.id });
+    expect((await ok(page, "poll_display_code", { game_id: poll.id })).code).toMatch(/^\d{6}$/);
     expect(link.link).toContain(`/go/?p=anon&id=${poll.id}`);
     await ok(page, "stop_poll", { game_id: poll.id });
     await ok(page, "resume_poll", { game_id: poll.id });
@@ -205,6 +218,8 @@ test("narzędzia czatu: znajomi, kopia gry, udostępnienie bazy — dwa konta", 
     gameId = (await ok(a, "create_game", { type: "prepared", name: `${STAMP} do wysłania`, questions: questions(10) })).id;
     const sent = await ok(a, "send_copy", { kind: "game", source_id: gameId, friend_user_ids: [fr.user_id] });
     expect(sent.results[0], JSON.stringify(sent)).toMatchObject({ ok: true });
+    const history = await ok(a, "copy_history", { kind: "game", source_id: gameId });
+    expect(JSON.stringify(history)).toContain(friend.username);
     const inbox = await ok(b, "list_received_copies", { kind: "game" });
     const offer = inbox.copies.find((c) => c.name.startsWith(STAMP));
     expect(offer, JSON.stringify(inbox).slice(0, 300)).toBeTruthy();
@@ -217,6 +232,9 @@ test("narzędzia czatu: znajomi, kopia gry, udostępnienie bazy — dwa konta", 
     baseId = (await ok(a, "create_base", { name: `${STAMP} wspólna` })).id;
     const share = await ok(a, "share_base", { base_id: baseId, role: "viewer", friend_user_ids: [fr.user_id] });
     expect(share.results[0], JSON.stringify(share)).toMatchObject({ ok: true });
+    const pending = (await ok(a, "get_base_sharing", { base_id: baseId })).invitations[0];
+    const remind = await tool(a, "remind_base_share", { task_id: pending.task_id });
+    expect(remind.value.ok || /cooldown|limit/.test(JSON.stringify(remind.value)), JSON.stringify(remind.value)).toBeTruthy();
     const proposed = (await ok(b, "list_bases", {})).bases.find((x) => x.id === baseId);
     expect(proposed, "propozycja widoczna u znajomego").toMatchObject({ proposed: true });
     await ok(b, "answer_base_share", { task_id: proposed.task_id, decision: "accept" });

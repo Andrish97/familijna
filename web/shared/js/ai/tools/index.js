@@ -28,8 +28,9 @@ import sharing from "./sharing.js";
 import support from "./support.js";
 import guide from "./guide.js";
 import community from "./community.js";
+import account from "./account.js";
 
-export const TOOLS = [...knowledge, ...guide, ...games, ...gameSettings, ...polls, ...bases, ...sharing, ...logos, ...copies, ...contacts, ...community, ...support];
+export const TOOLS = [...knowledge, ...guide, ...games, ...gameSettings, ...polls, ...bases, ...sharing, ...logos, ...copies, ...contacts, ...community, ...account, ...support];
 
 const BY_NAME = new Map(TOOLS.map((x) => [x.name, x]));
 export const toolByName = (name) => BY_NAME.get(name) || null;

@@ -1,5 +1,6 @@
 // Narzędzia czatu AI: gry (odczyt, tworzenie, treść, usuwanie, kopia do bazy).
 import { uuid, noArgs, rpc, rows, questionSchema } from "./common.js";
+import { parseQaText } from "../../core/text-import.js";
 
 const DESTRUCTIVE_OPS = new Set(["delete_question", "delete_answer", "set_answers"]);
 
@@ -132,6 +133,40 @@ export default [
       const res = await rpc(ctx, "qb_import_folder", { p_base_id: base_id, p_name: game.name, p_questions: questions });
       if (res?.ok) ctx.changed({ type: "base", id: base_id });
       return res;
+    },
+  },
+  {
+    name: "import_questions_text",
+    description: "Replace ALL questions of a game with questions from text in the editor import format: optional first line “@Game name”, “# Question” lines, then answer lines (optional numbers “1.”; optional points after “/”, used only in prepared games). poll_text games keep only the questions. Use when the user pastes a list of questions.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        game_id: uuid,
+        text: { type: "string" },
+        reset_poll_results: { type: "boolean", description: "Needed when the game has a closed poll (deletes its votes)." },
+      },
+      required: ["game_id", "text"],
+    },
+    confirm: () => "irreversible",
+    async run({ game_id, text, reset_poll_results = false }, ctx) {
+      const parsed = parseQaText(text);
+      if (!parsed.ok) return { ok: false, error: parsed.code, details: parsed.params };
+      const [game] = await rows(ctx.db.from("games").select("id,type").eq("id", game_id));
+      if (!game) return { ok: false, error: "not_found" };
+      const old = await rows(ctx.db.from("questions").select("id").eq("game_id", game_id));
+      const withAnswers = game.type !== "poll_text";
+      const ops = [
+        ...(parsed.name ? [{ op: "rename", name: parsed.name.slice(0, 80) }] : []),
+        ...old.map((q) => ({ op: "delete_question", question_id: q.id })),
+        ...parsed.items.map((it) => ({
+          op: "add_question", text: String(it.qText).trim().slice(0, 100),
+          answers: withAnswers ? it.answers.slice(0, 6).map((a) => ({ text: String(a.text).trim().slice(0, 17), points: game.type === "prepared" ? Number(a.points) || 0 : undefined })) : [],
+        })),
+      ];
+      // jedna transakcja z kontrolą blokad i stanu ankiety (zamiast game_import_content, które ich nie sprawdza)
+      const res = await rpc(ctx, "game_content_apply", { p_game_id: game_id, p_ops: ops, p_tab_id: ctx.tabId, p_reset: !!reset_poll_results });
+      if (res?.ok) ctx.changed({ type: "game", id: game_id });
+      return res?.ok ? { ok: true, questions: parsed.items.length } : res;
     },
   },
 ];

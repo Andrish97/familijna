@@ -164,4 +164,30 @@ export default [
       return data?.ok === false ? { ok: false, error: data.err } : { ok: true };
     },
   },
+  {
+    name: "reopen_poll",
+    description: "Start the poll of a game again after it was closed (status ready): all previous votes and results are deleted and a new poll opens.",
+    inputSchema: gameArg,
+    confirm: () => "irreversible",
+    async run({ game_id }, ctx) {
+      const aborted = await rpc(ctx, "poll_abort", { p_game_id: game_id });
+      if (aborted?.ok === false || !aborted?.share_key_poll) return { ok: false, error: aborted?.err || aborted?.error || "abort_failed" };
+      await rpc(ctx, "poll_open", { p_game_id: game_id, p_key: aborted.share_key_poll });
+      ctx.changed({ type: "game", id: game_id });
+      return { ok: true, status: "poll_open" };
+    },
+  },
+  {
+    name: "poll_display_code",
+    description: "6-digit code to show the voting QR code on a TV or projector: on that screen open familijna.app → Connect a device and enter the code (no login). Works while the poll is open.",
+    inputSchema: gameArg,
+    readOnly: true,
+    async run({ game_id }, ctx) {
+      const g = await pollGame(ctx, game_id);
+      if (!g) return { error: "not_found" };
+      if (g.status !== "poll_open" || !g.share_key_poll) return { error: "poll_not_open" };
+      const res = await rpc(ctx, "generate_device_connect_code", { p_game_id: g.id, p_device_type: "poll_qr", p_share_key: g.share_key_poll, p_game_name: g.name });
+      return res?.ok ? { code: res.code } : { error: "failed" };
+    },
+  },
 ];

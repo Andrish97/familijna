@@ -41,14 +41,24 @@ export default [
     description: "Search community games in the Market (title or description contains the words; optional language). Returns up to 20: market id, title, language, author, rating, how many added it.",
     inputSchema: {
       type: "object",
-      properties: { query: { type: "string" }, lang: { type: "string", enum: ["pl", "en", "uk"] } },
+      properties: {
+        query: { type: "string" }, lang: { type: "string", enum: ["pl", "en", "uk"] },
+        sort: { type: "string", enum: ["best_rated", "most_added", "newest", "title"], description: "Default: catalog order (recommended)." },
+      },
     },
     readOnly: true,
-    async run({ query = "", lang }, ctx) {
+    async run({ query = "", lang, sort }, ctx) {
       const words = String(query).toLowerCase().split(/\s+/).filter(Boolean);
       const rows = list(await rpc(ctx, "market_public_catalog", {}))
         .filter((g) => !lang || g.lang === lang)
         .filter((g) => words.every((w) => `${g.title} ${g.description || ""}`.toLowerCase().includes(w)));
+      const by = {
+        best_rated: (a, b) => (Number(b.avg_rating) || 0) - (Number(a.avg_rating) || 0),
+        most_added: (a, b) => (b.library_count || 0) - (a.library_count || 0),
+        newest: (a, b) => String(b.created_at).localeCompare(String(a.created_at)),
+        title: (a, b) => String(a.title).localeCompare(String(b.title)),
+      }[sort];
+      if (by) rows.sort(by);
       return {
         total: rows.length,
         games: rows.slice(0, 20).map((g) => ({ market_id: g.id, title: g.title, lang: g.lang, author: g.author_username, rating: g.avg_rating, ratings: g.rating_count, added: g.library_count })),

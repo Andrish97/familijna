@@ -19,6 +19,22 @@ const loadFont = (ctx, url) => {
 const font3x10 = (ctx) => loadFont(ctx, "/shared/fonts/display/font_3x10.json");
 const font5x7 = (ctx) => loadFont(ctx, "/shared/fonts/display/font_5x7.json");
 
+// Nowe logo (logo_create) albo nadpisanie istniejącego (update_logo_checked —
+// ten sam endpoint co edytor; blokada puli logo jak przy edycji ręcznej).
+async function saveLogo(ctx, { name, type, payload, replaceId }) {
+  if (replaceId) {
+    const [old] = await rows(ctx.db.from("user_logos").select("id,name").eq("id", replaceId));
+    if (!old) return { ok: false, error: "not_found" };
+    const patch = { type, payload, ...(name && name !== old.name ? { name } : {}) };
+    const res = await rpc(ctx, "update_logo_checked", { p_logo_id: replaceId, p_patch: patch, p_tab_id: ctx.tabId });
+    if (res?.ok) ctx.changed({ type: "logo", id: replaceId });
+    return res?.ok ? { ok: true, id: replaceId, replaced: true } : res;
+  }
+  const res = await rpc(ctx, "logo_create", { p_name: name, p_type: type, p_payload: payload, p_tab_id: ctx.tabId });
+  if (res?.ok) ctx.changed({ type: "logo", id: res.id });
+  return res;
+}
+
 const SHAPE_TYPES = ["rect", "ellipse", "line", "polygon", "polyline", "text"];
 const shapeSchema = {
   type: "object",
@@ -53,19 +69,19 @@ export default [
     description: "Create a text logo shown on the game board: the text is drawn in big board letters (about 7–9 characters fit; spaces separate words). Returns an error if the text is too wide or has characters the board cannot show.",
     inputSchema: {
       type: "object",
-      properties: { name: { type: "string", description: "Logo name, max 80 characters, unique." }, text: { type: "string" } },
+      properties: {
+        name: { type: "string", description: "Logo name, max 80 characters, unique." }, text: { type: "string" },
+        replace_logo_id: { type: "string", description: "UUID of an existing logo to overwrite instead of creating a new one (its name stays unless name is changed)." },
+      },
       required: ["name", "text"],
     },
-    async run({ name, text }, ctx) {
+    confirm: ({ replace_logo_id }) => (replace_logo_id ? "irreversible" : null),
+    async run({ name, text, replace_logo_id }, ctx) {
       const compiled = compileText(String(text || ""), await font3x10(ctx));
       if (compiled.invalid.length) return { ok: false, error: "invalid_chars", chars: compiled.invalid };
       if (!compiled.fit) return { ok: false, error: "too_wide", used_columns: compiled.usedW, max_columns: 30 };
-      const res = await rpc(ctx, "logo_create", {
-        p_name: name, p_type: "GLYPH_30x10", p_tab_id: ctx.tabId,
-        p_payload: { layers: [{ color: "main", rows: compiled.rows }], source: { mode: "TEXT", text: String(text) } },
-      });
-      if (res?.ok) ctx.changed({ type: "logo", id: res.id });
-      return res;
+      const payload = { layers: [{ color: "main", rows: compiled.rows }], source: { mode: "TEXT", text: String(text) } };
+      return saveLogo(ctx, { name, type: "GLYPH_30x10", payload, replaceId: replace_logo_id });
     },
   },
   {
@@ -78,10 +94,12 @@ export default [
         background: { type: "string", enum: ["black", "white"], description: "black = all dots dark at start (default), white = all lit." },
         shapes: { type: "array", items: shapeSchema },
         preview_only: { type: "boolean", description: "true = only return the preview, do not save." },
+        replace_logo_id: { type: "string", description: "UUID of an existing logo to overwrite (redraw) instead of creating a new one." },
       },
       required: ["name", "shapes"],
     },
-    async run({ name, background = "black", shapes, preview_only = false }, ctx) {
+    confirm: ({ replace_logo_id, preview_only }) => (replace_logo_id && !preview_only ? "irreversible" : null),
+    async run({ name, background = "black", shapes, preview_only = false, replace_logo_id }, ctx) {
       if (!Array.isArray(shapes) || !shapes.length) return { ok: false, error: "no_shapes" };
       if (shapes.length > 300) return { ok: false, error: "too_many_shapes", max: 300 };
       const usesText = shapes.some((x) => x?.type === "text");
@@ -90,11 +108,10 @@ export default [
       const preview = previewAscii(bits);
       if (preview_only) return { ok: true, saved: false, lit_dots: lit, warnings, preview };
       if (!lit) return { ok: false, error: "empty_logo", warnings };
-      const res = await rpc(ctx, "logo_create", {
-        p_name: name, p_type: "PIX_150x70", p_tab_id: ctx.tabId,
-        p_payload: { w: DOT_W, h: DOT_H, format: PIX_FORMAT, bits_b64: packBits(bits), source: { mode: "DRAW", bg: "BLACK" } },
+      const res = await saveLogo(ctx, {
+        name, type: "PIX_150x70", replaceId: replace_logo_id,
+        payload: { w: DOT_W, h: DOT_H, format: PIX_FORMAT, bits_b64: packBits(bits), source: { mode: "DRAW", bg: "BLACK" } },
       });
-      if (res?.ok) ctx.changed({ type: "logo", id: res.id });
       return { ...res, warnings };
     },
   },

@@ -12,7 +12,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SRC = path.join(ROOT, "web/shared/js/ai/tools");
 const OUT = path.join(ROOT, "supabase/functions/_shared/ai-tools");
 // Moduły web/shared/js/core, które narzędzia mogą importować (bez DOM).
-const SHARED = ["logo-text.js", "logo-draw.js"];
+const SHARED = ["logo-text.js", "logo-draw.js", "text-import.js"];
 const HEADER = "// Wygenerowane przez scripts/sync-ai-tools.mjs z web/shared/js/ai/tools — nie edytować.\n";
 
 export function expectedFiles() {

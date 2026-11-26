@@ -114,4 +114,28 @@ export default [
       return { ok: ok === true };
     },
   },
+  {
+    name: "remind_base_share",
+    description: "Remind a person about a pending invitation to the user's base (task_id from get_base_sharing invitations); there is a waiting time between reminders.",
+    inputSchema: { type: "object", properties: { task_id: uuid }, required: ["task_id"] },
+    confirm: () => "send",
+    async run({ task_id }, ctx) {
+      const res = one(await rpc(ctx, "base_share_resend", { p_task_id: task_id }));
+      if (!res?.ok) return { ok: false, error: res?.err || res?.error || "failed", cooldown_until: res?.cooldown_until };
+      let mailSent = false;
+      const token = linkToken(res.mail_link, "b");
+      if (res.mail_allowed && token) { try { mailSent = await ctx.sendNotificationMail({ action: "base:share", token, reminder: true }); } catch { mailSent = false; } }
+      return { ok: true, mail_sent: mailSent };
+    },
+  },
+  {
+    name: "undo_base_decline",
+    description: "Bring back a base invitation the user declined (within 30 days); then it can be accepted with answer_base_share.",
+    inputSchema: { type: "object", properties: { task_id: uuid }, required: ["task_id"] },
+    async run({ task_id }, ctx) {
+      const res = one(await rpc(ctx, "base_share_undo_decline", { p_task_id: task_id }));
+      ctx.changed({ type: "base", id: task_id });
+      return res?.ok === false ? { ok: false, error: res.err || res.error } : { ok: true };
+    },
+  },
 ];

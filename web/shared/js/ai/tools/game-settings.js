@@ -246,4 +246,24 @@ export default [
       return { error: "conflict" };
     },
   },
+  {
+    name: "reset_game_settings",
+    description: "Restore default settings of a game (teams, appearance, sounds, questions, game settings). If the game has own uploaded sound files, the whole sound section is kept — sounds are reset on the settings page.",
+    inputSchema: { type: "object", properties: { game_id: uuid }, required: ["game_id"] },
+    confirm: () => "irreversible",
+    async run({ game_id }, ctx) {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const [game] = await rows(ctx.db.from("games").select("id,settings").eq("id", game_id));
+        if (!game) return { error: "not_found" };
+        const sound = game.settings?.sound;
+        const custom = Object.values(sound?.variants || {}).includes("__custom__");
+        // własne pliki dźwięków zostają razem z całą sekcją dźwięku (pliki usuwa strona)
+        const next = custom ? { sound } : {};
+        const res = await rpc(ctx, "game_settings_save", { p_game_id: game_id, p_expected: game.settings ?? null, p_settings: next, p_tab_id: ctx.tabId });
+        if (res?.ok) { ctx.changed({ type: "game", id: game_id }); return { ok: true, kept_custom_sounds: custom }; }
+        if (res?.error !== "conflict") return res;
+      }
+      return { error: "conflict" };
+    },
+  },
 ];

@@ -460,3 +460,56 @@ test("pozostałe czynności stron: bazy, ankiety, zmiana typu, Zadania, Rynek, p
   r = await run("search_market", { query: "weselna" });
   assert.deepEqual(r.games.map((g) => g.market_id), ["m1"]);
 });
+
+test("braki ze spisu: import z tekstu, zmiana logo, ponowna ankieta, reset ustawień, przypomnienie o bazie, konto", async () => {
+  const calls = [];
+  const mails = [];
+  const tables = {
+    games: [{ id: "g", type: "prepared", settings: { teams: { teamA: "X" }, sound: { variants: { reveal: "__custom__" } } } }],
+    questions: [{ id: "old1" }, { id: "old2" }],
+    user_logos: [{ id: "L", name: "Stare" }],
+  };
+  const replies = {
+    game_content_apply: { ok: true }, update_logo_checked: { ok: true }, game_settings_save: { ok: true },
+    poll_abort: { ok: true, share_key_poll: "K2" }, base_share_resend: { ok: true, mail_allowed: true, mail_link: "https://www.familijna.app/go/?b=tok-b" },
+  };
+  const db = {
+    rpc: async (fn, args) => { calls.push([fn, args]); return { data: replies[fn] ?? { ok: true }, error: null }; },
+    from: (name) => { const q = { select: () => q, eq: () => q, order: () => q, then: (ok) => Promise.resolve({ data: tables[name] || [], error: null }).then(ok) }; return q; },
+  };
+  const ctx = {
+    lang: "pl", pageId: "games", db, userId: "u1", tabId: "tab", changed() {}, confirm: async () => true,
+    sendNotificationMail: async (item) => { mails.push(item); return true; },
+    loadJson: async () => JSON.parse(fs.readFileSync(path.join(ROOT, "web/shared/fonts/display/font_3x10.json"), "utf8")),
+  };
+  const run = async (name, args) => JSON.parse((await chat.runTool(name, args, ctx)).text);
+  const fs = require("node:fs");
+
+  let r = await run("import_questions_text", { game_id: "g", text: "@Nowa\n# Pierwsze?\nA / 40\nB / 30\nC / 20\n# Drugie?\n1. X\n2. Y\n3. Z" });
+  assert.equal(r.questions, 2);
+  const [fn, args] = calls.at(-1);
+  assert.equal(fn, "game_content_apply", "z kontrolą blokad, nie game_import_content");
+  assert.deepEqual(args.p_ops.map((o) => o.op), ["rename", "delete_question", "delete_question", "add_question", "add_question"]);
+  assert.deepEqual(args.p_ops[3].answers[0], { text: "A", points: 40 });
+
+  r = await run("create_text_logo", { name: "Stare", text: "AI", replace_logo_id: "L" });
+  assert.equal(r.replaced, true);
+  assert.equal(calls.at(-1)[0], "update_logo_checked");
+  assert.equal(calls.at(-1)[1].p_patch.type, "GLYPH_30x10");
+
+  await run("reopen_poll", { game_id: "g" });
+  assert.deepEqual(calls.slice(-2).map((c) => c[0]), ["poll_abort", "poll_open"]);
+  assert.equal(calls.at(-1)[1].p_key, "K2");
+
+  r = await run("reset_game_settings", { game_id: "g" });
+  assert.equal(r.kept_custom_sounds, true);
+  assert.deepEqual(calls.at(-1)[1].p_settings, { sound: { variants: { reveal: "__custom__" } } });
+
+  await run("remind_base_share", { task_id: "t" });
+  assert.deepEqual(mails.at(-1), { action: "base:share", token: "tok-b", reminder: true });
+
+  await run("set_email_notifications", { enabled: false });
+  assert.deepEqual(calls.at(-1), ["set_my_email_notifications", { p_user_id: "u1", p_enabled: false }]);
+  await run("restore_demo", {});
+  assert.deepEqual(calls.at(-1), ["restore_my_demo", { p_lang: "pl" }]);
+});

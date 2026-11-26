@@ -74,4 +74,13 @@ export default [
       return res;
     },
   },
+  {
+    name: "copy_history",
+    description: "To whom and when the user sent copies of a game or logo in the last 30 days (history of “Send”). It does not show whether the copy was accepted.",
+    inputSchema: { type: "object", properties: { kind: { type: "string", enum: ["game", "logo"] }, source_id: uuid }, required: ["kind", "source_id"] },
+    readOnly: true,
+    async run({ kind, source_id }, ctx) {
+      return rpc(ctx, "resource_copy_history", { p_kind: kind, p_source: source_id });
+    },
+  },
 ];
