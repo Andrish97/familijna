@@ -4,12 +4,15 @@
 -- serwisu. Liczy funkcja Edge ai-chat (service_role) przez ai_quota_take;
 -- użytkownik widzi swój stan przez ai_quota_status; panel admina zmienia
 -- ustawienia przez admin_ai_limits_get/set. Doba w strefie Europe/Warsaw.
+-- Dostępność (audience): off — wyłączony; test — tylko konta testowe
+-- (is_test_user: próba na produkcji z prawdziwym Gemini przed udostępnieniem);
+-- all — wszystkie konta zarejestrowane.
 
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS public.ai_limits (
   id smallint PRIMARY KEY DEFAULT 1 CHECK (id = 1),
-  enabled boolean NOT NULL DEFAULT false,
+  audience text NOT NULL DEFAULT 'off' CHECK (audience IN ('off', 'test', 'all')),
   model text NOT NULL DEFAULT 'gemini-2.5-flash-lite',
   daily_messages integer NOT NULL DEFAULT 20 CHECK (daily_messages BETWEEN 0 AND 1000),
   per_minute integer NOT NULL DEFAULT 6 CHECK (per_minute BETWEEN 1 AND 120),
@@ -71,7 +74,7 @@ declare
   v_global integer;
 begin
   select * into l from public.ai_limits where id = 1;
-  if not found or not l.enabled then
+  if not found or l.audience = 'off' or (l.audience = 'test' and not public.is_test_user(p_user)) then
     return jsonb_build_object('ok', false, 'error', 'disabled');
   end if;
   select to_jsonb(x) into v_identity from auth.users x where x.id = p_user;
@@ -130,7 +133,9 @@ begin
   select * into l from public.ai_limits where id = 1;
   if v_uid is null then return jsonb_build_object('ok', false, 'error', 'not_registered'); end if;
   select messages into v_used from public.ai_usage where user_id = v_uid and day = public._ai_today();
-  return jsonb_build_object('ok', true, 'enabled', coalesce(l.enabled, false), 'daily', l.daily_messages,
+  return jsonb_build_object('ok', true,
+    'enabled', l.audience = 'all' or (l.audience = 'test' and public.is_test_user(v_uid)),
+    'daily', l.daily_messages,
     'used', coalesce(v_used, 0), 'remaining', greatest(l.daily_messages - coalesce(v_used, 0), 0),
     'reset_at', public._ai_reset_at());
 end;
@@ -157,7 +162,7 @@ RETURNS jsonb
 LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
 begin
   update public.ai_limits set
-    enabled = coalesce((p_patch->>'enabled')::boolean, enabled),
+    audience = coalesce(nullif(btrim(p_patch->>'audience'), ''), audience),
     model = coalesce(nullif(btrim(p_patch->>'model'), ''), model),
     daily_messages = coalesce((p_patch->>'daily_messages')::integer, daily_messages),
     per_minute = coalesce((p_patch->>'per_minute')::integer, per_minute),

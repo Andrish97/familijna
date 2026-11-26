@@ -415,7 +415,8 @@ const pl = {
       list_contacts: "Lista kontaktów",
       invite_contact: "Zaproszenie kontaktu",
     },
-    quota: "Asystent Familijnej: zostało {remaining} z {daily} wiadomości na dziś",
+    quota: "Asystent Familijnej: zostało {remaining} z {daily} wiadomości na dziś.",
+    ownKeyHint: "Chcesz bez limitu? Dodaj własny klucz AI.",
     addOwnKey: "Dodaj własny klucz",
     errors: {
       dailyLimit: "Dzisiejszy limit asystenta Familijnej się skończył. Wróci o północy — albo dodaj własny klucz AI w Ustawieniach konta.",

@@ -81,7 +81,11 @@ export async function mountAiPanel({ pageId }) {
   const head = el("div", "mHead");
   const title = el("div", "mTitle", { id: "aiChatTitle", text: t("aiChat.title") });
   // asystent Familijnej: ile wiadomości zostało dziś (decyzja 26)
+  // Od razu podpowiedź: własny klucz = bez dziennego limitu Familijnej.
   const quotaLine = el("div", "hint ai-quota");
+  const quotaText = el("span");
+  const ownKeyLink = el("a", "link ai-quota-own", { href: linkTo("account", { hash: "ai" }), text: t("aiChat.ownKeyHint") });
+  quotaLine.append(quotaText, " ", ownKeyLink);
   quotaLine.hidden = true;
   const btnHistory = iconButton("folder-open", t("aiChat.history"));
   const btnNew = iconButton("plus", t("aiChat.newChat"));
@@ -206,7 +210,7 @@ export async function mountAiPanel({ pageId }) {
   function showQuota(q) {
     if (!q || !Number.isFinite(Number(q.daily)) || !Number(q.daily)) { quotaLine.hidden = true; return; }
     if (conversation) conversation.quotaDaily = Number(q.daily);
-    quotaLine.textContent = t("aiChat.quota", { remaining: Number(q.remaining ?? 0), daily: Number(q.daily) });
+    quotaText.textContent = t("aiChat.quota", { remaining: Number(q.remaining ?? 0), daily: Number(q.daily) });
     quotaLine.hidden = false;
   }
 

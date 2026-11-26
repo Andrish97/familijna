@@ -420,7 +420,8 @@ const en = {
       list_contacts: "List of contacts",
       invite_contact: "Inviting a contact",
     },
-    quota: "Familijna assistant: {remaining} of {daily} messages left today",
+    quota: "Familijna assistant: {remaining} of {daily} messages left today.",
+    ownKeyHint: "Want no limit? Add your own AI key.",
     addOwnKey: "Add your own key",
     errors: {
       dailyLimit: "Today's limit of the Familijna assistant is used up. It comes back at midnight — or add your own AI key in Account settings.",

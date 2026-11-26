@@ -5,11 +5,16 @@
 begin;
 insert into auth.users(id,email,email_confirmed_at) values
   ('53800000-0000-4000-8000-0000000000aa','a538@x.pl',now()),
-  ('53800000-0000-4000-8000-0000000000cc',null,null);
+  ('53800000-0000-4000-8000-0000000000cc',null,null),
+  ('53800000-0000-4000-8000-0000000000dd','t538@x.pl',now());
 insert into public.profiles(id, username, is_guest) values
   ('53800000-0000-4000-8000-0000000000aa','a538',false),
-  ('53800000-0000-4000-8000-0000000000cc','g538',true)
+  ('53800000-0000-4000-8000-0000000000cc','g538',true),
+  ('53800000-0000-4000-8000-0000000000dd','e2e.standard99',false)
 on conflict (id) do update set is_guest = excluded.is_guest;
+-- konto testowe (E25): rola e2e w app_metadata — is_test_user
+update auth.users set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"e2e_role": "standard"}'
+ where id = '53800000-0000-4000-8000-0000000000dd';
 
 do $$
 declare r jsonb; a uuid := '53800000-0000-4000-8000-0000000000aa'; g uuid := '53800000-0000-4000-8000-0000000000cc';
@@ -17,8 +22,19 @@ begin
   -- domyślnie wyłączone
   r := public.ai_quota_take(a, true);
   if r->>'error' <> 'disabled' then raise exception 'disabled: %', r; end if;
-  r := public.admin_ai_limits_set('{"enabled": true, "daily_messages": 2, "per_minute": 5, "max_steps": 2}');
-  if not (r->'limits'->>'enabled')::boolean or (r->'limits'->>'daily_messages')::int <> 2 then raise exception 'set: %', r; end if;
+  -- tylko konta testowe: zwykłe konto dalej bez asystenta
+  perform public.admin_ai_limits_set('{"audience": "test"}');
+  if public.ai_quota_take(a, true)->>'error' <> 'disabled' then raise exception 'test-only: zwykłe konto'; end if;
+  if not public.is_test_user('53800000-0000-4000-8000-0000000000dd') then raise exception 'konto e2e. nie jest testowe?'; end if;
+  r := public.ai_quota_take('53800000-0000-4000-8000-0000000000dd', true);
+  if r->>'error' = 'disabled' then raise exception 'test-only: konto testowe bez dostępu: %', r; end if;
+  r := public.admin_ai_limits_set('{"audience": "all", "daily_messages": 2, "per_minute": 5, "max_steps": 2}');
+  if r->'limits'->>'audience' <> 'all' or (r->'limits'->>'daily_messages')::int <> 2 then raise exception 'set: %', r; end if;
+  begin
+    perform public.admin_ai_limits_set('{"audience": "everyone"}');
+    raise exception 'audience check';
+  exception when check_violation then null;
+  end;
 
   -- gość nie korzysta
   if public.ai_quota_take(g, true)->>'error' <> 'not_registered' then raise exception 'gość'; end if;
@@ -45,7 +61,7 @@ begin
   if public.ai_quota_take(a, true)->>'error' <> 'global_limit' then raise exception 'global'; end if;
 
   r := public.admin_ai_limits_get();
-  if (r->'usage'->0->>'messages')::int <> 2 then raise exception 'usage: %', r; end if;
+  if (r->'usage'->0->>'messages')::int <> 3 or (r->'usage'->0->>'users')::int <> 2 then raise exception 'usage: %', r; end if;
   begin
     perform public.admin_ai_limits_set('{"daily_messages": -1}');
     raise exception 'check';
@@ -67,7 +83,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    perform public.admin_ai_limits_set('{"enabled": false}');
+    perform public.admin_ai_limits_set('{"audience": "off"}');
     raise exception 'authenticated nie może zmieniać limitów';
   exception when insufficient_privilege then null;
   end;
