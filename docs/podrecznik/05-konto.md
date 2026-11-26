@@ -290,3 +290,17 @@ czego nie da się cofnąć (usunięcie gry, podliczenie ankiety), pyta o zgodę 
 Podczas rozgrywki niczego nie zmienia — tylko podpowiada, np. jak podłączyć urządzenia.
 
 > Wskazówka: gdy prosisz asystenta o pracę na grach, bazach czy kontaktach, ich treść trafia do wybranego dostawcy.
+
+### 5.10.1 Claude i ChatGPT bez klucza
+
+Masz konto Claude albo ChatGPT? Dodaj Familijnę jako łącznik w ich aplikacji —
+asystent działa wtedy na Twoim abonamencie, bez klucza, z tymi samymi czynnościami.
+Adres łącznika i kroki są w sekcji „Asystent AI” w *Ustawieniach konta*:
+
+1. Skopiuj adres łącznika przyciskiem [Kopiuj].
+2. W Claude albo ChatGPT dodaj własny łącznik i wklej adres.
+3. Zaloguj się do Familijnej i wybierz [Zezwól].
+
+![Zgoda na dostęp łącznika](zrzut:connect-ai-consent)
+
+Połączone aplikacje widzisz w tej samej sekcji; [Odłącz] odbiera im dostęp do konta.

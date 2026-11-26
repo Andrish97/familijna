@@ -291,3 +291,17 @@ consent in a dialog. During a game it changes nothing — it only advises, e.g. 
 to connect devices.
 
 > Tip: when you ask the assistant to work on games, bases or contacts, their content goes to the selected provider.
+
+### 5.10.1 Claude and ChatGPT without a key
+
+Have a Claude or ChatGPT account? Add Familijna as a connector in their app — the
+assistant then runs on your subscription, without a key, with the same actions.
+The connector address and steps are in the "AI assistant" section of *Account settings*:
+
+1. Copy the connector address with [Copy].
+2. In Claude or ChatGPT add a custom connector and paste the address.
+3. Sign in to Familijna and choose [Allow].
+
+![Connector access consent](zrzut:connect-ai-consent)
+
+Connected apps are listed in the same section; [Disconnect] takes away their access to your account.

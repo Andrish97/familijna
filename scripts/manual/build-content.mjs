@@ -234,6 +234,8 @@ function renderBlocks(lines, icons) {
     }
     const para = [];
     for (; i < lines.length && lines[i].trim() && !isTable(lines[i]) && !isList(lines[i]) && !SHOT_RE.test(lines[i]) && !/^(```|>|#)/.test(lines[i]); i++) para.push(lines[i].trim());
+    // Linia z „#”, której nic nie rozpoznało (np. „### Tytuł” bez numeru) — błąd zapisu, nie pętla bez końca.
+    if (!para.length) throw new Error(`podręcznik: nierozpoznana linia: ${lines[i]}`);
     out.push(`<p class="m-p">${inline(para.join(" "), icons, TITLES)}</p>`);
   }
   return out.join("\n");
