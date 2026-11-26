@@ -111,7 +111,7 @@ export function fetchFromOrigin(request, url, originBase) {
 
 const PAGE_ROUTES = new Set([
   "account", "bases", "bases/explorer",
-  "connect", "connect/tv", "control", "control/buzzer", "control/display", "control/host",
+  "connect", "connect/ai", "connect/tv", "control", "control/buzzer", "control/display", "control/host",
   "games", "games/editor", "games/settings", "login", "login/confirm", "login/reset",
   "logos", "logos/editor/draw", "logos/editor/image", "logos/editor/text",
   "maintenance", "manual", "marketplace", "go", "mails", "snake",
