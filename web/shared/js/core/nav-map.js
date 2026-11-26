@@ -103,7 +103,6 @@ export const PAGES = {
   }, locks: [{ type: "game", id: "id" }, { type: "logos", mode: "shared" }] },
   marketplace:   { path: "/marketplace/",       access: "public", minViewportHeight: 580, parent: "games", parentAnon: "home", subpaths: ["game/"], from: ["home", "games", "manual"], manual: "13", tabs: ["browse", "mine"], state: ["q", "filter", "sort", "tab", "dialog", "game"], dialogs: ["gameDetailOverlay"] },
   connectDevice: { path: "/connect/",    access: "public", parent: "games", parentAnon: "home", from: ["home", "games", "manual"], manual: "17.1", state: ["share"] },
-  connectAi:     { path: "/connect/ai/", access: "user", parent: null, from: [], kind: "standalone", standaloneReason: "Zgoda na dostęp łącznika AI (OAuth): wejście z przekierowania Claude/ChatGPT, wyjście na adres powrotu klienta." },
   connectTv:     { path: "/connect/tv/", access: "public", parent: "connectDevice", parentAnon: "connectDevice", from: ["connectDevice"], deviceGuard: { formFactors: ["tv"] } },
   controlDisplay:{ path: "/control/display/", access: "public", parent: null, from: [], kind: "standalone", standaloneReason: "Odbiornik ekranu uruchamiany kodem parowania; osobna sesja urządzenia." },
   controlHost:   { path: "/control/host/", access: "public", parent: null, from: [], kind: "standalone", standaloneReason: "Widok hosta sterowania otwierany przez połączone urządzenie." },
@@ -136,7 +135,7 @@ export const PAGES = {
 export const GLOBAL_DIALOGS = {
   contactModalOverlay: Object.keys(PAGES).filter((id) => id !== "home" && id !== "login"),
   // Czat AI (E30, shared/js/ai/panel.js): strony, na których montuje go initPage.
-  aiChatOverlay: Object.keys(PAGES).filter((id) => !["home", "login", "privacy", "mailCenter", "connectDevice", "connectAi"].includes(id)),
+  aiChatOverlay: Object.keys(PAGES).filter((id) => !["home", "login", "privacy", "mailCenter", "connectDevice"].includes(id)),
 };
 
 export function dialogAllowed(pageId, dialogId) {

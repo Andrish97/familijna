@@ -7,7 +7,7 @@ import { pushSupport, getPushState, enablePush, disablePush, savePushKinds } fro
 import { initI18n, t, getUiLang } from "../../shared/translation/translation.js";
 import { linkTo, loginUrl } from "../../shared/js/core/nav-map.js";
 import { initPage } from "../../shared/js/core/page-init.js";
-import { initAiKeysUi } from "./account-ai.js";
+import { initAiKeysUi, openConnectConsent } from "./account-ai.js";
 import { toast } from "../../shared/js/core/toast.js";
 import { getTurnstileToken } from "../../shared/js/core/turnstile.js";
 import { confirmModal } from "../../shared/js/core/modal.js";
@@ -672,6 +672,7 @@ async function loadProfile(user) {
     if (deleteHintEl) deleteHintEl.textContent = t("account.deleteHintGuest");
 
     if (migrateSection) migrateSection.hidden = false;
+    void openConnectConsent({ guest: true });
     window.addEventListener("i18n:lang", () => loadUserRating(user.id));
     await Promise.all([loadUserRating(user.id), refreshMigrateState()]);
 
@@ -696,6 +697,7 @@ async function loadProfile(user) {
 
   void initPushUi();
   void initAiKeysUi().catch((e) => console.warn("[account] ai keys", e));
+  void openConnectConsent().catch((e) => console.warn("[account] ai connect", e));
   await wireDemoActions(user);
   // Odczyty niezależne od siebie — równolegle (wcześniej 5 kolejnych rund).
   await Promise.all([

@@ -1,17 +1,5 @@
 // Tłumaczenia EN — część „connect”.
 const en = {
-  connectAi: {
-    pageTitle: "Familijna — connect an AI assistant",
-    title: "Connect an AI assistant",
-    wants: "{name} wants access to your Familijna account",
-    what: "The assistant will be able to read and change your games, question bases, logos, polls and contacts — just like you on the site. Before it deletes something or sends something to other people, it will ask you in its app.",
-    revoke: "You can revoke access in Account settings, in the “AI assistant” section.",
-    returnTo: "After you decide, you will return to: {host}",
-    allow: "Allow",
-    deny: "Deny",
-    expired: "This access request has expired or was already handled. Connect the connector again in the assistant’s app.",
-    needAccount: "The AI connector works only with a registered account.",
-  },
   connectDevice: {
     tv: {
       pageTitle: "Familijna — Connect display",

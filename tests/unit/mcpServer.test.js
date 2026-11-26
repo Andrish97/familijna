@@ -64,7 +64,7 @@ test("OAuth: opisy, rejestracja, przekierowanie do zgody, wymiana kodu", async (
   assert.equal(bad.status, 400);
   const auth = await handleHttp(new Request(`${PUB}/mcp/oauth/authorize?response_type=code&client_id=c1&redirect_uri=https%3A%2F%2Fclaude.ai%2Fcb&code_challenge=${"x".repeat(43)}&code_challenge_method=S256&state=s`), d);
   assert.equal(auth.status, 302);
-  assert.equal(auth.headers.get("location"), `${SITE}/connect/ai/?request=r1`);
+  assert.equal(auth.headers.get("location"), `${SITE}/login/?next=account&ai=r1`);
 
   const form = (code) => new Request(`${PUB}/mcp/oauth/token`, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: `grant_type=authorization_code&code=${code}&code_verifier=v&client_id=c1&redirect_uri=https%3A%2F%2Fclaude.ai%2Fcb` });
   const tok = await handleHttp(form("good"), d);

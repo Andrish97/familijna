@@ -3,7 +3,7 @@
 // migracja 536). Kilka kluczy, jeden aktywny; klucz widać tylko przy wpisaniu
 // — potem nazwa, dostawca, model i 4 ostatnie znaki. Tylko konta zarejestrowane.
 import { t } from "../../shared/translation/translation.js";
-import { confirmModal } from "../../shared/js/core/modal.js";
+import { confirmModal, alertModal } from "../../shared/js/core/modal.js";
 import { toast } from "../../shared/js/core/toast.js";
 import { icon } from "../../shared/js/core/icons.js";
 import { initUiSelect } from "../../shared/js/core/ui-select.js";
@@ -210,8 +210,7 @@ async function renderConnectors() {
   const box = document.getElementById("aiConnectorsBox");
   if (!box) return;
   box.textContent = "";
-  box.append(el("div", "field-label", { text: t("account.ai.mcp.title") }));
-  box.append(el("div", "section-hint", { text: t("account.ai.mcp.hint") }));
+  document.getElementById("aiConnect").hidden = false;
   const row = el("div", "account-ai-mcp-url");
   const url = el("input", "inp", { type: "text", readonly: "", value: MCP_URL, "aria-label": t("account.ai.mcp.urlLabel") });
   const copy = button("account.ai.mcp.copy", "btn sm", "copy");
@@ -249,4 +248,39 @@ async function renderConnectors() {
     item.append(revoke);
     box.append(item);
   }
+}
+
+// Zgoda na dostęp łącznika AI (decyzja 19/20): Claude albo ChatGPT kieruje przez
+// /login/?next=account&ai=<prośba> tutaj; okno silnika zamiast osobnej strony.
+// Zgoda → adres powrotu klienta z jednorazowym kodem; odmowa → error=access_denied.
+export function aiConnectRequest() {
+  const id = new URLSearchParams(location.search).get("ai") || "";
+  return /^[0-9a-f-]{36}$/i.test(id) ? id : null;
+}
+
+function dropRequestParam() {
+  const url = new URL(location.href);
+  url.searchParams.delete("ai");
+  history.replaceState(history.state, "", url);
+}
+
+export async function openConnectConsent({ guest = false } = {}) {
+  const requestId = aiConnectRequest();
+  if (!requestId) return;
+  dropRequestParam();
+  const refuse = (key) => alertModal({ title: t("account.ai.mcp.title"), text: t(key) });
+  if (guest) return refuse("account.ai.mcp.consent.needAccount");
+  const { data, error } = await sb().rpc("mcp_authorize_info", { p_request: requestId });
+  if (error || !data?.ok) return refuse(data?.error === "registered_account_required" ? "account.ai.mcp.consent.needAccount" : "account.ai.mcp.consent.expired");
+  const body = el("div", "hint", { text: t("account.ai.mcp.consent.returnTo", { host: data.redirect_host || "" }) });
+  const allow = await confirmModal({
+    title: t("account.ai.mcp.consent.wants", { name: data.client_name }),
+    text: `${t("account.ai.mcp.consent.what")} ${t("account.ai.mcp.consent.revoke")}`,
+    body,
+    okText: t("account.ai.mcp.consent.allow"),
+    cancelText: t("account.ai.mcp.consent.deny"),
+  });
+  const res = await sb().rpc("mcp_authorize_decide", { p_request: requestId, p_allow: !!allow });
+  if (res.error || !res.data?.ok || !res.data.redirect) return refuse("account.ai.mcp.consent.expired");
+  location.replace(res.data.redirect);
 }

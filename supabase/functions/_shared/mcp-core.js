@@ -7,7 +7,7 @@
 //   GET  /.well-known/oauth-protected-resource[/mcp]
 //   GET  /.well-known/oauth-authorization-server   (i openid-configuration)
 //   POST /mcp/oauth/register                       — rejestracja klienta (DCR)
-//   GET  /mcp/oauth/authorize                      — PKCE S256 → strona zgody /connect/ai/
+//   GET  /mcp/oauth/authorize                      — PKCE S256 → okno zgody w Ustawieniach konta (przez /login/?next=account)
 //   POST /mcp/oauth/token                          — kod → token fam_mcp_…
 // Narzędzia: kopia katalogu czatu (./ai-tools, scripts/sync-ai-tools.mjs),
 // wołane klientem Supabase z krótkotrwałym JWT użytkownika — te same
@@ -151,7 +151,7 @@ export async function handleHttp(request, deps) {
       p_challenge: q.get("code_challenge") || "", p_state: q.get("state"),
     }).catch(() => null);
     if (!res?.ok) return json(400, { error: res?.error || "invalid_request" });
-    return new Response(null, { status: 302, headers: { location: `${deps.site}/connect/ai/?request=${encodeURIComponent(res.request_id)}`, "cache-control": "no-store" } });
+    return new Response(null, { status: 302, headers: { location: `${deps.site}/login/?next=account&ai=${encodeURIComponent(res.request_id)}`, "cache-control": "no-store" } });
   }
 
   if (route === "/mcp/oauth/token" && request.method === "POST") {

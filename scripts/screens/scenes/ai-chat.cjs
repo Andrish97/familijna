@@ -40,10 +40,18 @@ module.exports.push(
     }] },
 );
 
-// Zgoda na dostęp łącznika AI (web/connect/ai/, decyzja 19): Claude chce dostępu do konta.
-module.exports.push({
-  id: "connect-ai-consent", category: "Czat AI", title: "Łącznik AI — zgoda na dostęp do konta",
-  path: "/connect/ai/?request=53700000-0000-4000-8000-000000000001", sources: ["web/connect/ai/"],
-  ready: "#aiConsent:not([hidden])", devices: ["desktop", "phone"],
-  db: (db) => { db.rpc.mcp_authorize_info = { ok: true, client_name: "Claude", redirect_host: "claude.ai" }; },
-});
+// Zgoda na dostęp łącznika AI (decyzje 19–20): okno w Ustawieniach konta po
+// przekierowaniu z Claude (/login/?next=account&ai=…).
+module.exports.push(
+  {
+    id: "account-ai-consent", category: "Czat AI", title: "Konto — okno zgody łącznika AI (Claude chce dostępu)",
+    path: "/account/?ai=53700000-0000-4000-8000-000000000001", sources: ACCOUNT_SOURCES,
+    ready: ".overlay:not([hidden]) .modal", devices: ["desktop", "phone"],
+    db: (db) => { vaultDb(db); db.rpc.mcp_authorize_info = { ok: true, client_name: "Claude", redirect_host: "claude.ai" }; },
+  },
+  {
+    id: "account-ai-full", category: "Czat AI", title: "Konto — cała strona z Asystentem AI i łącznikiem", fullPage: true,
+    path: "/account/", sources: ACCOUNT_SOURCES, ready: "#aiConnect:not([hidden]) .account-ai-key", devices: ["desktop", "phone"],
+    db: (db) => { vaultDb(db); db.rpc.ai_vault_get = { ok: true, vault: null }; },
+  },
+);

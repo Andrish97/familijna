@@ -555,6 +555,8 @@ const nextTask = params.get("t");
 const nextBase = params.get("b");
 const nextFriend = params.get("f");
 const nextTab = params.get("tab");
+// Prośba łącznika AI (Claude/ChatGPT, OAuth) — okno zgody w Ustawieniach konta.
+const nextAiRequest = /^[0-9a-f-]{36}$/i.test(params.get("ai") || "") ? params.get("ai") : null;
 // Ukryta gra w węża: powrót tylko z ważnym linkiem z kodu QR (inaczej /snake/ = 404).
 const nextSnakeQr = params.get("qr");
 // account: centrum maili („Masz konto w Familijnej”) prowadzi do Ustawień konta (powiadomienia).
@@ -594,6 +596,7 @@ function buildNextUrl() {
   if (nextTarget === "friends" && nextFriend) url.searchParams.set("f", nextFriend);
   if (nextTarget === "tasks" && nextTask) url.searchParams.set("t", nextTask);
   if (nextTarget === "bases" && nextBase) url.searchParams.set("b", nextBase);
+  if (nextTarget === "account" && nextAiRequest) url.searchParams.set("ai", nextAiRequest);
   if (PAGES[nextTarget]?.tabs?.includes(nextTab)) url.searchParams.set("tab", nextTab);
 
   url.searchParams.set("lang", getUiLang());

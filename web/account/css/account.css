@@ -170,7 +170,7 @@
   .account-ai-key { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .account-ai-key-main { flex: 1 1 220px; min-width: 0; }
   .account-ai-key .ui-select { flex: 0 1 220px; min-width: 0; }
-  .account-ai-mcp { gap: 8px; padding-top: 10px; border-top: 1px solid var(--line-faint); }
+  .account-ai-mcp { gap: 8px; }
   .account-ai-mcp-url { display: flex; gap: 8px; align-items: center; }
   .account-ai-mcp-url .inp { flex: 1 1 auto; min-width: 0; }
   .account-ai-help { gap: 8px; align-items: flex-start; }

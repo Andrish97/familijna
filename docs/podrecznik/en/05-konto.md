@@ -302,6 +302,6 @@ The connector address and steps are in the "AI assistant" section of *Account se
 2. In Claude or ChatGPT add a custom connector and paste the address.
 3. Sign in to Familijna and choose [Allow].
 
-![Connector access consent](zrzut:connect-ai-consent)
+![Connector access consent](zrzut:account-ai-consent)
 
 Connected apps are listed in the same section; [Disconnect] takes away their access to your account.

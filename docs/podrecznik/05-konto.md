@@ -301,6 +301,6 @@ Adres łącznika i kroki są w sekcji „Asystent AI” w *Ustawieniach konta*:
 2. W Claude albo ChatGPT dodaj własny łącznik i wklej adres.
 3. Zaloguj się do Familijnej i wybierz [Zezwól].
 
-![Zgoda na dostęp łącznika](zrzut:connect-ai-consent)
+![Zgoda na dostęp łącznika](zrzut:account-ai-consent)
 
 Połączone aplikacje widzisz w tej samej sekcji; [Odłącz] odbiera im dostęp do konta.

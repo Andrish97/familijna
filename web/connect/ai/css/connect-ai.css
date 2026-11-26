@@ -1,5 +1,0 @@
-/* Zgoda na dostęp łącznika AI (E30, decyzja 19) — układ strony. */
-@layer page {
-  .connect-ai-card { max-width: 640px; margin-inline: auto; }
-  .connect-ai-card .stack { gap: 12px; }
-}
