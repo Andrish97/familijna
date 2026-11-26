@@ -8,7 +8,11 @@ const openPanel = async (view) => {
   await view.waitForTimeout(400);
 };
 
-const vaultDb = (db) => { db.rpc.ai_vault_get = { ok: true, vault: null }; db.rpc.ai_vault_save = { ok: true }; };
+const vaultDb = (db) => {
+  db.rpc.ai_vault_get = { ok: true, vault: null };
+  db.rpc.ai_vault_save = { ok: true };
+  db.rpc.mcp_tokens_mine = { ok: true, tokens: [{ id: "53700000-0000-4000-8000-0000000000f1", client_name: "Claude", created_at: "2026-11-20T10:00:00Z", last_used_at: "2026-11-25T18:30:00Z", expires_at: "2027-02-18T10:00:00Z" }] };
+};
 
 module.exports = [
   { id: "ai-chat-no-key", category: "Czat AI", title: "Czat AI — bez klucza", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: vaultDb, steps: [openPanel] },

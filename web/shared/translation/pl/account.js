@@ -2,6 +2,21 @@
 const pl = {
   account: {
     ai: {
+      mcp: {
+        title: "Claude i ChatGPT (bez klucza)",
+        hint: "Masz konto Claude albo ChatGPT? Dodaj Familijnę jako łącznik w ich aplikacji — asystent działa wtedy na Twoim abonamencie, bez klucza.",
+        urlLabel: "Adres łącznika",
+        copy: "Kopiuj",
+        copied: "Adres skopiowany.",
+        step1: "Claude: Ustawienia → Łączniki → Dodaj własny łącznik. ChatGPT: Ustawienia → Aplikacje i łączniki → tryb dewelopera → Utwórz.",
+        step2: "Wklej adres łącznika i zapisz.",
+        step3: "Zaloguj się do Familijnej i wybierz [Zezwól].",
+        connected: "Połączone aplikacje",
+        lastUsed: "ostatnio: {date}",
+        revoke: "Odłącz",
+        revokeTitle: "Odłączyć aplikację?",
+        revokeText: "{name} straci dostęp do Twojego konta.",
+      },
       freeKey: {
         title: "Nie masz klucza? Darmowy klucz Google Gemini",
         step1: "Otwórz Google AI Studio i zaloguj się kontem Google.",

@@ -2,6 +2,21 @@
 const en = {
   account: {
     ai: {
+      mcp: {
+        title: "Claude and ChatGPT (no key)",
+        hint: "Have a Claude or ChatGPT account? Add Familijna as a connector in their app — the assistant then runs on your subscription, without a key.",
+        urlLabel: "Connector address",
+        copy: "Copy",
+        copied: "Address copied.",
+        step1: "Claude: Settings → Connectors → Add custom connector. ChatGPT: Settings → Apps & Connectors → developer mode → Create.",
+        step2: "Paste the connector address and save.",
+        step3: "Sign in to Familijna and choose [Allow].",
+        connected: "Connected apps",
+        lastUsed: "last used: {date}",
+        revoke: "Disconnect",
+        revokeTitle: "Disconnect the app?",
+        revokeText: "{name} will lose access to your account.",
+      },
       freeKey: {
         title: "No key? A free Google Gemini key",
         step1: "Open Google AI Studio and sign in with your Google account.",

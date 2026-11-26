@@ -7,6 +7,7 @@ import { confirmModal } from "../../shared/js/core/modal.js";
 import { toast } from "../../shared/js/core/toast.js";
 import { icon } from "../../shared/js/core/icons.js";
 import { initUiSelect } from "../../shared/js/core/ui-select.js";
+import { sb } from "../../shared/js/core/supabase.js";
 import { getVault } from "../../shared/js/ai/keys.js";
 import { PROVIDERS, listModels, ProviderError } from "../../shared/js/ai/providers.js";
 
@@ -199,4 +200,53 @@ export async function initAiKeysUi() {
   }
 
   await render();
+  void renderConnectors();
+}
+
+const MCP_URL = "https://api.familijna.app/mcp";
+
+// Claude i ChatGPT (decyzja 19): adres łącznika i połączone aplikacje z odwołaniem dostępu.
+async function renderConnectors() {
+  const box = document.getElementById("aiConnectorsBox");
+  if (!box) return;
+  box.textContent = "";
+  box.append(el("div", "field-label", { text: t("account.ai.mcp.title") }));
+  box.append(el("div", "section-hint", { text: t("account.ai.mcp.hint") }));
+  const row = el("div", "account-ai-mcp-url");
+  const url = el("input", "inp", { type: "text", readonly: "", value: MCP_URL, "aria-label": t("account.ai.mcp.urlLabel") });
+  const copy = button("account.ai.mcp.copy", "btn sm", "copy");
+  copy.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(MCP_URL); toast(t("account.ai.mcp.copied")); }
+    catch { url.select(); }
+  });
+  row.append(url, copy);
+  box.append(row);
+  const steps = el("ol", "account-ai-steps");
+  for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.mcp.${k}`) }));
+  box.append(steps);
+
+  let list = [];
+  try {
+    const { data } = await sb().rpc("mcp_tokens_mine");
+    list = data?.ok ? data.tokens : [];
+  } catch { list = []; }
+  if (!list.length) return;
+  box.append(el("div", "field-label", { text: t("account.ai.mcp.connected") }));
+  for (const c of list) {
+    const item = el("div", "account-ai-key");
+    const used = c.last_used_at ? new Date(c.last_used_at).toLocaleDateString() : "—";
+    item.append(el("span", "account-ai-key-main", { text: `${c.client_name} · ${t("account.ai.mcp.lastUsed", { date: used })}` }));
+    const revoke = button("account.ai.mcp.revoke", "btn sm danger");
+    revoke.addEventListener("click", async () => {
+      const ok = await confirmModal({
+        title: t("account.ai.mcp.revokeTitle"), text: t("account.ai.mcp.revokeText", { name: c.client_name }),
+        okText: t("account.ai.mcp.revoke"), cancelText: t("account.ai.cancel"),
+      });
+      if (!ok) return;
+      await sb().rpc("mcp_token_revoke", { p_id: c.id });
+      await renderConnectors();
+    });
+    item.append(revoke);
+    box.append(item);
+  }
 }
