@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict mGH9AzHrDQu24vWeg1dy2mlrzooVfylu2AxRgakeEJTXSkZyDu7IKKsw1Zscfkv
+\restrict GCJbnhH4ehFJXobYUszi1zn0tqxie8GZcbyPCF9nIMniX9GMw4an7tU3DsjNEKP
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -6109,6 +6109,82 @@ begin
   delete from public.ai_chats where updated_at < now() - interval '30 days';
   get diagnostics v_n = row_count;
   return v_n;
+end;
+$$;
+
+
+--
+-- Name: ai_vault_delete(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_vault_delete"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  delete from public.ai_key_vaults where user_id = v_uid;
+  return jsonb_build_object('ok', true, 'deleted', found);
+end;
+$$;
+
+
+--
+-- Name: ai_vault_get(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_vault_get"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  v public.ai_key_vaults;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  select * into v from public.ai_key_vaults where user_id = v_uid;
+  if not found then
+    return jsonb_build_object('ok', true, 'vault', null);
+  end if;
+  return jsonb_build_object('ok', true, 'vault',
+    jsonb_build_object('salt', v.salt, 'check', v."check", 'payload', v.payload, 'updated_at', v.updated_at));
+end;
+$$;
+
+
+--
+-- Name: ai_vault_save("text", "jsonb", "jsonb"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."ai_vault_save"("p_salt" "text", "p_check" "jsonb", "p_payload" "jsonb") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  if coalesce(char_length(p_salt), 0) not between 16 and 64
+     or jsonb_typeof(p_check) is distinct from 'object' or not (p_check ? 'iv' and p_check ? 'ct')
+     or jsonb_typeof(p_payload) is distinct from 'object' or not (p_payload ? 'iv' and p_payload ? 'ct') then
+    return jsonb_build_object('ok', false, 'error', 'invalid_payload');
+  end if;
+  if pg_column_size(p_payload) > 65536 then
+    return jsonb_build_object('ok', false, 'error', 'too_large');
+  end if;
+  insert into public.ai_key_vaults (user_id, salt, "check", payload, updated_at)
+  values (v_uid, p_salt, p_check, p_payload, now())
+  on conflict (user_id) do update
+    set salt = excluded.salt, "check" = excluded."check", payload = excluded.payload, updated_at = now();
+  return jsonb_build_object('ok', true);
 end;
 $$;
 
@@ -21259,6 +21335,23 @@ CREATE TABLE "public"."ai_chats" (
 
 
 --
+-- Name: ai_key_vaults; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."ai_key_vaults" (
+    "user_id" "uuid" NOT NULL,
+    "salt" "text" NOT NULL,
+    "check" "jsonb" NOT NULL,
+    "payload" "jsonb" NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "ai_key_vaults_check_check" CHECK (("jsonb_typeof"("check") = 'object'::"text")),
+    CONSTRAINT "ai_key_vaults_payload_check" CHECK (("jsonb_typeof"("payload") = 'object'::"text")),
+    CONSTRAINT "ai_key_vaults_payload_check1" CHECK (("pg_column_size"("payload") <= 65536)),
+    CONSTRAINT "ai_key_vaults_salt_check" CHECK ((("char_length"("salt") >= 16) AND ("char_length"("salt") <= 64)))
+);
+
+
+--
 -- Name: answers; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -23270,6 +23363,14 @@ ALTER TABLE ONLY "public"."admin_demo_updates"
 
 ALTER TABLE ONLY "public"."ai_chats"
     ADD CONSTRAINT "ai_chats_pkey" PRIMARY KEY ("id");
+
+
+--
+-- Name: ai_key_vaults ai_key_vaults_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_key_vaults"
+    ADD CONSTRAINT "ai_key_vaults_pkey" PRIMARY KEY ("user_id");
 
 
 --
@@ -26423,6 +26524,14 @@ ALTER TABLE ONLY "public"."ai_chats"
 
 
 --
+-- Name: ai_key_vaults ai_key_vaults_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."ai_key_vaults"
+    ADD CONSTRAINT "ai_key_vaults_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "auth"."users"("id") ON DELETE CASCADE;
+
+
+--
 -- Name: answers answers_question_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -27665,6 +27774,12 @@ ALTER TABLE "public"."admin_demo_updates" ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE "public"."ai_chats" ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: ai_key_vaults; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."ai_key_vaults" ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: answers; Type: ROW SECURITY; Schema: public; Owner: -
@@ -29053,5 +29168,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict mGH9AzHrDQu24vWeg1dy2mlrzooVfylu2AxRgakeEJTXSkZyDu7IKKsw1Zscfkv
+\unrestrict GCJbnhH4ehFJXobYUszi1zn0tqxie8GZcbyPCF9nIMniX9GMw4an7tU3DsjNEKP
 
