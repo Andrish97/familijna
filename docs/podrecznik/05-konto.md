@@ -299,14 +299,15 @@ Podczas rozgrywki niczego nie zmienia — tylko podpowiada, np. jak podłączyć
 
 > Wskazówka: gdy prosisz asystenta o pracę na grach, bazach czy kontaktach, ich treść trafia do wybranego dostawcy.
 
-### 5.10.1 Claude i ChatGPT bez klucza
+### 5.10.1 Łącznik MCP w innych aplikacjach AI
 
-Masz konto Claude albo ChatGPT? Dodaj Familijnę jako łącznik w ich aplikacji —
-asystent działa wtedy na Twoim abonamencie, bez klucza, z tymi samymi czynnościami.
+Familijna działa jako łącznik (serwer MCP) w aplikacjach AI, które go obsługują —
+m.in. Claude, ChatGPT, Le Chat (Mistral), Cursor, VS Code. Asystent działa wtedy
+w tamtej aplikacji, na Twoim koncie u niej, z tymi samymi czynnościami.
 Adres łącznika i kroki są w sekcji „Asystent AI” w *Ustawieniach konta*:
 
 1. Skopiuj adres łącznika przyciskiem [Kopiuj].
-2. W Claude albo ChatGPT dodaj własny łącznik i wklej adres.
+2. W aplikacji AI dodaj własny łącznik (serwer MCP) i wklej adres.
 3. Zaloguj się do Familijnej i wybierz [Zezwól].
 
 ![Zgoda na dostęp łącznika](zrzut:account-ai-consent)

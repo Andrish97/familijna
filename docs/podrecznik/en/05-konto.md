@@ -300,14 +300,15 @@ to connect devices.
 
 > Tip: when you ask the assistant to work on games, bases or contacts, their content goes to the selected provider.
 
-### 5.10.1 Claude and ChatGPT without a key
+### 5.10.1 MCP connector in other AI apps
 
-Have a Claude or ChatGPT account? Add Familijna as a connector in their app — the
-assistant then runs on your subscription, without a key, with the same actions.
+Familijna works as a connector (MCP server) in AI apps that support it — e.g.
+Claude, ChatGPT, Le Chat (Mistral), Cursor, VS Code. The assistant then runs in that
+app, on your account there, with the same actions.
 The connector address and steps are in the "AI assistant" section of *Account settings*:
 
 1. Copy the connector address with [Copy].
-2. In Claude or ChatGPT add a custom connector and paste the address.
+2. In the AI app add a custom connector (MCP server) and paste the address.
 3. Sign in to Familijna and choose [Allow].
 
 ![Connector access consent](zrzut:account-ai-consent)
