@@ -278,8 +278,15 @@ export async function mountAiPanel({ pageId }) {
     }
   }
 
-  async function persist() {
-    if (!conversation) return;
+  // Zapisy po kolei: drugi zapis czeka na id rozmowy z pierwszego (inaczej
+  // powstałaby druga rozmowa w historii).
+  let saving = Promise.resolve();
+  function persist() {
+    saving = saving.then(saveNow, saveNow);
+    return saving;
+  }
+  async function saveNow() {
+    if (!conversation?.history?.length) return;
     const first = displayItems(conversation.kind, conversation.history).find((x) => x.role === "user");
     try {
       chatId = await saveChat({ id: chatId, title: chatTitle(first?.text), provider: conversation.provider, model: conversation.model, history: conversation.history });
