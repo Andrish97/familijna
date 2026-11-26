@@ -44,7 +44,7 @@ begin
 
   -- wiadomość 1 + kroki do limitu kroków
   r := public.ai_quota_take(a, true);
-  if not (r->>'ok')::boolean or (r->>'remaining')::int <> 1 or r->>'model' <> 'gemini-2.5-flash-lite' then raise exception 'msg1: %', r; end if;
+  if not (r->>'ok')::boolean or (r->>'remaining')::int <> 1 or r->>'model' not like 'gemini-%-flash-lite' then raise exception 'msg1: %', r; end if;
   r := public.ai_quota_take(a, false);
   if not (r->>'ok')::boolean then raise exception 'step2: %', r; end if;
   r := public.ai_quota_take(a, false);

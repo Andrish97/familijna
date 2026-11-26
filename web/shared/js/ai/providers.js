@@ -15,7 +15,7 @@ import { t } from "../../translation/translation.js";
 
 // familijna — wbudowany asystent (decyzje 25–30): Gemini przez funkcję Edge
 // ai-chat na kluczu serwera, z limitami; key = funkcja zwracająca JWT użytkownika.
-export const BUILTIN_MODEL = "gemini-2.5-flash-lite";
+export const BUILTIN_MODEL = "gemini-3.5-flash-lite";
 export const PROVIDERS = {
   familijna: { label: "Asystent Familijnej", kind: "gemini", base: `${API_ORIGIN}/functions/v1/ai-chat`, builtin: true },
   anthropic: { label: "Anthropic (Claude)", kind: "anthropic", base: "https://api.anthropic.com/v1", keyUrl: "https://console.anthropic.com/settings/keys" },

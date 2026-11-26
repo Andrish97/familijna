@@ -16,7 +16,7 @@ function deps(over = {}) {
     apiKey: "SECRET",
     sleep: async () => {},
     userOf: async (t) => (t === "jwt" ? "u1" : null),
-    quotaTake: async (u, m) => { calls.quota.push([u, m]); return { ok: true, model: "gemini-2.5-flash-lite", remaining: 19, daily: 20, reset_at: "2026-11-27T00:00:00+01:00" }; },
+    quotaTake: async (u, m) => { calls.quota.push([u, m]); return { ok: true, model: "gemini-3.5-flash-lite", remaining: 19, daily: 20, reset_at: "2026-11-27T00:00:00+01:00" }; },
     fetchImpl: async (url, init) => { calls.fetch.push([url, init]); return new Response("data: {}\n\n", { status: 200, headers: { "content-type": "text/event-stream" } }); },
     ...over,
   };
@@ -36,7 +36,7 @@ test("stały początek: prompt i narzędzia z serwera, klucz w nagłówku, liczn
   assert.equal(res.status, 200);
   assert.equal(res.headers.get("x-ai-remaining"), "19");
   const [url, init] = d.calls.fetch[0];
-  assert.match(url, /models\/gemini-2\.5-flash-lite:streamGenerateContent\?alt=sse$/);
+  assert.match(url, /models\/gemini-3\.5-flash-lite:streamGenerateContent\?alt=sse$/);
   assert.doesNotMatch(url, /SECRET/, "klucz nie w adresie");
   assert.equal(init.headers["x-goog-api-key"], "SECRET");
   const body = JSON.parse(init.body);

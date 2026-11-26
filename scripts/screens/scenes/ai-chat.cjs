@@ -122,11 +122,11 @@ const CHAT_ID = "53500000-0000-4000-8000-00000000c001";
 const historyDb = (db) => {
   vaultDb(db);
   db.rpc.ai_chat_list = { ok: true, chats: [
-    { id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-26T18:20:00Z" },
-    { id: "53500000-0000-4000-8000-00000000c002", title: "Logo z sercem na wesele", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-25T20:05:00Z" },
-    { id: "53500000-0000-4000-8000-00000000c003", title: "Jak podłączyć telewizor?", provider: "familijna", model: "gemini-2.5-flash-lite", updated_at: "2026-11-24T17:40:00Z" },
+    { id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-3.5-flash-lite", updated_at: "2026-11-26T18:20:00Z" },
+    { id: "53500000-0000-4000-8000-00000000c002", title: "Logo z sercem na wesele", provider: "familijna", model: "gemini-3.5-flash-lite", updated_at: "2026-11-25T20:05:00Z" },
+    { id: "53500000-0000-4000-8000-00000000c003", title: "Jak podłączyć telewizor?", provider: "familijna", model: "gemini-3.5-flash-lite", updated_at: "2026-11-24T17:40:00Z" },
   ] };
-  db.rpc.ai_chat_get = { ok: true, id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-2.5-flash-lite", history: [
+  db.rpc.ai_chat_get = { ok: true, id: CHAT_ID, title: "Ile mam gier?", provider: "familijna", model: "gemini-3.5-flash-lite", history: [
     { role: "user", parts: [{ text: "Ile mam gier gotowych do gry?\n\n<ctx>language: Polish; page: games</ctx>" }] },
     { role: "model", parts: [{ functionCall: { name: "list_games", args: {} } }] },
     { role: "user", parts: [{ functionResponse: { name: "list_games", response: { games: [] } } }] },
