@@ -7,6 +7,9 @@ on:
       - 'supabase/functions/send-email/**'
       - 'supabase/functions/mail-worker/**'
       - 'tests/deno/**'
+      - 'supabase/functions/mcp/**'
+      - 'supabase/functions/_shared/mcp-*.js'
+      - 'supabase/functions/_shared/ai-tools/**'
       - '.github/workflows/edge-contracts.yml'
   workflow_dispatch: {}
 
@@ -22,5 +25,5 @@ jobs:
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5 (E24 R16: przypięte SHA)
         with:
           deno-version: v2.x
-      - run: deno check supabase/functions/send-email/index.ts supabase/functions/mail-worker/index.ts
+      - run: deno check supabase/functions/send-email/index.ts supabase/functions/mail-worker/index.ts supabase/functions/mcp/index.ts
       - run: deno test tests/deno/mail-providers.test.ts
