@@ -183,5 +183,6 @@
   .account-ai-mcp-url { display: flex; gap: 8px; align-items: center; }
   .account-ai-mcp-url .inp { flex: 1 1 auto; min-width: 0; }
   .account-ai-help { gap: 8px; align-items: flex-start; }
+  .account-ai-help-head { font-weight: 800; margin-top: 4px; }
   .account-ai-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 13px; }
 }

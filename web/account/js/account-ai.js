@@ -10,6 +10,7 @@ import { initUiSelect } from "../../shared/js/core/ui-select.js";
 import { sb } from "../../shared/js/core/supabase.js";
 import { getVault, getSource, setSource, builtinStatus } from "../../shared/js/ai/keys.js";
 import { PROVIDERS, listModels, ProviderError } from "../../shared/js/ai/providers.js";
+import { startOpenRouterLogin, finishOpenRouterLogin, freeToolModel } from "./account-openrouter.js";
 
 const ERRORS = {
   password_too_short: "account.ai.passwordShort",
@@ -58,9 +59,30 @@ export async function initAiKeysUi() {
   void renderSource(status);
   const vault = await getVault();
 
+  // Powrót z logowania OpenRouter (decyzja 32): klucz czeka, aż sejf będzie otwarty.
+  let pendingOr = null;
+  try { pendingOr = await finishOpenRouterLogin(); } catch { toast(t("account.ai.openrouter.failed"), { kind: "error" }); }
+  if (pendingOr) requestAnimationFrame(() => section.scrollIntoView({ block: "start" }));
+
+  async function savePendingOr() {
+    const { key, label } = pendingOr;
+    pendingOr = null;
+    try {
+      const model = await freeToolModel();
+      await vault.add({ label, provider: "openrouter", key, model });
+      setSource("own");
+      void renderSource();
+      toast(t("account.ai.openrouter.saved"));
+    } catch (e) { showError(e); }
+  }
+
   async function render() {
     box.textContent = "";
     const status = await vault.status().catch(() => "error");
+    if (status === "open" && pendingOr) await savePendingOr();
+    if (pendingOr && (status === "none" || status === "locked")) {
+      box.append(el("div", "callout callout--info", { text: t(status === "none" ? "account.ai.openrouter.pendingCreate" : "account.ai.openrouter.pendingUnlock") }));
+    }
     if (status === "none") return renderCreate();
     if (status === "locked") return renderUnlock();
     if (status === "open") return renderKeys();
@@ -185,18 +207,25 @@ export async function initAiKeysUi() {
     let provider = ids[0];
     const link = el("a", "link", { target: "_blank", rel: "noopener noreferrer", text: t("account.ai.getKey") });
     const setLink = () => { link.href = PROVIDERS[provider].keyUrl; };
-    const prov = uiSelect(ids.map((id) => ({ value: id, label: PROVIDERS[id].label })), provider, (v) => { provider = v; setLink(); }, "account.ai.provider");
-    setLink();
     const label = el("input", "inp", { type: "text", maxlength: "60", placeholder: t("account.ai.labelPlaceholder"), "aria-label": t("account.ai.labelPlaceholder") });
+    // OpenRouter: logowanie zamiast wklejania klucza (decyzja 32)
+    const orLogin = button("account.ai.openrouter.login", "btn sm gold account-ai-or-login", "person");
+    orLogin.addEventListener("click", () => { void startOpenRouterLogin(label.value); });
+    const orBox = el("div", "stack account-ai-or");
+    orBox.append(orLogin, el("div", "hint", { text: t("account.ai.openrouter.hint") }));
+    const syncOr = () => { orBox.hidden = provider !== "openrouter"; };
+    const prov = uiSelect(ids.map((id) => ({ value: id, label: PROVIDERS[id].label })), provider, (v) => { provider = v; setLink(); syncOr(); }, "account.ai.provider");
+    setLink();
+    syncOr();
     const key = el("input", "inp", { type: "password", autocomplete: "off", spellcheck: "false", placeholder: t("account.ai.keyPlaceholder"), "aria-label": t("account.ai.keyPlaceholder") });
-    const help = freeKeyHelp(() => { provider = "gemini"; prov.api.setValue("gemini", { silent: true }); setLink(); key.focus(); });
+    const help = freeKeyHelp(() => { provider = "gemini"; prov.api.setValue("gemini", { silent: true }); setLink(); syncOr(); key.focus(); }, label);
     help.hidden = !showHelp;
     const noKey = el("button", "link", { type: "button", text: t("account.ai.noKey") });
     noKey.hidden = showHelp;
     noKey.addEventListener("click", () => { help.hidden = false; noKey.hidden = true; });
     const links = el("div", "cluster account-ai-links");
     links.append(link, noKey);
-    form.append(prov.root, label, key, links, help);
+    form.append(prov.root, label, orBox, key, links, help);
     const ok = await confirmModal({
       title: t("account.ai.addTitle"), text: t("account.ai.keyHint"), body: form, sheet: { fit: true },
       okText: t("account.ai.add"), cancelText: t("account.ai.cancel"), initialFocus: key,
@@ -222,14 +251,19 @@ export async function initAiKeysUi() {
   }
 
   // Instrukcja dla osób bez klucza (decyzja 18): darmowy klucz Google Gemini.
-  function freeKeyHelp(useGemini) {
+  // Darmowe klucze (decyzje 18 i 32): logowanie przez OpenRouter (bez kopiowania)
+  // albo klucz Google Gemini z AI Studio.
+  function freeKeyHelp(useGemini, labelInput) {
     const help = el("div", "callout callout--info stack account-ai-help");
     help.append(el("div", "field-label", { text: t("account.ai.freeKey.title") }));
+    const or = button("account.ai.openrouter.login", "btn sm", "person");
+    or.addEventListener("click", () => { void startOpenRouterLogin(labelInput?.value || ""); });
+    help.append(el("div", "account-ai-help-head", { text: t("account.ai.openrouter.freeTitle") }), el("div", "hint", { text: t("account.ai.openrouter.free") }), or);
     const steps = el("ol", "account-ai-steps");
     for (const k of ["step1", "step2", "step3"]) steps.append(el("li", "", { text: t(`account.ai.freeKey.${k}`) }));
     const open = el("a", "btn sm", { href: PROVIDERS.gemini.keyUrl, target: "_blank", rel: "noopener noreferrer", text: t("account.ai.freeKey.open") });
     open.addEventListener("click", useGemini);
-    help.append(steps, el("div", "hint", { text: t("account.ai.freeKey.note") }), open);
+    help.append(el("div", "account-ai-help-head", { text: t("account.ai.freeKey.geminiTitle") }), steps, el("div", "hint", { text: t("account.ai.freeKey.note") }), open);
     return help;
   }
 
