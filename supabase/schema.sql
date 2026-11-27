@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict jeu6bwBDydQm9P45bFWE2eLeJKaQTEnfrL4ywNHBCI0HFwHr27diichI90r7Y8R
+\restrict xd1OND5i2QEr8XSv6hyIJOGGzbAFgE0zoTXleycEzlcVQnUzsfGSsbqmlbXErOa
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -5989,7 +5989,21 @@ CREATE FUNCTION "public"."admin_ai_limits_get"() RETURNS "jsonb"
     'limits', (SELECT to_jsonb(l) - 'id' FROM public.ai_limits l WHERE id = 1),
     'usage', coalesce((SELECT jsonb_agg(jsonb_build_object('day', d.day, 'users', d.users, 'messages', d.messages, 'steps', d.steps) ORDER BY d.day DESC)
       FROM (SELECT day, count(*) AS users, sum(messages) AS messages, sum(steps) AS steps
-              FROM public.ai_usage WHERE day > public._ai_today() - 14 GROUP BY day) d), '[]'::jsonb)
+              FROM public.ai_usage WHERE day > public._ai_today() - 14 GROUP BY day) d), '[]'::jsonb),
+    'totals', jsonb_build_object(
+      'today_users', (SELECT count(*) FROM public.ai_usage WHERE day = public._ai_today()),
+      'today_messages', (SELECT coalesce(sum(messages), 0) FROM public.ai_usage WHERE day = public._ai_today()),
+      'today_steps', (SELECT coalesce(sum(steps), 0) FROM public.ai_usage WHERE day = public._ai_today()),
+      'users_30d', (SELECT count(DISTINCT user_id) FROM public.ai_usage WHERE day > public._ai_today() - 30),
+      'messages_30d', (SELECT coalesce(sum(messages), 0) FROM public.ai_usage WHERE day > public._ai_today() - 30),
+      'chats', (SELECT count(*) FROM public.ai_chats),
+      'chat_users', (SELECT count(DISTINCT user_id) FROM public.ai_chats),
+      'chats_7d', (SELECT count(*) FROM public.ai_chats WHERE updated_at > now() - interval '7 days'),
+      'vaults', (SELECT count(*) FROM public.ai_key_vaults),
+      'mcp_apps', (SELECT count(*) FROM public.mcp_tokens WHERE kind = 'oauth' AND revoked_at IS NULL AND expires_at > now()),
+      'mcp_users', (SELECT count(DISTINCT user_id) FROM public.mcp_tokens WHERE kind = 'oauth' AND revoked_at IS NULL AND expires_at > now()),
+      'api_keys', (SELECT count(*) FROM public.mcp_tokens WHERE kind = 'api_key' AND revoked_at IS NULL)
+    )
   )
 $$;
 
@@ -29967,5 +29981,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict jeu6bwBDydQm9P45bFWE2eLeJKaQTEnfrL4ywNHBCI0HFwHr27diichI90r7Y8R
+\unrestrict xd1OND5i2QEr8XSv6hyIJOGGzbAFgE0zoTXleycEzlcVQnUzsfGSsbqmlbXErOa
 
