@@ -118,7 +118,7 @@ test("czat: klucz w sejfie, narzędzie, historia na koncie, okno wraca po przej�
     await openChat(page);
     const own = await page.evaluate(async () => (await window.__sbClient.from("games").select("id").neq("type", "market")).data.length);
     await page.locator("#aiChatOverlay .ai-input").fill("Ile mam gier?");
-    await page.keyboard.press("Enter");
+    await page.locator("#aiChatOverlay .ai-form button[type=submit]").click();
     await expect(page.locator("#aiChatOverlay .ai-msg--assistant").last()).toHaveText(`Masz gier: ${own}.`, { timeout: 20000 });
     await expect(page.locator("#aiChatOverlay .ai-msg--tool")).toContainText("Lista gier");
     expect(requests[0].tools.some((x) => x.name === "list_games")).toBe(true);
@@ -149,7 +149,7 @@ test("czat: usunięcie gry wymaga potwierdzenia; odmowa nic nie usuwa", async ({
     gameId = await page.evaluate(async () => (await window.__sbClient.rpc("game_create", { p_type: "prepared", p_name: `E2E-AI-${Date.now()}` })).data.id);
     await openChat(page);
     await page.locator("#aiChatOverlay .ai-input").fill("Usuń tę grę");
-    await page.keyboard.press("Enter");
+    await page.locator("#aiChatOverlay .ai-form button[type=submit]").click();
     const confirm = page.locator(".overlay:not([hidden]) .modal:not(.ai-chat)", { hasText: "Usunięcie gry" });
     await expect(confirm).toBeVisible({ timeout: 20000 });
     await confirm.getByRole("button", { name: "Nie" }).click();

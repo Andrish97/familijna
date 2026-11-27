@@ -39,7 +39,7 @@ test("asystent Familijnej: odpowiedź z narzędziem, licznik, podpowiedź własn
   const before = status.remaining;
 
   await chat.locator(".ai-input").fill("Ile mam gier? Sprawdź narzędziem i podaj samą liczbę.");
-  await page.keyboard.press("Enter");
+  await page.locator("#aiChatOverlay .ai-form button[type=submit]").click();
   await expect(chat.locator(".ai-msg--tool").first()).toContainText("Lista gier", { timeout: 60000 });
   await expect(chat.locator(".ai-msg--assistant").last()).toContainText(String(own), { timeout: 60000 });
   await expect(chat.locator(".ai-quota")).toContainText(`${before - 1} z ${status.daily}`, { timeout: 15000 });

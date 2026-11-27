@@ -2788,6 +2788,18 @@
     animation: sheetUp var(--dur-sheet-in) var(--ease-sheet) both;
     will-change: transform;
   }
+  /* Okno skracane przy klawiaturze (.keyboard-shrink, czat AI): nakładka =
+     widoczny obszar ekranu (--vv-top/--vv-h z core/device-attrs.js); góra okna
+     zostaje, okno kończy się nad klawiaturą, przesuwa się tylko dół (pole). */
+  :where(:root[data-sheet]) body.sheet-open .overlay.modal--sheet.sheet-active.keyboard-shrink {
+    inset: auto 0;
+    top: var(--vv-top, 0px);
+    height: var(--vv-h, 100dvh);
+  }
+  :where(:root[data-sheet]) .modal--sheet.sheet-active.keyboard-shrink .modal {
+    height: calc(var(--vv-h, 100dvh) - max(16px, env(safe-area-inset-top, 0px) + 12px));
+  }
+  :where(:root[data-sheet][data-keyboard]) .modal--sheet.sheet-active.keyboard-shrink .modal { padding-bottom: 10px; }
   :where(:root[data-sheet]) .modal--sheet.sheet-active.sheet-dragging .modal { animation: none; transition: none; }
   :where(:root[data-sheet]) .modal--sheet.sheet-active.sheet-settling .modal { animation: none; transition: transform .22s var(--ease-out); }
   :where(:root[data-sheet]) .modal--sheet.sheet-active.sheet-closing .modal { animation: sheetDown var(--dur-sheet-out) cubic-bezier(.4, 0, 1, 1) both; }
@@ -3155,7 +3167,8 @@
   .ai-msg--tool { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: .85em; color: var(--text-faint); }
   .ai-notice { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
   .ai-form { display: flex; align-items: flex-end; gap: 6px; }
-  .ai-form .ai-input { flex: 1 1 auto; min-height: 44px; max-height: 160px; resize: none; }
+  /* pole rośnie z tekstem (--ai-input-h z panel.js), od 2 do ~6 linii */
+  .ai-form .ai-input { flex: 1 1 auto; min-height: 64px; max-height: 160px; height: var(--ai-input-h, auto); resize: none; overflow-y: auto; }
   /* podgląd logo utworzonego przez czat (jak na tablicy) */
   .ai-logo-preview { align-self: flex-start; margin: 0; display: flex; flex-direction: column; gap: 4px; }
   .ai-logo-preview canvas { width: min(300px, 100%); height: auto; border-radius: var(--r-sm); }

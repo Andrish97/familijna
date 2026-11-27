@@ -99,6 +99,8 @@ function pageLocked() {
 }
 
 function revealAboveKeyboard(el, kb) {
+  // okno skracane do widocznego obszaru (CSS: .keyboard-shrink) — bez podnoszenia
+  if (el.closest(".keyboard-shrink")) return;
   const overlay = el.closest(".overlay");
   const lift = overlay || (pageLocked() ? el.closest("main") : null);
   // Podniesienia innego miejsca (fokus przeszedł gdzie indziej) nie trzymamy.
@@ -170,8 +172,18 @@ function scheduleReveal() {
   }, Math.max(0, revealUntil - Date.now()));
 }
 
+// Widoczny obszar ekranu (--vv-top, --vv-h): okna .keyboard-shrink (czat AI)
+// dopasowują się do niego — przy klawiaturze góra zostaje, okno skraca się od dołu.
+function applyVisualViewport() {
+  const vv = window.visualViewport;
+  const root = document.documentElement;
+  root.style.setProperty("--vv-top", `${Math.round(vv?.offsetTop || 0)}px`);
+  root.style.setProperty("--vv-h", `${Math.round(vv?.height || window.innerHeight)}px`);
+}
+
 let keyboardH = 0;
 function applyKeyboard() {
+  applyVisualViewport();
   const root = document.documentElement;
   const covered = keyboardHeight(); // zawsze: zapamiętuje pełną wysokość okna
   const kb = root.dataset.input === "touch" && editableFocused() ? covered : 0;
@@ -211,6 +223,7 @@ if (typeof document !== "undefined" && typeof window !== "undefined") {
     vk.addEventListener?.("geometrychange", applyKeyboard);
   }
   window.visualViewport?.addEventListener("resize", applyKeyboard, { passive: true });
+  window.visualViewport?.addEventListener("scroll", applyVisualViewport, { passive: true });
   document.addEventListener("focusin", onFocusIn);
   document.addEventListener("focusout", () => requestAnimationFrame(applyKeyboard));
 }

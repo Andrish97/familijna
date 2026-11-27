@@ -89,7 +89,7 @@ export async function mountAiPanel({ pageId }) {
   toggle.setAttribute("aria-controls", AI_DIALOG_ID);
   toggle.setAttribute("aria-expanded", "false");
 
-  const overlay = el("div", "overlay modal--sheet ai-chat-overlay", { id: AI_DIALOG_ID });
+  const overlay = el("div", "overlay modal--sheet ai-chat-overlay keyboard-shrink", { id: AI_DIALOG_ID });
   overlay.hidden = true;
   const panel = el("div", "modal modal--fill ai-chat", { role: "dialog", "aria-modal": "true", "aria-labelledby": "aiChatTitle" });
   const head = el("div", "mHead");
@@ -463,16 +463,23 @@ export async function mountAiPanel({ pageId }) {
     input.focus();
   });
   btnStop.addEventListener("click", () => abort?.abort());
+  // Pole rośnie z tekstem (do max-height w CSS); Enter = nowa linia,
+  // wysyła przycisk albo Ctrl/⌘+Enter.
+  const fitInput = () => {
+    input.style.setProperty("--ai-input-h", "auto");
+    input.style.setProperty("--ai-input-h", `${input.scrollHeight + 2}px`);
+  };
   input.value = state.draft || "";
-  input.addEventListener("input", () => { writeState({ draft: input.value }); });
+  input.addEventListener("input", () => { writeState({ draft: input.value }); fitInput(); });
   input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !e.isComposing) { e.preventDefault(); form.requestSubmit(); }
   });
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const text = input.value.trim();
     if (!text || busy) return;
     input.value = "";
+    fitInput();
     writeState({ draft: "" });
     void runTurn(text);
   });
