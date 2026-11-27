@@ -160,7 +160,9 @@ export async function mountAiPanel({ pageId }) {
       attach();
       openDialog(overlay, { onClose: () => setOpen(false), restore: instant });
       if (instant) requestAnimationFrame(() => requestAnimationFrame(() => overlay.classList.remove("is-instant")));
-      else input.focus();
+      // dotyk: bez kursora — klawiatura w trakcie wysuwania okna zmieniała
+      // wysokość ekranu i okno skakało; klawiatura po dotknięciu pola
+      else if (!matchMedia("(pointer: coarse)").matches) input.focus();
       requestAnimationFrame(scrollEnd);
     } else if (!open && isOpen) {
       closeDialog(overlay);
