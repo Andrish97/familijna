@@ -76,13 +76,18 @@ export async function mountAiPanel({ pageId }) {
   const slot = document.querySelector(".topbar-section-3");
   if (!slot) return;
 
-  // rozmiar jak inne przyciski paska (Wskazówki, ☰) — bez „sm”
-  const toggle = el("button", "btn ai-toggle", { type: "button", "aria-label": t("aiChat.open"), title: t("aiChat.open") });
-  toggle.innerHTML = icon("chat");
-  toggle.id = "btnAiChat";
+  // przycisk zwykle już jest (core/page-init.js mountAiToggle) — rozmiar jak inne przyciski paska
+  let toggle = document.getElementById("btnAiChat");
+  if (!toggle) {
+    toggle = el("button", "btn ai-toggle", { type: "button" });
+    toggle.innerHTML = icon("chat");
+    toggle.id = "btnAiChat";
+    slot.insertBefore(toggle, slot.firstChild);
+  }
+  toggle.setAttribute("aria-label", t("aiChat.open"));
+  toggle.title = t("aiChat.open");
   toggle.setAttribute("aria-controls", AI_DIALOG_ID);
   toggle.setAttribute("aria-expanded", "false");
-  slot.insertBefore(toggle, slot.firstChild);
 
   const overlay = el("div", "overlay modal--sheet ai-chat-overlay", { id: AI_DIALOG_ID });
   overlay.hidden = true;
@@ -478,7 +483,9 @@ export async function mountAiPanel({ pageId }) {
   };
 
   const urlOpen = new URLSearchParams(location.search).get("dialog") === AI_DIALOG_ID;
-  if (state.open || urlOpen) setOpen(true, { instant: true });
+  const clickedEarly = toggle.dataset.openWhenReady === "1";
+  delete toggle.dataset.openWhenReady;
+  if (state.open || urlOpen || clickedEarly) setOpen(true, { instant: !clickedEarly });
   void runQueuedPoint(pageId, pointActions);
   await loadConversation();
 }

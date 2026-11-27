@@ -51,12 +51,10 @@ export async function initAiKeysUi() {
   const section = document.getElementById("ai");
   const box = document.getElementById("aiVaultBox");
   if (!section || !box) return;
-  // etap próbny: sekcje AI tylko dla kont, które widzą czat (ai_limits.chat_audience)
-  const status = await builtinStatus().catch(() => ({ visible: false }));
-  if (!status.visible) return;
+  // konto zarejestrowane (gość nie dochodzi tutaj) — sekcja od razu, bez pytania serwera
   section.hidden = false;
   if (location.hash === "#ai") requestAnimationFrame(() => section.scrollIntoView({ block: "start" }));
-  void renderSource(status);
+  void renderSource();
   const vault = await getVault();
 
   // Powrót z logowania OpenRouter (decyzja 32): klucz czeka, aż sejf będzie otwarty.

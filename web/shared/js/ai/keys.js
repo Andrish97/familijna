@@ -61,20 +61,6 @@ export async function builtinStatus() {
   return data;
 }
 
-// Czy pokazać czat: pamięć karty na 5 minut (bez zapytania na każdej stronie).
-const ACCESS = "familijna:ai-access";
-export async function aiVisible(userId) {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem(ACCESS) || "null");
-    if (saved && saved.user === userId && Date.now() - saved.at < 5 * 60 * 1000) return !!saved.visible;
-  } catch { /* bez pamięci */ }
-  const status = await builtinStatus().catch(() => ({ visible: false, failed: true }));
-  // chwilowy błąd sieci nie chowa czatu na 5 minut — tylko odpowiedź serwera trafia do pamięci
-  if (!status.failed) {
-    try { sessionStorage.setItem(ACCESS, JSON.stringify({ user: userId, at: Date.now(), visible: !!status.visible })); } catch { /* bez pamięci */ }
-  }
-  return !!status.visible;
-}
 const userToken = async () => (await sb().auth.getSession()).data?.session?.access_token || "";
 
 /**

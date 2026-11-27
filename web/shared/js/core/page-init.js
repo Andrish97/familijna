@@ -37,6 +37,8 @@ import { setModalSheetPage } from "./modal-sheet.js";
 import { guardViewportWidth } from "./device-guard.js";
 import "./scroll-fade.js"; // wygaszona krawędź przewijanych list (wszystkie strony)
 import "./fit-row.js"; // wiersze przycisków bez zawijania (.fit-row)
+import { icon } from "./icons.js";
+import { t } from "../../translation/translation.js";
 
 // Dotyk (telefon, tablet): bez chwytania i przeciągania elementów (decyzja
 // użytkownika 2026-10-20). Każde przeciąganie ma odpowiednik w przyciskach
@@ -233,6 +235,22 @@ export async function initEntryPage(id, { ready, route } = {}) {
 // Strony bez czatu AI: wejście, logowanie, centrum maili, podłączanie urządzenia.
 const NO_AI_PANEL = new Set(["login", "privacy", "mailCenter", "connectDevice"]);
 
+function mountAiToggle() {
+  const slot = document.querySelector(".topbar-section-3");
+  if (!slot || document.getElementById("btnAiChat")) return;
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "btn ai-toggle";
+  toggle.id = "btnAiChat";
+  toggle.innerHTML = icon("chat");
+  toggle.setAttribute("aria-label", t("aiChat.open"));
+  toggle.title = t("aiChat.open");
+  toggle.addEventListener("click", () => {
+    if (!document.getElementById("aiChatOverlay")) toggle.dataset.openWhenReady = "1";
+  });
+  slot.insertBefore(toggle, slot.firstChild);
+}
+
 export async function initPage(id, opts = {}) {
   let finishLayout;
   holdPageLayout(new Promise((resolve) => { finishLayout = resolve; }));
@@ -283,12 +301,13 @@ async function initializePage(id, opts, finishLayout) {
         .catch((error) => console.warn("[nav] contact badge refresh failed", error));
     }
   }
-  // E30: czat AI na kluczu użytkownika — konto zarejestrowane, strony aplikacji.
-  // Czat tylko dla kont, które go widzą (ai_limits.chat_audience — etap próbny: konta testowe).
+  // E30: czat AI — konto zarejestrowane, strony aplikacji. Przycisk od razu
+  // z resztą paska (bez pytania serwera); moduł czatu wczytuje się obok
+  // i przejmuje przycisk. Kliknięcie przed wczytaniem otwiera okno po wczytaniu.
   if (user && !isGuestUser(user) && !NO_AI_PANEL.has(id)) {
-    void import("../ai/keys.js")
-      .then(({ aiVisible }) => aiVisible(user.id))
-      .then((visible) => (visible ? import("../ai/panel.js").then(({ mountAiPanel }) => mountAiPanel({ pageId: id })) : null))
+    mountAiToggle();
+    void import("../ai/panel.js")
+      .then(({ mountAiPanel }) => mountAiPanel({ pageId: id }))
       .catch((error) => console.warn("[ai] panel failed", error));
   }
   if (!opts.deferTopbarReady) document.querySelector(".topbar")?.classList.add("topbar-ready");
