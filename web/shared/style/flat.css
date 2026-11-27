@@ -3390,6 +3390,7 @@
   /* Historia rozmów: osobny widok w miejscu rozmowy (nagłówek, lista). */
   .ai-chats { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
   .ai-chats-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .ai-chats-head-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .ai-chats-list { display: flex; flex-direction: column; gap: 6px; }
   .ai-chat-row { display: flex; align-items: center; gap: 6px; border-radius: var(--r-md); background: var(--surface-inset); border: 1px solid transparent; padding: 6px 6px 6px 12px; }
   .ai-chat-row.is-current { border-color: var(--g-35); }

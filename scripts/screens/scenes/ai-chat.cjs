@@ -157,4 +157,9 @@ module.exports.push(
   { id: "ai-chat-conversation", category: "Czat AI", title: "Czat AI — rozmowa z narzędziem", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: historyDb, steps: [withChat] },
   { id: "ai-chat-history", category: "Czat AI", title: "Czat AI — historia rozmów", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: historyDb,
     steps: [withChat, async (view) => { await view.locator(".ai-btn-history").click(); await view.locator(".ai-chat-row").first().waitFor(); await view.waitForTimeout(300); }] },
+  { id: "ai-chat-delete-all", category: "Czat AI", title: "Czat AI — usuwanie wszystkich rozmów", path: "/games/", sources: SOURCES, ready: "#btnAiChat", devices: ["desktop", "phone"], db: historyDb,
+    steps: [withChat, async (view) => {
+      await view.locator(".ai-btn-history").click(); await view.locator(".ai-chat-row").first().waitFor();
+      await view.locator(".ai-btn-delete-all").click(); await view.waitForTimeout(500);
+    }] },
 );

@@ -88,6 +88,20 @@ begin
   then raise exception 'usage: %', d; end if;
 end $$;
 
+-- usunięcie wszystkich rozmów: tylko własne
+set local role authenticated;
+do $$
+declare r jsonb;
+begin
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-0000000545a1', true);
+  r := public.ai_chat_delete_all();
+  if (r->>'deleted')::int <> 2 then raise exception 'delete_all: %', r; end if;
+  if jsonb_array_length(public.ai_chat_list()->'chats') <> 0 then raise exception 'delete_all: zostały rozmowy'; end if;
+  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-0000000545c3', true);
+  if jsonb_array_length(public.ai_chat_list()->'chats') <> 1 then raise exception 'delete_all: usunięte cudze'; end if;
+end $$;
+reset role;
+
 set local role authenticated;
 do $$
 begin

@@ -12,6 +12,7 @@ async function call(fn, args) {
 export const listChats = async () => (await call("ai_chat_list", { p_limit: 50 })).chats || [];
 export const getChat = (id) => call("ai_chat_get", { p_id: id });
 export const deleteChat = (id) => call("ai_chat_delete", { p_id: id });
+export const deleteAllChats = () => call("ai_chat_delete_all", {});
 
 /** Zapis rozmowy; zwraca jej id (nowa rozmowa: id === null). */
 export async function saveChat({ id = null, title, provider, model, history }) {

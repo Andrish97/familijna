@@ -162,3 +162,44 @@ test("czat: usunięcie gry wymaga potwierdzenia; odmowa nic nie usuwa", async ({
     await cleanup(page);
   }
 });
+
+test("czat: usuwanie rozmów z potwierdzeniem — jednej i wszystkich (migracja 545)", async ({ page, context, accounts, loginAs }) => {
+  test.setTimeout(120_000);
+  await loginAs(page, context, accounts.standard[0]);
+  await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => !!window.__sbClient, null, { timeout: 20000 });
+  try {
+    await cleanup(page);
+    await page.evaluate(async () => {
+      for (const title of ["E2E rozmowa A", "E2E rozmowa B", "E2E rozmowa C"]) {
+        await window.__sbClient.rpc("ai_chat_save", { p_id: null, p_title: title, p_provider: "openai", p_model: "m", p_history: [{ role: "user", content: title }] });
+      }
+    });
+    await openChat(page);
+    const chat = page.locator("#aiChatOverlay");
+    await chat.locator(".ai-btn-history").click();
+    await expect(chat.locator(".ai-chat-row")).toHaveCount(3, { timeout: 15000 });
+    const confirm = page.locator(".overlay:not([hidden]) .modal:not(.ai-chat)");
+
+    // jedna: odmowa nic nie usuwa, zgoda usuwa
+    const rowB = chat.locator(".ai-chat-row", { hasText: "E2E rozmowa B" });
+    await rowB.locator("button").last().click();
+    await expect(confirm).toContainText("E2E rozmowa B");
+    await confirm.getByRole("button", { name: "Nie" }).click();
+    await expect(chat.locator(".ai-chat-row")).toHaveCount(3);
+    await rowB.locator("button").last().click();
+    await confirm.getByRole("button", { name: "Usuń", exact: true }).click();
+    await expect(chat.locator(".ai-chat-row")).toHaveCount(2);
+
+    // wszystkie
+    await chat.locator(".ai-btn-delete-all").click();
+    await expect(confirm).toContainText("(2)");
+    await confirm.getByRole("button", { name: "Usuń wszystkie" }).click();
+    await expect(chat.locator(".ai-chat-row")).toHaveCount(0);
+    await expect(chat.locator(".ai-btn-delete-all")).toBeHidden();
+    const left = await page.evaluate(async () => (await window.__sbClient.rpc("ai_chat_list", { p_limit: 20 })).data?.chats?.length);
+    expect(left).toBe(0);
+  } finally {
+    await cleanup(page);
+  }
+});

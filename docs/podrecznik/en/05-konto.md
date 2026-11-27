@@ -282,7 +282,8 @@ sends it right away. While answering, the window shows which tools the assistant
   [Back to the conversation] closes the list.
 - [New conversation] starts from scratch; the previous one stays on the list.
 - The window stays open when you go to another page, together with the conversation.
-- The bin icon next to a conversation on the list deletes it at once, without confirmation.
+- The bin icon next to a conversation on the list deletes it after you confirm; [Delete all]
+  clears the whole history.
 - Conversations are saved on your account; ones unused for 30 days disappear.
 
 ![List of saved conversations](zrzut:ai-chat-history)

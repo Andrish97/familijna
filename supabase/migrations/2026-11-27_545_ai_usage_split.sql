@@ -215,3 +215,21 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public' AS $$
 $$;
 REVOKE ALL ON FUNCTION public.admin_ai_limits_get() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_ai_limits_get() TO service_role;
+
+-- 7. Usunięcie wszystkich rozmów konta (okno czatu → Rozmowy → Usuń wszystkie).
+CREATE OR REPLACE FUNCTION public.ai_chat_delete_all() RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path TO 'public' AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  v_n integer;
+begin
+  if v_uid is null then
+    return jsonb_build_object('ok', false, 'error', 'registered_account_required');
+  end if;
+  delete from public.ai_chats where user_id = v_uid;
+  get diagnostics v_n = row_count;
+  return jsonb_build_object('ok', true, 'deleted', v_n);
+end;
+$$;
+REVOKE ALL ON FUNCTION public.ai_chat_delete_all() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.ai_chat_delete_all() TO authenticated;

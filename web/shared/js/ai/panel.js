@@ -19,7 +19,7 @@ import { openDialog, closeDialog } from "../core/modal-sheet.js";
 import { linkTo } from "../core/nav-map.js";
 import { activeKey, keyStatus } from "./keys.js";
 import { startConversation, sendMessage, continueReply, displayItems, awaitingReply } from "./chat.js";
-import { getChat, saveChat, listChats, deleteChat, chatTitle } from "./history.js";
+import { getChat, saveChat, listChats, deleteChat, deleteAllChats, chatTitle } from "./history.js";
 import { PROVIDERS } from "./providers.js";
 import { browserToolEnv } from "./env-browser.js";
 import { pointHere, queuePoint, runQueuedPoint, clearPointer } from "./pointer.js";
@@ -117,7 +117,11 @@ export async function mountAiPanel({ pageId }) {
   chats.hidden = true;
   const chatsHead = el("div", "ai-chats-head");
   const btnBackToChat = textButton("arrow-left", t("aiChat.backToChat"));
-  chatsHead.append(el("div", "field-label", { text: t("aiChat.historyTitle") }), btnBackToChat);
+  const btnDeleteAll = textButton("trash", t("aiChat.deleteAll"), "ai-btn-delete-all");
+  btnDeleteAll.hidden = true;
+  const chatsHeadActions = el("div", "ai-chats-head-actions");
+  chatsHeadActions.append(btnDeleteAll, btnBackToChat);
+  chatsHead.append(el("div", "field-label", { text: t("aiChat.historyTitle") }), chatsHeadActions);
   const chatsList = el("div", "ai-chats-list");
   chats.append(chatsHead, chatsList);
   const log = el("div", "ai-log sheet-scroll", { role: "log", "aria-live": "polite" });
@@ -425,6 +429,7 @@ export async function mountAiPanel({ pageId }) {
     chatsList.textContent = "";
     let list = [];
     try { list = await listChats(); } catch { /* bez listy */ }
+    btnDeleteAll.hidden = !list.length;
     if (!list.length) { chatsList.append(el("div", "hint", { text: t("aiChat.historyEmpty") })); return; }
     const date = new Intl.DateTimeFormat(lang, { dateStyle: "medium", timeStyle: "short" });
     for (const c of list) {
@@ -440,10 +445,20 @@ export async function mountAiPanel({ pageId }) {
         await loadConversation();
       });
       del.addEventListener("click", async () => {
+        const ok = await confirmModal({
+          title: t("aiChat.deleteChatTitle"),
+          text: t("aiChat.deleteChatText", { title: c.title || t("aiChat.untitled") }),
+          okText: t("aiChat.deleteOk"),
+          cancelText: t("aiChat.confirm.cancel"),
+        });
+        if (!ok) return;
         await deleteChat(c.id).catch(() => {});
         if (chatId === c.id) { chatId = null; writeState({ chatId }); await loadConversation(); }
         row.remove();
-        if (!chatsList.childElementCount) chatsList.append(el("div", "hint", { text: t("aiChat.historyEmpty") }));
+        if (!chatsList.childElementCount) {
+          btnDeleteAll.hidden = true;
+          chatsList.append(el("div", "hint", { text: t("aiChat.historyEmpty") }));
+        }
       });
       row.append(open, del);
       chatsList.append(row);
@@ -453,6 +468,19 @@ export async function mountAiPanel({ pageId }) {
   toggle.addEventListener("click", () => setOpen(overlay.hidden));
   btnClose.addEventListener("click", () => setOpen(false));
   btnHistory.addEventListener("click", () => { void showChats(); });
+  btnDeleteAll.addEventListener("click", async () => {
+    const ok = await confirmModal({
+      title: t("aiChat.deleteAllTitle"),
+      text: t("aiChat.deleteAllText", { count: chatsList.querySelectorAll(".ai-chat-row").length }),
+      okText: t("aiChat.deleteAllOk"),
+      cancelText: t("aiChat.confirm.cancel"),
+    });
+    if (!ok) return;
+    await deleteAllChats().catch(() => {});
+    if (chatId) { chatId = null; writeState({ chatId }); await loadConversation(); }
+    btnDeleteAll.hidden = true;
+    chatsList.replaceChildren(el("div", "hint", { text: t("aiChat.historyEmpty") }));
+  });
   btnBackToChat.addEventListener("click", () => setChatsView(false));
   btnNew.addEventListener("click", async () => {
     if (busy) return;
