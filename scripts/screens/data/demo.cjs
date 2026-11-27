@@ -326,6 +326,8 @@ function buildDb(lang, extras = {}) {
     get_my_email_notifications: true, set_my_email_notifications: null, cooldown_get: [],
     push_subscription_get: { subscribed: false, kinds: [] }, push_subscribe: { ok: true }, push_unsubscribe: { ok: true },
     get_app_rating_stats: { avg_stars: 4.8, total_count: 126 },
+    app_rating_prompt_log: true,
+    ai_quota_status: { ok: false }, ai_vault_get: { vault: null },
     friend_invites_from_subscriptions: { ok: true },
     control_game_settings_status: { ok: true, in_progress: false },
     game_validate: `fn:(args, db) => { const g = db.tables.games.find((x) => x.id === args.p_game_id); const s = g?.rules_state || {}; return { ok: !!g, game: g ? { id: g.id, type: g.type, status: g.status, rev: 1 } : null, ...s }; }`,

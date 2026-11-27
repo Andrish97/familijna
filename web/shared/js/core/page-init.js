@@ -68,16 +68,16 @@ async function loadDeps() {
 }
 
 // Jednorazowe komunikaty konta (informacja dla gościa, potem prośba o ocenę
-// -- dla kont i gości), wspólne dla stron z kontem. Ładowane leniwie;
-// w testach podmieniane w deps.
-async function showAccountNotices(user) {
+// -- dla kont i gości, tylko na spokojnych stronach: RATING_PROMPT_PAGES),
+// wspólne dla stron z kontem. Ładowane leniwie; w testach podmieniane w deps.
+async function showAccountNotices(user, page) {
   if (!user) return;
   if (isGuestUser(user)) {
     const { maybeShowGuestInfoModal } = await import("./guest-info-modal.js");
     await maybeShowGuestInfoModal(user);
   }
   const { initRatingSystem } = await import("./rating-system.js");
-  await initRatingSystem(user);
+  await initRatingSystem(user, { page });
 }
 
 function elementOf(ref, defaultId) {
@@ -335,7 +335,7 @@ async function initializePage(id, opts, finishLayout) {
   // Games library. Await the same blocking modal flow everywhere so users
   // don't miss a one-time notice while the page continues initializing.
   if (!new Set(["login", "privacy", "mailCenter", "connectDevice"]).has(id)) {
-    await d.showAccountNotices(user);
+    await d.showAccountNotices(user, id);
   }
 
   return user;

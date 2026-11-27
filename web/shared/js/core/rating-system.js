@@ -14,7 +14,22 @@ const LEGACY_SUPPRESSED_KEY = "fam:app_rating_suppressed";
 // znowu po 3 dniach (decyzja użytkownika 2026-11-08).
 export const RATING_FIRST_AFTER_DAYS = 2;
 export const RATING_REMIND_AFTER_DAYS = 3;
+// Prośba tylko na spokojnych stronach (listy i Konto) -- nigdy w edytorach,
+// Control, ankiecie w toku ani przy głosowaniu (decyzja użytkownika 2026-11-27).
+export const RATING_PROMPT_PAGES = new Set(["games", "bases", "logoEditor", "account", "marketplace", "tasks"]);
 let activePrompt = null;
+
+// Pokazanie i wybór trafiają do bazy (lejek w panelu admina, migracja 546).
+// Błąd zapisu nie zatrzymuje okna.
+function logPrompt(outcome, page) {
+  try {
+    void Promise.resolve(sb().rpc("app_rating_prompt_log", { p_outcome: outcome, p_page: page }))
+      .then((res) => { if (res?.error) console.warn("[rating] log failed", res.error); })
+      .catch((error) => console.warn("[rating] log failed", error));
+  } catch (error) {
+    console.warn("[rating] log failed", error);
+  }
+}
 
 function readStorage(key) {
     try { return localStorage.getItem(key); } catch { return null; }
@@ -24,14 +39,14 @@ function writeStorage(key, value) {
     try { localStorage.setItem(key, value); } catch { /* Storage can be disabled. */ }
 }
 
-export async function initRatingSystem(user) {
-    if (!user?.id) return;
+export async function initRatingSystem(user, { page } = {}) {
+    if (!user?.id || !RATING_PROMPT_PAGES.has(page)) return;
     if (activePrompt) return activePrompt;
-    activePrompt = showRatingIfEligible(user).finally(() => { activePrompt = null; });
+    activePrompt = showRatingIfEligible(user, page).finally(() => { activePrompt = null; });
     return activePrompt;
 }
 
-async function showRatingIfEligible(user) {
+async function showRatingIfEligible(user, page) {
     const ratedKey = `${RATING_LS_PREFIX}${user.id}`;
     const dismissedKey = `${RATING_DISMISSED_PREFIX}${user.id}`;
     const suppressedKey = `${RATING_SUPPRESSED_PREFIX}${user.id}`;
@@ -79,13 +94,14 @@ async function showRatingIfEligible(user) {
     }
 
     // Pokaż modal
-    await showRatingModal(user.id, { ratedKey, dismissedKey, suppressedKey });
+    await showRatingModal(user.id, page, { ratedKey, dismissedKey, suppressedKey });
 }
 
 // Prośba o ocenę: wspólne choiceModal (modal.js) z trzema przyciskami.
 // X / Esc / klik w tło działa jak „Później” (wróci po RATING_REMIND_AFTER_DAYS).
-async function showRatingModal(userId, storageKeys) {
+async function showRatingModal(userId, page, storageKeys) {
   const { body, stars, commentEl, selected } = ratingBody();
+  logPrompt("shown", page);
   const result = await choiceModal({
     title: t("common.rating.modal.title"),
     text: t("common.rating.modal.sub"),
@@ -111,6 +127,7 @@ async function showRatingModal(userId, storageKeys) {
       }
     },
   });
+  logPrompt(result === "send" ? "sent" : result === "never" ? "never" : result === "later" ? "later" : "closed", page);
   if (result === "send") {
     writeStorage(storageKeys.ratedKey, "true");
     await alertModal({ title: t("common.rating.modal.thanksTitle"), text: t("common.rating.modal.thanksSub"), okText: t("common.done") });

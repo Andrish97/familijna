@@ -417,7 +417,7 @@ module.exports = [
       const m = await import("/shared/js/core/rating-system.js");
       // okno pokazuje się po 7 dniach od rejestracji i bez wcześniejszej odmowy
       try { for (const k of Object.keys(localStorage)) if (k.startsWith("fam:app_rat")) localStorage.removeItem(k); } catch {}
-      void m.initRatingSystem({ id: "screens-user", created_at: "2026-01-01T00:00:00Z" });
+      void m.initRatingSystem({ id: "screens-user", created_at: "2026-01-01T00:00:00Z" }, { page: "games" });
     });
     await view.locator("#ratingOverlay").waitFor({ state: "visible", timeout: 5000 });
     await view.locator('#ratingOverlay .star-btn[data-value="4"]').click();
