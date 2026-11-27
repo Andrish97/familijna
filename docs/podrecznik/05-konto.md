@@ -283,6 +283,7 @@ narzędzia sięga asystent (np. „Lista gier”, „Szukanie we Wskazówkach”
   [Wróć do rozmowy] zamyka listę.
 - [Nowa rozmowa] zaczyna od zera; poprzednia zostaje na liście.
 - Okno zostaje otwarte, gdy przechodzisz na inną stronę, razem z rozmową.
+- Ikona kosza przy rozmowie na liście usuwa ją od razu, bez potwierdzenia.
 - Rozmowy są zapisane na koncie; te nieużywane przez 30 dni znikają.
 
 ![Lista zapisanych rozmów](zrzut:ai-chat-history)
