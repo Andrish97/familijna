@@ -30,7 +30,7 @@ const fromHistory = (history = []) => ({
 });
 
 test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ page, context, accounts, loginAs }) => {
-  test.setTimeout(CASES.length * 70_000 + 60_000);
+  test.setTimeout(CASES.length * 80_000 + 60_000);
   await serveBranchCode(context, { pages: ["games"] });
   await loginAs(page, context, accounts.standard[0]);
   await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
@@ -42,7 +42,11 @@ test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ 
 
   let hits = 0;
   const ids = [];
+  let last = 0;
   for (const [prompt, expected] of CASES) {
+    // limit asystenta: 6 wiadomości na minutę (decyzja 30) — co najmniej 11 s odstępu
+    await page.waitForTimeout(Math.max(0, last + 11_000 - Date.now()));
+    last = Date.now();
     await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
     if (!(await page.locator("#btnAiChat").isVisible({ timeout: 15000 }).catch(() => false))) {
       await page.locator("#btnAiChat").waitFor({ state: "visible", timeout: 15000 }).catch(async () => {
