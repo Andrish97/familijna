@@ -328,6 +328,16 @@
   .topbar .btn,
   .topbar .who,
   .topbar .dotRow { height: var(--topbar-ctl-h); }
+  /* Przyciski-ikony paska są kwadratowe (decyzja użytkownika 2026-11-27):
+     czat, Wskazówki, instalacja, ☰, wygląd i język (w pasku; w menu ☰ mają podpis). */
+  .topbar :is(#btnAiChat, #btnManual, #btnInstall, .topbar-menu-toggle, .theme-btn, .lang-btn) {
+    width: var(--topbar-ctl-h);
+    min-width: var(--topbar-ctl-h);
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+  }
+  .topbar :is(#btnAiChat, #btnManual, #btnInstall, .topbar-menu-toggle, .theme-btn, .lang-btn)[hidden] { display: none; }
   /* <a class="btn"> nie centruje zawartości w pionie sam z siebie i dziedziczy
      czcionkę strony (16px) — w topbarze ma wyglądać jak <button class="btn">
      (domyślna czcionka przycisku przeglądarki, 13.333px). */
@@ -1086,8 +1096,9 @@
       font-size: 0;
       line-height: 0;
       gap: 0;
-      min-width: 40px;
-      padding-inline: 10px;
+      width: var(--topbar-ctl-h);
+      min-width: var(--topbar-ctl-h);
+      padding-inline: 0;
       align-items: center;
       justify-content: center;
     }
@@ -1586,7 +1597,6 @@
 
   :where(:root[data-compact]) .topbar-menu-toggle {
     position: relative;
-    padding: 10px 12px;
     border-radius: var(--r-md);
   }
   /* Otwarty panel pokazuje liczniki przy przyciskach — suma na ✕ znika. */
@@ -1643,7 +1653,7 @@
   }
   :where(:root[data-compact]) .topbar-mobile-hidden { display: none; }
 
-  :where(:root:not([data-compact])) .topbar-mobile-forced .topbar-menu-toggle { position: relative; padding: 10px 12px; border-radius: var(--r-md); }
+  :where(:root:not([data-compact])) .topbar-mobile-forced .topbar-menu-toggle { position: relative; border-radius: var(--r-md); }
   :where(:root:not([data-compact])) .topbar-mobile-forced .topbar-menu-toggle .badge {
     position: absolute; top: -6px; right: -6px; margin-left: 0; transform: translate(0, 0); pointer-events: none;
   }
