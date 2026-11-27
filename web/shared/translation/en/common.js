@@ -350,6 +350,8 @@ const en = {
       doneMessage: "Done. What's next?",
       ok: "Got it",
       back: "Back to chat",
+      computerOnly: "This place is available on a computer only.",
+      notNow: "This button isn't here right now — it appears only at the right moment.",
       missing: "I can’t see this place on the page — something may need to be selected or scrolled first.",
     },
     tools: {

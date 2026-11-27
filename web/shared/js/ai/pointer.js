@@ -6,6 +6,7 @@
 import { t } from "../../translation/translation.js";
 import { iconText } from "../core/icons.js";
 import { POINT_TARGETS, SELECT_TILE } from "./tools/targets.js";
+import { isCompactLayout } from "../core/device-attrs.js";
 
 const STORE = "familijna:ai-point";
 // Kafel w innej karcie strony — kolejno próbowane karty przy zaznaczaniu.
@@ -31,7 +32,8 @@ async function waitFor(sel, ms = 6000) {
 // przycisku karty/sekcji działa też wtedy, gdy szuflada jest zamknięta.
 function clickIfThere(sel) {
   const all = [...document.querySelectorAll(sel)];
-  const el = all.find(visible) || all[0];
+  // ukryty przycisk paska (np. „Więcej” na telefonie) — pozycje są w menu ☰
+  const el = all.find(visible) || all.find((e) => !e.closest(".topbar"));
   if (el && !el.disabled) el.click();
   return !!el;
 }
@@ -89,7 +91,16 @@ function place(ring, note, el) {
   }
 }
 
-function show(el, text, { onBack, onNext }) {
+// Element w zamkniętym menu ☰ (telefon) — otwórz menu, potem szukaj jeszcze raz.
+async function revealInMobileMenu(sel) {
+  const inMenu = [...document.querySelectorAll(sel)].some((e) => e.closest(".topbar-mobile-overlay"));
+  const overlay = document.querySelector(".topbar-mobile-overlay");
+  if (!inMenu || !overlay || overlay.classList.contains("is-open")) return null;
+  document.querySelector(".topbar-menu-toggle")?.click();
+  return waitFor(sel, 2000);
+}
+
+function show(el, text, { onBack, onNext, reason = "" }) {
   clearPointer();
   const ring = document.createElement("div");
   ring.className = "ai-pointer";
@@ -103,7 +114,7 @@ function show(el, text, { onBack, onNext }) {
   if (!el) {
     const miss = document.createElement("p");
     miss.className = "hint";
-    miss.textContent = t("aiChat.pointer.missing");
+    miss.textContent = t(reason === "computer_only" ? "aiChat.pointer.computerOnly" : reason === "not_available_now" ? "aiChat.pointer.notNow" : "aiChat.pointer.missing");
     note.append(miss);
   }
   const actions = document.createElement("div");
@@ -137,13 +148,22 @@ function show(el, text, { onBack, onNext }) {
 export async function pointHere(pageId, { place: key, id, text }, { onBack, onNext } = {}) {
   const target = POINT_TARGETS[pageId]?.[key];
   if (!target) return { error: "unknown_place" };
+  // telefon: strona/funkcja tylko na komputerze — bez szukania, od razu wyjaśnienie
+  if (target.computerOnly && isCompactLayout()) {
+    show(null, text, { onBack, onNext, reason: "computer_only" });
+    return { ok: true, shown: false, note: "computer_only" };
+  }
   const clicks = pageId !== "control";
   let selected = true;
   if (clicks && target.select && id) selected = await selectTile(pageId, target.select, id);
+  if (clicks && isCompactLayout()) for (const sel of target.phoneBefore || []) { clickIfThere(sel); await sleep(300); }
   if (clicks) for (const sel of target.before || []) { clickIfThere(sel); await sleep(250); }
-  const el = await waitFor(target.sel);
-  show(el, text, { onBack, onNext });
-  return { ok: true, shown: !!el, ...(selected ? {} : { note: "item_not_found_on_page" }) };
+  let el = await waitFor(target.sel, target.sometimes ? 2500 : 6000);
+  if (!el && clicks) el = await revealInMobileMenu(target.sel);
+  const reason = !el && target.sometimes ? "not_available_now" : "";
+  show(el, text, { onBack, onNext, reason });
+  const note = !selected ? "item_not_found_on_page" : reason || undefined;
+  return { ok: true, shown: !!el, ...(note ? { note } : {}) };
 }
 
 export function queuePoint(point) {

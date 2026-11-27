@@ -5,7 +5,12 @@
 //   sel     — selektor elementu do podświetlenia;
 //   select  — zaznacz najpierw kafel z id (game | logo | base) — tylko widok;
 //   before  — kliknięcia odsłaniające (karta, sekcja, menu „Więcej”) — tylko widok;
-//   about   — opis dla modelu (po angielsku).
+//   about   — opis dla modelu (po angielsku);
+//   phoneBefore — kliknięcia odsłaniające tylko w układzie telefonu (szuflada);
+//   computerOnly — miejsce niedostępne na telefonie (strona albo funkcja tylko na komputerze);
+//   sometimes — element pokazuje się tylko w pewnym stanie (opis warunku w about).
+// Elementy z menu ☰ (telefon) pointer.js odsłania sam. Audyt wszystkich miejsc:
+// scripts/screens/audit-pointer.mjs (telefon i komputer).
 // Zasada: before i select niczego nie zapisują i nie wysyłają. W Control
 // (decyzja 7) bez kliknięć — tylko podświetlenie.
 
@@ -18,7 +23,7 @@ export const POINT_TARGETS = {
     tab_prepared: { sel: "#tabPrepared", about: "Tab: prepared games (points by hand)" },
     tab_market: { sel: "#tabMarket", about: "Tab: games from the Market library" },
     new_game: { sel: ".addCard:not(.addCard--static)", about: "Tile that creates a new game in the current tab" },
-    play: { sel: "#btnPlay", select: "game", about: "Play the selected game (opens Control)" },
+    play: { sel: "#btnPlay", select: "game", computerOnly: true, about: "Play the selected game (opens Control — on a computer only)" },
     settings: { sel: "#btnSettings", select: "game", about: "Settings of the selected game" },
     edit: { sel: "#btnEdit", select: "game", about: "Editor of the selected game" },
     preview: { sel: "#btnPreview", select: "game", about: "Preview of the selected game" },
@@ -30,11 +35,11 @@ export const POINT_TARGETS = {
     export_to_base: { sel: "#btnExportBase", select: "game", about: "Copy the selected game's questions to a question base" },
     send_copy: { sel: "#btnSendCopy", select: "game", about: "Send a copy of the selected game to friends" },
     connect_device: { sel: "#btnConnectDevice", before: MORE, about: "Connect a device (display, host tablet, buzzer) with a code" },
-    install: { sel: "#btnInstall", about: "Install Familijna on the device (shown when the browser allows it)" },
+    install: { sel: "#btnInstall", sometimes: true, about: "Install Familijna on the device (shown only when the browser allows installing and the app is not installed yet)" },
     language: { sel: ".lang-btn", about: "Language of the service (flag button in the top bar)" },
     appearance: { sel: ".theme-btn", about: "Appearance: automatic, light or dark" },
     coffee: { sel: ".btn-support-footer", about: "Buy a coffee (voluntary support, in the footer next to Contact; payment on buycoffee.to)" },
-    menu_more: { sel: "#btnMore", about: "Menu “More”: logos, bases, friends, subscribers, tasks, Market, connect a device" },
+    menu_more: { sel: "#btnMore, .topbar-menu-toggle", about: "Menu “More” (on a phone the ☰ menu): logos, bases, friends, subscribers, tasks, Market, connect a device" },
   },
   editor: {
     import_txt: { sel: "#btnImportTxt", about: "Import questions from a text file into the game" },
@@ -49,7 +54,7 @@ export const POINT_TARGETS = {
     round_questions: { sel: "#gsContentInner", before: ['[data-cat="rounds"]'], about: "Section Questions — Rounds: choose and order round questions" },
     game: { sel: "#gsContentInner", before: ['[data-cat="game"]'], about: "Section Game settings: final threshold and target, end screen, prizes, round multipliers" },
     save: { sel: "#btnSaveAll", about: "Save settings" },
-    play: { sel: "#btnPlay", about: "Play the game" },
+    play: { sel: "#btnPlay", sometimes: true, computerOnly: true, about: "Play the game (shown when the game is ready to play; Control works on a computer only)" },
   },
   polls: {
     share: { sel: "#secShare", before: ["#tabShare"], about: "Poll link and QR code to share" },
@@ -57,29 +62,29 @@ export const POINT_TARGETS = {
     qr: { sel: "#qr", before: ["#tabShare"], about: "QR code of the poll (click to enlarge)" },
     recipients: { sel: "#btnAddRecipients", before: ["#tabRecipients"], about: "Add recipients (friends, subscribers)" },
     results: { sel: "#secResults", before: ["#tabResults"], about: "Poll results" },
-    open: { sel: "#btnOpenPoll", about: "Start the poll" },
-    stop: { sel: "#btnStopPoll", about: "Stop the poll" },
-    tally: { sel: "#btnTallyPoll", about: "Tally the poll" },
+    open: { sel: "#btnOpenPoll", sometimes: true, about: "Start the poll (shown only for a poll that has not started yet)" },
+    stop: { sel: "#btnStopPoll", sometimes: true, about: "Stop the poll (shown only while the poll is open)" },
+    tally: { sel: "#btnTallyPoll", sometimes: true, about: "Tally the poll (shown only after the poll is stopped)" },
   },
   logoEditor: {
     tab_text: { sel: "#tabLogoText", about: "Tab: text logos" },
     tab_draw: { sel: "#tabLogoDraw", about: "Tab: drawn logos" },
     tab_image: { sel: "#tabLogoImage", about: "Tab: logos from an image (upload a picture)" },
-    new_logo: { sel: ".addCard", about: "Tile that creates a new logo in the current tab" },
-    new_image_logo: { sel: ".addCard", before: ["#tabLogoImage"], about: "Create a logo from an image file (upload)" },
-    edit: { sel: "#btnEdit", select: "logo", about: "Edit the selected logo" },
+    new_logo: { sel: ".addCard", computerOnly: true, about: "Tile that creates a new logo in the current tab (logo editors work on a computer only)" },
+    new_image_logo: { sel: ".addCard", before: ["#tabLogoImage"], computerOnly: true, about: "Create a logo from an image file (upload; on a computer only)" },
+    edit: { sel: "#btnEdit", select: "logo", computerOnly: true, about: "Edit the selected logo (on a computer only)" },
     preview: { sel: "#btnPreview", select: "logo", about: "Preview the selected logo" },
     export_file: { sel: "#btnExport", select: "logo", about: "Export the selected logo to a file" },
     import_file: { sel: "#btnImport", about: "Import a logo from a file" },
     send_copy: { sel: "#btnSendCopy", select: "logo", about: "Send a copy of the selected logo to friends" },
   },
   logoDraw: {
-    toolbar: { sel: "#editorToolbar", about: "Drawing tools: brush, eraser, shapes, text, undo" },
-    canvas: { sel: "#drawStageHost", about: "Drawing area" },
+    toolbar: { sel: "#editorToolbar", computerOnly: true, about: "Drawing tools: brush, eraser, shapes, text, undo" },
+    canvas: { sel: "#drawStageHost", computerOnly: true, about: "Drawing area" },
   },
   logoImage: {
-    pick: { sel: "#btnPickImage", about: "Choose an image file" },
-    adjust: { sel: "#imgPanels", about: "Brightness, contrast, crop of the image" },
+    pick: { sel: "#btnPickImage", computerOnly: true, about: "Choose an image file" },
+    adjust: { sel: "#imgPanels", computerOnly: true, about: "Brightness, contrast, crop of the image" },
   },
   bases: {
     tab_mine: { sel: "#tabBasesMine", about: "Tab: my bases" },
@@ -92,20 +97,20 @@ export const POINT_TARGETS = {
     import_file: { sel: "#btnImport", about: "Import a base from a file" },
   },
   baseExplorer: {
-    tree: { sel: "#tree", about: "Folders of the base" },
-    tags: { sel: "#tags", about: "Tags" },
+    tree: { sel: "#tree", phoneBefore: ["#btnDrawerToggle"], about: "Folders of the base" },
+    tags: { sel: "#tags", phoneBefore: ["#btnDrawerToggle"], before: ['[data-left-view="tags"]'], about: "Tags" },
     list: { sel: "#list", about: "Questions and folders in the current folder" },
     toolbar: { sel: "#toolbar", about: "Actions: new question/folder, move, delete, tags, create a game" },
   },
   friends: {
     invite: { sel: "#btnInvite", before: ["#contactsTabInvite"], about: "Invite a friend" },
-    received: { sel: "#contactsTabReceived", about: "Invitations received" },
+    received: { sel: "#contactsTabReceived, #contactsReceived", about: "Invitations received" },
   },
   subscribers: {
     invite: { sel: "#btnInvite", before: ["#contactsTabInvite"], about: "Add a subscriber (e-mail)" },
   },
   marketplace: {
-    search: { sel: "#btnSearchFocus", about: "Search the Market" },
+    search: { sel: "#btnSearchFocus, #searchInput", about: "Search the Market" },
     my_sent: { sel: "#btnMySent", about: "My submissions to the Market" },
     submit: { sel: "#btnSubmitNew", before: ["#btnMySent"], about: "Submit one of my games to the Market" },
   },
@@ -124,15 +129,15 @@ export const POINT_TARGETS = {
     password: { sel: "#passwordSection", about: "Change password" },
   },
   control: {
-    device_display: { sel: '[data-device="display"]', about: "Display: code, open, share" },
-    device_host: { sel: '[data-device="host"]', about: "Host tablet: code, QR, share" },
-    device_buzzer: { sel: '[data-device="buzzer"]', about: "Buzzer phone: code, QR, share" },
-    device_status: { sel: "#dotDisplayRow", about: "Connection status of devices (top bar)" },
-    mute: { sel: "#btnMute", about: "Mute sounds" },
-    no_host_tablet: { sel: '[data-device="host"] .device-row-opt', about: "Option: play without the host tablet" },
-    physical_buzzer: { sel: '[data-device="buzzer"] .device-row-opt', about: "Option: physical buzzers instead of the phone" },
-    test_mode: { sel: ".control-test-choice", about: "Test mode: all screens in one window for a rehearsal" },
-    start_over: { sel: "#btnStartOver", about: "Start the game over" },
+    device_display: { computerOnly: true, sometimes: true, sel: '[data-device="display"]', about: "Display: code, open, share (devices step before the game starts)" },
+    device_host: { computerOnly: true, sometimes: true, sel: '[data-device="host"]', about: "Host tablet: code, QR, share (devices step before the game starts)" },
+    device_buzzer: { computerOnly: true, sometimes: true, sel: '[data-device="buzzer"]', about: "Buzzer phone: code, QR, share (devices step before the game starts)" },
+    device_status: { computerOnly: true, sel: "#dotDisplayRow", about: "Connection status of devices (top bar)" },
+    mute: { computerOnly: true, sel: "#btnMute", about: "Mute sounds" },
+    no_host_tablet: { computerOnly: true, sometimes: true, sel: '[data-device="host"] .device-row-opt', about: "Option: play without the host tablet (devices step)" },
+    physical_buzzer: { computerOnly: true, sometimes: true, sel: '[data-device="buzzer"] .device-row-opt', about: "Option: physical buzzers instead of the phone (devices step)" },
+    test_mode: { computerOnly: true, sometimes: true, sel: ".control-test-choice", about: "Test mode: all screens in one window for a rehearsal (devices step)" },
+    start_over: { computerOnly: true, sel: "#btnStartOver", about: "Start the game over" },
   },
 };
 

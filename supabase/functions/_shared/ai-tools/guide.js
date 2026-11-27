@@ -15,12 +15,12 @@ export default [
     run({ page }) {
       const places = POINT_TARGETS[page];
       if (!places) return { error: "unknown_page" };
-      return { page, needs_id: NEEDS_ID.has(page), places: Object.entries(places).map(([key, p]) => ({ key, about: p.about, needs_selected_item: p.select || undefined })) };
+      return { page, needs_id: NEEDS_ID.has(page), places: Object.entries(places).map(([key, p]) => ({ key, about: p.about, needs_selected_item: p.select || undefined, computer_only: p.computerOnly || undefined, only_sometimes: p.sometimes || undefined })) };
     },
   },
   {
     name: "show_on_page",
-    description: "Show the user where to do something: go to the page (if needed), open the right tab or section, highlight the element and put your short explanation next to it. Use it when you cannot do the thing yourself (uploading a file, drawing by hand, sounds from files, connecting a device, anything during a game in Control) or when the user asks where something is. Place keys: list_page_places. For places on a selected game/logo/base and for pages of one item, give its id. During a game (Control) only places on Control can be shown.",
+    description: "Show the user where to do something: go to the page (if needed), open the right tab or section, highlight the element and put your short explanation next to it. Use it when you cannot do the thing yourself (uploading a file, drawing by hand, sounds from files, connecting a device, anything during a game in Control) or when the user asks where something is. Place keys: list_page_places. For places on a selected game/logo/base and for pages of one item, give its id. During a game (Control) only places on Control can be shown. Result shown=false with note: computer_only — tell the user it works on a computer; not_available_now — the element appears only in some state (see its description); explain what has to happen first.",
     inputSchema: {
       type: "object",
       properties: {

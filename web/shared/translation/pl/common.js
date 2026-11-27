@@ -345,6 +345,8 @@ const pl = {
       doneMessage: "Zrobione. Co dalej?",
       ok: "Rozumiem",
       back: "Wróć do czatu",
+      computerOnly: "To miejsce jest dostępne tylko na komputerze.",
+      notNow: "Tego przycisku teraz tu nie ma — pojawia się dopiero w odpowiednim momencie.",
       missing: "Nie widzę tego miejsca na stronie — może trzeba najpierw coś zaznaczyć albo przewinąć.",
     },
     tools: {
