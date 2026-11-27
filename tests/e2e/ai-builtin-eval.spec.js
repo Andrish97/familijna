@@ -4,6 +4,7 @@
 // więc wynik to procent trafień (próg PASS_RATE), zawsze wypisany w [e2e-diag].
 // Tylko na żądanie (spec_filter). Koszt: ~8 wiadomości z dziennego limitu konta.
 const { test, expect } = require("./helpers/e2e-test");
+const { serveBranchCode } = require("./helpers/branch-code");
 
 test.use({ serviceWorkers: "block", needs: { standard: 1 } });
 
@@ -30,6 +31,7 @@ const fromHistory = (history = []) => ({
 
 test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ page, context, accounts, loginAs }) => {
   test.setTimeout(CASES.length * 70_000 + 60_000);
+  await serveBranchCode(context, { pages: ["games"] });
   await loginAs(page, context, accounts.standard[0]);
   await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
   await page.waitForFunction(() => !!window.__sbClient, null, { timeout: 20000 });
@@ -42,6 +44,11 @@ test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ 
   const ids = [];
   for (const [prompt, expected] of CASES) {
     await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
+    if (!(await page.locator("#btnAiChat").isVisible({ timeout: 15000 }).catch(() => false))) {
+      await page.locator("#btnAiChat").waitFor({ state: "visible", timeout: 15000 }).catch(async () => {
+        console.log(`[e2e-diag] eval brak przycisku czatu: ${await page.evaluate(() => sessionStorage.getItem("familijna:ai-access"))}`);
+      });
+    }
     await page.locator("#btnAiChat").click();
     const chat = page.locator("#aiChatOverlay");
     await expect(chat).toBeVisible();

@@ -55,7 +55,9 @@ export function setSource(source) {
  */
 export async function builtinStatus() {
   const { data, error } = await sb().rpc("ai_quota_status");
-  if (error || !data?.ok) return { visible: false, enabled: false };
+  // failed: błąd połączenia (nie zapamiętujemy); bez ok — odpowiedź serwera „nie”
+  if (error) return { visible: false, enabled: false, failed: true };
+  if (!data?.ok) return { visible: false, enabled: false };
   return data;
 }
 
@@ -66,8 +68,11 @@ export async function aiVisible(userId) {
     const saved = JSON.parse(sessionStorage.getItem(ACCESS) || "null");
     if (saved && saved.user === userId && Date.now() - saved.at < 5 * 60 * 1000) return !!saved.visible;
   } catch { /* bez pamięci */ }
-  const status = await builtinStatus().catch(() => ({ visible: false }));
-  try { sessionStorage.setItem(ACCESS, JSON.stringify({ user: userId, at: Date.now(), visible: !!status.visible })); } catch { /* bez pamięci */ }
+  const status = await builtinStatus().catch(() => ({ visible: false, failed: true }));
+  // chwilowy błąd sieci nie chowa czatu na 5 minut — tylko odpowiedź serwera trafia do pamięci
+  if (!status.failed) {
+    try { sessionStorage.setItem(ACCESS, JSON.stringify({ user: userId, at: Date.now(), visible: !!status.visible })); } catch { /* bez pamięci */ }
+  }
   return !!status.visible;
 }
 const userToken = async () => (await sb().auth.getSession()).data?.session?.access_token || "";
