@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict tj8AO3nq2ZRKtgUkz9cDIjehEGyHr90qc0WKCs3LaLwQ0fcfEp6XLgWHsVectp8
+\restrict CMuiHBOiJXETmrjTu084dvHNmrw2dX0DRwfExYrfh0Tl19rESt3XE1u0WZENxqk
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -6647,6 +6647,34 @@ $$;
 
 
 --
+-- Name: app_rating_prompt_log("text", "text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."app_rating_prompt_log"("p_outcome" "text", "p_page" "text") RETURNS boolean
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $_$
+DECLARE
+  v_uid uuid := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN RETURN false; END IF;
+  IF p_outcome IS NULL OR p_outcome NOT IN ('shown', 'sent', 'later', 'never', 'closed') THEN RETURN false; END IF;
+  IF p_page IS NULL OR p_page !~ '^[A-Za-z]{1,32}$' THEN RETURN false; END IF;
+  IF (SELECT count(*) FROM public.app_rating_prompt_events e
+        WHERE e.user_id = v_uid AND e.created_at > now() - interval '1 day') >= 40 THEN
+    RETURN false;
+  END IF;
+  INSERT INTO public.app_rating_prompt_events (user_id, outcome, page, from_guest, test_account)
+  VALUES (
+    v_uid, p_outcome, p_page,
+    coalesce((SELECT p.is_guest FROM public.profiles p WHERE p.id = v_uid), false),
+    EXISTS (SELECT 1 FROM public.stats_exclusions_effective x WHERE x.user_id = v_uid)
+  );
+  RETURN true;
+END $_$;
+
+
+--
 -- Name: app_ratings_after_unlink(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -12418,6 +12446,36 @@ BEGIN
     'questions', COALESCE(v_result, '[]'::jsonb)
   );
 END;
+$$;
+
+
+--
+-- Name: get_rating_prompt_funnel(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."get_rating_prompt_funnel"() RETURNS "jsonb"
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public', 'pg_temp'
+    AS $$
+  WITH ev AS (
+    SELECT e.* FROM public.app_rating_prompt_events e
+    WHERE NOT e.test_account
+      AND (e.user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective x WHERE x.user_id = e.user_id))
+      AND e.created_at >= now() - interval '30 days'
+  ), win AS (
+    SELECT 'd7' AS k, interval '7 days' AS span UNION ALL SELECT 'd30', interval '30 days'
+  )
+  SELECT coalesce(jsonb_object_agg(w.k, jsonb_build_object(
+    'shown',  (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'shown'),
+    'sent',   (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'sent'),
+    'later',  (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'later'),
+    'never',  (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'never'),
+    'closed', (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'closed'),
+    'users',  (SELECT count(DISTINCT user_id) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'shown'),
+    'guest_shown', (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'shown' AND from_guest),
+    'guest_sent',  (SELECT count(*) FROM ev WHERE ev.created_at >= now() - w.span AND outcome = 'sent' AND from_guest)
+  )), '{}'::jsonb)
+  FROM win w;
 $$;
 
 
@@ -22140,6 +22198,37 @@ CREATE TABLE "public"."app_config" (
 
 
 --
+-- Name: app_rating_prompt_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE "public"."app_rating_prompt_events" (
+    "id" bigint NOT NULL,
+    "user_id" "uuid",
+    "outcome" "text" NOT NULL,
+    "page" "text" NOT NULL,
+    "from_guest" boolean DEFAULT false NOT NULL,
+    "test_account" boolean DEFAULT false NOT NULL,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "app_rating_prompt_events_outcome_check" CHECK (("outcome" = ANY (ARRAY['shown'::"text", 'sent'::"text", 'later'::"text", 'never'::"text", 'closed'::"text"]))),
+    CONSTRAINT "app_rating_prompt_events_page_check" CHECK (("page" ~ '^[A-Za-z]{1,32}$'::"text"))
+);
+
+
+--
+-- Name: app_rating_prompt_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."app_rating_prompt_events" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."app_rating_prompt_events_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
 -- Name: app_ratings; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -24253,6 +24342,14 @@ ALTER TABLE ONLY "public"."app_config"
 
 
 --
+-- Name: app_rating_prompt_events app_rating_prompt_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."app_rating_prompt_events"
+    ADD CONSTRAINT "app_rating_prompt_events_pkey" PRIMARY KEY ("id");
+
+
+--
 -- Name: app_ratings app_ratings_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -25462,6 +25559,20 @@ CREATE INDEX "ai_usage_day_idx" ON "public"."ai_usage" USING "btree" ("day");
 --
 
 CREATE INDEX "ai_usage_events_user_at_idx" ON "public"."ai_usage_events" USING "btree" ("user_id", "at");
+
+
+--
+-- Name: app_rating_prompt_events_created_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "app_rating_prompt_events_created_idx" ON "public"."app_rating_prompt_events" USING "btree" ("created_at");
+
+
+--
+-- Name: app_rating_prompt_events_user_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX "app_rating_prompt_events_user_idx" ON "public"."app_rating_prompt_events" USING "btree" ("user_id", "created_at");
 
 
 --
@@ -27502,6 +27613,14 @@ ALTER TABLE ONLY "public"."answers"
 
 
 --
+-- Name: app_rating_prompt_events app_rating_prompt_events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY "public"."app_rating_prompt_events"
+    ADD CONSTRAINT "app_rating_prompt_events_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE SET NULL;
+
+
+--
 -- Name: app_ratings app_ratings_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -28863,6 +28982,12 @@ CREATE POLICY "app_config_no_access" ON "public"."app_config" USING (false);
 
 
 --
+-- Name: app_rating_prompt_events; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE "public"."app_rating_prompt_events" ENABLE ROW LEVEL SECURITY;
+
+--
 -- Name: app_ratings; Type: ROW SECURITY; Schema: public; Owner: -
 --
 
@@ -30218,5 +30343,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict tj8AO3nq2ZRKtgUkz9cDIjehEGyHr90qc0WKCs3LaLwQ0fcfEp6XLgWHsVectp8
+\unrestrict CMuiHBOiJXETmrjTu084dvHNmrw2dX0DRwfExYrfh0Tl19rESt3XE1u0WZENxqk
 
