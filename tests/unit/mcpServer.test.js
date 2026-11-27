@@ -168,3 +168,23 @@ test("klucz API (decyzja 35): MCP z fam_key_… i X-API-Key, API HTTP z opisem O
   const init = await (await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 1, method: "initialize", params: {} }, { authorization: `Bearer ${KEY}` }), d)).json();
   assert.equal(init.result.serverInfo.name, "familijna");
 });
+
+test("licznik wywołań do statystyk (migracja 545): MCP i API HTTP, błąd licznika nie psuje odpowiedzi", async () => {
+  const KEY = `fam_key_${"c".repeat(64)}`;
+  const recorded = [];
+  const d = deps({
+    tokenUser: async (t) => (t === TOKEN ? { user_id: "u1", token_id: "t1" } : t === KEY ? { user_id: "u1", token_id: "k1" } : null),
+    recordCall: async (x) => { recorded.push(x); },
+  });
+  const H = { authorization: `Bearer ${TOKEN}` };
+  await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_games", arguments: {} } }, H), d);
+  await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 2, method: "tools/list" }, H), d);
+  await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 3, method: "tools/call", params: { name: "open_page", arguments: {} } }, H), d);
+  await handleHttp(post("/mcp/api/call", { name: "list_games", arguments: {} }, { authorization: `Bearer ${KEY}` }), d);
+  assert.deepEqual(recorded, [{ tokenId: "t1", tool: "list_games", ok: true }, { tokenId: "k1", tool: "list_games", ok: true }],
+    "tylko wywołania narzędzi (bez listy i nieznanych), bez argumentów");
+
+  const broken = deps({ recordCall: async () => { throw new Error("baza"); } });
+  const call = await (await handleHttp(post("/mcp", { jsonrpc: "2.0", id: 4, method: "tools/call", params: { name: "list_games", arguments: {} } }, H), broken)).json();
+  assert.equal(call.result.isError, false);
+});

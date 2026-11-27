@@ -167,9 +167,17 @@ export async function handleMessage(msg, session) {
     const result = await callTool(params.name, params.arguments, session.ctx);
     if (result === null) return rpcError(id, ERR.PARAMS, `Unknown tool: ${params.name}`);
     const failed = !!result?.error || result?.ok === false;
+    await session.record?.(params.name, !failed);
     return rpcResult(id, { content: [{ type: "text", text: JSON.stringify(result ?? {}) }], isError: failed });
   }
   return rpcError(id, ERR.METHOD, `Method not found: ${method}`);
+}
+
+// Licznik wywołań do statystyk panelu admina (mcp_usage): liczby i nazwa
+// narzędzia, bez argumentów i wyników. Błąd licznika nie psuje odpowiedzi.
+async function record(deps, user, tool, ok) {
+  if (!deps.recordCall || !user?.token_id) return;
+  try { await deps.recordCall({ tokenId: user.token_id, tool, ok }); } catch { /* bez licznika */ }
 }
 
 async function authUser(request, deps) {
@@ -181,7 +189,8 @@ async function authUser(request, deps) {
  * Obsługa żądania HTTP. deps:
  *   pub (https://api.familijna.app), site (https://www.familijna.app),
  *   anonRpc(fn, args) → data (rola anon), tokenUser(token) → { user_id, token_id } | null,
- *   userCtx({ userId, tokenId }) → ctx narzędzi (klient z JWT użytkownika, maile, Wskazówki…).
+ *   userCtx({ userId, tokenId }) → ctx narzędzi (klient z JWT użytkownika, maile, Wskazówki…),
+ *   recordCall({ tokenId, tool, ok }) — opcjonalny licznik wywołań (statystyki).
  */
 export async function handleHttp(request, deps) {
   const url = new URL(request.url);
@@ -242,6 +251,7 @@ export async function handleHttp(request, deps) {
       try { body = JSON.parse(await request.text()); } catch { return json(400, { error: "invalid_json" }, CORS); }
       const result = await callTool(String(body?.name || ""), body?.arguments, ctx);
       if (result === null) return json(404, { error: "unknown_tool", name: body?.name ?? null }, CORS);
+      await record(deps, apiUser, String(body?.name || ""), !(result?.error || result?.ok === false));
       return json(200, result, CORS);
     }
     return json(405, { error: "method_not_allowed" }, CORS);
@@ -263,7 +273,10 @@ export async function handleHttp(request, deps) {
   const user = await authUser(request, deps);
   if (!user) return unauthorized(Array.isArray(body) ? null : body?.id);
 
-  const session = { ctx: await deps.userCtx({ userId: user.user_id, tokenId: user.token_id }) };
+  const session = {
+    ctx: await deps.userCtx({ userId: user.user_id, tokenId: user.token_id }),
+    record: (tool, ok) => record(deps, user, tool, ok),
+  };
   if (Array.isArray(body)) {
     const out = (await Promise.all(body.map((m) => handleMessage(m, session)))).filter(Boolean);
     return out.length ? json(200, out, CORS) : new Response(null, { status: 202, headers: CORS });

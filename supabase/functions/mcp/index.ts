@@ -43,6 +43,9 @@ Deno.serve((request: Request) => handleHttp(request, {
     const res = await rpc(service, "mcp_token_user", { p_token: token });
     return res?.ok ? res : null;
   },
+  async recordCall({ tokenId, tool, ok }: { tokenId: string; tool: string; ok: boolean }) {
+    await rpc(service, "mcp_usage_record", { p_token_id: tokenId, p_tool: tool, p_ok: ok });
+  },
   async userCtx({ userId, tokenId }: { userId: string; tokenId: string }) {
     const now = Math.floor(Date.now() / 1000);
     const jwt = await signJwt({ sub: userId, role: "authenticated", aud: "authenticated", iat: now, exp: now + 600 });
