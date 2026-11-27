@@ -222,7 +222,8 @@ W *Ustawieniach konta* znajdziesz także:
 ### 5.8.1 Język i wygląd
 
 Na górnym pasku przycisk z flagą zmienia język (polski, angielski, ukraiński), a przycisk
-wyglądu obok niego — kolory serwisu:
+wyglądu obok niego — kolory serwisu. Na telefonie oba są w menu [Menu|hamburger], na górze,
+jako „Wygląd” i „Język”:
 
 - **Automatyczny** — jasny albo ciemny, tak jak ustawienia telefonu lub komputera,
 - **Jasny** albo **Ciemny** — zawsze ten sam, niezależnie od urządzenia.

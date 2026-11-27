@@ -221,7 +221,8 @@ In *Account settings* you will also find:
 ### 5.8.1 Language and appearance
 
 On the top bar, the flag button changes the language (Polish, English, Ukrainian), and the
-appearance button next to it changes the colours of the app:
+appearance button next to it changes the colours of the app. On a phone both are at the top
+of the [Menu|hamburger] menu, as “Appearance” and “Language”:
 
 - **Automatic** — light or dark, following your phone or computer settings,
 - **Light** or **Dark** — always the same, regardless of the device.
