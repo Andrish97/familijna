@@ -1,7 +1,7 @@
 -- Prośba o ocenę systemu (2 dni od rejestracji, „Później” -> 3 dni): oceny
 -- (bez kont wykluczonych) i powracający użytkownicy, którzy mogli ją zobaczyć.
 -- powracajacy_*: konto aktywne w oknie i aktywne też >= 2 dni wcześniej
--- (dolna granica uprawnionych; bez kont testowych i wykluczonych).
+-- (dolna granica uprawnionych, bez kont testowych i wykluczonych).
 WITH r AS (
   SELECT r.user_id, r.created_at, r.from_guest FROM public.app_ratings r
   WHERE r.user_id IS NULL OR NOT EXISTS (SELECT 1 FROM public.stats_exclusions_effective e WHERE e.user_id = r.user_id)
