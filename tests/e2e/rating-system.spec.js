@@ -62,10 +62,25 @@ async function registeredDaysAgo(page, context, days) {
 
 test.describe("system ocen", () => {
   test("modal pojawia się zalogowanemu użytkownikowi bez oceny po 2 dniach", async ({ page, context, accounts, loginAs }) => {
+    // 546: pokazanie i wybór zapisywane w bazie (konto e2e -- poza statystykami).
+    const logged = [];
+    page.on("request", (req) => {
+      if (req.method() === "POST" && req.url().includes("/rest/v1/rpc/app_rating_prompt_log")) logged.push(req.postDataJSON());
+    });
+    const laterSaved = page.waitForResponse((res) => res.url().includes("/rest/v1/rpc/app_rating_prompt_log")
+      && res.request().postDataJSON()?.p_outcome === "later", { timeout: 20000 });
     await loginAs(page, context, accounts.standard[0], { suppressRating: false });
     await registeredDaysAgo(page, context, 2.1);
     await expect(page.locator("#ratingOverlay .rating-modal")).toBeVisible({ timeout: 15000 });
     await expect(page.locator("#ratingOverlay .star-btn")).toHaveCount(5);
+    await page.locator('#ratingOverlay button[data-value="later"]').click();
+    const res = await laterSaved;
+    expect(res.status(), "zapis wyboru").toBe(200);
+    expect(await res.json()).toBe(true);
+    expect(logged).toEqual(expect.arrayContaining([
+      { p_outcome: "shown", p_page: "games" },
+      { p_outcome: "later", p_page: "games" },
+    ]));
   });
 
   test("modal nie pojawia się przed upływem 2 dni od rejestracji", async ({ page, context, accounts, loginAs }) => {
