@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict sHdwpNKDceeW1tXJN8qhVILKncRMPmAJl9OcqZF1Ns30C5uczYzBpIQedp5edwH
+\restrict AhR8Bay0kK45UPtqFkzyVhSjVxJqsaHrf5jvCGIdhVZqPcNILTihiDxyzEdUs1p
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -16193,6 +16193,37 @@ $$;
 
 
 --
+-- Name: mcp_api_key_create("text"); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION "public"."mcp_api_key_create"("p_name" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  v_uid uuid := public._ai_chat_uid();
+  v_name text := btrim(coalesce(p_name, ''));
+  v_token text;
+  v_id uuid;
+begin
+  if v_uid is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
+  if char_length(v_name) = 0 or char_length(v_name) > 60 then return jsonb_build_object('ok', false, 'error', 'invalid_name'); end if;
+  if (select count(*) from public.mcp_tokens where user_id = v_uid and kind = 'api_key' and revoked_at is null) >= 10 then
+    return jsonb_build_object('ok', false, 'error', 'too_many_keys');
+  end if;
+  if (select count(*) from public.mcp_tokens where user_id = v_uid and kind = 'api_key' and created_at > now() - interval '1 hour') >= 10 then
+    return jsonb_build_object('ok', false, 'error', 'rate_limited');
+  end if;
+  v_token := 'fam_key_' || public._mcp_secret();
+  insert into public.mcp_tokens (user_id, client_id, client_name, token_hash, expires_at, kind)
+  values (v_uid, null, v_name, public._mcp_hash(v_token), 'infinity', 'api_key')
+  returning id into v_id;
+  return jsonb_build_object('ok', true, 'id', v_id, 'token', v_token, 'name', v_name);
+end;
+$$;
+
+
+--
 -- Name: mcp_authorize_begin("uuid", "text", "text", "text"); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -16405,7 +16436,9 @@ begin
   if v_uid is null then return jsonb_build_object('ok', false, 'error', 'registered_account_required'); end if;
   return jsonb_build_object('ok', true, 'tokens', coalesce((
     select jsonb_agg(jsonb_build_object('id', t.id, 'client_name', t.client_name, 'created_at', t.created_at,
-                                        'last_used_at', t.last_used_at, 'expires_at', t.expires_at) order by t.created_at desc)
+                                        'last_used_at', t.last_used_at,
+                                        'expires_at', case when t.expires_at = 'infinity' then null else t.expires_at end,
+                                        'kind', t.kind) order by t.created_at desc)
       from public.mcp_tokens t
      where t.user_id = v_uid and t.revoked_at is null and t.expires_at > now()), '[]'::jsonb));
 end;
@@ -22960,7 +22993,9 @@ CREATE TABLE "public"."mcp_tokens" (
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "expires_at" timestamp with time zone NOT NULL,
     "last_used_at" timestamp with time zone,
-    "revoked_at" timestamp with time zone
+    "revoked_at" timestamp with time zone,
+    "kind" "text" DEFAULT 'oauth'::"text" NOT NULL,
+    CONSTRAINT "mcp_tokens_kind_check" CHECK (("kind" = ANY (ARRAY['oauth'::"text", 'api_key'::"text"])))
 );
 
 
@@ -29932,5 +29967,5 @@ ALTER TABLE "public"."user_market_library" ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict sHdwpNKDceeW1tXJN8qhVILKncRMPmAJl9OcqZF1Ns30C5uczYzBpIQedp5edwH
+\unrestrict AhR8Bay0kK45UPtqFkzyVhSjVxJqsaHrf5jvCGIdhVZqPcNILTihiDxyzEdUs1p
 
