@@ -103,3 +103,30 @@ test.describe("system ocen", () => {
     await expect(page.locator("#ratingOverlay .star-btn")).toHaveCount(5);
   });
 });
+
+// Telefon: w stopce samo „Wyślij ocenę”, „Nie pytaj więcej” i „Później”
+// z napisami pod komentarzem (decyzja użytkownika 2026-11-27).
+test.describe("system ocen — telefon", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+
+  test("przyciski z napisami pod komentarzem, wybór zapisany", async ({ page, context, accounts, loginAs }) => {
+    const neverSaved = page.waitForResponse((res) => res.url().includes("/rest/v1/rpc/app_rating_prompt_log")
+      && res.request().postDataJSON()?.p_outcome === "never", { timeout: 20000 });
+    await loginAs(page, context, accounts.standard[0], { suppressRating: false });
+    await registeredDaysAgo(page, context, 2.1);
+    const overlay = page.locator("#ratingOverlay");
+    await expect(overlay.locator(".rating-modal")).toBeVisible({ timeout: 15000 });
+    await expect(overlay.locator(".uni-foot button[data-value]")).toHaveCount(1);
+    await expect(overlay.locator('.uni-foot button[data-value="send"]')).toBeVisible();
+    const never = overlay.locator('.rating-secondary button[data-value="never"]');
+    const later = overlay.locator('.rating-secondary button[data-value="later"]');
+    await expect(never).toBeVisible();
+    await expect(later).toBeVisible();
+    // napis widoczny (nie sama ikona)
+    expect((await never.innerText()).trim().length).toBeGreaterThan(3);
+    expect((await later.innerText()).trim().length).toBeGreaterThan(3);
+    await never.click();
+    expect((await neverSaved).status()).toBe(200);
+    await expect(overlay).toHaveCount(0);
+  });
+});

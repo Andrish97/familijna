@@ -3,6 +3,7 @@ import { sb } from "./supabase.js";
 import { t } from "../../translation/translation.js";
 import { alertModal, choiceModal, confirmModal } from "./modal.js";
 import { icon } from "./icons.js";
+import { isSheetViewport } from "./modal-sheet.js";
 
 
 const RATING_LS_PREFIX = "fam:app_rated:";
@@ -101,6 +102,30 @@ async function showRatingIfEligible(user, page) {
 // X / Esc / klik w tło działa jak „Później” (wróci po RATING_REMIND_AFTER_DAYS).
 async function showRatingModal(userId, page, storageKeys) {
   const { body, stars, commentEl, selected } = ratingBody();
+  // Telefon/tablet: stopka okna od dołu mieści tylko ikony -- „Nie pytaj więcej”
+  // (⊗) wyglądało jak „Zamknij”. Tam w stopce samo „Wyślij ocenę”, a „Później”
+  // i „Nie pytaj więcej” z napisami pod komentarzem (decyzja użytkownika 2026-11-27).
+  const touch = isSheetViewport();
+  const controller = {};
+  const secondary = [
+    { value: "never", text: t("common.rating.modal.never"), icon: "cancel", kind: "danger" },
+    { value: "later", text: t("common.rating.modal.later"), icon: "hourglass" },
+  ];
+  if (touch) {
+    const row = document.createElement("div");
+    row.className = "rating-secondary";
+    for (const b of secondary) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `btn sm${b.kind ? ` ${b.kind}` : ""}`;
+      btn.dataset.value = b.value;
+      btn.innerHTML = `${icon(b.icon)}<span></span>`;
+      btn.querySelector("span").textContent = b.text;
+      btn.addEventListener("click", () => controller.close?.(b.value));
+      row.appendChild(btn);
+    }
+    body.appendChild(row);
+  }
   logPrompt("shown", page);
   const result = await choiceModal({
     title: t("common.rating.modal.title"),
@@ -108,9 +133,9 @@ async function showRatingModal(userId, page, storageKeys) {
     body,
     modalClass: "rating-modal",
     overlayId: "ratingOverlay",
+    controller,
     buttons: [
-      { value: "never", text: t("common.rating.modal.never"), icon: "cancel", kind: "danger" },
-      { value: "later", text: t("common.rating.modal.later"), icon: "hourglass" },
+      ...(touch ? [] : secondary),
       { value: "send", text: t("common.rating.modal.send"), icon: "envelope-out", kind: "gold", disabled: true },
     ],
     onReady: ({ buttons }) => wireStars(stars, selected, () => { buttons.send.disabled = false; }),

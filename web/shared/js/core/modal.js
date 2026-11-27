@@ -336,8 +336,9 @@ export function alertModal({ title, text, okText, body = null, onReady, sheet = 
  *   buttons: {value:any, text:string, icon?:string, kind?:string, disabled?:boolean}[],
  *   onChoice?: (value:any) => any, onReady?: Function, sheet?: object|null, modalClass?: string, overlayId?: string }} opts
  */
-export function choiceModal({ title, text = "", body = null, buttons, onChoice = null, onReady = null, sheet = null, modalClass = "", overlayId = "" } = {}) {
-  return openModal({ title, text, body, buttons, onChoice, onReady, sheet, modalClass, overlayId, showCancel: false });
+// controller: { close(value) } -- zamknięcie z wynikiem z przycisku w treści okna.
+export function choiceModal({ title, text = "", body = null, buttons, onChoice = null, onReady = null, sheet = null, modalClass = "", overlayId = "", controller = null } = {}) {
+  return openModal({ title, text, body, buttons, onChoice, onReady, sheet, modalClass, overlayId, controller, showCancel: false });
 }
 
 /**
