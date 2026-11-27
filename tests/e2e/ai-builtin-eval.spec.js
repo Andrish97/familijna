@@ -70,10 +70,16 @@ test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ 
     await page.waitForTimeout(1500);
     await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => !!window.__sbClient, null, { timeout: 20000 });
-    const saved = await page.evaluate(async () => {
-      const list = (await window.__sbClient.rpc("ai_chat_list", { p_limit: 1 })).data?.chats || [];
-      return list[0] ? (await window.__sbClient.rpc("ai_chat_get", { p_id: list[0].id })).data : null;
-    });
+    // rozmowa tego polecenia (tytuł = początek wiadomości), nie ostatnia na liście
+    let saved = null;
+    await expect.poll(async () => {
+      saved = await page.evaluate(async (title) => {
+        const list = (await window.__sbClient.rpc("ai_chat_list", { p_limit: 20 })).data?.chats || [];
+        const hit = list.find((c) => c.title === title);
+        return hit ? (await window.__sbClient.rpc("ai_chat_get", { p_id: hit.id })).data : null;
+      }, prompt.slice(0, 60));
+      return !!saved;
+    }, { timeout: 15000 }).toBe(true);
     const { tools, answer } = fromHistory(saved?.history);
     const ok = tools.some((x) => expected.includes(x)) && (answer.length > 0 || moved);
     if (ok) hits += 1;
