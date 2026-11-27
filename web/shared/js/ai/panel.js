@@ -98,7 +98,7 @@ export async function mountAiPanel({ pageId }) {
   quotaLine.hidden = true;
   const btnHistory = textButton("folder-open", t("aiChat.history"), "ai-btn-history");
   btnHistory.setAttribute("aria-pressed", "false");
-  const btnNew = textButton("plus", t("aiChat.newChat"));
+  const btnNew = textButton("plus", t("aiChat.newChat"), "ai-btn-new");
   const btnClose = el("button", "btn sm", { type: "button", "aria-label": t("aiChat.close") });
   btnClose.innerHTML = icon("close");
   head.append(title, btnClose);

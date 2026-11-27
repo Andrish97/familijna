@@ -56,10 +56,13 @@ test("asystent Familijnej: ocena wyboru narzędzi (procent trafień)", async ({ 
     await page.locator("#btnAiChat").click();
     const chat = page.locator("#aiChatOverlay");
     await expect(chat).toBeVisible();
+    // każde polecenie w nowej rozmowie (okno przywraca poprzednią)
+    await chat.locator(".ai-btn-new").click();
+    await expect(chat.locator(".ai-msg--assistant")).toHaveCount(0, { timeout: 10000 });
     const start = page.url();
     await chat.locator(".ai-input").fill(prompt);
     await page.keyboard.press("Enter");
-    // koniec tury: odpowiedź w oknie albo przejście na wskazaną stronę
+    // koniec tury: nowa odpowiedź w oknie albo przejście na wskazaną stronę
     await expect.poll(async () => page.url() !== start
       || (await chat.locator(".ai-msg--assistant").count() > 0 && await chat.locator(".ai-input").isEnabled().catch(() => false)),
     { timeout: 90000 }).toBe(true);
