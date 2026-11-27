@@ -265,47 +265,101 @@ Asystent odpowiada na pytania o serwis i wykonuje czynności za Ciebie: tworzy
 i poprawia gry, zmienia ich ustawienia, układa bazy pytań i je udostępnia,
 rysuje logo z opisu, uruchamia i podlicza ankiety, wysyła zaproszenia i kopie
 znajomym, przyjmuje otrzymane kopie. Czego nie zrobi sam (np. wgranie pliku albo
-podłączenie urządzenia), to pokaże: otworzy właściwą stronę i podświetli miejsce
-z krótką instrukcją. Otwiera go przycisk z dymkiem w górnym pasku, obok Wskazówek. Okno
-zostaje otwarte, gdy przechodzisz na inną stronę. Rozmowy są zapisane na koncie;
-te nieużywane przez 30 dni znikają. Konto gościa nie ma asystenta.
+podłączenie urządzenia), to pokaże na stronie. Otwiera go przycisk [Asystent AI|chat]
+w górnym pasku, obok Wskazówek. Konto gościa nie ma asystenta.
 
-Asystent działa od razu: **asystent Familijnej** ma dzienny limit wiadomości
-(licznik „zostało … na dziś” widać w oknie czatu, limit wraca o północy). Jeśli
-chcesz więcej, dodaj własny klucz do usługi sztucznej inteligencji (np. Anthropic,
-OpenAI, Google Gemini) — od tej chwili czat korzysta z niego (w *Ustawieniach konta* zaznaczone jest „Mój klucz”;
-tam też wracasz do asystenta Familijnej). Za użycie płacisz wtedy bezpośrednio
-dostawcy, bez limitu Familijnej. Rozmowy z asystentem Familijnej
-przetwarza Google (Gemini API w planie płatnym).
+![Okno asystenta z przykładowymi poleceniami](zrzut:ai-chat-builtin)
 
-Klucz dodajesz w *Ustawieniach konta*, w sekcji „Asystent AI”:
+### 5.10.1 Rozmowa z asystentem
+
+Napisz, czego potrzebujesz, np. „Przygotuj grę o wakacjach z 10 pytaniami” albo „Jak
+podłączyć telewizor jako wyświetlacz?”. Puste okno podsuwa kilka przykładów —
+wybranie przykładu od razu go wysyła. W trakcie odpowiedzi okno pokazuje, po jakie
+narzędzia sięga asystent (np. „Lista gier”, „Szukanie we Wskazówkach”).
+
+![Rozmowa: asystent odczytuje gry i odpowiada](zrzut:ai-chat-conversation)
+
+- [Rozmowy] pokazuje zapisane rozmowy — wybierz jedną, żeby do niej wrócić;
+  [Wróć do rozmowy] zamyka listę.
+- [Nowa rozmowa] zaczyna od zera; poprzednia zostaje na liście.
+- Okno zostaje otwarte, gdy przechodzisz na inną stronę, razem z rozmową.
+- Rozmowy są zapisane na koncie; te nieużywane przez 30 dni znikają.
+
+![Lista zapisanych rozmów](zrzut:ai-chat-history)
+
+Zanim asystent wyśle coś innym osobom (zaproszenia, ankietę, kopię) albo zrobi coś,
+czego nie da się cofnąć (usunięcie gry, podliczenie ankiety), pyta o zgodę w oknie.
+Podczas rozgrywki w Control niczego nie zmienia — tylko podpowiada, np. jak podłączyć
+urządzenia.
+
+### 5.10.2 Pokaż mi, gdzie to jest
+
+Gdy coś trzeba zrobić samemu (wgrać plik, narysować logo ręką, podłączyć urządzenie),
+asystent przechodzi na właściwą stronę, zamyka okno czatu i podświetla miejsce
+z krótką instrukcją. Przy instrukcji są dwa przyciski:
+
+- [Zrobione — dalej] — asystent sprawdza, co zrobiłeś, i prowadzi do następnego kroku,
+- [Wróć do czatu] — otwiera czat z powrotem.
+
+![Asystent wskazuje ustawienia zaznaczonej gry](zrzut:ai-point-games)
+
+### 5.10.3 Kto odpowiada: asystent Familijnej albo Twój klucz
+
+Asystent działa od razu jako **asystent Familijnej**. Ma limit: 20 wiadomości dziennie
+(i najwyżej 6 na minutę). Pod polem wiadomości widać, ile zostało na dziś; limit wraca
+o północy. Rozmowy z asystentem Familijnej przetwarza Google (Gemini API w planie płatnym,
+bez używania rozmów do ulepszania usług Google).
+
+Chcesz bez limitu albo z innym modelem? Dodaj **własny klucz** do usługi sztucznej
+inteligencji (→ 5.10.4). Za użycie płacisz wtedy bezpośrednio dostawcy. Który asystent
+odpowiada, wybierasz w *Ustawieniach konta*, w sekcji „Asystent AI” („Asystent Familijnej”
+albo „Mój klucz”); dodanie klucza od razu ustawia „Mój klucz”.
+
+> Wskazówka: gdy prosisz asystenta o pracę na grach, bazach czy kontaktach, ich treść trafia do dostawcy, który odpowiada.
+
+### 5.10.4 Własny klucz
+
+Klucze trzymasz w *Ustawieniach konta*, w sekcji „Asystent AI”:
 
 1. Ustal hasło do kluczy i wybierz [Utwórz sejf kluczy]. Klucze szyfruje Twoja
-   przeglądarka tym hasłem — nikt poza Tobą ich nie odczyta. Na każdym urządzeniu
-   podajesz hasło raz.
-2. Wybierz dostawcę, wpisz klucz i wybierz [Dodaj klucz]. Klucz widzisz tylko
-   przy wpisywaniu.
+   przeglądarka tym hasłem — nikt poza Tobą ich nie odczyta, także administrator.
+   Na każdym urządzeniu podajesz hasło raz.
+2. Wybierz [Dodaj klucz]. W oknie wybierz dostawcę (np. Anthropic, OpenAI, Google Gemini,
+   Groq, Mistral, OpenRouter), wpisz nazwę i klucz, wybierz [Dodaj klucz]. Familijna
+   sprawdza klucz u dostawcy, zanim go zapisze. Klucz widzisz tylko przy wpisywaniu.
 
-Możesz dodać kilka kluczy — używany jest zaznaczony. Przy kluczu wybierasz model.
-Jeśli nie masz klucza, sekcja pokazuje krok po kroku, jak założyć darmowy klucz Google Gemini.
+![Okno dodawania klucza](zrzut:account-ai-add)
 
-![Asystent AI w Ustawieniach konta](zrzut:account-ai-keys)
-![Okno asystenta bez klucza](zrzut:ai-chat-no-key)
+Klucze tworzą listę: zaznaczony jest używany. Przy kluczu [Zmień model] wybiera model
+z listy dostawcy (domyślnie zalecany), a [Usuń] usuwa klucz. [Zablokuj klucze] zamyka
+sejf na tym urządzeniu — przy następnym użyciu podasz hasło.
+
+![Lista kluczy](zrzut:account-ai-list)
 
 > Uwaga: zgubionego hasła do kluczy nie da się odzyskać — [Nie pamiętasz hasła?] usuwa sejf, a klucze dodajesz od nowa.
 
-Zanim asystent wyśle coś innym osobom (zaproszenia, ankietę) albo zrobi coś,
-czego nie da się cofnąć (usunięcie gry, podliczenie ankiety), pyta o zgodę w oknie.
-Podczas rozgrywki niczego nie zmienia — tylko podpowiada, np. jak podłączyć urządzenia.
+### 5.10.5 Darmowy klucz
 
-> Wskazówka: gdy prosisz asystenta o pracę na grach, bazach czy kontaktach, ich treść trafia do wybranego dostawcy.
+Nie masz klucza? Okno dodawania podsuwa dwa darmowe sposoby:
 
-### 5.10.1 Łącznik MCP w innych aplikacjach AI
+- **Logowanie przez OpenRouter** — wybierz [Zaloguj przez OpenRouter], zaloguj się na
+  ich stronie (konto Google albo e-mail), a klucz zapisze się w sejfie sam, bez kopiowania.
+  Familijna ustawia darmowy model, który obsługuje narzędzia; inny wybierzesz przez
+  [Zmień model].
+- **Klucz Google Gemini** — w Google AI Studio wybierz „Create API key”, skopiuj klucz
+  i dodaj go z dostawcą „Google Gemini”.
+
+Darmowe modele mają dzienny limit zapytań, a jedna wiadomość do asystenta może zużyć
+kilka zapytań (każde narzędzie to osobny krok). Darmowe plany dostawców mogą
+wykorzystywać treść rozmów do ulepszania swoich usług.
+
+### 5.10.6 Familijna w innych aplikacjach AI
 
 Familijna działa jako łącznik (serwer MCP) w aplikacjach AI, które go obsługują —
 m.in. Claude, ChatGPT, Le Chat (Mistral), Cursor, VS Code. Asystent działa wtedy
 w tamtej aplikacji, na Twoim koncie u niej, z tymi samymi czynnościami.
-Adres łącznika i kroki są w sekcji „Asystent AI” w *Ustawieniach konta*:
+Adres łącznika i kroki są w sekcji „Familijna w innych aplikacjach AI”
+w *Ustawieniach konta*:
 
 1. Skopiuj adres łącznika przyciskiem [Kopiuj].
 2. W aplikacji AI dodaj własny łącznik (serwer MCP) i wklej adres.

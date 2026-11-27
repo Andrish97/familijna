@@ -260,56 +260,107 @@ logos (→ 8.5) and question bases (→ 9.1).
 
 ## 5.10 AI assistant
 
-The assistant answers questions about the service and does things for you: it
-creates and edits games, changes their settings, organises and shares question
-bases, draws logos from a description, starts and tallies polls, sends invitations
-and copies to friends, and accepts received copies. What it cannot do itself (e.g.
-uploading a file or connecting a device) it shows you: it opens the right page and
-highlights the place with a short instruction. Open it with the speech-bubble button in the top bar, next to
-Help. The window stays open when you go to another page. Conversations are saved
-in your account; those unused for 30 days are removed. Guest accounts do not have
-the assistant.
+The assistant answers questions about the service and does things for you: creates
+and edits games, changes their settings, builds question bases and shares them,
+draws a logo from a description, starts and tallies polls, sends invitations and
+copies to friends, accepts copies you receive. What it can't do by itself (e.g.
+uploading a file or connecting a device), it shows you on the page. Open it with
+[AI assistant|chat] on the top bar, next to Help. Guest accounts have no assistant.
 
-The assistant works right away: the **Familijna assistant** has a daily message
-limit (the chat window shows “… left today”, the limit comes back at midnight). For
-more, add your own AI service key (e.g. Anthropic, OpenAI, Google Gemini) — from then on
-the chat uses it (“My key” is selected in *Account settings*, where you can also switch
-back to the Familijna assistant). You then pay the provider directly, without the
-Familijna limit. Conversations with the Familijna assistant are processed by Google
-(Gemini API on a paid plan).
+![Assistant window with example requests](zrzut:ai-chat-builtin)
 
-Add a key in *Account settings*, in the “AI assistant” section:
+### 5.10.1 Talking to the assistant
 
-1. Set a key password and choose [Create key vault]. Your browser encrypts the
-   keys with this password — nobody else can read them. You enter the password
-   once on each device.
-2. Choose the provider, enter the key and choose [Add key]. You see the key only
-   while entering it.
+Write what you need, e.g. “Prepare a game about holidays with 10 questions” or “How do
+I connect a TV as the display?”. An empty window suggests a few examples — choosing one
+sends it right away. While answering, the window shows which tools the assistant uses
+(e.g. “List of games”, “Searching Help”).
 
-You can add several keys — the selected one is used. Next to a key you choose the model.
-If you have no key, the section shows step by step how to get a free Google Gemini key.
+![Conversation: the assistant reads your games and answers](zrzut:ai-chat-conversation)
 
-![AI assistant in Account settings](zrzut:account-ai-keys)
-![Assistant window without a key](zrzut:ai-chat-no-key)
+- [Conversations] shows saved conversations — choose one to go back to it;
+  [Back to the conversation] closes the list.
+- [New conversation] starts from scratch; the previous one stays on the list.
+- The window stays open when you go to another page, together with the conversation.
+- Conversations are saved on your account; ones unused for 30 days disappear.
 
-> Note: a lost key password cannot be recovered — [Forgot the password?] deletes the vault and you add the keys again.
+![List of saved conversations](zrzut:ai-chat-history)
 
-Before the assistant sends something to other people (invitations, a poll) or does
-something that cannot be undone (deleting a game, tallying a poll), it asks for your
-consent in a dialog. During a game it changes nothing — it only advises, e.g. how
-to connect devices.
+Before the assistant sends something to other people (invitations, a poll, a copy) or
+does something that can't be undone (deleting a game, tallying a poll), it asks for your
+consent in a window. During a game in Control it changes nothing — it only gives tips,
+e.g. how to connect devices.
 
-> Tip: when you ask the assistant to work on games, bases or contacts, their content goes to the selected provider.
+### 5.10.2 Show me where it is
 
-### 5.10.1 MCP connector in other AI apps
+When you need to do something yourself (upload a file, draw a logo by hand, connect a
+device), the assistant goes to the right page, closes the chat window and highlights
+the place with a short instruction. The instruction has two buttons:
 
-Familijna works as a connector (MCP server) in AI apps that support it — e.g.
-Claude, ChatGPT, Le Chat (Mistral), Cursor, VS Code. The assistant then runs in that
-app, on your account there, with the same actions.
-The connector address and steps are in the "AI assistant" section of *Account settings*:
+- [Done — next] — the assistant checks what you did and leads you to the next step,
+- [Back to chat] — opens the chat again.
+
+![The assistant points at the settings of the selected game](zrzut:ai-point-games)
+
+### 5.10.3 Who answers: the Familijna assistant or your key
+
+The assistant works right away as the **Familijna assistant**. It has a limit: 20 messages
+a day (and at most 6 a minute). Below the message box you see how many are left today;
+the limit comes back at midnight. Conversations with the Familijna assistant are processed
+by Google (Gemini API on a paid plan, without using conversations to improve Google services).
+
+Want no limit or another model? Add **your own key** for an AI service (→ 5.10.4). You then
+pay the provider directly. You choose who answers in *Account settings*, in the “AI
+assistant” section (“Familijna assistant” or “My key”); adding a key switches to “My key”
+right away.
+
+> Tip: when you ask the assistant to work on games, bases or contacts, their content goes to the provider that answers.
+
+### 5.10.4 Your own key
+
+You keep keys in *Account settings*, in the “AI assistant” section:
+
+1. Set a key password and choose [Create key vault]. Your browser encrypts the keys with
+   this password — nobody but you can read them, not even the administrator. You enter the
+   password once on each device.
+2. Choose [Add key]. In the window, choose the provider (e.g. Anthropic, OpenAI, Google
+   Gemini, Groq, Mistral, OpenRouter), enter a name and the key, then choose [Add key].
+   Familijna checks the key with the provider before saving it. You see the key only while
+   typing it.
+
+![Add key window](zrzut:account-ai-add)
+
+Keys form a list: the selected one is used. Next to a key, [Change model] picks a model
+from the provider's list (recommended by default), and [Delete key] removes the key.
+[Lock keys] closes the vault on this device — next time you enter the password.
+
+![Key list](zrzut:account-ai-list)
+
+> Warning: a lost key password can't be recovered — [Forgot the password?] deletes the vault and you add the keys again.
+
+### 5.10.5 Free key
+
+No key? The add window suggests two free ways:
+
+- **Sign in with OpenRouter** — choose [Sign in with OpenRouter], sign in on their page
+  (Google account or e-mail) and the key is saved in the vault by itself, with no copying.
+  Familijna sets a free model that supports tools; choose another with [Change model].
+- **Google Gemini key** — in Google AI Studio choose “Create API key”, copy the key and add
+  it with the “Google Gemini” provider.
+
+Free models have a daily request limit, and one message to the assistant can use several
+requests (each tool is a separate step). Free plans of providers may use conversation
+content to improve their services.
+
+### 5.10.6 Familijna in other AI apps
+
+Familijna works as a connector (MCP server) in AI apps that support it — e.g. Claude,
+ChatGPT, Le Chat (Mistral), Cursor, VS Code. The assistant then runs in that app, on your
+account there, with the same actions. The connector address and steps are in the
+“Familijna in other AI apps” section of *Account settings*:
 
 1. Copy the connector address with [Copy].
-2. In the AI app add a custom connector (MCP server) and paste the address.
+2. In the AI app, add a custom connector (MCP server) and paste the address.
 3. Sign in to Familijna and choose [Allow].
 
 ![Connector access consent](zrzut:account-ai-consent)
