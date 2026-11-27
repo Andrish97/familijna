@@ -37,6 +37,9 @@ test("łącznik MCP: OAuth z PKCE, zgoda w Ustawieniach konta, narzędzia, odł�
   // zgoda: zalogowany użytkownik w Ustawieniach konta (?ai=…) wybiera „Zezwól”
   await serveBranchCode(context, { pages: ["account"] });
   await loginAs(page, context, accounts.standard[0]);
+  await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => !!window.__sbClient, null, { timeout: 20000 });
+  const own = await page.evaluate(async () => (await window.__sbClient.from("games").select("id").neq("type", "market")).data.length);
   let callback = null;
   await context.route(`${REDIRECT}**`, (route) => { callback = route.request().url(); return route.fulfill({ status: 200, body: "ok" }); });
   await page.goto(`${ORIGIN}/account/?ai=${requestId}`, { waitUntil: "domcontentloaded" });
@@ -71,13 +74,14 @@ test("łącznik MCP: OAuth z PKCE, zgoda w Ustawieniach konta, narzędzia, odł�
   expect(init.result.serverInfo.name).toBe("familijna");
   const list = await (await rpc(2, "tools/list")).json();
   expect(list.result.tools.some((x) => x.name === "list_games")).toBe(true);
-  const own = await page.evaluate(async () => (await window.__sbClient.from("games").select("id").neq("type", "market")).data.length);
   const call = await (await rpc(3, "tools/call", { name: "list_games", arguments: {} })).json();
   expect(call.result.isError).toBe(false);
   expect(JSON.parse(call.result.content[0].text).games.length).toBe(own);
   console.log(`[e2e-diag] mcp-oauth tools=${list.result.tools.length} list_games=${own}`);
 
-  // odłączenie w Ustawieniach konta
+  // odłączenie w Ustawieniach konta (po zgodzie strona przeszła na adres klienta)
+  await page.goto(`${ORIGIN}/games/`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => !!window.__sbClient, null, { timeout: 20000 });
   const tokens = await page.evaluate(async () => (await window.__sbClient.rpc("mcp_tokens_mine")).data?.tokens || []);
   const mine = tokens.find((x) => x.client_name === clientName);
   expect(mine).toBeTruthy();
